@@ -2,15 +2,8 @@ use auto_ops::*;
 use std::{
     fs::File,
     io::Write,
-    ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Sub, SubAssign},
+    ops::{Index, IndexMut},
 };
-
-#[derive(Debug, Clone, Copy)]
-struct Color {
-    red: u8,
-    green: u8,
-    blue: u8,
-}
 
 pub struct Image {
     width: u32,
@@ -24,13 +17,13 @@ impl Image {
         for x in 0..width {
             let mut col = Vec::with_capacity(height.try_into().unwrap());
             for y in (0..height).rev() {
-                let r = x as f64 / (width - 1) as f64;
-                let g = y as f64 / (height - 1) as f64;
-                let b = 0.2;
-                let red = (r * 255.0) as u8;
-                let green = (g * 255.0) as u8;
-                let blue = (b * 255.0) as u8;
-                col.push(Color { red, green, blue });
+                let mut vector = Vector3 {
+                    x: x as f64 / (width - 1) as f64,
+                    y: y as f64 / (height - 1) as f64,
+                    z: 0.2,
+                };
+                vector *= 255.0;
+                col.push(vector.as_color());
             }
             data.push(col);
         }
@@ -79,7 +72,7 @@ impl Vector3 {
         *self /= self.length();
     }
 
-    fn as_unit_vector(&self) -> Self {
+    fn unit_vector(&self) -> Self {
         self / self.length()
     }
 
@@ -92,6 +85,14 @@ impl Vector3 {
             x: self.y * other.z - self.z * other.y,
             y: self.z * other.x - self.x * other.z,
             z: self.x * other.y - self.y * other.x,
+        }
+    }
+
+    fn as_color(&self) -> Color {
+        Color {
+            red: self.x as u8,
+            green: self.y as u8,
+            blue: self.z as u8,
         }
     }
 }
@@ -204,146 +205,14 @@ impl IndexMut<usize> for Vector3 {
     }
 }
 
-// impl Add for Vector3 {
-//     type Output = Self;
+struct Color {
+    red: u8,
+    green: u8,
+    blue: u8,
+}
 
-//     fn add(self, rhs: Self) -> Self::Output {
-//         Self {
-//             x: self.x + rhs.x,
-//             y: self.y + rhs.y,
-//             z: self.z + rhs.z,
-//         }
-//     }
-// }
-
-// impl AddAssign for Vector3 {
-//     fn add_assign(&mut self, rhs: Self) {
-//         self.x += rhs.x;
-//         self.y += rhs.y;
-//         self.z += rhs.z;
-//     }
-// }
-
-// impl Sub for Vector3 {
-//     type Output = Self;
-
-//     fn sub(self, rhs: Self) -> Self::Output {
-//         Self {
-//             x: self.x - rhs.x,
-//             y: self.y - rhs.y,
-//             z: self.z - rhs.z,
-//         }
-//     }
-// }
-
-// impl SubAssign for Vector3 {
-//     fn sub_assign(&mut self, rhs: Self) {
-//         self.x -= rhs.x;
-//         self.y -= rhs.y;
-//         self.z -= rhs.z;
-//     }
-// }
-
-// impl Mul for Vector3 {
-//     type Output = Self;
-
-//     fn mul(self, rhs: Self) -> Self::Output {
-//         Self {
-//             x: self.x * rhs.x,
-//             y: self.y * rhs.y,
-//             z: self.z * rhs.z,
-//         }
-//     }
-// }
-
-// impl Mul<f64> for Vector3 {
-//     type Output = Self;
-
-//     fn mul(self, rhs: f64) -> Self::Output {
-//         Self {
-//             x: self.x * rhs,
-//             y: self.y * rhs,
-//             z: self.z * rhs,
-//         }
-//     }
-// }
-
-// impl Mul<Vector3> for f64 {
-//     type Output = Vector3;
-
-//     fn mul(self, rhs: Vector3) -> Self::Output {
-//         Vector3 {
-//             x: self * rhs.x,
-//             y: self * rhs.y,
-//             z: self * rhs.z,
-//         }
-//     }
-// }
-
-// impl MulAssign for Vector3 {
-//     fn mul_assign(&mut self, rhs: Self) {
-//         self.x *= rhs.x;
-//         self.y *= rhs.y;
-//         self.z *= rhs.z;
-//     }
-// }
-
-// impl MulAssign<f64> for Vector3 {
-//     fn mul_assign(&mut self, rhs: f64) {
-//         self.x *= rhs;
-//         self.y *= rhs;
-//         self.z *= rhs;
-//     }
-// }
-
-// impl Div for Vector3 {
-//     type Output = Self;
-
-//     fn div(self, rhs: Self) -> Self::Output {
-//         Self {
-//             x: self.x / rhs.x,
-//             y: self.y / rhs.y,
-//             z: self.z / rhs.z,
-//         }
-//     }
-// }
-
-// // impl Div for &Vector3 {
-// //     type Output = Vector3;
-
-// //     fn div(self, rhs: Self) -> Self::Output {
-// //         Vector3 {
-// //             x: self.x / rhs.x,
-// //             y: self.y / rhs.y,
-// //             z: self.z / rhs.z,
-// //         }
-// //     }
-// // }
-
-// impl Div<f64> for Vector3 {
-//     type Output = Self;
-
-//     fn div(self, rhs: f64) -> Self::Output {
-//         Self {
-//             x: self.x / rhs,
-//             y: self.y / rhs,
-//             z: self.z / rhs,
-//         }
-//     }
-// }
-
-// impl DivAssign for Vector3 {
-//     fn div_assign(&mut self, rhs: Self) {
-//         self.x /= rhs.x;
-//         self.y /= rhs.y;
-//         self.z /= rhs.z;
-//     }
-// }
-
-// impl DivAssign<f64> for Vector3 {
-//     fn div_assign(&mut self, rhs: f64) {
-//         self.x /= rhs;
-//         self.y /= rhs;
-//         self.z /= rhs;
-//     }
-// }
+impl Color {
+    fn new(red: u8, green: u8, blue: u8) -> Self {
+        Self { red, green, blue }
+    }
+}
