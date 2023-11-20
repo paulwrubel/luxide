@@ -1,61 +1,38 @@
 use auto_ops::*;
-use std::{
-    fs::File,
-    io::Write,
-    ops::{Index, IndexMut},
-};
+use image::{ImageBuffer, ImageError, Rgb};
 
-pub struct Image {
-    width: u32,
-    height: u32,
-    data: Vec<Vec<Color>>,
-}
+pub struct Image(ImageBuffer<Rgb<u8>, Vec<u8>>);
 
 impl Image {
     pub fn generate(width: u32, height: u32) -> Self {
-        let mut data = Vec::with_capacity(width.try_into().unwrap());
-        for x in 0..width {
-            let mut col = Vec::with_capacity(height.try_into().unwrap());
-            for y in (0..height).rev() {
-                let mut vector = Vector3 {
-                    x: x as f64 / (width - 1) as f64,
-                    y: y as f64 / (height - 1) as f64,
-                    z: 0.2,
-                };
-                vector *= 255.0;
-                col.push(vector.as_color());
-            }
-            data.push(col);
+        let mut buffer = ImageBuffer::new(width, height);
+
+        for (x, y, pixel) in buffer.enumerate_pixels_mut() {
+            *pixel = (Vector {
+                x: x as f64 / (width - 1) as f64,
+                y: (height - y - 1) as f64 / (height - 1) as f64,
+                z: 0.2,
+            } * 255.0)
+                .as_rgb_u8();
         }
 
-        Self {
-            width,
-            height,
-            data,
-        }
+        Self(buffer)
     }
 
-    pub fn to_ppm(&self, file: &mut File) -> std::io::Result<()> {
-        file.write_all(format!("P3\n{} {}\n255\n", self.width, self.height).as_bytes())?;
-
-        for y in 0..self.height {
-            for x in 0..self.width {
-                let Color { red, green, blue } = self.data[x as usize][y as usize];
-                file.write_all(format!("{red} {green} {blue}\n").as_bytes())?;
-            }
-        }
+    pub fn save(&self, filename: &str) -> Result<(), ImageError> {
+        self.0.save(filename)?;
         Ok(())
     }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-struct Vector3 {
+struct Vector {
     x: f64,
     y: f64,
     z: f64,
 }
 
-impl Vector3 {
+impl Vector {
     fn new(x: f64, y: f64, z: f64) -> Self {
         Self { x, y, z }
     }
@@ -88,131 +65,127 @@ impl Vector3 {
         }
     }
 
-    fn as_color(&self) -> Color {
-        Color {
-            red: self.x as u8,
-            green: self.y as u8,
-            blue: self.z as u8,
-        }
+    fn as_rgb_u8(&self) -> Rgb<u8> {
+        Rgb([self.x as u8, self.y as u8, self.z as u8])
     }
 }
 
-impl_op_ex!(+ |a: &Vector3, b: &Vector3| -> Vector3 {
-    Vector3 {
+impl_op_ex!(+ |a: &Vector, b: &Vector| -> Vector {
+    Vector {
         x: a.x + b.x,
         y: a.y + b.y,
         z: a.z + b.z,
     }
 });
 
-impl_op_ex!(+= |a: &mut Vector3, b: &Vector3| {
+impl_op_ex!(+= |a: &mut Vector, b: &Vector| {
     a.x += b.x;
     a.y += b.y;
     a.z += b.z;
 });
 
-impl_op_ex!(-|a: &Vector3, b: &Vector3| -> Vector3 {
-    Vector3 {
+impl_op_ex!(-|a: &Vector, b: &Vector| -> Vector {
+    Vector {
         x: a.x - b.x,
         y: a.y - b.y,
         z: a.z - b.z,
     }
 });
 
-impl_op_ex!(-= |a: &mut Vector3, b: &Vector3|  {
+impl_op_ex!(-= |a: &mut Vector, b: &Vector|  {
     a.x -= b.x;
     a.y -= b.y;
     a.z -= b.z;
 });
 
-impl_op_ex!(*|a: &Vector3, b: &Vector3| -> Vector3 {
-    Vector3 {
+impl_op_ex!(*|a: &Vector, b: &Vector| -> Vector {
+    Vector {
         x: a.x * b.x,
         y: a.y * b.y,
         z: a.z * b.z,
     }
 });
 
-impl_op_ex_commutative!(*|a: &Vector3, b: &f64| -> Vector3 {
-    Vector3 {
+impl_op_ex_commutative!(*|a: &Vector, b: &f64| -> Vector {
+    Vector {
         x: a.x * b,
         y: a.y * b,
         z: a.z * b,
     }
 });
 
-impl_op_ex!(*= |a: &mut Vector3, b: &Vector3| {
+impl_op_ex!(*= |a: &mut Vector, b: &Vector| {
     a.x *= b.x;
     a.y *= b.y;
     a.z *= b.z;
 });
 
-impl_op_ex!(*= |a: &mut Vector3, b: &f64| {
+impl_op_ex!(*= |a: &mut Vector, b: &f64| {
     a.x *= b;
     a.y *= b;
     a.z *= b;
 });
 
-impl_op_ex!(/|a: &Vector3, b: &Vector3| -> Vector3 {
-    Vector3 {
+impl_op_ex!(/|a: &Vector, b: &Vector| -> Vector {
+    Vector {
         x: a.x / b.x,
         y: a.y / b.y,
         z: a.z / b.z,
     }
 });
 
-impl_op_ex_commutative!(/|a: &Vector3, b: &f64| -> Vector3 {
-    Vector3 {
+impl_op_ex_commutative!(/|a: &Vector, b: &f64| -> Vector {
+    Vector {
         x: a.x / b,
         y: a.y / b,
         z: a.z / b,
     }
 });
 
-impl_op_ex!(/= |a: &mut Vector3, b: &Vector3| {
+impl_op_ex!(/= |a: &mut Vector, b: &Vector| {
     a.x /= b.x;
     a.y /= b.y;
     a.z /= b.z;
 });
 
-impl_op_ex!(/= |a: &mut Vector3, b: &f64| {
+impl_op_ex!(/= |a: &mut Vector, b: &f64| {
     a.x /= b;
     a.y /= b;
     a.z /= b;
 });
 
-impl Index<usize> for Vector3 {
-    type Output = f64;
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct Point(Vector);
 
-    fn index(&self, index: usize) -> &Self::Output {
-        match index {
-            0 => &self.x,
-            1 => &self.y,
-            2 => &self.z,
-            _ => panic!("Index out of bounds"),
-        }
+impl Point {
+    fn new(x: f64, y: f64, z: f64) -> Self {
+        Self(Vector::new(x, y, z))
+    }
+
+    fn from_vector(vector: &Vector) -> Self {
+        Self(*vector)
+    }
+
+    fn as_vector(&self) -> Vector {
+        self.0
     }
 }
 
-impl IndexMut<usize> for Vector3 {
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        match index {
-            0 => &mut self.x,
-            1 => &mut self.y,
-            2 => &mut self.z,
-            _ => panic!("Index out of bounds"),
-        }
-    }
-}
+impl_op_ex!(+ |a: &Point, b: &Vector| -> Point {
+    Point(a.0 + b)
+});
 
-struct Color {
-    red: u8,
-    green: u8,
-    blue: u8,
-}
+impl_op_ex!(+= |a: &mut Point, b: &Vector| {
+    a.0 += b;
+});
 
-impl Color {
-    fn new(red: u8, green: u8, blue: u8) -> Self {
-        Self { red, green, blue }
-    }
+impl_op_ex!(-|a: &Point, b: &Vector| -> Point { Point(a.0 - b) });
+
+impl_op_ex!(-= |a: &mut Point, b: &Vector|  {
+    a.0 -= b;
+});
+
+struct Ray {
+    origin: Point,
+    direction: Vector,
 }

@@ -4,8 +4,10 @@ version = "0.1.0"
 edition = "2021"
 description = "A path tracer"
 license = "MIT"
+repository = "https://github.com/paulwrubel/luxide"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 auto_ops = "0.3.0"
+image = "0.24.7"
