@@ -12,14 +12,6 @@ impl Sphere {
     pub fn new(center: Point, radius: f64) -> Self {
         Self { center, radius }
     }
-
-    pub fn center(&self) -> Point {
-        self.center
-    }
-
-    pub fn radius(&self) -> f64 {
-        self.radius
-    }
 }
 
 impl Hit for Sphere {

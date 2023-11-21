@@ -12,14 +12,6 @@ impl List {
     pub fn from_vec(primitives: Vec<Box<dyn Hit>>) -> Self {
         Self(primitives)
     }
-
-    pub fn push(&mut self, primitive: Box<dyn Hit>) {
-        self.0.push(primitive);
-    }
-
-    pub fn clear(&mut self) {
-        self.0.clear();
-    }
 }
 
 impl Hit for List {
