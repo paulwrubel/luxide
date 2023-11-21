@@ -1,6 +1,6 @@
 use auto_ops::{impl_op_ex, impl_op_ex_commutative};
 
-use crate::primitives::Sphere;
+use crate::primitives::{Hit, Sphere};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Vector {
@@ -187,10 +187,9 @@ impl Ray {
         self.origin + (t * self.direction)
     }
 
-    pub fn color(&self) -> Vector {
-        let sphere = Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5);
-        if sphere.hit(self) {
-            return Vector::new(1.0, 0.0, 0.0);
+    pub fn color(&self, primitive: &Box<dyn Hit>) -> Vector {
+        if let Some(rec) = primitive.hit(self, 0.0, f64::MAX) {
+            return 0.5 * (rec.normal + Vector::new(1.0, 1.0, 1.0));
         }
 
         let unit = self.direction.unit_vector();

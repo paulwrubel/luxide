@@ -1,7 +1,6 @@
-use auto_ops::*;
 use geometry::{Point, Ray, Vector};
 use image::{imageops, ImageBuffer, ImageError, Rgb};
-use primitives::Sphere;
+use primitives::{Hit, List, Sphere};
 
 mod camera;
 mod geometry;
@@ -18,11 +17,16 @@ impl Image {
         let vertical = Vector::new(0.0, 2.0, 0.0);
         let origin = Point::new(0.0, 0.0, 0.0);
 
+        let world: Box<dyn Hit> = Box::new(List::from_vec(vec![
+            Box::new(Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5)),
+            Box::new(Sphere::new(Point::new(0.0, -100.5, -1.0), 100.0)),
+        ]));
+
         for (x, y, pixel) in buffer.enumerate_pixels_mut() {
             let u = x as f64 / width as f64;
             let v = y as f64 / height as f64;
             let ray = Ray::new(origin, (llc + u * horizontal + v * vertical) - origin);
-            let color = ray.color();
+            let color = ray.color(&world);
             *pixel = (color * 255.0).as_rgb_u8();
         }
 
