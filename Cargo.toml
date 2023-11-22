@@ -11,3 +11,4 @@ repository = "https://github.com/paulwrubel/luxide"
 [dependencies]
 auto_ops = "0.3.0"
 image = "0.24.7"
+rand = "0.8.5"

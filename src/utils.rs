@@ -26,4 +26,14 @@ impl Interval {
     pub fn contains_excluding(&self, x: f64) -> bool {
         self.minimum < x && x < self.maximum
     }
+
+    pub fn clamp(&self, x: f64) -> f64 {
+        if x < self.minimum {
+            self.minimum
+        } else if x > self.maximum {
+            self.maximum
+        } else {
+            x
+        }
+    }
 }

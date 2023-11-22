@@ -15,34 +15,36 @@ impl Color {
     }
 
     pub fn as_rgb_u8(&self) -> image::Rgb<u8> {
-        image::Rgb([self.0.x as u8, self.0.y as u8, self.0.z as u8])
+        image::Rgb([
+            (self.0.x.clamp(0.0, 1.0) * u8::MAX as f64).round() as u8,
+            (self.0.y.clamp(0.0, 1.0) * u8::MAX as f64).round() as u8,
+            (self.0.z.clamp(0.0, 1.0) * u8::MAX as f64).round() as u8,
+        ])
     }
 }
 
-impl_op_ex_commutative!(*|a: &Color, b: &f64| -> Color {
-    Color(Vector {
-        x: a.0.x * b,
-        y: a.0.y * b,
-        z: a.0.z * b,
-    })
+impl_op_ex!(+|a: &Color, b: &Color| -> Color { Color(a.0 + b.0) });
+
+impl_op_ex!(+= |a: &mut Color, b: &Color| {
+    a.0 += b.0;
 });
 
+impl_op_ex!(-|a: &Color, b: &Color| -> Color { Color(a.0 - b.0) });
+
+impl_op_ex!(-= |a: &mut Color, b: &Color| {
+    a.0 -= b.0;
+});
+
+impl_op_ex_commutative!(*|a: &Color, b: &f64| -> Color { Color(a.0 * b) });
+
 impl_op_ex!(*= |a: &mut Color, b: &f64| {
-    a.0.x *= b;
-    a.0.y *= b;
-    a.0.z *= b;
+    a.0 *= b;
 });
 
 impl_op_ex_commutative!(/|a: &Color, b: &f64| -> Color {
-    Color(Vector {
-        x: a.0.x / b,
-        y: a.0.y / b,
-        z: a.0.z / b,
-    })
+    Color(a.0 / b)
 });
 
 impl_op_ex!(/= |a: &mut Color, b: &f64| {
-    a.0.x /= b;
-    a.0.y /= b;
-    a.0.z /= b;
+    a.0 /= b;
 });

@@ -1,4 +1,5 @@
 use image::ImageBuffer;
+use rand::Rng;
 
 use crate::{
     geometry::{
@@ -11,9 +12,12 @@ use crate::{
 
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct Camera {
-    pub aspect_ratio: f64,
-    pub image_width: u32,
+    // "public" fields
+    aspect_ratio: f64,
+    image_width: u32,
+    samples_per_pixel: u32,
 
+    // private fields
     image_height: u32,
     center: Point,
     pixel_00_location: Point,
@@ -22,10 +26,11 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f64, image_width: u32) -> Self {
+    pub fn new(aspect_ratio: f64, image_width: u32, samples_per_pixel: u32) -> Self {
         Self {
             aspect_ratio,
             image_width,
+            samples_per_pixel,
             ..Default::default()
         }
     }
@@ -42,15 +47,14 @@ impl Camera {
                 self.image_height
             );
             for x in 0..self.image_width {
-                let pixel = buffer.get_pixel_mut(x, y);
+                let mut color = Color::new(0.0, 0.0, 0.0);
+                for _ in 0..self.samples_per_pixel {
+                    let ray = self.get_ray(x, y);
+                    color += self.ray_color(&ray, primitive);
+                }
 
-                let pixel_center = self.pixel_00_location
-                    + self.pixel_delta_u * x as f64
-                    + self.pixel_delta_v * y as f64;
-                let direction = pixel_center - self.center;
-                let ray = Ray::new(self.center, direction);
-                let color = self.ray_color(&ray, primitive);
-                *pixel = (color * 255.999).as_rgb_u8();
+                let pixel = buffer.get_pixel_mut(x, y);
+                *pixel = (color / self.samples_per_pixel as f64).as_rgb_u8();
             }
         }
 
@@ -79,6 +83,27 @@ impl Camera {
 
         self.pixel_00_location =
             viewport_upper_left + 0.5 * (self.pixel_delta_u + self.pixel_delta_v);
+    }
+
+    fn get_ray(&self, x: u32, y: u32) -> Ray {
+        let pixel_center = self.pixel_00_location
+            + (self.pixel_delta_u * x as f64)
+            + (self.pixel_delta_v * y as f64);
+        let pixel_sample = pixel_center + self.pixel_sample_square();
+
+        let origin = self.center;
+        let direction = pixel_sample - self.center;
+
+        Ray::new(origin, direction)
+    }
+
+    fn pixel_sample_square(&self) -> Vector {
+        let mut rng = rand::thread_rng();
+
+        let x_offset = self.pixel_delta_u * rng.gen_range(-0.5..0.5);
+        let y_offset = self.pixel_delta_v * rng.gen_range(-0.5..0.5);
+
+        x_offset + y_offset
     }
 
     fn ray_color(&self, ray: &Ray, primitive: &dyn Hit) -> Color {
