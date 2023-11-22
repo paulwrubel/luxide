@@ -1,6 +1,12 @@
 use std::{fs, path::Path};
 
-use luxide::Image;
+use luxide::{
+    camera::Camera,
+    geometry::{
+        primitives::{Hit, List, Sphere},
+        Point,
+    },
+};
 
 const OUTPUT_DIR: &str = "./output";
 
@@ -19,10 +25,17 @@ fn main() -> std::io::Result<()> {
         }
     }
 
-    let width = 1920;
+    let width = 400;
     let aspect_ratio = 16.0 / 9.0;
 
-    let image = Image::generate(width, aspect_ratio);
+    // Primitives
+    let world: Box<dyn Hit> = Box::new(List::from_vec(vec![
+        Box::new(Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5)),
+        Box::new(Sphere::new(Point::new(0.0, -100.5, -1.0), 100.0)),
+    ]));
+
+    let mut camera = Camera::new(aspect_ratio, width);
+    let image = camera.render(world.as_ref());
 
     match image.save(&Path::new(&filepath)) {
         Ok(()) => {

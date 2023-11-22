@@ -1,4 +1,4 @@
-use crate::geometry::Ray;
+use crate::{geometry::Ray, utils::Interval};
 
 use super::{Hit, RayHit};
 
@@ -15,11 +15,13 @@ impl List {
 }
 
 impl Hit for List {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<RayHit> {
-        let mut closest_t_so_far = t_max;
+    fn hit(&self, ray: &Ray, ray_t: Interval) -> Option<RayHit> {
+        let mut closest_t_so_far = ray_t.maximum;
         let mut closest_hit_record = None;
         for primitive in &self.0 {
-            if let Some(hit_record) = primitive.hit(ray, t_min, closest_t_so_far) {
+            if let Some(hit_record) =
+                primitive.hit(ray, Interval::new(ray_t.minimum, closest_t_so_far))
+            {
                 closest_t_so_far = hit_record.t;
                 closest_hit_record = Some(hit_record);
             }

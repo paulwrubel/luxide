@@ -1,4 +1,5 @@
-use crate::{Point, Ray, Vector};
+use super::{Point, Ray, Vector};
+use crate::utils::Interval;
 
 mod list;
 pub use list::List;
@@ -13,5 +14,5 @@ pub struct RayHit {
 }
 
 pub trait Hit {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<RayHit>;
+    fn hit(&self, ray: &Ray, ray_t: Interval) -> Option<RayHit>;
 }

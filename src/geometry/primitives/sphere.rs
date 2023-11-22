@@ -1,4 +1,7 @@
-use crate::geometry::{Point, Ray};
+use crate::{
+    geometry::{Point, Ray},
+    utils::Interval,
+};
 
 use super::{Hit, RayHit};
 
@@ -15,7 +18,7 @@ impl Sphere {
 }
 
 impl Hit for Sphere {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<RayHit> {
+    fn hit(&self, ray: &Ray, ray_t: Interval) -> Option<RayHit> {
         // solve quadratic equation
         let oc = ray.origin() - self.center;
 
@@ -32,9 +35,9 @@ impl Hit for Sphere {
         // find closest root solution within t_min and t_max
         let disc_sqrt = discriminant.sqrt();
         let mut root = (-half_b - disc_sqrt) / a;
-        if root <= t_min || root >= t_max {
+        if !ray_t.contains_excluding(root) {
             root = (-half_b + disc_sqrt) / a;
-            if root <= t_min || root >= t_max {
+            if !ray_t.contains_excluding(root) {
                 return None;
             }
         }

@@ -2,7 +2,7 @@ use auto_ops::impl_op_ex;
 
 use super::Vector;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct Point(Vector);
 
 impl Point {

@@ -1,6 +1,6 @@
 use auto_ops::{impl_op_ex, impl_op_ex_commutative};
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Default)]
 pub struct Vector {
     pub x: f64,
     pub y: f64,
