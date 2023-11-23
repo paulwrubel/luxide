@@ -30,30 +30,45 @@ fn main() -> std::io::Result<()> {
     }
 
     let aspect_ratio = 16.0 / 9.0;
-    let width = 1280;
-    let samples_per_pixel = 10;
-    let max_bounces = 500;
+    let width = 400;
+    let samples_per_pixel = 100;
+    let max_bounces = 50;
 
     // Materials
-    let lambertian_light_grey: Rc<dyn Scatter> =
-        Rc::new(Lambertian::new(Color::new(0.8, 0.8, 0.8)));
-    let lambertian_red: Rc<dyn Scatter> = Rc::new(Lambertian::new(Color::new(0.9, 0.1, 0.1)));
-    let metal_white: Rc<dyn Scatter> = Rc::new(Metal::new(Color::WHITE));
+    let lambertian_ground: Rc<dyn Scatter> = Rc::new(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
+    let lambertian_center: Rc<dyn Scatter> = Rc::new(Lambertian::new(Color::new(0.7, 0.3, 0.3)));
+    let metal_left: Rc<dyn Scatter> = Rc::new(Metal::new(Color::new(0.8, 0.8, 0.8)));
+    let metal_right: Rc<dyn Scatter> = Rc::new(Metal::new(Color::new(0.8, 0.6, 0.2)));
 
     // Primitives
     let ground_sphere = Box::new(Sphere::new(
         Point::new(0.0, -100.5, -1.0),
         100.0,
-        Rc::clone(&lambertian_light_grey),
+        Rc::clone(&lambertian_ground),
     ));
-    let subject_sphere = Box::new(Sphere::new(
+    let center_sphere = Box::new(Sphere::new(
         Point::new(0.0, 0.0, -1.0),
         0.5,
-        Rc::clone(&metal_white),
+        Rc::clone(&lambertian_center),
+    ));
+    let left_sphere = Box::new(Sphere::new(
+        Point::new(-1.0, 0.0, -1.0),
+        0.5,
+        Rc::clone(&metal_left),
+    ));
+    let right_sphere = Box::new(Sphere::new(
+        Point::new(1.0, 0.0, -1.0),
+        0.5,
+        Rc::clone(&metal_right),
     ));
 
     // World
-    let world: Box<dyn Hit> = Box::new(List::from_vec(vec![ground_sphere, subject_sphere]));
+    let world: Box<dyn Hit> = Box::new(List::from_vec(vec![
+        ground_sphere,
+        center_sphere,
+        left_sphere,
+        right_sphere,
+    ]));
 
     let mut camera = Camera::new(aspect_ratio, width, samples_per_pixel, max_bounces);
     let image = camera.render(world.as_ref());
