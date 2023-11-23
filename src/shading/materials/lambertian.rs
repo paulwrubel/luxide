@@ -26,6 +26,8 @@ impl Scatter for Lambertian {
             direction
         };
 
-        Some((Ray::new(ray_hit.point, direction), self.albedo))
+        let scattered = Ray::new(ray_hit.point, direction);
+
+        Some((scattered, self.albedo))
     }
 }

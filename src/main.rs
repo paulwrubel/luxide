@@ -37,8 +37,8 @@ fn main() -> std::io::Result<()> {
     // Materials
     let lambertian_ground: Rc<dyn Scatter> = Rc::new(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
     let lambertian_center: Rc<dyn Scatter> = Rc::new(Lambertian::new(Color::new(0.7, 0.3, 0.3)));
-    let metal_left: Rc<dyn Scatter> = Rc::new(Metal::new(Color::new(0.8, 0.8, 0.8)));
-    let metal_right: Rc<dyn Scatter> = Rc::new(Metal::new(Color::new(0.8, 0.6, 0.2)));
+    let metal_left: Rc<dyn Scatter> = Rc::new(Metal::new(Color::new(0.8, 0.8, 0.8), 0.3));
+    let metal_right: Rc<dyn Scatter> = Rc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 1.0));
 
     // Primitives
     let ground_sphere = Box::new(Sphere::new(
