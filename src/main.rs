@@ -29,6 +29,7 @@ fn main() -> std::io::Result<()> {
     let aspect_ratio = 16.0 / 9.0;
     let width = 400;
     let samples_per_pixel = 100;
+    let max_bounces = 50;
 
     // Primitives
     let world: Box<dyn Hit> = Box::new(List::from_vec(vec![
@@ -36,7 +37,7 @@ fn main() -> std::io::Result<()> {
         Box::new(Sphere::new(Point::new(0.0, -100.5, -1.0), 100.0)),
     ]));
 
-    let mut camera = Camera::new(aspect_ratio, width, samples_per_pixel);
+    let mut camera = Camera::new(aspect_ratio, width, samples_per_pixel, max_bounces);
     let image = camera.render(world.as_ref());
 
     match image.save(&Path::new(&filepath)) {

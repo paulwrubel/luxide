@@ -1,4 +1,7 @@
+use std::ops::Neg;
+
 use auto_ops::{impl_op_ex, impl_op_ex_commutative};
+use rand::Rng;
 
 #[derive(Debug, Copy, Clone, PartialEq, Default)]
 pub struct Vector {
@@ -8,8 +11,59 @@ pub struct Vector {
 }
 
 impl Vector {
+    pub const ZERO: Self = Self {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    };
+    pub const ONE: Self = Self {
+        x: 1.0,
+        y: 1.0,
+        z: 1.0,
+    };
+
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Self { x, y, z }
+    }
+
+    pub fn random() -> Self {
+        let mut rng = rand::thread_rng();
+        Self {
+            x: rng.gen(),
+            y: rng.gen(),
+            z: rng.gen(),
+        }
+    }
+
+    pub fn random_in_range(min: f64, max: f64) -> Self {
+        let mut rng = rand::thread_rng();
+        Self {
+            x: rng.gen_range(min..max),
+            y: rng.gen_range(min..max),
+            z: rng.gen_range(min..max),
+        }
+    }
+
+    pub fn random_in_unit_sphere() -> Self {
+        loop {
+            let p = Self::random_in_range(-1.0, 1.0);
+            if p.squared_length() < 1.0 {
+                return p;
+            }
+        }
+    }
+
+    pub fn random_unit() -> Self {
+        Self::random_in_unit_sphere().unit_vector()
+    }
+
+    pub fn random_on_hemisphere(normal: &Self) -> Self {
+        let on_unit_sphere = Self::random_unit();
+        if on_unit_sphere.dot(normal) > 0.0 {
+            on_unit_sphere
+        } else {
+            -on_unit_sphere
+        }
     }
 
     pub fn length(&self) -> f64 {
@@ -38,6 +92,14 @@ impl Vector {
             y: self.z * other.x - self.x * other.z,
             z: self.x * other.y - self.y * other.x,
         }
+    }
+}
+
+impl Neg for Vector {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        self * -1.0
     }
 }
 

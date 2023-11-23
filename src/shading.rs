@@ -6,6 +6,9 @@ use crate::geometry::Vector;
 pub struct Color(Vector);
 
 impl Color {
+    pub const BLACK: Color = Self(Vector::ZERO);
+    pub const WHITE: Color = Self(Vector::ONE);
+
     pub fn new(r: f64, g: f64, b: f64) -> Self {
         Self(Vector::new(r, g, b))
     }

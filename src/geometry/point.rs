@@ -6,6 +6,9 @@ use super::Vector;
 pub struct Point(Vector);
 
 impl Point {
+    pub const ZERO: Point = Self(Vector::ZERO);
+    pub const ONE: Point = Self(Vector::ONE);
+
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Self(Vector::new(x, y, z))
     }

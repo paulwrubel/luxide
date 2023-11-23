@@ -16,6 +16,7 @@ pub struct Camera {
     aspect_ratio: f64,
     image_width: u32,
     samples_per_pixel: u32,
+    max_bounces: u32,
 
     // private fields
     image_height: u32,
@@ -26,11 +27,17 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f64, image_width: u32, samples_per_pixel: u32) -> Self {
+    pub fn new(
+        aspect_ratio: f64,
+        image_width: u32,
+        samples_per_pixel: u32,
+        max_bounces: u32,
+    ) -> Self {
         Self {
             aspect_ratio,
             image_width,
             samples_per_pixel,
+            max_bounces,
             ..Default::default()
         }
     }
@@ -50,7 +57,7 @@ impl Camera {
                 let mut color = Color::new(0.0, 0.0, 0.0);
                 for _ in 0..self.samples_per_pixel {
                     let ray = self.get_ray(x, y);
-                    color += self.ray_color(&ray, primitive);
+                    color += self.ray_color(&ray, primitive, self.max_bounces);
                 }
 
                 let pixel = buffer.get_pixel_mut(x, y);
@@ -64,7 +71,7 @@ impl Camera {
     fn init(&mut self) {
         self.image_height = ((self.image_width as f64 / self.aspect_ratio) as u32).max(1);
 
-        self.center = Point::new(0.0, 0.0, 0.0);
+        self.center = Point::ZERO;
 
         // Camera
         let focal_length = 1.0;
@@ -106,11 +113,21 @@ impl Camera {
         x_offset + y_offset
     }
 
-    fn ray_color(&self, ray: &Ray, primitive: &dyn Hit) -> Color {
+    fn ray_color(&self, ray: &Ray, primitive: &dyn Hit, remaining_bounces: u32) -> Color {
+        if remaining_bounces <= 0 {
+            return Color::BLACK;
+        }
         // Get the hit point color if we hit something
-        if let Some(rec) = primitive.hit(ray, Interval::new(0.0, f64::INFINITY)) {
-            let color_vec = 0.5 * (rec.normal + Vector::new(1.0, 1.0, 1.0));
-            return Color::from_vector(&color_vec);
+        if let Some(rec) = primitive.hit(ray, Interval::new(0.001, f64::INFINITY)) {
+            let direction = rec.normal + Vector::random_unit();
+            return 0.5
+                * self.ray_color(
+                    &Ray::new(rec.point, direction),
+                    primitive,
+                    remaining_bounces - 1,
+                );
+            // let color_vec = 0.5 * (rec.normal + Vector::new(1.0, 1.0, 1.0));
+            // return Color::from_vector(&color_vec);
         }
 
         // otherwise, get the background
