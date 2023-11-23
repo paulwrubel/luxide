@@ -1,5 +1,7 @@
+use std::rc::Rc;
+
 use super::{Point, Ray, Vector};
-use crate::utils::Interval;
+use crate::{shading::materials::Scatter, utils::Interval};
 
 mod list;
 pub use list::List;
@@ -11,6 +13,7 @@ pub struct RayHit {
     pub t: f64,
     pub point: Point,
     pub normal: Vector,
+    pub material: Rc<dyn Scatter>,
 }
 
 pub trait Hit {

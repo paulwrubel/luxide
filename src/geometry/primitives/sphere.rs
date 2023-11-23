@@ -1,19 +1,27 @@
+use std::rc::Rc;
+
 use crate::{
     geometry::{Point, Ray},
+    shading::materials::Scatter,
     utils::Interval,
 };
 
 use super::{Hit, RayHit};
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Clone)]
 pub struct Sphere {
     center: Point,
     radius: f64,
+    material: Rc<dyn Scatter>,
 }
 
 impl Sphere {
-    pub fn new(center: Point, radius: f64) -> Self {
-        Self { center, radius }
+    pub fn new(center: Point, radius: f64, material: Rc<dyn Scatter>) -> Self {
+        Self {
+            center,
+            radius,
+            material: Rc::clone(&material),
+        }
     }
 }
 
@@ -46,6 +54,7 @@ impl Hit for Sphere {
             t: root,
             point: ray.at(root),
             normal: (ray.at(root) - self.center) / self.radius,
+            material: Rc::clone(&self.material),
         })
     }
 }

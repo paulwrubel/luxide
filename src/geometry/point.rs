@@ -13,6 +13,14 @@ impl Point {
         Self(Vector::new(x, y, z))
     }
 
+    pub fn to(&self, &other: &Self) -> Vector {
+        other - self
+    }
+
+    pub fn from(&self, &other: &Self) -> Vector {
+        self - other
+    }
+
     pub fn from_vector(vector: &Vector) -> Self {
         Self(*vector)
     }
