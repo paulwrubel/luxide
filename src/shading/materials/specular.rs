@@ -21,7 +21,10 @@ impl Specular {
 
 impl Scatter for Specular {
     fn scatter(&self, ray: &Ray, ray_hit: &RayHit) -> Option<(Ray, Color)> {
-        let reflected = ray.direction().unit_vector().reflect(&ray_hit.normal);
+        let reflected = ray
+            .direction()
+            .unit_vector()
+            .reflect_around(&ray_hit.normal);
 
         let scattered = Ray::new(
             ray_hit.point,

@@ -1,6 +1,9 @@
 use super::Color;
 use crate::geometry::{primitives::RayHit, Ray};
 
+mod dielectric;
+pub use dielectric::Dielectric;
+
 mod lambertian;
 pub use lambertian::Lambertian;
 

@@ -1,5 +1,6 @@
 use std::{
     collections::VecDeque,
+    f64::consts::PI,
     time::{Duration, Instant},
 };
 
@@ -9,7 +10,7 @@ use rand::Rng;
 use crate::{
     geometry::{primitives::Hit, Point, Ray, Vector},
     shading::Color,
-    utils::Interval,
+    utils::{progress_string, Degrees, Interval},
 };
 
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -20,12 +21,25 @@ pub struct Camera {
     samples_per_pixel: u32,
     max_bounces: u32,
 
+    vertical_field_of_view_degrees: f64,
+    look_from: Point,
+    look_at: Point,
+    view_up: Vector,
+
+    defocus_angle_degrees: f64,
+    focus_distance: f64,
+
     // private fields
     image_height: u32,
     center: Point,
     pixel_00_location: Point,
     pixel_delta_u: Vector,
     pixel_delta_v: Vector,
+    u: Vector,
+    v: Vector,
+    w: Vector,
+    defocus_disk_u: Vector,
+    defocus_disk_v: Vector,
 
     progress_instants: VecDeque<Instant>,
 }
@@ -36,12 +50,24 @@ impl Camera {
         image_width: u32,
         samples_per_pixel: u32,
         max_bounces: u32,
+        vertical_field_of_view_degrees: f64,
+        look_from: Point,
+        look_at: Point,
+        view_up: Vector,
+        defocus_angle_degrees: f64,
+        focus_distance: f64,
     ) -> Self {
         Self {
             aspect_ratio,
             image_width,
             samples_per_pixel,
             max_bounces,
+            vertical_field_of_view_degrees,
+            look_from,
+            look_at,
+            view_up,
+            defocus_angle_degrees,
+            focus_distance,
             ..Default::default()
         }
     }
@@ -53,7 +79,10 @@ impl Camera {
         let start = Instant::now();
         for y in 0..self.image_height {
             if y > 0 {
-                println!("{}", self.progress_string(y, self.image_height, start));
+                println!(
+                    "{}",
+                    progress_string(&mut self.progress_instants, y, self.image_height, start)
+                );
             }
             for x in 0..self.image_width {
                 let mut color = Color::BLACK;
@@ -74,52 +103,37 @@ impl Camera {
     fn init(&mut self) {
         self.image_height = ((self.image_width as f64 / self.aspect_ratio) as u32).max(1);
 
-        self.center = Point::ZERO;
+        self.center = self.look_from;
 
-        // Camera
-        let focal_length = 1.0;
-        let viewport_height = 2.0;
+        // camera configuration
+        let theta = self.vertical_field_of_view_degrees * PI / 180.0;
+        let half_height = (theta / 2.0).tan();
+        let viewport_height = 2.0 * half_height * self.focus_distance;
         let viewport_width = viewport_height * (self.image_width as f64 / self.image_height as f64);
 
-        // Viewport
-        let viewport_u = Vector::new(viewport_width, 0.0, 0.0);
-        let viewport_v = Vector::new(0.0, -viewport_height, 0.0);
+        // calculate basis vectors
+        self.w = self.look_at.to(&self.look_from).unit_vector();
+        self.u = self.view_up.cross(&self.w).unit_vector();
+        self.v = self.w.cross(&self.u);
+
+        // viewport / pixel vectors
+        let viewport_u = viewport_width * self.u;
+        let viewport_v = viewport_height * -self.v;
 
         self.pixel_delta_u = viewport_u / self.image_width as f64;
         self.pixel_delta_v = viewport_v / self.image_height as f64;
 
         let viewport_upper_left =
-            self.center - Vector::new(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
+            self.center - (self.focus_distance * self.w) - viewport_u / 2.0 - viewport_v / 2.0;
 
         self.pixel_00_location =
             viewport_upper_left + 0.5 * (self.pixel_delta_u + self.pixel_delta_v);
-    }
 
-    fn progress_string(&mut self, current: u32, total: u32, start: Instant) -> String {
-        let progress = current as f64 / total as f64;
-        let elapsed_duration = start.elapsed();
-
-        let now = Instant::now();
-        self.progress_instants.push_front(now);
-        if self.progress_instants.len() > 50 {
-            self.progress_instants.pop_back();
-        }
-        let mut averaged_increment_duration = Duration::new(0, 0);
-        for i in (0..self.progress_instants.len() - 1).rev() {
-            let increment_duration =
-                self.progress_instants[i].duration_since(self.progress_instants[i + 1]);
-            averaged_increment_duration +=
-                increment_duration / (self.progress_instants.len() - 1) as u32;
-        }
-
-        let estimated_remaining_duration = averaged_increment_duration * (total - current);
-
-        format!(
-            "{:>6.1}% done... [{:>1.1}s elapsed, est. {:>1.1}s remaining]",
-            progress * 100.0,
-            elapsed_duration.as_secs_f32(),
-            estimated_remaining_duration.as_secs_f32()
-        )
+        // defocus disk
+        let defocus_disk_radius =
+            self.focus_distance * Degrees(self.defocus_angle_degrees / 2.0).as_radians().tan();
+        self.defocus_disk_u = defocus_disk_radius * self.u;
+        self.defocus_disk_v = defocus_disk_radius * self.v;
     }
 
     fn get_ray(&self, x: u32, y: u32) -> Ray {
@@ -128,10 +142,22 @@ impl Camera {
             + (self.pixel_delta_v * y as f64);
         let pixel_sample = pixel_center + self.pixel_sample_square();
 
-        let origin = self.center;
-        let direction = self.center.to(&pixel_sample);
+        let origin = if self.defocus_angle_degrees > 0.0 {
+            self.defocus_disk_sample()
+        } else {
+            self.center
+        };
+        let direction = origin.to(&pixel_sample);
 
         Ray::new(origin, direction)
+    }
+
+    fn defocus_disk_sample(&self) -> Point {
+        let disk_unit_vector = &Vector::random_in_unit_disk();
+
+        self.center
+            + self.defocus_disk_u * disk_unit_vector.x
+            + self.defocus_disk_v * disk_unit_vector.y
     }
 
     fn pixel_sample_square(&self) -> Vector {

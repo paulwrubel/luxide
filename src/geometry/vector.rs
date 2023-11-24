@@ -35,18 +35,28 @@ impl Vector {
         }
     }
 
-    pub fn random_in_range(min: f64, max: f64) -> Self {
+    pub fn random_in_unit_sphere() -> Self {
         let mut rng = rand::thread_rng();
-        Self {
-            x: rng.gen_range(min..max),
-            y: rng.gen_range(min..max),
-            z: rng.gen_range(min..max),
+        loop {
+            let p = Self {
+                x: rng.gen_range(-1.0..1.0),
+                y: rng.gen_range(-1.0..1.0),
+                z: rng.gen_range(-1.0..1.0),
+            };
+            if p.squared_length() < 1.0 {
+                return p;
+            }
         }
     }
 
-    pub fn random_in_unit_sphere() -> Self {
+    pub fn random_in_unit_disk() -> Self {
+        let mut rng = rand::thread_rng();
         loop {
-            let p = Self::random_in_range(-1.0, 1.0);
+            let p = Self {
+                x: rng.gen_range(-1.0..1.0),
+                y: rng.gen_range(-1.0..1.0),
+                z: 0.0,
+            };
             if p.squared_length() < 1.0 {
                 return p;
             }
@@ -99,8 +109,26 @@ impl Vector {
         }
     }
 
-    pub fn reflect(&self, normal: &Self) -> Self {
+    pub fn reflect_around(&self, normal: &Self) -> Self {
         self - 2.0 * self.dot(normal) * normal
+    }
+
+    pub fn refract_around(&self, normal: &Self, etai_over_etat: f64) -> Self {
+        let cos_theta = (-self).dot(normal).min(1.0);
+        let perpendicular_component = etai_over_etat * (self + cos_theta * normal);
+        let parallel_component = -((1.0 - perpendicular_component.squared_length())
+            .abs()
+            .sqrt())
+            * normal;
+        perpendicular_component + parallel_component
+    }
+}
+
+impl Neg for &Vector {
+    type Output = Vector;
+
+    fn neg(self) -> Self::Output {
+        *self * -1.0
     }
 }
 

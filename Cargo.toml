@@ -8,6 +8,10 @@ repository = "https://github.com/paulwrubel/luxide"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[profile.dev-fast]
+inherits = "dev"
+opt-level = 1
+
 [dependencies]
 auto_ops = "0.3.0"
 image = "0.24.7"
