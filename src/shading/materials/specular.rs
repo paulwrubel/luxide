@@ -5,12 +5,12 @@ use crate::{
 
 use super::Scatter;
 
-pub struct Metal {
+pub struct Specular {
     albedo: Color,
     fuzziness: f64,
 }
 
-impl Metal {
+impl Specular {
     pub fn new(albedo: Color, fuzziness: f64) -> Self {
         Self {
             albedo,
@@ -19,7 +19,7 @@ impl Metal {
     }
 }
 
-impl Scatter for Metal {
+impl Scatter for Specular {
     fn scatter(&self, ray: &Ray, ray_hit: &RayHit) -> Option<(Ray, Color)> {
         let reflected = ray.direction().unit_vector().reflect(&ray_hit.normal);
 

@@ -7,7 +7,7 @@ use luxide::{
         Point,
     },
     shading::{
-        materials::{Lambertian, Metal, Scatter},
+        materials::{Lambertian, Scatter, Specular},
         Color,
     },
 };
@@ -37,8 +37,8 @@ fn main() -> std::io::Result<()> {
     // Materials
     let lambertian_ground: Rc<dyn Scatter> = Rc::new(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
     let lambertian_center: Rc<dyn Scatter> = Rc::new(Lambertian::new(Color::new(0.7, 0.3, 0.3)));
-    let metal_left: Rc<dyn Scatter> = Rc::new(Metal::new(Color::new(0.8, 0.8, 0.8), 0.3));
-    let metal_right: Rc<dyn Scatter> = Rc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 1.0));
+    let specular_left: Rc<dyn Scatter> = Rc::new(Specular::new(Color::new(0.8, 0.8, 0.8), 0.3));
+    let specular_right: Rc<dyn Scatter> = Rc::new(Specular::new(Color::new(0.8, 0.6, 0.2), 1.0));
 
     // Primitives
     let ground_sphere = Box::new(Sphere::new(
@@ -54,12 +54,12 @@ fn main() -> std::io::Result<()> {
     let left_sphere = Box::new(Sphere::new(
         Point::new(-1.0, 0.0, -1.0),
         0.5,
-        Rc::clone(&metal_left),
+        Rc::clone(&specular_left),
     ));
     let right_sphere = Box::new(Sphere::new(
         Point::new(1.0, 0.0, -1.0),
         0.5,
-        Rc::clone(&metal_right),
+        Rc::clone(&specular_right),
     ));
 
     // World
