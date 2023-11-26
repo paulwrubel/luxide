@@ -1,14 +1,10 @@
-use std::{
-    collections::VecDeque,
-    f64::consts::PI,
-    time::{Duration, Instant},
-};
+use std::{collections::VecDeque, f64::consts::PI, time::Instant};
 
 use image::ImageBuffer;
 use rand::Rng;
 
 use crate::{
-    geometry::{primitives::Hit, Point, Ray, Vector},
+    geometry::{Intersect, Point, Ray, Vector},
     shading::Color,
     utils::{progress_string, Degrees, Interval},
 };
@@ -45,6 +41,8 @@ pub struct Camera {
 }
 
 impl Camera {
+    const PROGRESS_PIXEL_BATCH_SIZE: u32 = 1000;
+
     pub fn new(
         aspect_ratio: f64,
         image_width: u32,
@@ -72,19 +70,28 @@ impl Camera {
         }
     }
 
-    pub fn render(&mut self, primitive: &dyn Hit) -> ImageBuffer<image::Rgba<u8>, Vec<u8>> {
+    pub fn render(&mut self, primitive: &dyn Intersect) -> ImageBuffer<image::Rgba<u8>, Vec<u8>> {
         self.init();
 
         let mut buffer = ImageBuffer::new(self.image_width, self.image_height);
         let start = Instant::now();
+        let pixel_count = self.image_width * self.image_height;
+        let mut current_pixel = 0;
         for y in 0..self.image_height {
-            if y > 0 {
-                println!(
-                    "{}",
-                    progress_string(&mut self.progress_instants, y, self.image_height, start)
-                );
-            }
             for x in 0..self.image_width {
+                if current_pixel % Self::PROGRESS_PIXEL_BATCH_SIZE == 0 {
+                    println!(
+                        "{}",
+                        progress_string(
+                            &mut self.progress_instants,
+                            current_pixel,
+                            Self::PROGRESS_PIXEL_BATCH_SIZE,
+                            pixel_count,
+                            start
+                        )
+                    );
+                }
+
                 let mut color = Color::BLACK;
                 for _ in 0..self.samples_per_pixel {
                     let ray = self.get_ray(x, y);
@@ -94,6 +101,8 @@ impl Camera {
                 let pixel = buffer.get_pixel_mut(x, y);
                 *pixel =
                     (color / self.samples_per_pixel as f64).as_gamma_corrected_rgba_u8(1.0 / 2.0);
+
+                current_pixel += 1;
             }
         }
 
@@ -148,8 +157,9 @@ impl Camera {
             self.center
         };
         let direction = origin.to(&pixel_sample);
+        let time = rand::random();
 
-        Ray::new(origin, direction)
+        Ray::new(origin, direction, time)
     }
 
     fn defocus_disk_sample(&self) -> Point {
@@ -169,14 +179,14 @@ impl Camera {
         x_offset + y_offset
     }
 
-    fn ray_color(&self, ray: &Ray, primitive: &dyn Hit, remaining_bounces: u32) -> Color {
+    fn ray_color(&self, ray: &Ray, primitive: &dyn Intersect, remaining_bounces: u32) -> Color {
         // if we've bounced too many times, just say the ray is black
         if remaining_bounces <= 0 {
             return Color::BLACK;
         }
 
         // get the hit point color if we hit something
-        if let Some(ray_hit) = primitive.hit(ray, Interval::new(0.001, f64::INFINITY)) {
+        if let Some(ray_hit) = primitive.intersect(ray, Interval::new(0.001, f64::INFINITY)) {
             let (scattered_ray, attentuation) = match ray_hit.material.scatter(&ray, &ray_hit) {
                 Some(scatter) => scatter,
                 None => return Color::BLACK,
@@ -189,7 +199,7 @@ impl Camera {
     }
 
     fn background_color(&self, ray: &Ray) -> Color {
-        let unit = ray.direction().unit_vector();
+        let unit = ray.direction.unit_vector();
         let a = 0.5 * (unit.y + 1.0);
 
         let color_vec = (1.0 - a) * Vector::new(1.0, 1.0, 1.0) + a * Vector::new(0.5, 0.7, 1.0);

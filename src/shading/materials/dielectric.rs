@@ -1,5 +1,5 @@
 use crate::{
-    geometry::{primitives::RayHit, Ray},
+    geometry::{Ray, RayHit},
     shading::Color,
 };
 
@@ -26,13 +26,13 @@ impl Dielectric {
 impl Scatter for Dielectric {
     fn scatter(&self, ray: &Ray, ray_hit: &RayHit) -> Option<(Ray, Color)> {
         let attenuation = Color::new(1.0, 1.0, 1.0);
-        let (refractive_normal, refraction_ratio) = if ray.direction().dot(&ray_hit.normal) < 0.0 {
+        let (refractive_normal, refraction_ratio) = if ray.direction.dot(&ray_hit.normal) < 0.0 {
             (ray_hit.normal, 1.0 / self.index_of_refraction)
         } else {
             (-ray_hit.normal, self.index_of_refraction)
         };
 
-        let unit_direction = ray.direction().unit_vector();
+        let unit_direction = ray.direction.unit_vector();
         let cos_theta = (-unit_direction).dot(&refractive_normal).min(1.0);
         let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
         let cannot_refract = refraction_ratio * sin_theta > 1.0;
@@ -47,7 +47,7 @@ impl Scatter for Dielectric {
             unit_direction.refract_around(&refractive_normal, refraction_ratio)
         };
 
-        let scattered = Ray::new(ray_hit.point, refracted);
+        let scattered = Ray::new(ray_hit.point, refracted, ray.time);
         Some((scattered, attenuation))
     }
 }

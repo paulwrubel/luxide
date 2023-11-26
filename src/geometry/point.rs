@@ -1,3 +1,5 @@
+use std::ops::{Index, IndexMut};
+
 use auto_ops::impl_op_ex;
 
 use super::Vector;
@@ -27,6 +29,20 @@ impl Point {
 
     pub fn as_vector(&self) -> Vector {
         self.0
+    }
+}
+
+impl Index<usize> for Point {
+    type Output = f64;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.0[index]
+    }
+}
+
+impl IndexMut<usize> for Point {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.0[index]
     }
 }
 

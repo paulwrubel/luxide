@@ -1,5 +1,5 @@
 use super::Color;
-use crate::geometry::{primitives::RayHit, Ray};
+use crate::geometry::{Ray, RayHit};
 
 mod dielectric;
 pub use dielectric::Dielectric;

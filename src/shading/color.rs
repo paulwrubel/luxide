@@ -13,6 +13,14 @@ impl Color {
         Self(Vector::new(r, g, b))
     }
 
+    pub fn random() -> Self {
+        Self(Vector::random())
+    }
+
+    pub fn random_range(min: f64, max: f64) -> Self {
+        Self(Vector::random_range(min, max))
+    }
+
     pub fn from_vector(vector: &Vector) -> Self {
         Self(*vector)
     }

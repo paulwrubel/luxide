@@ -1,5 +1,5 @@
 use crate::{
-    geometry::{primitives::RayHit, Ray, Vector},
+    geometry::{Ray, RayHit, Vector},
     shading::Color,
 };
 
@@ -16,7 +16,7 @@ impl Lambertian {
 }
 
 impl Scatter for Lambertian {
-    fn scatter(&self, _ray: &Ray, ray_hit: &RayHit) -> Option<(Ray, Color)> {
+    fn scatter(&self, ray: &Ray, ray_hit: &RayHit) -> Option<(Ray, Color)> {
         let direction = ray_hit.normal + Vector::random_unit();
 
         // prevent degenerate rays from being generated
@@ -26,7 +26,7 @@ impl Scatter for Lambertian {
             direction
         };
 
-        let scattered = Ray::new(ray_hit.point, direction);
+        let scattered = Ray::new(ray_hit.point, direction, ray.time);
 
         Some((scattered, self.albedo))
     }

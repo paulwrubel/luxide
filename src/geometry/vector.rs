@@ -1,4 +1,4 @@
-use std::ops::Neg;
+use std::ops::{Index, IndexMut, Neg};
 
 use auto_ops::{impl_op_ex, impl_op_ex_commutative};
 use rand::Rng;
@@ -27,11 +27,15 @@ impl Vector {
     }
 
     pub fn random() -> Self {
+        Self::random_range(0.0, 1.0)
+    }
+
+    pub fn random_range(min: f64, max: f64) -> Self {
         let mut rng = rand::thread_rng();
         Self {
-            x: rng.gen(),
-            y: rng.gen(),
-            z: rng.gen(),
+            x: rng.gen_range(min..max),
+            y: rng.gen_range(min..max),
+            z: rng.gen_range(min..max),
         }
     }
 
@@ -137,6 +141,30 @@ impl Neg for Vector {
 
     fn neg(self) -> Self::Output {
         self * -1.0
+    }
+}
+
+impl Index<usize> for Vector {
+    type Output = f64;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        match index {
+            0 => &self.x,
+            1 => &self.y,
+            2 => &self.z,
+            _ => panic!("Index out of bounds"),
+        }
+    }
+}
+
+impl IndexMut<usize> for Vector {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        match index {
+            0 => &mut self.x,
+            1 => &mut self.y,
+            2 => &mut self.z,
+            _ => panic!("Index out of bounds"),
+        }
     }
 }
 

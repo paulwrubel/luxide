@@ -1,7 +1,6 @@
 use std::{
     collections::VecDeque,
     f64::consts::PI,
-    ops::Add,
     time::{Duration, Instant},
 };
 
@@ -24,6 +23,25 @@ impl Interval {
 
     pub fn new(minimum: f64, maximum: f64) -> Self {
         Self { minimum, maximum }
+    }
+
+    pub fn from_intervals(a: Self, b: Self) -> Self {
+        Self {
+            minimum: a.minimum.min(b.minimum),
+            maximum: a.maximum.max(b.maximum),
+        }
+    }
+
+    pub fn size(&self) -> f64 {
+        self.maximum - self.minimum
+    }
+
+    pub fn expand(&self, delta: f64) -> Self {
+        let padding = delta / 2.0;
+        Self {
+            minimum: self.minimum - padding,
+            maximum: self.maximum + padding,
+        }
     }
 
     pub fn contains_including(&self, x: f64) -> bool {
@@ -71,6 +89,7 @@ const MAX_PROGRESS_INSTANTS: usize = 10;
 pub fn progress_string(
     instants: &mut VecDeque<Instant>,
     current: u32,
+    batch_size: u32,
     total: u32,
     start: Instant,
 ) -> String {
@@ -88,7 +107,8 @@ pub fn progress_string(
         averaged_increment_duration += increment_duration / (instants.len() - 1) as u32;
     }
 
-    let estimated_remaining_duration = averaged_increment_duration * (total - current);
+    let estimated_remaining_duration =
+        averaged_increment_duration.mul_f64((total - current) as f64 / batch_size as f64);
     let estimated_total_duration = elapsed_duration + estimated_remaining_duration;
 
     format!(
