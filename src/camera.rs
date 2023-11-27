@@ -1,13 +1,12 @@
-use std::{collections::VecDeque, f64::consts::PI, time::Instant};
+use std::f64::consts::PI;
 
-use image::ImageBuffer;
 use rand::Rng;
 
 use crate::{
     geometry::{Intersect, Point, Ray, Vector},
     parameters::Parameters,
     shading::Color,
-    utils::{progress_string, Degrees, Interval},
+    utils::{Degrees, Interval},
 };
 
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -67,58 +66,7 @@ impl Camera {
         }
     }
 
-    // pub fn render(&mut self, primitive: &dyn Intersect) -> ImageBuffer<image::Rgba<u8>, Vec<u8>> {
-    //     self.init();
-
-    //     let mut buffer = ImageBuffer::new(self.image_width, self.image_height);
-    //     let start = Instant::now();
-    //     let pixel_count = self.image_width * self.image_height;
-    //     let mut current_pixel = 0;
-    //     for (x, y, pixel) in buffer.enumerate_pixels_mut() {
-    //         if current_pixel % Self::PROGRESS_PIXEL_BATCH_SIZE == 0 {
-    //             println!(
-    //                 "{}",
-    //                 progress_string(
-    //                     &mut self.progress_instants,
-    //                     current_pixel,
-    //                     Self::PROGRESS_PIXEL_BATCH_SIZE,
-    //                     pixel_count,
-    //                     start
-    //                 )
-    //             );
-    //         }
-
-    //         let color = if self.use_parallel {
-    //             let color = (0..self.samples_per_pixel).into_par_iter().fold(
-    //                 || Color::BLACK,
-    //                 |acc, _| {
-    //                     let ray = self.get_ray(x, y);
-    //                     acc + self.ray_color(ray, primitive, self.max_bounces)
-    //                 },
-    //             );
-    //             color.reduce(|| Color::BLACK, |a, b| a + b)
-    //         } else {
-    //             let mut color = Color::BLACK;
-    //             for _ in 0..self.samples_per_pixel {
-    //                 let ray = self.get_ray(x, y);
-    //                 color += self.ray_color(ray, primitive, self.max_bounces)
-    //             }
-    //             color
-    //         };
-
-    //         *pixel = (color / self.samples_per_pixel as f64).as_gamma_corrected_rgba_u8(1.0 / 2.0);
-
-    //         current_pixel += 1;
-    //     }
-
-    //     buffer
-    // }
-
     pub fn initialize(&mut self, parameters: &Parameters) {
-        let aspect_ratio = parameters.image_width as f64 / parameters.image_height as f64;
-        // parameters.image_height =
-        //     ((parameters.image_width as f64 / parameters.aspect_ratio) as u32).max(1);
-
         self.center = self.eye_location;
 
         // camera configuration

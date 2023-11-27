@@ -1,14 +1,15 @@
-use std::{collections::HashMap, fs, path::Path, sync::Arc};
+use std::{
+    collections::HashMap, fs, num::NonZeroUsize, path::Path, sync::Arc, thread, time::Instant,
+};
 
 use luxide::{
     camera::Camera,
     geometry::{
         compounds::{List, BVH},
-        instances::ReverseNormals,
         primitives::Sphere,
         Intersect, Point, Vector,
     },
-    parameters::{self, Parameters},
+    parameters::Parameters,
     scene::Scene,
     shading::{
         materials::{Dielectric, Lambertian, Scatter, Specular},
@@ -16,6 +17,7 @@ use luxide::{
         Color, Texture,
     },
     tracer::Tracer,
+    utils,
 };
 
 const _SD: u32 = 720;
@@ -51,17 +53,29 @@ fn main() -> std::io::Result<()> {
 
     let parameters = Parameters {
         filepath: &filepath,
-        image_width: 400,
-        image_height: 400,
+        image_width: 3840,
+        image_height: 2160,
+        tile_width: 100,
+        tile_height: 100,
+
         gamma_correction: 2.0,
         samples_per_pixel: 100,
         max_bounces: 50,
+
         use_parallel: true,
+        pixels_per_progress_update: 50000,
+        progress_memory: 50,
 
         scene: &scene,
     };
 
-    let mut tracer = Tracer::new();
+    let thread_count = thread::available_parallelism()
+        .unwrap_or(NonZeroUsize::new(24).unwrap())
+        .get();
+
+    let mut tracer = Tracer::new(thread_count);
+    println!("Rendering {selected_scene_name} with {thread_count} threads...");
+    let start = Instant::now();
     match tracer.render(&parameters) {
         Ok(()) => {
             println!("Saved image to {filepath}");
@@ -70,6 +84,8 @@ fn main() -> std::io::Result<()> {
             println!("Failed to save image: {e}");
         }
     };
+    let elapsed = start.elapsed();
+    println!("Done in {}", utils::format_duration(elapsed));
 
     Ok(())
 }
@@ -107,7 +123,7 @@ fn earth() -> Scene {
         Arc::clone(&dielectric_glass),
     )));
     world.push(Box::new(Sphere::new(
-        Point::new(-3.0, 0.0, -4.0),
+        Point::new(-1.5, 0.0, 4.0),
         0.7,
         Arc::clone(&lambertian_moon),
     )));
@@ -115,7 +131,7 @@ fn earth() -> Scene {
     let world = Box::new(BVH::new(world.take_items()));
 
     // Camera
-    let vertical_field_of_view_degrees = 40.0;
+    let vertical_field_of_view_degrees = 30.0;
     let eye_location = Point::new(0.0, 0.0, 12.0);
     let target_location = Point::new(0.0, 0.0, 0.0);
     let view_up = Vector::new(0.0, 1.0, 0.0);

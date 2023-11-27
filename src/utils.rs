@@ -63,7 +63,7 @@ impl Interval {
     }
 }
 
-fn format_duration(d: Duration) -> String {
+pub fn format_duration(d: Duration) -> String {
     let mut s = String::new();
 
     let hours = d.as_secs() / 3600;
@@ -84,21 +84,20 @@ fn format_duration(d: Duration) -> String {
     s
 }
 
-const MAX_PROGRESS_INSTANTS: usize = 10;
-
 pub fn progress_string(
     instants: &mut VecDeque<Instant>,
     current: u32,
     batch_size: u32,
     total: u32,
     start: Instant,
+    memory: usize,
 ) -> String {
     let progress = current as f64 / total as f64;
     let elapsed_duration = start.elapsed();
 
     let now = Instant::now();
     instants.push_front(now);
-    if instants.len() > MAX_PROGRESS_INSTANTS {
+    if instants.len() > memory {
         instants.pop_back();
     }
     let mut averaged_increment_duration = Duration::new(0, 0);
