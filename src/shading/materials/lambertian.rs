@@ -1,22 +1,24 @@
+use std::sync::Arc;
+
 use crate::{
     geometry::{Ray, RayHit, Vector},
-    shading::Color,
+    shading::{Color, Texture},
 };
 
 use super::Scatter;
 
 pub struct Lambertian {
-    albedo: Color,
+    albedo: Arc<dyn Texture>,
 }
 
 impl Lambertian {
-    pub fn new(albedo: Color) -> Self {
+    pub fn new(albedo: Arc<dyn Texture>) -> Self {
         Self { albedo }
     }
 }
 
 impl Scatter for Lambertian {
-    fn scatter(&self, ray: &Ray, ray_hit: &RayHit) -> Option<(Ray, Color)> {
+    fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<(Ray, Color)> {
         let direction = ray_hit.normal + Vector::random_unit();
 
         // prevent degenerate rays from being generated
@@ -28,6 +30,9 @@ impl Scatter for Lambertian {
 
         let scattered = Ray::new(ray_hit.point, direction, ray.time);
 
-        Some((scattered, self.albedo))
+        Some((
+            scattered,
+            self.albedo.value(ray_hit.u, ray_hit.v, ray_hit.point),
+        ))
     }
 }

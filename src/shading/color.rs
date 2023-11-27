@@ -1,4 +1,5 @@
 use auto_ops::{impl_op_ex, impl_op_ex_commutative};
+use image::Rgba;
 
 use crate::geometry::Vector;
 
@@ -21,8 +22,16 @@ impl Color {
         Self(Vector::random_range(min, max))
     }
 
-    pub fn from_vector(vector: &Vector) -> Self {
-        Self(*vector)
+    pub fn from_vector(vector: Vector) -> Self {
+        Self(vector)
+    }
+
+    pub fn from_rgba(rgba: &Rgba<u8>) -> Self {
+        Self(Vector::new(
+            rgba.0[0] as f64 / u8::MAX as f64,
+            rgba.0[1] as f64 / u8::MAX as f64,
+            rgba.0[2] as f64 / u8::MAX as f64,
+        ))
     }
 
     pub fn as_rgba_u8(&self) -> image::Rgba<u8> {

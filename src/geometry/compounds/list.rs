@@ -37,8 +37,13 @@ impl List {
         self.list.clear();
     }
 
-    pub fn all(&self) -> &Vec<Box<dyn Intersect>> {
+    pub fn items(&self) -> &Vec<Box<dyn Intersect>> {
         &self.list
+    }
+
+    // all but give ownership
+    pub fn take_items(self) -> Vec<Box<dyn Intersect>> {
+        self.list
     }
 
     pub fn len(&self) -> usize {
@@ -51,7 +56,7 @@ impl List {
 }
 
 impl Intersect for List {
-    fn intersect(&self, ray: &Ray, ray_t: Interval) -> Option<RayHit> {
+    fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit> {
         let mut closest_t_so_far = ray_t.maximum;
         let mut closest_hit_record = None;
         for primitive in &self.list {

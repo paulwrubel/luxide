@@ -9,6 +9,8 @@ use crate::{
     utils::{progress_string, Degrees, Interval},
 };
 
+use rayon::prelude::*;
+
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Camera {
     // "public" fields
@@ -37,6 +39,8 @@ pub struct Camera {
     defocus_disk_u: Vector,
     defocus_disk_v: Vector,
 
+    use_parallel: bool,
+
     progress_instants: VecDeque<Instant>,
 }
 
@@ -54,6 +58,7 @@ impl Camera {
         view_up: Vector,
         defocus_angle_degrees: f64,
         focus_distance: f64,
+        use_parallel: bool,
     ) -> Self {
         Self {
             aspect_ratio,
@@ -66,6 +71,7 @@ impl Camera {
             view_up,
             defocus_angle_degrees,
             focus_distance,
+            use_parallel,
             ..Default::default()
         }
     }
@@ -77,33 +83,41 @@ impl Camera {
         let start = Instant::now();
         let pixel_count = self.image_width * self.image_height;
         let mut current_pixel = 0;
-        for y in 0..self.image_height {
-            for x in 0..self.image_width {
-                if current_pixel % Self::PROGRESS_PIXEL_BATCH_SIZE == 0 {
-                    println!(
-                        "{}",
-                        progress_string(
-                            &mut self.progress_instants,
-                            current_pixel,
-                            Self::PROGRESS_PIXEL_BATCH_SIZE,
-                            pixel_count,
-                            start
-                        )
-                    );
-                }
+        for (x, y, pixel) in buffer.enumerate_pixels_mut() {
+            if current_pixel % Self::PROGRESS_PIXEL_BATCH_SIZE == 0 {
+                println!(
+                    "{}",
+                    progress_string(
+                        &mut self.progress_instants,
+                        current_pixel,
+                        Self::PROGRESS_PIXEL_BATCH_SIZE,
+                        pixel_count,
+                        start
+                    )
+                );
+            }
 
+            let color = if self.use_parallel {
+                let color = (0..self.samples_per_pixel).into_par_iter().fold(
+                    || Color::BLACK,
+                    |acc, _| {
+                        let ray = self.get_ray(x, y);
+                        acc + self.ray_color(ray, primitive, self.max_bounces)
+                    },
+                );
+                color.reduce(|| Color::BLACK, |a, b| a + b)
+            } else {
                 let mut color = Color::BLACK;
                 for _ in 0..self.samples_per_pixel {
                     let ray = self.get_ray(x, y);
-                    color += self.ray_color(&ray, primitive, self.max_bounces);
+                    color += self.ray_color(ray, primitive, self.max_bounces)
                 }
+                color
+            };
 
-                let pixel = buffer.get_pixel_mut(x, y);
-                *pixel =
-                    (color / self.samples_per_pixel as f64).as_gamma_corrected_rgba_u8(1.0 / 2.0);
+            *pixel = (color / self.samples_per_pixel as f64).as_gamma_corrected_rgba_u8(1.0 / 2.0);
 
-                current_pixel += 1;
-            }
+            current_pixel += 1;
         }
 
         buffer
@@ -121,9 +135,9 @@ impl Camera {
         let viewport_width = viewport_height * (self.image_width as f64 / self.image_height as f64);
 
         // calculate basis vectors
-        self.w = self.look_at.to(&self.look_from).unit_vector();
-        self.u = self.view_up.cross(&self.w).unit_vector();
-        self.v = self.w.cross(&self.u);
+        self.w = self.look_at.to(self.look_from).unit_vector();
+        self.u = self.view_up.cross(self.w).unit_vector();
+        self.v = self.w.cross(self.u);
 
         // viewport / pixel vectors
         let viewport_u = viewport_width * self.u;
@@ -156,7 +170,7 @@ impl Camera {
         } else {
             self.center
         };
-        let direction = origin.to(&pixel_sample);
+        let direction = origin.to(pixel_sample);
         let time = rand::random();
 
         Ray::new(origin, direction, time)
@@ -179,7 +193,7 @@ impl Camera {
         x_offset + y_offset
     }
 
-    fn ray_color(&self, ray: &Ray, primitive: &dyn Intersect, remaining_bounces: u32) -> Color {
+    fn ray_color(&self, ray: Ray, primitive: &dyn Intersect, remaining_bounces: u32) -> Color {
         // if we've bounced too many times, just say the ray is black
         if remaining_bounces <= 0 {
             return Color::BLACK;
@@ -187,11 +201,11 @@ impl Camera {
 
         // get the hit point color if we hit something
         if let Some(ray_hit) = primitive.intersect(ray, Interval::new(0.001, f64::INFINITY)) {
-            let (scattered_ray, attentuation) = match ray_hit.material.scatter(&ray, &ray_hit) {
+            let (scattered_ray, attentuation) = match ray_hit.material.scatter(ray, &ray_hit) {
                 Some(scatter) => scatter,
                 None => return Color::BLACK,
             };
-            return attentuation * self.ray_color(&scattered_ray, primitive, remaining_bounces - 1);
+            return attentuation * self.ray_color(scattered_ray, primitive, remaining_bounces - 1);
         }
 
         // otherwise, get the background color
@@ -203,6 +217,6 @@ impl Camera {
         let a = 0.5 * (unit.y + 1.0);
 
         let color_vec = (1.0 - a) * Vector::new(1.0, 1.0, 1.0) + a * Vector::new(0.5, 0.7, 1.0);
-        Color::from_vector(&color_vec)
+        Color::from_vector(color_vec)
     }
 }

@@ -47,7 +47,7 @@ impl AABB {
         Self::from_aabbs(*self, *other)
     }
 
-    pub fn hit(&self, ray: &Ray, ray_t: Interval) -> bool {
+    pub fn hit(&self, ray: Ray, ray_t: Interval) -> bool {
         let mut interval = ray_t.clone(); // trivial clone since Inteval is Copy
         for axis in 0..3 {
             let inverse_direction_component = 1.0 / ray.direction[axis];

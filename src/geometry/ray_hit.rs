@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::shading::materials::Scatter;
 
@@ -9,5 +9,7 @@ pub struct RayHit {
     pub t: f64,
     pub point: Point,
     pub normal: Vector,
-    pub material: Rc<dyn Scatter>,
+    pub material: Arc<dyn Scatter>,
+    pub u: f64,
+    pub v: f64,
 }

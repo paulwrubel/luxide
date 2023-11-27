@@ -10,6 +10,6 @@ pub use lambertian::Lambertian;
 mod specular;
 pub use specular::Specular;
 
-pub trait Scatter {
-    fn scatter(&self, ray: &Ray, ray_hit: &RayHit) -> Option<(Ray, Color)>;
+pub trait Scatter: Sync + Send {
+    fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<(Ray, Color)>;
 }

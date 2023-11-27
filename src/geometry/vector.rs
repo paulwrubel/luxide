@@ -71,7 +71,7 @@ impl Vector {
         Self::random_in_unit_sphere().unit_vector()
     }
 
-    pub fn random_on_hemisphere(normal: &Self) -> Self {
+    pub fn random_on_hemisphere(normal: Self) -> Self {
         let on_unit_sphere = Self::random_unit();
         if on_unit_sphere.dot(normal) > 0.0 {
             on_unit_sphere
@@ -101,11 +101,11 @@ impl Vector {
         self.x.abs() < s && self.y.abs() < s && self.z.abs() < s
     }
 
-    pub fn dot(&self, other: &Self) -> f64 {
+    pub fn dot(&self, other: Self) -> f64 {
         self.x * other.x + self.y * other.y + self.z * other.z
     }
 
-    pub fn cross(&self, other: &Self) -> Self {
+    pub fn cross(&self, other: Self) -> Self {
         Self {
             x: self.y * other.z - self.z * other.y,
             y: self.z * other.x - self.x * other.z,
@@ -113,12 +113,12 @@ impl Vector {
         }
     }
 
-    pub fn reflect_around(&self, normal: &Self) -> Self {
+    pub fn reflect_around(&self, normal: Self) -> Self {
         self - 2.0 * self.dot(normal) * normal
     }
 
-    pub fn refract_around(&self, normal: &Self, etai_over_etat: f64) -> Self {
-        let cos_theta = (-self).dot(normal).min(1.0);
+    pub fn refract_around(&self, normal: Self, etai_over_etat: f64) -> Self {
+        let cos_theta = (-*self).dot(normal).min(1.0);
         let perpendicular_component = etai_over_etat * (self + cos_theta * normal);
         let parallel_component = -((1.0 - perpendicular_component.squared_length())
             .abs()
@@ -128,16 +128,8 @@ impl Vector {
     }
 }
 
-impl Neg for &Vector {
-    type Output = Vector;
-
-    fn neg(self) -> Self::Output {
-        *self * -1.0
-    }
-}
-
 impl Neg for Vector {
-    type Output = Self;
+    type Output = Vector;
 
     fn neg(self) -> Self::Output {
         self * -1.0

@@ -90,7 +90,7 @@ impl BVH {
 }
 
 impl Intersect for BVH {
-    fn intersect(&self, ray: &Ray, ray_t: Interval) -> Option<RayHit> {
+    fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit> {
         if !self.bounding_box.hit(ray, ray_t) {
             return None;
         }

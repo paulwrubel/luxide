@@ -1,4 +1,4 @@
-use crate::shading::Color;
+use crate::{geometry::Point, shading::Color};
 
 use super::Texture;
 
@@ -15,7 +15,7 @@ impl SolidColor {
 }
 
 impl Texture for SolidColor {
-    fn value(&self, _u: f64, _v: f64) -> Color {
+    fn value(&self, _u: f64, _v: f64, _p: Point) -> Color {
         self.0
     }
 }

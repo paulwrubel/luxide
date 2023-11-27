@@ -241,6 +241,7 @@ dependencies = [
  "auto_ops",
  "image",
  "rand",
+ "rayon",
 ]
 
 [[package]]

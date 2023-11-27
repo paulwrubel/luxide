@@ -1,4 +1,5 @@
 pub mod compounds;
+pub mod instances;
 pub mod primitives;
 
 mod intersect;
