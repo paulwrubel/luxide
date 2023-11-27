@@ -8,11 +8,14 @@ use luxide::{
         primitives::Sphere,
         Intersect, Point, Vector,
     },
+    parameters::{self, Parameters},
+    scene::Scene,
     shading::{
         materials::{Dielectric, Lambertian, Scatter, Specular},
         textures::{Checker, Image8Bit, SolidColor},
         Color, Texture,
     },
+    tracer::Tracer,
 };
 
 const _SD: u32 = 720;
@@ -44,38 +47,34 @@ fn main() -> std::io::Result<()> {
     scenes.insert("two_spheres", two_spheres());
     scenes.insert("earth", earth());
 
-    let (camera, world) = scenes.get_mut(selected_scene_name).unwrap();
+    let scene = scenes.get_mut(selected_scene_name).unwrap();
 
-    let image = camera.render(world.as_ref());
+    let parameters = Parameters {
+        filepath: &filepath,
+        image_width: 400,
+        image_height: 400,
+        gamma_correction: 2.0,
+        samples_per_pixel: 100,
+        max_bounces: 50,
+        use_parallel: true,
 
-    match image.save(&Path::new(&filepath)) {
+        scene: &scene,
+    };
+
+    let mut tracer = Tracer::new();
+    match tracer.render(&parameters) {
         Ok(()) => {
             println!("Saved image to {filepath}");
         }
         Err(e) => {
             println!("Failed to save image: {e}");
         }
-    }
+    };
 
     Ok(())
 }
 
-fn earth() -> (Camera, Box<dyn Intersect>) {
-    let use_parallel = true;
-
-    let aspect_ratio = 16.0 / 9.0;
-    let width = _FOUR_K;
-    let samples_per_pixel = 500;
-    let max_bounces = 50;
-
-    let vertical_field_of_view_degrees = 40.0;
-    let look_from = Point::new(0.0, 0.0, 12.0);
-    let look_at = Point::new(0.0, 0.0, 0.0);
-    let view_up = Vector::new(0.0, 1.0, 0.0);
-
-    let defocus_angle_degrees = 0.0;
-    let focus_distance = 1.0;
-
+fn earth() -> Scene {
     // Textures
     let image_earth_day: Arc<dyn Texture> =
         Arc::new(Image8Bit::from_filename("./texture_images/8k_earth_daymap.jpg", 2.0).unwrap());
@@ -115,39 +114,28 @@ fn earth() -> (Camera, Box<dyn Intersect>) {
 
     let world = Box::new(BVH::new(world.take_items()));
 
-    let camera = Camera::new(
-        aspect_ratio,
-        width,
-        samples_per_pixel,
-        max_bounces,
-        vertical_field_of_view_degrees,
-        look_from,
-        look_at,
-        view_up,
-        defocus_angle_degrees,
-        focus_distance,
-        use_parallel,
-    );
-
-    (camera, world)
-}
-
-fn two_spheres() -> (Camera, Box<dyn Intersect>) {
-    let use_parallel = true;
-
-    let aspect_ratio = 16.0 / 9.0;
-    let width = _FOUR_K * 4;
-    let samples_per_pixel = 3000;
-    let max_bounces = 50;
-
+    // Camera
     let vertical_field_of_view_degrees = 40.0;
-    let look_from = Point::new(13.0, 2.0, 3.0);
-    let look_at = Point::new(0.0, 0.0, 0.0);
+    let eye_location = Point::new(0.0, 0.0, 12.0);
+    let target_location = Point::new(0.0, 0.0, 0.0);
     let view_up = Vector::new(0.0, 1.0, 0.0);
 
     let defocus_angle_degrees = 0.0;
     let focus_distance = 1.0;
 
+    let camera = Camera::new(
+        vertical_field_of_view_degrees,
+        eye_location,
+        target_location,
+        view_up,
+        defocus_angle_degrees,
+        focus_distance,
+    );
+
+    Scene { camera, world }
+}
+
+fn two_spheres() -> Scene {
     // Materials
     let checker: Arc<dyn Texture> = Arc::new(Checker::from_colors(
         0.5,
@@ -169,39 +157,28 @@ fn two_spheres() -> (Camera, Box<dyn Intersect>) {
         Arc::clone(&lambertian_checker),
     )));
 
+    // Camera
+    let vertical_field_of_view_degrees = 40.0;
+    let eye_location = Point::new(13.0, 2.0, 3.0);
+    let target_location = Point::new(0.0, 0.0, 0.0);
+    let view_up = Vector::new(0.0, 1.0, 0.0);
+
+    let defocus_angle_degrees = 0.0;
+    let focus_distance = 1.0;
+
     let camera = Camera::new(
-        aspect_ratio,
-        width,
-        samples_per_pixel,
-        max_bounces,
         vertical_field_of_view_degrees,
-        look_from,
-        look_at,
+        eye_location,
+        target_location,
         view_up,
         defocus_angle_degrees,
         focus_distance,
-        use_parallel,
     );
 
-    (camera, world)
+    Scene { world, camera }
 }
 
-fn random_spheres() -> (Camera, Box<dyn Intersect>) {
-    let use_parallel = true;
-
-    let aspect_ratio = 16.0 / 9.0;
-    let width = 400;
-    let samples_per_pixel = 100;
-    let max_bounces = 50;
-
-    let vertical_field_of_view_degrees = 20.0;
-    let look_from = Point::new(13.0, 2.0, 3.0);
-    let look_at = Point::new(0.0, 0.0, 0.0);
-    let view_up = Vector::new(0.0, 1.0, 0.0);
-
-    let defocus_angle_degrees = 0.06;
-    let focus_distance = 10.0;
-
+fn random_spheres() -> Scene {
     // Textures
     let solid_white = Arc::new(SolidColor::new(Color::WHITE));
     let solid_brown = Arc::new(SolidColor::new(Color::new(0.4, 0.2, 0.1)));
@@ -287,19 +264,23 @@ fn random_spheres() -> (Camera, Box<dyn Intersect>) {
     let world: Box<dyn Intersect> = Box::new(BVH::from_list(world_list));
     // let world: Box<dyn Intersect> = Box::new(world_list);
 
+    // Camera
+    let vertical_field_of_view_degrees = 20.0;
+    let eye_location = Point::new(13.0, 2.0, 3.0);
+    let target_location = Point::new(0.0, 0.0, 0.0);
+    let view_up = Vector::new(0.0, 1.0, 0.0);
+
+    let defocus_angle_degrees = 0.06;
+    let focus_distance = 10.0;
+
     let camera = Camera::new(
-        aspect_ratio,
-        width,
-        samples_per_pixel,
-        max_bounces,
         vertical_field_of_view_degrees,
-        look_from,
-        look_at,
+        eye_location,
+        target_location,
         view_up,
         defocus_angle_degrees,
         focus_distance,
-        use_parallel,
     );
 
-    (camera, world)
+    Scene { world, camera }
 }
