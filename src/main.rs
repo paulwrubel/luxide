@@ -25,6 +25,7 @@ const _HD: (u32, u32) = (1280, 720);
 const _FULL_HD: (u32, u32) = (1920, 1080);
 const _4K: (u32, u32) = (3840, 2160);
 const _8K: (u32, u32) = (7680, 4320);
+const _16K: (u32, u32) = (15360, 8640);
 
 const OUTPUT_DIR: &str = "./output";
 
@@ -54,16 +55,16 @@ fn main() -> std::io::Result<()> {
 
     let parameters = Parameters {
         filepath: &filepath,
-        image_dimensions: _8K,
+        image_dimensions: _16K,
         tile_dimensions: (100, 100),
 
         gamma_correction: 2.0,
-        samples_per_pixel: 100,
+        samples_per_pixel: 5,
         max_bounces: 50,
 
         use_parallel: true,
         pixels_per_progress_update: 50000,
-        progress_memory: 50,
+        progress_memory: 200,
 
         scene: &scene,
     };
@@ -116,11 +117,11 @@ fn earth() -> Scene {
         2.0,
         Arc::clone(&lambertian_earth_day),
     )));
-    world.push(Box::new(Sphere::new(
-        Point::new(0.0, 0.0, 0.0),
-        2.5,
-        Arc::clone(&dielectric_glass),
-    )));
+    // world.push(Box::new(Sphere::new(
+    //     Point::new(0.0, 0.0, 0.0),
+    //     2.5,
+    //     Arc::clone(&dielectric_glass),
+    // )));
     world.push(Box::new(Sphere::new(
         Point::new(-1.5, 0.0, 4.0),
         0.7,
