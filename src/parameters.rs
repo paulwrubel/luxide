@@ -2,10 +2,8 @@ use crate::scene::Scene;
 
 pub struct Parameters<'a, 'b> {
     pub filepath: &'a str,
-    pub image_width: u32,
-    pub image_height: u32,
-    pub tile_width: u32,
-    pub tile_height: u32,
+    pub image_dimensions: (u32, u32),
+    pub tile_dimensions: (u32, u32),
 
     pub gamma_correction: f64,
     pub samples_per_pixel: u32,

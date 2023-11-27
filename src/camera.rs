@@ -69,12 +69,13 @@ impl Camera {
     pub fn initialize(&mut self, parameters: &Parameters) {
         self.center = self.eye_location;
 
+        let (width, height) = parameters.image_dimensions;
+
         // camera configuration
         let theta = self.vertical_field_of_view_degrees * PI / 180.0;
         let half_height = (theta / 2.0).tan();
         let viewport_height = 2.0 * half_height * self.focus_distance;
-        let viewport_width =
-            viewport_height * (parameters.image_width as f64 / parameters.image_height as f64);
+        let viewport_width = viewport_height * (width as f64 / height as f64);
 
         // calculate basis vectors
         self.w = self.target_location.to(self.eye_location).unit_vector();
@@ -85,8 +86,8 @@ impl Camera {
         let viewport_u = viewport_width * self.u;
         let viewport_v = viewport_height * -self.v;
 
-        self.pixel_delta_u = viewport_u / parameters.image_width as f64;
-        self.pixel_delta_v = viewport_v / parameters.image_height as f64;
+        self.pixel_delta_u = viewport_u / width as f64;
+        self.pixel_delta_v = viewport_v / height as f64;
 
         let viewport_upper_left =
             self.center - (self.focus_distance * self.w) - viewport_u / 2.0 - viewport_v / 2.0;

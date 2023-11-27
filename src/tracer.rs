@@ -29,6 +29,7 @@ impl Tracer {
     fn parallel_render(&self, parameters: &Parameters) -> RgbaImage {
         let world = &parameters.scene.world;
         let mut cam = parameters.scene.camera.clone();
+        let (width, height) = parameters.image_dimensions;
 
         cam.initialize(parameters);
 
@@ -36,15 +37,12 @@ impl Tracer {
         // let pixel_count = parameters.image_width * parameters.image_height;
         // let mut current_pixel = 0;
 
-        let tiles = Tiles::new(
-            (parameters.image_width, parameters.image_height),
-            (parameters.tile_width, parameters.tile_height),
-        );
+        let tiles = Tiles::new(parameters.image_dimensions, parameters.tile_dimensions);
 
         let (sender, receiver) = mpsc::channel();
 
         let start: Instant = Instant::now();
-        let total = parameters.image_width * parameters.image_height;
+        let total = width * height;
         let batch_size = parameters.pixels_per_progress_update;
         let memory = parameters.progress_memory;
         let progress_handle = thread::spawn(move || {
@@ -99,7 +97,7 @@ impl Tracer {
         drop(sender);
         progress_handle.join().unwrap();
 
-        let mut buffer = ImageBuffer::new(parameters.image_width, parameters.image_height);
+        let mut buffer = ImageBuffer::new(width, height);
         for (x, y, color) in colors {
             let pixel = buffer.get_pixel_mut(x, y);
             *pixel = color.as_gamma_corrected_rgba_u8(1.0 / parameters.gamma_correction);

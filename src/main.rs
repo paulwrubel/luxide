@@ -20,10 +20,11 @@ use luxide::{
     utils,
 };
 
-const _SD: u32 = 720;
-const _HD: u32 = 1280;
-const _FULL_HD: u32 = 1920;
-const _FOUR_K: u32 = 3840;
+const _SD: (u32, u32) = (640, 480);
+const _HD: (u32, u32) = (1280, 720);
+const _FULL_HD: (u32, u32) = (1920, 1080);
+const _4K: (u32, u32) = (3840, 2160);
+const _8K: (u32, u32) = (7680, 4320);
 
 const OUTPUT_DIR: &str = "./output";
 
@@ -53,10 +54,8 @@ fn main() -> std::io::Result<()> {
 
     let parameters = Parameters {
         filepath: &filepath,
-        image_width: 3840,
-        image_height: 2160,
-        tile_width: 100,
-        tile_height: 100,
+        image_dimensions: _8K,
+        tile_dimensions: (100, 100),
 
         gamma_correction: 2.0,
         samples_per_pixel: 100,
