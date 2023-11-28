@@ -111,7 +111,7 @@ pub fn progress_string(
     let estimated_total_duration = elapsed_duration + estimated_remaining_duration;
 
     format!(
-        "{:>6.1}% done... [{} elapsed, est. {}/{} remaining]",
+        "{:>5.1}% done... [{} elapsed, est. {}/{} remaining]",
         progress * 100.0,
         format_duration(elapsed_duration),
         format_duration(estimated_remaining_duration),

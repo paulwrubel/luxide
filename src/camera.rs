@@ -39,23 +39,14 @@ pub struct Camera {
 
 impl Camera {
     pub fn new(
-        // aspect_ratio: f64,
-        // image_width: u32,
-        // samples_per_pixel: u32,
-        // max_bounces: u32,
         vertical_field_of_view_degrees: f64,
         eye_location: Point,
         target_location: Point,
         view_up: Vector,
         defocus_angle_degrees: f64,
         focus_distance: f64,
-        // use_parallel: bool,
     ) -> Self {
         Self {
-            // aspect_ratio,
-            // image_width,
-            // samples_per_pixel,
-            // max_bounces,
             vertical_field_of_view_degrees,
             eye_location,
             target_location,

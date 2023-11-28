@@ -23,6 +23,7 @@ use luxide::{
 const _SD: (u32, u32) = (640, 480);
 const _HD: (u32, u32) = (1280, 720);
 const _FULL_HD: (u32, u32) = (1920, 1080);
+const _QUAD_HD: (u32, u32) = (2560, 1440);
 const _4K: (u32, u32) = (3840, 2160);
 const _8K: (u32, u32) = (7680, 4320);
 const _16K: (u32, u32) = (15360, 8640);
@@ -30,6 +31,9 @@ const _16K: (u32, u32) = (15360, 8640);
 const OUTPUT_DIR: &str = "./output";
 
 fn main() -> std::io::Result<()> {
+    println!("Starting Luxide...");
+
+    println!("Determining output filename...");
     fs::create_dir_all(OUTPUT_DIR)?;
     let mut file_index = 0;
     let mut filepath;
@@ -46,6 +50,7 @@ fn main() -> std::io::Result<()> {
 
     let selected_scene_name = "earth";
 
+    println!("Assembling scenes...");
     let mut scenes = HashMap::new();
     scenes.insert("random_spheres", random_spheres());
     scenes.insert("two_spheres", two_spheres());
@@ -55,16 +60,15 @@ fn main() -> std::io::Result<()> {
 
     let parameters = Parameters {
         filepath: &filepath,
-        image_dimensions: _16K,
-        tile_dimensions: (100, 100),
+        image_dimensions: _QUAD_HD,
+        tile_dimensions: (10, 10),
 
         gamma_correction: 2.0,
-        samples_per_pixel: 5,
+        samples_per_pixel: 1000,
         max_bounces: 50,
 
-        use_parallel: true,
-        pixels_per_progress_update: 50000,
-        progress_memory: 200,
+        pixels_per_progress_update: 10000,
+        progress_memory: 50,
 
         scene: &scene,
     };
@@ -74,7 +78,7 @@ fn main() -> std::io::Result<()> {
         .get();
 
     let mut tracer = Tracer::new(thread_count);
-    println!("Rendering {selected_scene_name} with {thread_count} threads...");
+    println!("Rendering scene \"{selected_scene_name}\" with {thread_count} threads...");
     let start = Instant::now();
     match tracer.render(&parameters) {
         Ok(()) => {
@@ -117,15 +121,15 @@ fn earth() -> Scene {
         2.0,
         Arc::clone(&lambertian_earth_day),
     )));
-    // world.push(Box::new(Sphere::new(
-    //     Point::new(0.0, 0.0, 0.0),
-    //     2.5,
-    //     Arc::clone(&dielectric_glass),
-    // )));
     world.push(Box::new(Sphere::new(
-        Point::new(-1.5, 0.0, 4.0),
+        Point::new(-1.5, 0.0, 3.0),
         0.7,
         Arc::clone(&lambertian_moon),
+    )));
+    world.push(Box::new(Sphere::new(
+        Point::new(-0.3, 0.0, 6.5),
+        0.5,
+        Arc::clone(&dielectric_glass),
     )));
 
     let world = Box::new(BVH::new(world.take_items()));

@@ -1,6 +1,14 @@
-use std::{collections::VecDeque, path::Path, sync::mpsc, thread, time::Instant};
+use std::{
+    collections::VecDeque,
+    io::{stdout, Write},
+    path::Path,
+    sync::mpsc,
+    thread,
+    time::Instant,
+};
 
 use image::{ImageBuffer, ImageError, RgbaImage};
+use rand::seq::SliceRandom;
 use rayon::prelude::*;
 
 use crate::{parameters::Parameters, shading::Color, utils};
@@ -31,14 +39,14 @@ impl Tracer {
         let mut cam = parameters.scene.camera.clone();
         let (width, height) = parameters.image_dimensions;
 
+        println!("  Initializing camera...");
         cam.initialize(parameters);
 
         // let start = Instant::now();
         // let pixel_count = parameters.image_width * parameters.image_height;
         // let mut current_pixel = 0;
 
-        let tiles = Tiles::new(parameters.image_dimensions, parameters.tile_dimensions);
-
+        println!("  Starting progress worker...");
         let (sender, receiver) = mpsc::channel();
 
         let start: Instant = Instant::now();
@@ -49,7 +57,8 @@ impl Tracer {
             let mut instants: VecDeque<Instant> = VecDeque::new();
             let mut current = 0;
             for (_x, _y) in receiver {
-                if current % batch_size == 0 {
+                current += 1;
+                if current % batch_size == 0 || current == total {
                     let progress_string = utils::progress_string(
                         &mut instants,
                         current,
@@ -58,28 +67,35 @@ impl Tracer {
                         start,
                         memory,
                     );
-                    println!("{}", progress_string);
+                    print!("\r  {}{}", progress_string, " ".repeat(10));
+                    stdout().flush().unwrap();
                 }
-                current += 1;
             }
         });
 
+        println!("  Creating tiles...");
+        let tiles = Tiles::new(parameters.image_dimensions, parameters.tile_dimensions);
+
+        let mut rng = rand::thread_rng();
+
+        println!("  Preparing tiles...");
+        let mut tiles = tiles.collect::<Vec<Tile>>();
+        tiles.shuffle(&mut rng);
+        let tiles = tiles.par_iter();
+
+        println!("  Rendering tiles...");
         let colors: Vec<(u32, u32, Color)> = tiles
-            .par_bridge()
             .flat_map(|tile| {
                 let tile_colors: Vec<(u32, u32, Color)> = tile
-                    .par_bridge()
+                    // .par_bridge()
                     .map(|(x, y)| {
                         let color = (0..parameters.samples_per_pixel)
-                            .into_par_iter()
-                            .fold(
-                                || Color::BLACK,
-                                |acc, _| {
-                                    let ray = cam.get_ray(x, y);
-                                    acc + cam.ray_color(ray, world.as_ref(), parameters.max_bounces)
-                                },
-                            )
-                            .reduce(|| Color::BLACK, |a, b| a + b);
+                            // .into_par_iter()
+                            .fold(Color::BLACK, |acc, _| {
+                                let ray = cam.get_ray(x, y);
+                                acc + cam.ray_color(ray, world.as_ref(), parameters.max_bounces)
+                            });
+                        // .reduce(|| Color::BLACK, |a, b| a + b);
 
                         // done with pixel!
                         sender.send((x, y)).unwrap();
@@ -96,7 +112,9 @@ impl Tracer {
 
         drop(sender);
         progress_handle.join().unwrap();
+        println!("");
 
+        println!("  Writing data to image buffer...");
         let mut buffer = ImageBuffer::new(width, height);
         for (x, y, color) in colors {
             let pixel = buffer.get_pixel_mut(x, y);
@@ -107,10 +125,12 @@ impl Tracer {
     }
 
     fn write_to_file(&self, buffer: &RgbaImage, filepath: &str) -> Result<(), ImageError> {
+        println!("  Saving image buffer to {filepath}...");
         buffer.save(&Path::new(filepath))
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 struct Tiles {
     image_dimensions: (u32, u32),
     tile_dimensions: (u32, u32),
@@ -156,6 +176,7 @@ impl Iterator for Tiles {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 struct Tile {
     origin: (u32, u32),
     dimensions: (u32, u32),

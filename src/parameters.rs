@@ -9,7 +9,6 @@ pub struct Parameters<'a, 'b> {
     pub samples_per_pixel: u32,
     pub max_bounces: u32,
 
-    pub use_parallel: bool,
     pub pixels_per_progress_update: u32,
     pub progress_memory: usize,
 
