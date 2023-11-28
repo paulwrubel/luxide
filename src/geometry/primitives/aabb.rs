@@ -43,8 +43,28 @@ impl AABB {
         }
     }
 
-    pub fn expand(&self, other: &Self) -> Self {
-        Self::from_aabbs(*self, *other)
+    pub fn pad(self, delta: f64) -> Self {
+        Self {
+            x_interval: if self.x_interval.size() >= delta {
+                self.x_interval
+            } else {
+                self.x_interval.expand(delta)
+            },
+            y_interval: if self.y_interval.size() >= delta {
+                self.y_interval
+            } else {
+                self.y_interval.expand(delta)
+            },
+            z_interval: if self.z_interval.size() >= delta {
+                self.z_interval
+            } else {
+                self.z_interval.expand(delta)
+            },
+        }
+    }
+
+    pub fn expand(self, other: Self) -> Self {
+        Self::from_aabbs(self, other)
     }
 
     pub fn hit(&self, ray: Ray, ray_t: Interval) -> bool {

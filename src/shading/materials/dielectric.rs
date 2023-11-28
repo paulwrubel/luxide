@@ -5,17 +5,23 @@ use crate::{
     shading::{Color, Texture},
 };
 
-use super::Scatter;
+use super::Material;
 
 pub struct Dielectric {
-    albedo: Arc<dyn Texture>,
+    reflectance_texture: Arc<dyn Texture>,
+    emittance_texture: Arc<dyn Texture>,
     index_of_refraction: f64,
 }
 
 impl Dielectric {
-    pub fn new(albedo: Arc<dyn Texture>, index_of_refraction: f64) -> Dielectric {
+    pub fn new(
+        reflectance_texture: Arc<dyn Texture>,
+        emittance_texture: Arc<dyn Texture>,
+        index_of_refraction: f64,
+    ) -> Dielectric {
         Dielectric {
-            albedo,
+            reflectance_texture,
+            emittance_texture,
             index_of_refraction,
         }
     }
@@ -27,9 +33,16 @@ impl Dielectric {
     }
 }
 
-impl Scatter for Dielectric {
-    fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<(Ray, Color)> {
-        let attenuation = self.albedo.value(ray_hit.u, ray_hit.v, ray_hit.point);
+impl Material for Dielectric {
+    fn reflectance(&self, u: f64, v: f64, p: crate::geometry::Point) -> Color {
+        self.reflectance_texture.value(u, v, p)
+    }
+
+    fn emittance(&self, u: f64, v: f64, p: crate::geometry::Point) -> Color {
+        self.emittance_texture.value(u, v, p)
+    }
+
+    fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<Ray> {
         let (refractive_normal, refraction_ratio) = if ray.direction.dot(ray_hit.normal) < 0.0 {
             (ray_hit.normal, 1.0 / self.index_of_refraction)
         } else {
@@ -52,6 +65,6 @@ impl Scatter for Dielectric {
         };
 
         let scattered = Ray::new(ray_hit.point, refracted, ray.time);
-        Some((scattered, attenuation))
+        Some(scattered)
     }
 }

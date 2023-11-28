@@ -25,6 +25,7 @@ pub struct Camera {
     focus_distance: f64,
 
     // "private" fields
+    background_color: Color,
     image_height: u32,
     center: Point,
     pixel_00_location: Point,
@@ -59,6 +60,7 @@ impl Camera {
 
     pub fn initialize(&mut self, parameters: &Parameters) {
         self.center = self.eye_location;
+        self.background_color = parameters.scene.background_color;
 
         let (width, height) = parameters.image_dimensions;
 
@@ -135,22 +137,34 @@ impl Camera {
 
         // get the hit point color if we hit something
         if let Some(ray_hit) = primitive.intersect(ray, Interval::new(0.001, f64::INFINITY)) {
-            let (scattered_ray, attentuation) = match ray_hit.material.scatter(ray, &ray_hit) {
+            let emittance = ray_hit
+                .material
+                .emittance(ray_hit.u, ray_hit.v, ray_hit.point);
+
+            let reflectance = ray_hit
+                .material
+                .reflectance(ray_hit.u, ray_hit.v, ray_hit.point);
+
+            // if the surface is black, it's not going to let any incoming light contribute to the outgoing color
+            // so we can safely say no light is reflected and simply return the emittance of the material
+            if reflectance == Color::BLACK {
+                return emittance;
+            }
+
+            // get scattered ray, if possible
+            let scattered_ray = match ray_hit.material.scatter(ray, &ray_hit) {
                 Some(scatter) => scatter,
-                None => return Color::BLACK,
+                None => {
+                    // return just emitted light, since we didn't scatter
+                    return emittance;
+                }
             };
-            return attentuation * self.ray_color(scattered_ray, primitive, remaining_bounces - 1);
+            let scattered_color = self.ray_color(scattered_ray, primitive, remaining_bounces - 1);
+
+            emittance + reflectance * scattered_color
+        } else {
+            // otherwise, get the background color
+            self.background_color
         }
-
-        // otherwise, get the background color
-        self.background_color(&ray)
-    }
-
-    fn background_color(&self, ray: &Ray) -> Color {
-        let unit = ray.direction.unit_vector();
-        let a = 0.5 * (unit.y + 1.0);
-
-        let color_vec = (1.0 - a) * Vector::new(1.0, 1.0, 1.0) + a * Vector::new(0.5, 0.7, 1.0);
-        Color::from_vector(color_vec)
     }
 }

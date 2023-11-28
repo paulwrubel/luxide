@@ -6,19 +6,21 @@ use luxide::{
     camera::Camera,
     geometry::{
         compounds::{List, BVH},
-        primitives::Sphere,
+        primitives::{Parallelogram, Sphere},
         Intersect, Point, Vector,
     },
     parameters::Parameters,
     scene::Scene,
     shading::{
-        materials::{Dielectric, Lambertian, Scatter, Specular},
-        textures::{Checker, Image8Bit, SolidColor},
+        materials::{Dielectric, Lambertian, Material, Specular},
+        textures::{Checker, Image8Bit, Noise, SolidColor},
         Color, Texture,
     },
     tracer::Tracer,
-    utils,
+    utils::{self},
 };
+use noise::{Perlin, Turbulence};
+use rand::Rng;
 
 const _SD: (u32, u32) = (640, 480);
 const _HD: (u32, u32) = (1280, 720);
@@ -48,23 +50,25 @@ fn main() -> std::io::Result<()> {
         }
     }
 
-    let selected_scene_name = "earth";
+    let selected_scene_name = "quads";
 
     println!("Assembling scenes...");
     let mut scenes = HashMap::new();
     scenes.insert("random_spheres", random_spheres());
     scenes.insert("two_spheres", two_spheres());
     scenes.insert("earth", earth());
+    scenes.insert("two_perlin_spheres", two_perlin_spheres());
+    scenes.insert("quads", quads());
 
     let scene = scenes.get_mut(selected_scene_name).unwrap();
 
     let parameters = Parameters {
         filepath: &filepath,
-        image_dimensions: _QUAD_HD,
+        image_dimensions: (400, 400),
         tile_dimensions: (10, 10),
 
         gamma_correction: 2.0,
-        samples_per_pixel: 1000,
+        samples_per_pixel: 100,
         max_bounces: 50,
 
         pixels_per_progress_update: 10000,
@@ -94,8 +98,162 @@ fn main() -> std::io::Result<()> {
     Ok(())
 }
 
+fn quads() -> Scene {
+    // Textures
+    let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::BLACK));
+    let solid_red: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::new(1.0, 0.2, 0.2)));
+    let solid_green: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::new(0.2, 1.0, 0.2)));
+    let solid_blue: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::new(0.2, 0.2, 1.0)));
+    let solid_orange: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::new(1.0, 0.5, 0.0)));
+    let solid_teal: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::new(0.2, 0.8, 0.8)));
+
+    // Materials
+    let lambertian_red: Arc<dyn Material> = Arc::new(Lambertian::new(
+        Arc::clone(&solid_red),
+        Arc::clone(&solid_black),
+    ));
+    let lambertian_green: Arc<dyn Material> = Arc::new(Lambertian::new(
+        Arc::clone(&solid_green),
+        Arc::clone(&solid_black),
+    ));
+    let lambertian_blue: Arc<dyn Material> = Arc::new(Lambertian::new(
+        Arc::clone(&solid_blue),
+        Arc::clone(&solid_black),
+    ));
+    let lambertian_orange: Arc<dyn Material> = Arc::new(Lambertian::new(
+        Arc::clone(&solid_orange),
+        Arc::clone(&solid_black),
+    ));
+    let lambertian_teal: Arc<dyn Material> = Arc::new(Lambertian::new(
+        Arc::clone(&solid_teal),
+        Arc::clone(&solid_black),
+    ));
+
+    // Primitives
+    let mut world = Box::new(List::new());
+    world.push(Box::new(Parallelogram::new(
+        Point::new(-3.0, -2.0, 5.0),
+        Vector::new(0.0, 0.0, -4.0),
+        Vector::new(0.0, 4.0, 0.0),
+        Arc::clone(&lambertian_red),
+    )));
+    world.push(Box::new(Parallelogram::new(
+        Point::new(-2.0, -2.0, 0.0),
+        Vector::new(4.0, 0.0, 0.0),
+        Vector::new(0.0, 4.0, 0.0),
+        Arc::clone(&lambertian_green),
+    )));
+    world.push(Box::new(Parallelogram::new(
+        Point::new(3.0, -2.0, 1.0),
+        Vector::new(0.0, 0.0, 4.0),
+        Vector::new(0.0, 4.0, 0.0),
+        Arc::clone(&lambertian_blue),
+    )));
+    world.push(Box::new(Parallelogram::new(
+        Point::new(-2.0, 3.0, 1.0),
+        Vector::new(4.0, 0.0, 0.0),
+        Vector::new(0.0, 0.0, 4.0),
+        Arc::clone(&lambertian_orange),
+    )));
+    world.push(Box::new(Parallelogram::new(
+        Point::new(-2.0, -3.0, 5.0),
+        Vector::new(4.0, 0.0, 0.0),
+        Vector::new(0.0, 0.0, -4.0),
+        Arc::clone(&lambertian_teal),
+    )));
+
+    // Camera
+    let vertical_field_of_view_degrees = 80.0;
+    let eye_location = Point::new(0.0, 0.0, 9.0);
+    let target_location = Point::new(0.0, 0.0, 0.0);
+    let view_up = Vector::new(0.0, 1.0, 0.0);
+
+    let defocus_angle_degrees = 0.0;
+    let focus_distance = 1.0;
+
+    let camera = Camera::new(
+        vertical_field_of_view_degrees,
+        eye_location,
+        target_location,
+        view_up,
+        defocus_angle_degrees,
+        focus_distance,
+    );
+
+    Scene {
+        camera,
+        world,
+        background_color: Color::new(0.7, 0.8, 1.0),
+    }
+}
+
+fn two_perlin_spheres() -> Scene {
+    // Textures
+    let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::BLACK));
+
+    let input_fn = |p: Point| Point::from_vector(4.0 * p.0);
+    // let output_fn = |n: f64, p: Point| 0.5 * (1.0 + (p.0.z + 10.0 * n).sin());
+    let output_fn = |n: f64, p: Point| 0.5 * (1.0 + (p.0.z + 2.0 * n).sin());
+    // let output_fn = |n: f64, p: Point| n;
+    let noise_perlin =
+        Turbulence::<_, Perlin>::new(Perlin::new(rand::thread_rng().gen_range(0..=u32::MAX)))
+            .set_roughness(7)
+            .set_frequency(2.0)
+            // .set_power(2.0)
+            ;
+    let perlin_noise: Arc<dyn Texture> = Arc::new(
+        Noise::new(noise_perlin)
+            .map_input(input_fn)
+            .map_output(output_fn),
+    );
+
+    // Materials
+    let lambertian_perlin: Arc<dyn Material> = Arc::new(Lambertian::new(
+        Arc::clone(&perlin_noise),
+        Arc::clone(&solid_black),
+    ));
+
+    // Primitives
+    let mut world = Box::new(List::new());
+    world.push(Box::new(Sphere::new(
+        Point::new(0.0, -1000.0, 0.0),
+        1000.0,
+        Arc::clone(&lambertian_perlin),
+    )));
+    world.push(Box::new(Sphere::new(
+        Point::new(0.0, 2.0, 0.0),
+        2.0,
+        Arc::clone(&lambertian_perlin),
+    )));
+
+    // Camera
+    let vertical_field_of_view_degrees = 20.0;
+    let eye_location = Point::new(13.0, 2.0, 3.0);
+    let target_location = Point::new(0.0, 0.0, 0.0);
+    let view_up = Vector::new(0.0, 1.0, 0.0);
+
+    let defocus_angle_degrees = 0.0;
+    let focus_distance = 1.0;
+
+    let camera = Camera::new(
+        vertical_field_of_view_degrees,
+        eye_location,
+        target_location,
+        view_up,
+        defocus_angle_degrees,
+        focus_distance,
+    );
+
+    Scene {
+        camera,
+        world,
+        background_color: Color::new(0.7, 0.8, 1.0),
+    }
+}
+
 fn earth() -> Scene {
     // Textures
+    let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::BLACK));
     let image_earth_day: Arc<dyn Texture> =
         Arc::new(Image8Bit::from_filename("./texture_images/8k_earth_daymap.jpg", 2.0).unwrap());
     // let image_earth_night: Arc<dyn Texture> =
@@ -104,15 +262,25 @@ fn earth() -> Scene {
         Arc::new(Image8Bit::from_filename("./texture_images/8k_moon.jpg", 2.0).unwrap());
     // let image_stars_milky_way =
     //     Arc::new(Image8Bit::from_filename("./texture_images/8k_stars_milky_way.jpg", 2.0).unwrap());
-    let solid_white = Arc::new(SolidColor::new(Color::WHITE));
+    let solid_white: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::WHITE));
 
     // Materials
-    let lambertian_earth_day: Arc<dyn Scatter> = Arc::new(Lambertian::new(image_earth_day));
-    // let lambertian_earth_night: Arc<dyn Scatter> = Arc::new(Lambertian::new(image_earth_night));
-    let lambertian_moon: Arc<dyn Scatter> = Arc::new(Lambertian::new(image_moon));
-    // let lambertian_stars_milky_way: Arc<dyn Scatter> =
+    let lambertian_earth_day: Arc<dyn Material> = Arc::new(Lambertian::new(
+        Arc::clone(&image_earth_day),
+        Arc::clone(&solid_black),
+    ));
+    // let lambertian_earth_night: Arc<dyn Material> = Arc::new(Lambertian::new(image_earth_night));
+    let lambertian_moon: Arc<dyn Material> = Arc::new(Lambertian::new(
+        Arc::clone(&image_moon),
+        Arc::clone(&solid_black),
+    ));
+    // let lambertian_stars_milky_way: Arc<dyn Material> =
     //     Arc::new(Lambertian::new(image_stars_milky_way));
-    let dielectric_glass: Arc<dyn Scatter> = Arc::new(Dielectric::new(solid_white, 1.5));
+    let dielectric_glass: Arc<dyn Material> = Arc::new(Dielectric::new(
+        Arc::clone(&solid_white),
+        Arc::clone(&solid_black),
+        1.5,
+    ));
 
     // Primitives
     let mut world = Box::new(List::new());
@@ -152,17 +320,25 @@ fn earth() -> Scene {
         focus_distance,
     );
 
-    Scene { camera, world }
+    Scene {
+        camera,
+        world,
+        background_color: Color::new(0.7, 0.8, 1.0),
+    }
 }
 
 fn two_spheres() -> Scene {
     // Materials
+    let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::BLACK));
     let checker: Arc<dyn Texture> = Arc::new(Checker::from_colors(
         0.5,
         Color::new(0.2, 0.1, 0.1),
         Color::new(0.9, 0.9, 0.9),
     ));
-    let lambertian_checker: Arc<dyn Scatter> = Arc::new(Lambertian::new(checker));
+    let lambertian_checker: Arc<dyn Material> = Arc::new(Lambertian::new(
+        Arc::clone(&checker),
+        Arc::clone(&solid_black),
+    ));
 
     // Primitives
     let mut world = Box::new(List::new());
@@ -195,14 +371,19 @@ fn two_spheres() -> Scene {
         focus_distance,
     );
 
-    Scene { world, camera }
+    Scene {
+        world,
+        camera,
+        background_color: Color::new(0.7, 0.8, 1.0),
+    }
 }
 
 fn random_spheres() -> Scene {
     // Textures
-    let solid_white = Arc::new(SolidColor::new(Color::WHITE));
-    let solid_brown = Arc::new(SolidColor::new(Color::new(0.4, 0.2, 0.1)));
-    let solid_amber = Arc::new(SolidColor::new(Color::new(0.7, 0.6, 0.5)));
+    let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::BLACK));
+    let solid_white: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::WHITE));
+    let solid_brown: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::new(0.4, 0.2, 0.1)));
+    let solid_amber: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::new(0.7, 0.6, 0.5)));
 
     // Materials
     let checker: Arc<dyn Texture> = Arc::new(Checker::from_colors(
@@ -210,10 +391,24 @@ fn random_spheres() -> Scene {
         Color::new(0.2, 0.3, 0.1),
         Color::new(0.9, 0.9, 0.9),
     ));
-    let lambertian_checker: Arc<dyn Scatter> = Arc::new(Lambertian::new(checker));
-    let dielectric_glass: Arc<dyn Scatter> = Arc::new(Dielectric::new(solid_white, 1.5));
-    let lambertian_brown: Arc<dyn Scatter> = Arc::new(Lambertian::new(solid_brown));
-    let specular_amber: Arc<dyn Scatter> = Arc::new(Specular::new(solid_amber, 0.0));
+    let lambertian_checker: Arc<dyn Material> = Arc::new(Lambertian::new(
+        Arc::clone(&checker),
+        Arc::clone(&solid_black),
+    ));
+    let dielectric_glass: Arc<dyn Material> = Arc::new(Dielectric::new(
+        Arc::clone(&solid_white),
+        Arc::clone(&solid_black),
+        1.5,
+    ));
+    let lambertian_brown: Arc<dyn Material> = Arc::new(Lambertian::new(
+        Arc::clone(&solid_brown),
+        Arc::clone(&solid_black),
+    ));
+    let specular_amber: Arc<dyn Material> = Arc::new(Specular::new(
+        Arc::clone(&solid_amber),
+        Arc::clone(&solid_black),
+        0.0,
+    ));
 
     // Primitives
     let mut world_list = List::new();
@@ -239,9 +434,10 @@ fn random_spheres() -> Scene {
                 let choose_mat = rand::random::<f64>();
                 if choose_mat < 0.8 {
                     // lambertian
-                    let albedo = Color::random() * Color::random();
-                    let albedo = Arc::new(SolidColor::new(albedo));
-                    let lambertian = Arc::new(Lambertian::new(albedo));
+                    let reflectance = Color::random() * Color::random();
+                    let reflectance = Arc::new(SolidColor::new(reflectance));
+                    let lambertian =
+                        Arc::new(Lambertian::new(reflectance, Arc::clone(&solid_black)));
                     let center_2 = center + Vector::new(0.0, 0.5 * rand::random::<f64>(), 0.0);
                     world_list.push(Box::new(Sphere::new_in_motion(
                         center, center_2, 0.2, lambertian,
@@ -249,14 +445,22 @@ fn random_spheres() -> Scene {
                 } else if choose_mat < 0.95 {
                     // specular
                     let albedo = Color::random_range(0.5, 1.0);
-                    let albedo = Arc::new(SolidColor::new(albedo));
+                    let albedo: Arc<dyn Texture> = Arc::new(SolidColor::new(albedo));
                     let fuzz = 0.5 * rand::random::<f64>();
-                    let specular = Arc::new(Specular::new(albedo, fuzz));
+                    let specular = Arc::new(Specular::new(
+                        Arc::clone(&albedo),
+                        Arc::clone(&solid_black),
+                        fuzz,
+                    ));
                     world_list.push(Box::new(Sphere::new(center, 0.2, specular)));
                 } else {
                     // dielectric
-                    let albedo = Arc::new(SolidColor::new(Color::WHITE));
-                    let dielectric = Arc::new(Dielectric::new(albedo, 1.5));
+                    let albedo: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::WHITE));
+                    let dielectric = Arc::new(Dielectric::new(
+                        Arc::clone(&albedo),
+                        Arc::clone(&solid_black),
+                        1.5,
+                    ));
                     world_list.push(Box::new(Sphere::new(center, 0.2, dielectric)));
                 }
             }
@@ -302,5 +506,9 @@ fn random_spheres() -> Scene {
         focus_distance,
     );
 
-    Scene { world, camera }
+    Scene {
+        world,
+        camera,
+        background_color: Color::new(0.7, 0.8, 1.0),
+    }
 }

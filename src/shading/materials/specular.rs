@@ -5,24 +5,38 @@ use crate::{
     shading::{Color, Texture},
 };
 
-use super::Scatter;
+use super::Material;
 
 pub struct Specular {
-    albedo: Arc<dyn Texture>,
+    reflectance_texture: Arc<dyn Texture>,
+    emittance_texture: Arc<dyn Texture>,
     fuzziness: f64,
 }
 
 impl Specular {
-    pub fn new(albedo: Arc<dyn Texture>, fuzziness: f64) -> Self {
+    pub fn new(
+        reflectance_texture: Arc<dyn Texture>,
+        emittance_texture: Arc<dyn Texture>,
+        fuzziness: f64,
+    ) -> Self {
         Self {
-            albedo,
+            reflectance_texture,
+            emittance_texture,
             fuzziness: fuzziness.min(1.0).max(0.0),
         }
     }
 }
 
-impl Scatter for Specular {
-    fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<(Ray, Color)> {
+impl Material for Specular {
+    fn reflectance(&self, u: f64, v: f64, p: crate::geometry::Point) -> Color {
+        self.reflectance_texture.value(u, v, p)
+    }
+
+    fn emittance(&self, u: f64, v: f64, p: crate::geometry::Point) -> Color {
+        self.emittance_texture.value(u, v, p)
+    }
+
+    fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<Ray> {
         let reflected = ray.direction.unit_vector().reflect_around(ray_hit.normal);
 
         let scattered = Ray::new(
@@ -32,10 +46,7 @@ impl Scatter for Specular {
         );
 
         if scattered.direction.dot(ray_hit.normal) > 0.0 {
-            Some((
-                scattered,
-                self.albedo.value(ray_hit.u, ray_hit.v, ray_hit.point),
-            ))
+            Some(scattered)
         } else {
             None
         }

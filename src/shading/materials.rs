@@ -1,5 +1,5 @@
 use super::Color;
-use crate::geometry::{Ray, RayHit};
+use crate::geometry::{Point, Ray, RayHit};
 
 mod dielectric;
 pub use dielectric::Dielectric;
@@ -10,6 +10,8 @@ pub use lambertian::Lambertian;
 mod specular;
 pub use specular::Specular;
 
-pub trait Scatter: Sync + Send {
-    fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<(Ray, Color)>;
+pub trait Material: Sync + Send {
+    fn reflectance(&self, u: f64, v: f64, p: Point) -> Color;
+    fn emittance(&self, u: f64, v: f64, p: Point) -> Color;
+    fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<Ray>;
 }

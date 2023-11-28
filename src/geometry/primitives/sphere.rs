@@ -2,7 +2,7 @@ use std::{f64::consts::PI, sync::Arc};
 
 use crate::{
     geometry::{Intersect, Point, Ray, RayHit, Vector},
-    shading::materials::Scatter,
+    shading::materials::Material,
     utils::Interval,
 };
 
@@ -11,15 +11,14 @@ use super::AABB;
 #[derive(Clone)]
 pub struct Sphere {
     center_1: Point,
-    // center_2: Option<Point>,
     center_vector: Option<Vector>,
     radius: f64,
-    material: Arc<dyn Scatter>,
+    material: Arc<dyn Material>,
     bounding_box: AABB,
 }
 
 impl Sphere {
-    pub fn new(center: Point, radius: f64, material: Arc<dyn Scatter>) -> Self {
+    pub fn new(center: Point, radius: f64, material: Arc<dyn Material>) -> Self {
         let radius_vector = Vector::new(radius, radius, radius);
         Self {
             center_1: center,
@@ -34,7 +33,7 @@ impl Sphere {
         center_1: Point,
         center_2: Point,
         radius: f64,
-        material: Arc<dyn Scatter>,
+        material: Arc<dyn Material>,
     ) -> Self {
         let radius_vector = Vector::new(radius, radius, radius);
         let bounding_box_1 = AABB::from_points(center_1 - radius_vector, center_1 + radius_vector);

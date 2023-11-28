@@ -20,7 +20,7 @@ impl List {
         let bounding_box = primitives
             .iter()
             .map(|p| p.bounding_box())
-            .reduce(|acc, bb| acc.expand(&bb))
+            .reduce(|acc, bb| acc.expand(bb))
             .unwrap_or(AABB::EMPTY);
 
         Self {

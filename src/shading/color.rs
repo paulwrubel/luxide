@@ -3,7 +3,7 @@ use image::Rgba;
 
 use crate::geometry::Vector;
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Default)]
 pub struct Color(Vector);
 
 impl Color {
