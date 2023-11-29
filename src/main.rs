@@ -21,6 +21,7 @@ use luxide::{
 };
 use noise::{Perlin, Turbulence};
 use rand::Rng;
+use time::OffsetDateTime;
 
 const _SD: (u32, u32) = (640, 480);
 const _HD: (u32, u32) = (1280, 720);
@@ -35,20 +36,7 @@ const OUTPUT_DIR: &str = "./output";
 fn main() -> std::io::Result<()> {
     println!("Starting Luxide...");
 
-    println!("Determining output filename...");
-    fs::create_dir_all(OUTPUT_DIR)?;
-    let mut file_index = 0;
-    let mut filepath;
-    loop {
-        filepath = format!("{OUTPUT_DIR}/image_{file_index}.png");
-        match Path::new(&filepath).try_exists() {
-            Ok(false) => break,
-            Ok(true) => {
-                file_index += 1;
-            }
-            Err(e) => return Err(e),
-        }
-    }
+    let local_utc_offset = time::UtcOffset::current_local_offset().unwrap();
 
     let selected_scene_name = "cornell_box";
 
@@ -64,16 +52,28 @@ fn main() -> std::io::Result<()> {
 
     let scene = scenes.get_mut(selected_scene_name).unwrap();
 
+    let now = OffsetDateTime::now_utc().to_offset(local_utc_offset);
+    let formatted_timestamp = utils::get_formatted_timestamp_for(now);
+
+    let sub_folder = format!("{selected_scene_name}_{formatted_timestamp}");
+
+    let output_dir_string = format!("{OUTPUT_DIR}/{sub_folder}");
+    let output_dir = Path::new(&output_dir_string);
+    fs::create_dir_all(output_dir)?;
+
     let parameters = Parameters {
-        filepath: &filepath,
-        image_dimensions: (600, 600),
+        output_dir,
+        file_basename: selected_scene_name,
+        file_ext: "png",
+        image_dimensions: (2000, 2000),
         tile_dimensions: (10, 10),
 
         gamma_correction: 2.0,
-        samples_per_pixel: 2000,
+        samples_per_round: 100,
+        round_limit: None,
         max_bounces: 50,
 
-        pixels_per_progress_update: 500,
+        pixels_per_progress_update: 10000,
         progress_memory: 50,
 
         scene: &scene,
@@ -83,12 +83,12 @@ fn main() -> std::io::Result<()> {
         .unwrap_or(NonZeroUsize::new(24).unwrap())
         .get();
 
-    let mut tracer = Tracer::new(thread_count);
+    let mut tracer = Tracer::new(thread_count, local_utc_offset);
     println!("Rendering scene \"{selected_scene_name}\" with {thread_count} threads...");
     let start = Instant::now();
-    match tracer.render(&parameters) {
+    match tracer.render(&parameters, 2) {
         Ok(()) => {
-            println!("Saved image to {filepath}");
+            println!("Saved image!");
         }
         Err(e) => {
             println!("Failed to save image: {e}");
