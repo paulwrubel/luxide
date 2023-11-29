@@ -5,6 +5,9 @@ use super::Texture;
 pub struct SolidColor(Color);
 
 impl SolidColor {
+    pub const BLACK: Self = Self(Color::BLACK);
+    pub const WHITE: Self = Self(Color::WHITE);
+
     pub fn new(color: Color) -> Self {
         Self(color)
     }

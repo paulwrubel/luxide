@@ -50,7 +50,7 @@ fn main() -> std::io::Result<()> {
         }
     }
 
-    let selected_scene_name = "quads";
+    let selected_scene_name = "cornell_box";
 
     println!("Assembling scenes...");
     let mut scenes = HashMap::new();
@@ -59,19 +59,21 @@ fn main() -> std::io::Result<()> {
     scenes.insert("earth", earth());
     scenes.insert("two_perlin_spheres", two_perlin_spheres());
     scenes.insert("quads", quads());
+    scenes.insert("simple_light", simple_light());
+    scenes.insert("cornell_box", cornell_box());
 
     let scene = scenes.get_mut(selected_scene_name).unwrap();
 
     let parameters = Parameters {
         filepath: &filepath,
-        image_dimensions: (400, 400),
+        image_dimensions: (600, 600),
         tile_dimensions: (10, 10),
 
         gamma_correction: 2.0,
-        samples_per_pixel: 100,
+        samples_per_pixel: 2000,
         max_bounces: 50,
 
-        pixels_per_progress_update: 10000,
+        pixels_per_progress_update: 500,
         progress_memory: 50,
 
         scene: &scene,
@@ -96,6 +98,189 @@ fn main() -> std::io::Result<()> {
     println!("Done in {}", utils::format_duration(elapsed));
 
     Ok(())
+}
+
+fn cornell_box() -> Scene {
+    // Textures
+    let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::BLACK));
+    let solid_white: Arc<dyn Texture> = Arc::new(SolidColor::from_rgb(0.73, 0.73, 0.73));
+    let solid_red: Arc<dyn Texture> = Arc::new(SolidColor::from_rgb(0.65, 0.05, 0.05));
+    let solid_green: Arc<dyn Texture> = Arc::new(SolidColor::from_rgb(0.12, 0.45, 0.15));
+    let solid_white_light: Arc<dyn Texture> = Arc::new(SolidColor::from_rgb(15.0, 15.0, 15.0));
+
+    // Materials
+    let lambertian_white: Arc<dyn Material> = Arc::new(Lambertian::new(
+        Arc::clone(&solid_white),
+        Arc::clone(&solid_black),
+    ));
+    let lambertian_red: Arc<dyn Material> = Arc::new(Lambertian::new(
+        Arc::clone(&solid_red),
+        Arc::clone(&solid_black),
+    ));
+    let lambertian_green: Arc<dyn Material> = Arc::new(Lambertian::new(
+        Arc::clone(&solid_green),
+        Arc::clone(&solid_black),
+    ));
+    let lambertian_white_light: Arc<dyn Material> = Arc::new(Lambertian::new(
+        Arc::clone(&solid_black),
+        Arc::clone(&solid_white_light),
+    ));
+
+    // Primitives
+    let mut world = Box::new(List::new());
+    // left wall (green)
+    world.push(Box::new(Parallelogram::new(
+        Point::new(0.0, 0.0, 0.0),
+        Vector::new(0.0, 0.0, -1.0),
+        Vector::new(0.0, 1.0, 0.0),
+        true,
+        Arc::clone(&lambertian_green),
+    )));
+    // right wall (red)
+    world.push(Box::new(Parallelogram::new(
+        Point::new(1.0, 0.0, -1.0),
+        Vector::new(0.0, 0.0, 1.0),
+        Vector::new(0.0, 1.0, 0.0),
+        true,
+        Arc::clone(&lambertian_red),
+    )));
+    // floor (white)
+    world.push(Box::new(Parallelogram::new(
+        Point::new(0.0, 0.0, 0.0),
+        Vector::new(1.0, 0.0, 0.0),
+        Vector::new(0.0, 0.0, -1.0),
+        true,
+        Arc::clone(&lambertian_white),
+    )));
+    // ceiling (white)
+    world.push(Box::new(Parallelogram::new(
+        Point::new(0.0, 1.0, -1.0),
+        Vector::new(1.0, 0.0, 0.0),
+        Vector::new(0.0, 0.0, 1.0),
+        true,
+        Arc::clone(&lambertian_white),
+    )));
+    // back wall (white)
+    world.push(Box::new(Parallelogram::new(
+        Point::new(0.0, 0.0, -1.0),
+        Vector::new(1.0, 0.0, 0.0),
+        Vector::new(0.0, 1.0, 0.0),
+        true,
+        Arc::clone(&lambertian_white),
+    )));
+    // ceiling light
+    world.push(Box::new(Parallelogram::new(
+        Point::new(0.38198, 0.99820, -0.59820),
+        Vector::new(0.23423, 0.0, 0.0),
+        Vector::new(0.0, 0.0, 0.18919),
+        true,
+        Arc::clone(&lambertian_white_light),
+    )));
+
+    // Camera
+    let vertical_field_of_view_degrees = 40.0;
+    let eye_location = Point::new(0.5, 0.5, 1.44144);
+    let target_location = Point::new(0.5, 0.5, 0.0);
+    let view_up = Vector::new(0.0, 1.0, 0.0);
+
+    let defocus_angle_degrees = 0.0;
+    let focus_distance = 1.0;
+
+    let camera = Camera::new(
+        vertical_field_of_view_degrees,
+        eye_location,
+        target_location,
+        view_up,
+        defocus_angle_degrees,
+        focus_distance,
+    );
+
+    Scene {
+        camera,
+        world,
+        background_color: Color::BLACK,
+    }
+}
+
+fn simple_light() -> Scene {
+    // Textures
+    let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::BLACK));
+    let solid_white_light: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::WHITE * 4.0));
+
+    let input_fn = |p: Point| Point::from_vector(4.0 * p.0);
+    // let output_fn = |n: f64, p: Point| 0.5 * (1.0 + (p.0.z + 10.0 * n).sin());
+    let output_fn = |n: f64, p: Point| 0.5 * (1.0 + (p.0.z + 3.0 * n).sin());
+    // let output_fn = |n: f64, p: Point| n;
+    let noise_perlin =
+        Turbulence::<_, Perlin>::new(Perlin::new(rand::thread_rng().gen_range(0..=u32::MAX)))
+            // .set_roughness(7)
+            // .set_frequency(1.0)
+            // .set_power(2.0)
+            ;
+    let perlin_noise: Arc<dyn Texture> = Arc::new(
+        Noise::new(noise_perlin)
+            .map_input(input_fn)
+            .map_output(output_fn),
+    );
+
+    // Materials
+    let lambertian_perlin: Arc<dyn Material> = Arc::new(Lambertian::new(
+        Arc::clone(&perlin_noise),
+        Arc::clone(&solid_black),
+    ));
+    let lambertian_light: Arc<dyn Material> = Arc::new(Lambertian::new(
+        Arc::clone(&solid_black),
+        Arc::clone(&solid_white_light),
+    ));
+
+    // Primitives
+    let mut world = Box::new(List::new());
+    world.push(Box::new(Sphere::new(
+        Point::new(0.0, -1000.0, 0.0),
+        1000.0,
+        Arc::clone(&lambertian_perlin),
+    )));
+    world.push(Box::new(Sphere::new(
+        Point::new(0.0, 2.0, 0.0),
+        2.0,
+        Arc::clone(&lambertian_perlin),
+    )));
+    world.push(Box::new(Parallelogram::new(
+        Point::new(3.0, 1.0, -2.0),
+        Vector::new(2.0, 0.0, 0.0),
+        Vector::new(0.0, 2.0, 0.0),
+        true,
+        Arc::clone(&lambertian_light),
+    )));
+    world.push(Box::new(Sphere::new(
+        Point::new(0.0, 7.0, 0.0),
+        2.0,
+        Arc::clone(&lambertian_light),
+    )));
+
+    // Camera
+    let vertical_field_of_view_degrees = 20.0;
+    let eye_location = Point::new(26.0, 3.0, 6.0);
+    let target_location = Point::new(0.0, 2.0, 0.0);
+    let view_up = Vector::new(0.0, 1.0, 0.0);
+
+    let defocus_angle_degrees = 0.0;
+    let focus_distance = 1.0;
+
+    let camera = Camera::new(
+        vertical_field_of_view_degrees,
+        eye_location,
+        target_location,
+        view_up,
+        defocus_angle_degrees,
+        focus_distance,
+    );
+
+    Scene {
+        camera,
+        world,
+        background_color: Color::BLACK,
+    }
 }
 
 fn quads() -> Scene {
@@ -130,35 +315,41 @@ fn quads() -> Scene {
     ));
 
     // Primitives
+    let is_culled = false;
     let mut world = Box::new(List::new());
     world.push(Box::new(Parallelogram::new(
         Point::new(-3.0, -2.0, 5.0),
         Vector::new(0.0, 0.0, -4.0),
         Vector::new(0.0, 4.0, 0.0),
+        is_culled,
         Arc::clone(&lambertian_red),
     )));
     world.push(Box::new(Parallelogram::new(
         Point::new(-2.0, -2.0, 0.0),
         Vector::new(4.0, 0.0, 0.0),
         Vector::new(0.0, 4.0, 0.0),
+        is_culled,
         Arc::clone(&lambertian_green),
     )));
     world.push(Box::new(Parallelogram::new(
         Point::new(3.0, -2.0, 1.0),
         Vector::new(0.0, 0.0, 4.0),
         Vector::new(0.0, 4.0, 0.0),
+        is_culled,
         Arc::clone(&lambertian_blue),
     )));
     world.push(Box::new(Parallelogram::new(
         Point::new(-2.0, 3.0, 1.0),
         Vector::new(4.0, 0.0, 0.0),
         Vector::new(0.0, 0.0, 4.0),
+        is_culled,
         Arc::clone(&lambertian_orange),
     )));
     world.push(Box::new(Parallelogram::new(
         Point::new(-2.0, -3.0, 5.0),
         Vector::new(4.0, 0.0, 0.0),
         Vector::new(0.0, 0.0, -4.0),
+        is_culled,
         Arc::clone(&lambertian_teal),
     )));
 

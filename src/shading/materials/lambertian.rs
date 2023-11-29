@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::{
     geometry::{Point, Ray, RayHit, Vector},
-    shading::{Color, Texture},
+    shading::{textures::SolidColor, Color, Texture},
 };
 
 use super::Material;
@@ -17,6 +17,22 @@ impl Lambertian {
         Self {
             reflectance_texture,
             emittance_texture,
+        }
+    }
+
+    pub fn black() -> Self {
+        let black: Arc<dyn Texture> = Arc::new(SolidColor::BLACK);
+        Self {
+            reflectance_texture: Arc::clone(&black),
+            emittance_texture: Arc::clone(&black),
+        }
+    }
+
+    pub fn white() -> Self {
+        let white: Arc<dyn Texture> = Arc::new(SolidColor::WHITE);
+        Self {
+            reflectance_texture: Arc::clone(&white),
+            emittance_texture: Arc::clone(&white),
         }
     }
 }
