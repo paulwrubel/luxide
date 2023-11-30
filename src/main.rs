@@ -59,13 +59,14 @@ fn main() -> std::io::Result<()> {
 
     let output_dir_string = format!("{OUTPUT_DIR}/{sub_folder}");
     let output_dir = Path::new(&output_dir_string);
+    println!("Initializing output directory: {output_dir_string}");
     fs::create_dir_all(output_dir)?;
 
     let parameters = Parameters {
         output_dir,
         file_basename: selected_scene_name,
         file_ext: "png",
-        image_dimensions: (2000, 2000),
+        image_dimensions: (1000, 1000),
         tile_dimensions: (10, 10),
 
         gamma_correction: 2.0,
@@ -73,7 +74,7 @@ fn main() -> std::io::Result<()> {
         round_limit: None,
         max_bounces: 50,
 
-        pixels_per_progress_update: 10000,
+        pixels_per_progress_update: 1000,
         progress_memory: 50,
 
         scene: &scene,

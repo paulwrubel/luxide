@@ -3,6 +3,8 @@ use std::ops::{Index, IndexMut, Neg};
 use auto_ops::{impl_op_ex, impl_op_ex_commutative};
 use rand::Rng;
 
+use crate::utils::Radians;
+
 #[derive(Debug, Copy, Clone, PartialEq, Default)]
 pub struct Vector {
     pub x: f64,
@@ -40,16 +42,20 @@ impl Vector {
     }
 
     pub fn random_in_unit_sphere() -> Self {
-        let mut rng = rand::thread_rng();
         loop {
-            let p = Self {
-                x: rng.gen_range(-1.0..1.0),
-                y: rng.gen_range(-1.0..1.0),
-                z: rng.gen_range(-1.0..1.0),
-            };
+            let p = Self::random_in_unit_cube();
             if p.squared_length() < 1.0 {
                 return p;
             }
+        }
+    }
+
+    pub fn random_in_unit_cube() -> Self {
+        let mut rng = rand::thread_rng();
+        Self {
+            x: rng.gen_range(-1.0..1.0),
+            y: rng.gen_range(-1.0..1.0),
+            z: rng.gen_range(-1.0..1.0),
         }
     }
 
@@ -99,6 +105,10 @@ impl Vector {
     pub fn is_near_zero(&self) -> bool {
         let s = 1e-8;
         self.x.abs() < s && self.y.abs() < s && self.z.abs() < s
+    }
+
+    pub fn angle(&self, other: Self) -> Radians {
+        Radians((self.dot(other) / (self.length() * other.length())).acos())
     }
 
     pub fn dot(&self, other: Self) -> f64 {

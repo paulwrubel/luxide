@@ -43,6 +43,14 @@ impl AABB {
         }
     }
 
+    pub fn unit() -> Self {
+        Self {
+            x_interval: Interval::new(-0.5, 0.5),
+            y_interval: Interval::new(-0.5, 0.5),
+            z_interval: Interval::new(-0.5, 0.5),
+        }
+    }
+
     pub fn pad(self, delta: f64) -> Self {
         Self {
             x_interval: if self.x_interval.size() >= delta {
@@ -68,7 +76,7 @@ impl AABB {
     }
 
     pub fn hit(&self, ray: Ray, ray_t: Interval) -> bool {
-        let mut interval = ray_t.clone(); // trivial clone since Inteval is Copy
+        let mut interval = ray_t.clone(); // trivial clone since Interval is Copy
         for axis in 0..3 {
             let inverse_direction_component = 1.0 / ray.direction[axis];
             let origin_component = ray.origin[axis];

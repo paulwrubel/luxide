@@ -11,7 +11,7 @@ use std::{
 use image::{ImageBuffer, RgbaImage};
 use rand::seq::SliceRandom;
 use rayon::prelude::*;
-use time::{macros::format_description, OffsetDateTime, UtcOffset};
+use time::{OffsetDateTime, UtcOffset};
 
 use crate::{parameters::Parameters, shading::Color, utils};
 

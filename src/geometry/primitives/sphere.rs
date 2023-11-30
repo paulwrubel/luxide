@@ -2,7 +2,7 @@ use std::{f64::consts::PI, sync::Arc};
 
 use crate::{
     geometry::{Intersect, Point, Ray, RayHit, Vector},
-    shading::materials::Material,
+    shading::materials::{Lambertian, Material},
     utils::Interval,
 };
 
@@ -45,6 +45,14 @@ impl Sphere {
             material,
             bounding_box: AABB::from_aabbs(bounding_box_1, bounding_box_2),
         }
+    }
+
+    pub fn unit() -> Self {
+        Self::new(
+            Point::new(0.0, 0.0, 0.0),
+            1.0,
+            Arc::new(Lambertian::white()),
+        )
     }
 
     pub fn center(&self, time: f64) -> Point {

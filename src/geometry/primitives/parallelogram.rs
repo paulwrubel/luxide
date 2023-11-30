@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::{
     geometry::{Intersect, Point, Ray, RayHit, Vector},
-    shading::materials::Material,
+    shading::materials::{Lambertian, Material},
     utils::Interval,
 };
 
@@ -41,6 +41,16 @@ impl Parallelogram {
             material,
             bounding_box: AABB::from_points(lower_left, lower_left + u + v).pad(0.0001),
         }
+    }
+
+    pub fn unit() -> Self {
+        Self::new(
+            Point::new(-0.5, -0.5, 0.0),
+            Vector::new(1.0, 0.0, 0.0),
+            Vector::new(0.0, 1.0, 0.0),
+            true,
+            Arc::new(Lambertian::white()),
+        )
     }
 }
 
