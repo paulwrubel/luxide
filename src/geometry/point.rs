@@ -10,9 +10,30 @@ pub struct Point(pub Vector);
 impl Point {
     pub const ZERO: Point = Self(Vector::ZERO);
     pub const ONE: Point = Self(Vector::ONE);
+    pub const ORIGIN: Point = Self::ZERO;
 
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Self(Vector::new(x, y, z))
+    }
+
+    pub fn from_vector(vector: Vector) -> Self {
+        Self(vector)
+    }
+
+    pub fn min_components_point(&self, other: Self) -> Point {
+        Self::new(
+            self.0.x.min(other.0.x),
+            self.0.y.min(other.0.y),
+            self.0.z.min(other.0.z),
+        )
+    }
+
+    pub fn max_components_point(&self, other: Self) -> Point {
+        Self::new(
+            self.0.x.max(other.0.x),
+            self.0.y.max(other.0.y),
+            self.0.z.max(other.0.z),
+        )
     }
 
     pub fn to(&self, other: Self) -> Vector {
@@ -21,10 +42,6 @@ impl Point {
 
     pub fn from(&self, other: Self) -> Vector {
         self - other
-    }
-
-    pub fn from_vector(vector: Vector) -> Self {
-        Self(vector)
     }
 
     pub fn as_vector(&self) -> Vector {

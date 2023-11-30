@@ -1,6 +1,7 @@
 pub mod compounds;
 pub mod instances;
 pub mod primitives;
+pub mod volumes;
 
 mod intersect;
 pub use intersect::Intersect;

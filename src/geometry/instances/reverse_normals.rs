@@ -3,6 +3,7 @@ use crate::{
     utils::Interval,
 };
 
+#[derive(Clone)]
 pub struct ReverseNormals(Box<dyn Intersect>);
 
 impl ReverseNormals {

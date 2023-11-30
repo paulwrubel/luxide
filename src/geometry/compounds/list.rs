@@ -3,6 +3,7 @@ use crate::{
     utils::Interval,
 };
 
+#[derive(Clone)]
 pub struct List {
     pub list: Vec<Box<dyn Intersect>>,
     bounding_box: AABB,
@@ -30,10 +31,16 @@ impl List {
     }
 
     pub fn push(&mut self, primitive: Box<dyn Intersect>) {
+        self.bounding_box = self.bounding_box.expand(primitive.bounding_box());
         self.list.push(primitive);
     }
 
+    pub fn push_all(&mut self, primitives: &mut Vec<Box<dyn Intersect>>) {
+        self.list.append(primitives)
+    }
+
     pub fn clear(&mut self) {
+        self.bounding_box = AABB::EMPTY;
         self.list.clear();
     }
 
@@ -41,7 +48,7 @@ impl List {
         &self.list
     }
 
-    // all but give ownership
+    // items but give ownership
     pub fn take_items(self) -> Vec<Box<dyn Intersect>> {
         self.list
     }
@@ -74,3 +81,16 @@ impl Intersect for List {
         self.bounding_box
     }
 }
+
+// impl Clone for List {
+//     fn clone(&self) -> Self {
+//         Self {
+//             list: self
+//                 .list
+//                 .iter()
+//                 .map(|p| Box::new((*p.as_ref()).clone()))
+//                 .collect(),
+//             bounding_box: self.bounding_box.clone(),
+//         }
+//     }
+// }

@@ -1,25 +1,29 @@
 use std::f64::consts::PI;
 
-pub struct Degrees(pub f64);
+pub enum Angle {
+    Degrees(f64),
+    Radians(f64),
+}
 
-impl Degrees {
+impl Angle {
     pub fn value(&self) -> f64 {
-        self.0
+        match self {
+            Angle::Degrees(d) => *d,
+            Angle::Radians(r) => *r,
+        }
     }
 
     pub fn as_radians(&self) -> f64 {
-        self.0 * (PI / 180.0)
-    }
-}
-
-pub struct Radians(pub f64);
-
-impl Radians {
-    pub fn value(&self) -> f64 {
-        self.0
+        match self {
+            Angle::Degrees(d) => *d * (PI / 180.0),
+            Angle::Radians(r) => *r,
+        }
     }
 
     pub fn as_degrees(&self) -> f64 {
-        self.0 * (180.0 / PI)
+        match self {
+            Angle::Degrees(d) => *d,
+            Angle::Radians(r) => *r * (180.0 / PI),
+        }
     }
 }

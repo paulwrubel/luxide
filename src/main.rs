@@ -5,9 +5,10 @@ use std::{
 use luxide::{
     camera::Camera,
     geometry::{
-        compounds::{List, BVH},
+        compounds::{AxisAlignedPBox, List, BVH},
+        instances::{RotateYAxis, Translate},
         primitives::{Parallelogram, Sphere},
-        Intersect, Point, Vector,
+        volumes, Intersect, Point, Vector,
     },
     parameters::Parameters,
     scene::Scene,
@@ -17,7 +18,7 @@ use luxide::{
         Color, Texture,
     },
     tracer::Tracer,
-    utils::{self},
+    utils::{self, Angle},
 };
 use noise::{Perlin, Turbulence};
 use rand::Rng;
@@ -38,7 +39,7 @@ fn main() -> std::io::Result<()> {
 
     let local_utc_offset = time::UtcOffset::current_local_offset().unwrap();
 
-    let selected_scene_name = "cornell_box";
+    let selected_scene_name = "final_scene";
 
     println!("Assembling scenes...");
     let mut scenes = HashMap::new();
@@ -49,6 +50,7 @@ fn main() -> std::io::Result<()> {
     scenes.insert("quads", quads());
     scenes.insert("simple_light", simple_light());
     scenes.insert("cornell_box", cornell_box());
+    scenes.insert("final_scene", final_scene());
 
     let scene = scenes.get_mut(selected_scene_name).unwrap();
 
@@ -66,12 +68,12 @@ fn main() -> std::io::Result<()> {
         output_dir,
         file_basename: selected_scene_name,
         file_ext: "png",
-        image_dimensions: (1000, 1000),
-        tile_dimensions: (10, 10),
+        image_dimensions: (400, 400),
+        tile_dimensions: (50, 50),
 
         gamma_correction: 2.0,
-        samples_per_round: 100,
-        round_limit: None,
+        samples_per_round: 250,
+        round_limit: Some(1),
         max_bounces: 50,
 
         pixels_per_progress_update: 1000,
@@ -97,8 +99,126 @@ fn main() -> std::io::Result<()> {
     };
     let elapsed = start.elapsed();
     println!("Done in {}", utils::format_duration(elapsed));
-
     Ok(())
+}
+
+fn final_scene() -> Scene {
+    let mut rng = rand::thread_rng();
+
+    // Textures
+    let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::BLACK);
+    let solid_white: Arc<dyn Texture> = Arc::new(SolidColor::WHITE);
+    let solid_ground: Arc<dyn Texture> = Arc::new(SolidColor::from_rgb(0.48, 0.83, 0.53));
+    let solid_white_light: Arc<dyn Texture> = Arc::new(SolidColor::from_rgb(7.0, 7.0, 7.0));
+    let solid_red_motion_sphere: Arc<dyn Texture> = Arc::new(SolidColor::from_rgb(0.7, 0.3, 0.1));
+    let solid_light_grey_frosted_metal: Arc<dyn Texture> =
+        Arc::new(SolidColor::from_rgb(0.9, 0.9, 0.8));
+
+    // Materials
+    let lambertian_ground: Arc<dyn Material> = Arc::new(Lambertian::new(
+        Arc::clone(&solid_ground),
+        Arc::clone(&solid_black),
+    ));
+    let lambertian_light: Arc<dyn Material> = Arc::new(Lambertian::new(
+        Arc::clone(&solid_black),
+        Arc::clone(&solid_white_light),
+    ));
+    let lambertian_red_motion_sphere: Arc<dyn Material> = Arc::new(Lambertian::new(
+        Arc::clone(&solid_red_motion_sphere),
+        Arc::clone(&solid_black),
+    ));
+    let dielectric_glass: Arc<dyn Material> = Arc::new(Dielectric::new(
+        Arc::clone(&solid_white),
+        Arc::clone(&solid_black),
+        1.5,
+    ));
+    let specular_frosted_metal: Arc<dyn Material> = Arc::new(Specular::new(
+        Arc::clone(&solid_light_grey_frosted_metal),
+        Arc::clone(&solid_black),
+        1.0,
+    ));
+
+    // Primitives
+    let mut world: Box<List> = Box::new(List::new());
+
+    let mut ground_boxes = List::new();
+    let width = 100.0;
+    for i in 0..20 {
+        for j in 0..20 {
+            let x0 = -1000.0 + i as f64 * width;
+            let z0 = -1000.0 + j as f64 * width;
+            let y0 = 0.0;
+
+            let x1 = x0 + width;
+            let y1 = rng.gen_range(1.0..101.0);
+            let z1 = z0 + width;
+
+            ground_boxes.push(Box::new(AxisAlignedPBox::new(
+                Point::new(x0, y0, z0),
+                Point::new(x1, y1, z1),
+                true,
+                Arc::clone(&lambertian_ground),
+            )))
+        }
+    }
+    world.push(Box::new(BVH::from_list(ground_boxes)));
+
+    let light_panel = Box::new(Parallelogram::new(
+        Point::new(123.0, 554.0, 147.0),
+        Vector::new(300.0, 0.0, 0.0),
+        Vector::new(0.0, 0.0, 265.0),
+        false,
+        Arc::clone(&lambertian_light),
+    ));
+    world.push(light_panel);
+
+    let center1 = Point::new(400.0, 400.0, 200.0);
+    let center2 = center1 + Vector::new(30.0, 0.0, 0.0);
+    let motion_sphere = Box::new(Sphere::new_in_motion(
+        center1,
+        center2,
+        50.0,
+        Arc::clone(&lambertian_red_motion_sphere),
+    ));
+    world.push(motion_sphere);
+
+    let glass_sphere = Box::new(Sphere::new(
+        Point::new(260.0, 150.0, 45.0),
+        50.0,
+        Arc::clone(&dielectric_glass),
+    ));
+    world.push(glass_sphere);
+
+    let metal_sphere = Box::new(Sphere::new(
+        Point::new(0.0, 150.0, 145.0),
+        50.0,
+        Arc::clone(&specular_frosted_metal),
+    ));
+    world.push(metal_sphere);
+
+    // Camera
+    let vertical_field_of_view_degrees = 40.0;
+    let eye_location = Point::new(478.0, 278.0, -600.0);
+    let target_location = Point::new(278.0, 278.0, 0.0);
+    let view_up = Vector::UP;
+
+    let defocus_angle_degrees = 0.0;
+    let focus_distance = 1.0;
+
+    let camera = Camera::new(
+        vertical_field_of_view_degrees,
+        eye_location,
+        target_location,
+        view_up,
+        defocus_angle_degrees,
+        focus_distance,
+    );
+
+    Scene {
+        camera,
+        world,
+        background_color: Color::BLACK,
+    }
 }
 
 fn cornell_box() -> Scene {
@@ -171,12 +291,58 @@ fn cornell_box() -> Scene {
     )));
     // ceiling light
     world.push(Box::new(Parallelogram::new(
-        Point::new(0.38198, 0.99820, -0.59820),
-        Vector::new(0.23423, 0.0, 0.0),
-        Vector::new(0.0, 0.0, 0.18919),
-        true,
+        Point::new(1.0 - (343.0 / 555.0), 554.0 / 555.0, -332.0 / 555.0),
+        Vector::new(130.0 / 555.0, 0.0, 0.0),
+        Vector::new(0.0, 0.0, 105.0 / 555.0),
+        false,
         Arc::clone(&lambertian_white_light),
     )));
+
+    // far left box
+    let far_left_box = Box::new(AxisAlignedPBox::new(
+        Point::ZERO,
+        Point::ZERO + Vector::new(-165.0, 330.0, -165.0) / 555.0,
+        false,
+        Arc::clone(&lambertian_white),
+    ));
+    let far_left_box = Box::new(RotateYAxis::new(
+        far_left_box,
+        Angle::Degrees(15.0),
+        Point::ORIGIN,
+    ));
+    let far_left_box = Box::new(Translate::new(
+        far_left_box,
+        Vector::new(1.0 - (265.0 / 555.0), 0.0, -295.0 / 555.0),
+    ));
+    let far_left_box = Box::new(volumes::Constant::new(
+        far_left_box,
+        0.01 * 555.0,
+        Arc::new(SolidColor::BLACK),
+    ));
+    world.push(far_left_box);
+
+    // near right box
+    let near_right_box = Box::new(AxisAlignedPBox::new(
+        Point::ZERO,
+        Point::ZERO + Vector::new(-165.0, 165.0, -165.0) / 555.0,
+        false,
+        Arc::clone(&lambertian_white),
+    ));
+    let near_right_box = Box::new(RotateYAxis::new(
+        near_right_box,
+        Angle::Degrees(-18.0),
+        Point::ORIGIN,
+    ));
+    let near_right_box = Box::new(Translate::new(
+        near_right_box,
+        Vector::new(1.0 - (130.0 / 555.0), 0.0, -65.0 / 555.0),
+    ));
+    let near_right_box = Box::new(volumes::Constant::new(
+        near_right_box,
+        0.01 * 555.0,
+        Arc::new(SolidColor::WHITE),
+    ));
+    world.push(near_right_box);
 
     // Camera
     let vertical_field_of_view_degrees = 40.0;

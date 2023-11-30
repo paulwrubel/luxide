@@ -20,6 +20,7 @@ noise = "0.8.2"
 rand = "0.8.5"
 rayon = "1.8.0"
 criterion = "0.5.1"
+dyn-clone = "1.0.16"
 
 [[bench]]
 name = "aabb"

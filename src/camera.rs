@@ -6,7 +6,7 @@ use crate::{
     geometry::{Intersect, Point, Ray, Vector},
     parameters::Parameters,
     shading::Color,
-    utils::{Degrees, Interval},
+    utils::{Angle, Interval},
 };
 
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -89,8 +89,10 @@ impl Camera {
             viewport_upper_left + 0.5 * (self.pixel_delta_u + self.pixel_delta_v);
 
         // defocus disk
-        let defocus_disk_radius =
-            self.focus_distance * Degrees(self.defocus_angle_degrees / 2.0).as_radians().tan();
+        let defocus_disk_radius = self.focus_distance
+            * Angle::Degrees(self.defocus_angle_degrees / 2.0)
+                .as_radians()
+                .tan();
         self.defocus_disk_u = defocus_disk_radius * self.u;
         self.defocus_disk_v = defocus_disk_radius * self.v;
     }

@@ -8,6 +8,7 @@ use crate::{
 
 use super::AABB;
 
+#[derive(Clone)]
 pub struct Parallelogram {
     lower_left: Point,
     u: Vector,

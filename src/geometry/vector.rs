@@ -3,7 +3,7 @@ use std::ops::{Index, IndexMut, Neg};
 use auto_ops::{impl_op_ex, impl_op_ex_commutative};
 use rand::Rng;
 
-use crate::utils::Radians;
+use crate::utils::Angle;
 
 #[derive(Debug, Copy, Clone, PartialEq, Default)]
 pub struct Vector {
@@ -18,10 +18,29 @@ impl Vector {
         y: 0.0,
         z: 0.0,
     };
+
     pub const ONE: Self = Self {
         x: 1.0,
         y: 1.0,
         z: 1.0,
+    };
+
+    pub const RIGHT: Self = Self {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    };
+
+    pub const UP: Self = Self {
+        x: 0.0,
+        y: 1.0,
+        z: 0.0,
+    };
+
+    pub const FORWARD: Self = Self {
+        x: 0.0,
+        y: 0.0,
+        z: -1.0,
     };
 
     pub fn new(x: f64, y: f64, z: f64) -> Self {
@@ -107,8 +126,8 @@ impl Vector {
         self.x.abs() < s && self.y.abs() < s && self.z.abs() < s
     }
 
-    pub fn angle(&self, other: Self) -> Radians {
-        Radians((self.dot(other) / (self.length() * other.length())).acos())
+    pub fn angle(&self, other: Self) -> Angle {
+        Angle::Radians((self.dot(other) / (self.length() * other.length())).acos())
     }
 
     pub fn dot(&self, other: Self) -> f64 {

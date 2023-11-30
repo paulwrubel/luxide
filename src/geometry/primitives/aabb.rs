@@ -1,15 +1,17 @@
 use std::ops::{Index, IndexMut};
 
+use auto_ops::{impl_op_ex, impl_op_ex_commutative};
+
 use crate::{
-    geometry::{Point, Ray},
+    geometry::{Point, Ray, Vector},
     utils::Interval,
 };
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct AABB {
-    x_interval: Interval,
-    y_interval: Interval,
-    z_interval: Interval,
+    pub x_interval: Interval,
+    pub y_interval: Interval,
+    pub z_interval: Interval,
 }
 
 impl AABB {
@@ -126,3 +128,31 @@ impl IndexMut<usize> for AABB {
         }
     }
 }
+
+impl_op_ex_commutative!(+ |a: &AABB, b: &Vector| -> AABB {
+    AABB {
+        x_interval: a.x_interval + b.x,
+        y_interval: a.y_interval + b.y,
+        z_interval: a.z_interval + b.z,
+    }
+});
+
+impl_op_ex!(+= |a: &mut AABB, b: &Vector| {
+    a.x_interval += b.x;
+    a.y_interval += b.y;
+    a.z_interval += b.z;
+});
+
+impl_op_ex!(-|a: &AABB, b: &Vector| -> AABB {
+    AABB {
+        x_interval: a.x_interval - b.x,
+        y_interval: a.y_interval - b.y,
+        z_interval: a.z_interval - b.z,
+    }
+});
+
+impl_op_ex!(-= |a: &mut AABB, b: &Vector|  {
+    a.x_interval -= b.x;
+    a.y_interval -= b.y;
+    a.z_interval -= b.z;
+});

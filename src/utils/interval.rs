@@ -1,3 +1,5 @@
+use auto_ops::{impl_op_ex, impl_op_ex_commutative};
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Interval {
     pub minimum: f64,
@@ -58,3 +60,27 @@ impl Interval {
         }
     }
 }
+
+impl_op_ex_commutative!(+ |a: &Interval, b: &f64| -> Interval {
+    Interval {
+        minimum: a.minimum + b,
+        maximum: a.maximum + b,
+    }
+});
+
+impl_op_ex!(+= |a: &mut Interval, b: &f64| {
+    a.minimum += b;
+    a.maximum += b;
+});
+
+impl_op_ex!(-|a: &Interval, b: &f64| -> Interval {
+    Interval {
+        minimum: a.minimum - b,
+        maximum: a.maximum - b,
+    }
+});
+
+impl_op_ex!(-= |a: &mut Interval, b: &f64|  {
+    a.minimum -= b;
+    a.maximum -= b;
+});

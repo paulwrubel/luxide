@@ -4,6 +4,9 @@ use crate::geometry::{Point, Ray, RayHit};
 mod dielectric;
 pub use dielectric::Dielectric;
 
+mod isotropic;
+pub use isotropic::Isotropic;
+
 mod lambertian;
 pub use lambertian::Lambertian;
 

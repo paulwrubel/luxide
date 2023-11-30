@@ -7,11 +7,13 @@ use crate::{
 
 use super::List;
 
+#[derive(Clone)]
 enum BVHNode {
     Branch { left: Box<BVH>, right: Box<BVH> },
     Leaf(Box<dyn Intersect>),
 }
 
+#[derive(Clone)]
 pub struct BVH {
     tree: BVHNode,
     bounding_box: AABB,
@@ -85,7 +87,7 @@ impl BVH {
     }
 
     pub fn from_list(list: List) -> Self {
-        Self::new(list.list)
+        Self::new(list.take_items())
     }
 }
 
