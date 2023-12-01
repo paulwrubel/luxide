@@ -20,11 +20,11 @@ impl Translate {
         }
     }
 
-    pub fn world_to_local(&self, v: Vector) -> Vector {
+    fn world_to_local(&self, v: Vector) -> Vector {
         v - self.translation
     }
 
-    pub fn local_to_world(&self, v: Vector) -> Vector {
+    fn local_to_world(&self, v: Vector) -> Vector {
         v + self.translation
     }
 }

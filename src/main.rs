@@ -68,15 +68,15 @@ fn main() -> std::io::Result<()> {
         output_dir,
         file_basename: selected_scene_name,
         file_ext: "png",
-        image_dimensions: (400, 400),
-        tile_dimensions: (50, 50),
+        image_dimensions: (6000, 6000),
+        tile_dimensions: (10, 10),
 
         gamma_correction: 2.0,
-        samples_per_round: 250,
-        round_limit: Some(1),
-        max_bounces: 50,
+        samples_per_round: 25,
+        round_limit: None,
+        max_bounces: 40,
 
-        pixels_per_progress_update: 1000,
+        pixels_per_progress_update: 100000,
         progress_memory: 50,
 
         scene: &scene,
@@ -108,13 +108,37 @@ fn final_scene() -> Scene {
     // Textures
     let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::BLACK);
     let solid_white: Arc<dyn Texture> = Arc::new(SolidColor::WHITE);
+    let solid_light_grey: Arc<dyn Texture> = Arc::new(SolidColor::from_rgb(0.73, 0.73, 0.73));
     let solid_ground: Arc<dyn Texture> = Arc::new(SolidColor::from_rgb(0.48, 0.83, 0.53));
     let solid_white_light: Arc<dyn Texture> = Arc::new(SolidColor::from_rgb(7.0, 7.0, 7.0));
     let solid_red_motion_sphere: Arc<dyn Texture> = Arc::new(SolidColor::from_rgb(0.7, 0.3, 0.1));
     let solid_light_grey_frosted_metal: Arc<dyn Texture> =
         Arc::new(SolidColor::from_rgb(0.9, 0.9, 0.8));
+    let solid_blue_glass: Arc<dyn Texture> = Arc::new(SolidColor::from_rgb(0.2, 0.4, 0.9));
+    let image_earth_day: Arc<dyn Texture> =
+        Arc::new(Image8Bit::from_filename("./texture_images/8k_earth_daymap.jpg", 2.0).unwrap());
+
+    //perlin noise
+    let input_fn = |p: Point| Point::from_vector(0.1 * p.0);
+    // let output_fn = |n: f64, p: Point| 0.5 * (1.0 + (p.0.z + 10.0 * n).sin());
+    let output_fn = |n: f64, p: Point| 0.5 * (1.0 + (p.0.z + 2.0 * n).sin());
+    // let output_fn = |n: f64, p: Point| n;
+    let noise_perlin = Turbulence::<_, Perlin>::new(Perlin::new(rng.gen_range(0..=u32::MAX)));
+    let noise_perlin: Arc<dyn Texture> = Arc::new(
+        Noise::new(noise_perlin)
+            .map_input(input_fn)
+            .map_output(output_fn),
+    );
 
     // Materials
+    let lambertian_white_pure: Arc<dyn Material> = Arc::new(Lambertian::new(
+        Arc::clone(&solid_white),
+        Arc::clone(&solid_black),
+    ));
+    let lambertian_light_grey: Arc<dyn Material> = Arc::new(Lambertian::new(
+        Arc::clone(&solid_light_grey),
+        Arc::clone(&solid_black),
+    ));
     let lambertian_ground: Arc<dyn Material> = Arc::new(Lambertian::new(
         Arc::clone(&solid_ground),
         Arc::clone(&solid_black),
@@ -137,9 +161,17 @@ fn final_scene() -> Scene {
         Arc::clone(&solid_black),
         1.0,
     ));
+    let lambertian_earth_day: Arc<dyn Material> = Arc::new(Lambertian::new(
+        Arc::clone(&image_earth_day),
+        Arc::clone(&solid_black),
+    ));
+    let lambertian_perlin_noise: Arc<dyn Material> = Arc::new(Lambertian::new(
+        Arc::clone(&noise_perlin),
+        Arc::clone(&solid_black),
+    ));
 
     // Primitives
-    let mut world: Box<List> = Box::new(List::new());
+    let mut world = List::new();
 
     let mut ground_boxes = List::new();
     let width = 100.0;
@@ -182,19 +214,77 @@ fn final_scene() -> Scene {
     ));
     world.push(motion_sphere);
 
-    let glass_sphere = Box::new(Sphere::new(
+    let clear_glass_sphere = Box::new(Sphere::new(
         Point::new(260.0, 150.0, 45.0),
         50.0,
         Arc::clone(&dielectric_glass),
     ));
-    world.push(glass_sphere);
+    world.push(clear_glass_sphere);
 
-    let metal_sphere = Box::new(Sphere::new(
+    let frosted_metal_sphere = Box::new(Sphere::new(
         Point::new(0.0, 150.0, 145.0),
         50.0,
         Arc::clone(&specular_frosted_metal),
     ));
-    world.push(metal_sphere);
+    world.push(frosted_metal_sphere);
+
+    let blue_glass_sphere = Box::new(Sphere::new(
+        Point::new(360.0, 150.0, 145.0),
+        70.0,
+        Arc::clone(&dielectric_glass),
+    ));
+    let blue_glass_sphere_volume_boundary = blue_glass_sphere.clone();
+    world.push(blue_glass_sphere);
+    let blue_glass_sphere_volume = Box::new(volumes::Constant::new(
+        blue_glass_sphere_volume_boundary,
+        0.2,
+        Arc::clone(&solid_blue_glass),
+    ));
+    world.push(blue_glass_sphere_volume);
+
+    let world_volume = Box::new(Sphere::new(
+        Point::new(0.0, 0.0, 0.0),
+        0.0001,
+        Arc::clone(&lambertian_white_pure),
+    ));
+    world.push(world_volume);
+
+    let earth_sphere = Box::new(Sphere::new(
+        Point::new(400.0, 200.0, 400.0),
+        100.0,
+        Arc::clone(&lambertian_earth_day),
+    ));
+    world.push(earth_sphere);
+
+    let perlin_noise_sphere = Box::new(Sphere::new(
+        Point::new(220.0, 280.0, 300.0),
+        80.0,
+        Arc::clone(&lambertian_perlin_noise),
+    ));
+    world.push(perlin_noise_sphere);
+
+    let mut sphere_box = List::new();
+    for _ in 0..1000 {
+        sphere_box.push(Box::new(Sphere::new(
+            Point::from_vector(Vector::random_range(0.0, 165.0)),
+            10.0,
+            Arc::clone(&lambertian_light_grey),
+        )))
+    }
+    let sphere_box = Box::new(BVH::from_list(sphere_box));
+    let sphere_box = Box::new(RotateYAxis::new(
+        sphere_box,
+        Angle::Degrees(15.0),
+        Point::ORIGIN,
+    ));
+    let sphere_box = Box::new(Translate::new(
+        sphere_box,
+        Vector::new(-100.0, 270.0, 395.0),
+    ));
+    world.push(sphere_box);
+
+    // create BVH from world
+    let world = Box::new(BVH::from_list(world));
 
     // Camera
     let vertical_field_of_view_degrees = 40.0;

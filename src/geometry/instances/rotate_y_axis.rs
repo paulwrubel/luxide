@@ -3,12 +3,10 @@ use crate::{
     utils::{Angle, Interval},
 };
 
-use super::Translate;
-
 #[derive(Clone)]
 pub struct RotateYAxis {
     primitive: Box<dyn Intersect>,
-    // translation: Translate,
+    translation: Vector,
     sin_theta: f64,
     cos_theta: f64,
     bounding_box: AABB,
@@ -16,7 +14,8 @@ pub struct RotateYAxis {
 
 impl RotateYAxis {
     pub fn new(primitive: Box<dyn Intersect>, angle: Angle, around: Point) -> Self {
-        let primitive_bbox = primitive.bounding_box();
+        let translation = around.0;
+        let primitive_bbox = primitive.bounding_box() - translation;
 
         let sin_theta = angle.as_radians().sin();
         let cos_theta = angle.as_radians().cos();
@@ -49,13 +48,16 @@ impl RotateYAxis {
 
         Self {
             primitive,
+            translation,
             sin_theta,
             cos_theta,
-            bounding_box: AABB::from_points(min_extent, max_extent),
+            bounding_box: AABB::from_points(min_extent, max_extent) + translation,
         }
     }
 
     fn world_to_local(&self, v: Vector) -> Vector {
+        let v = v - self.translation;
+
         let x = self.cos_theta * v.x - self.sin_theta * v.z;
         let z = self.sin_theta * v.x + self.cos_theta * v.z;
 
@@ -66,7 +68,9 @@ impl RotateYAxis {
         let x = self.cos_theta * v.x + self.sin_theta * v.z;
         let z = -self.sin_theta * v.x + self.cos_theta * v.z;
 
-        Vector::new(x, v.y, z)
+        let v = Vector::new(x, v.y, z);
+
+        v + self.translation
     }
 }
 
