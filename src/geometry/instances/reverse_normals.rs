@@ -9,8 +9,8 @@ use crate::{
 pub struct ReverseNormals(Arc<dyn Geometric>);
 
 impl ReverseNormals {
-    pub fn new(intersectable: Arc<dyn Geometric>) -> Self {
-        Self(Arc::clone(&intersectable))
+    pub fn new(geometric: Arc<dyn Geometric>) -> Self {
+        Self(Arc::clone(&geometric))
     }
 }
 

@@ -7,16 +7,16 @@ use crate::{
 
 #[derive(Clone)]
 pub struct Translate {
-    primitive: Arc<dyn Geometric>,
+    geometric: Arc<dyn Geometric>,
     translation: Vector,
     bounding_box: AABB,
 }
 
 impl Translate {
-    pub fn new(primitive: Arc<dyn Geometric>, translation: Vector) -> Self {
-        let bounding_box = primitive.bounding_box() + translation;
+    pub fn new(geometric: Arc<dyn Geometric>, translation: Vector) -> Self {
+        let bounding_box = geometric.bounding_box() + translation;
         Self {
-            primitive: Arc::clone(&primitive),
+            geometric: Arc::clone(&geometric),
             translation,
             bounding_box,
         }
@@ -37,7 +37,7 @@ impl Geometric for Translate {
 
         local_ray.origin.0 = self.world_to_local(local_ray.origin.0);
 
-        self.primitive
+        self.geometric
             .intersect(local_ray, ray_t)
             .and_then(|mut rh| {
                 rh.point.0 = self.local_to_world(rh.point.0);
