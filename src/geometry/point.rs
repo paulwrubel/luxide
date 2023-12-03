@@ -49,6 +49,12 @@ impl Point {
     }
 }
 
+impl From<[f64; 3]> for Point {
+    fn from(v: [f64; 3]) -> Self {
+        Self(Vector::new(v[0], v[1], v[2]))
+    }
+}
+
 impl Index<usize> for Point {
     type Output = f64;
 

@@ -14,20 +14,20 @@ use crate::{
 
 #[derive(Clone)]
 pub struct Constant {
-    primitive: Box<dyn Intersect>,
+    primitive: Arc<dyn Intersect>,
     negative_inverse_density: f64,
     phase_function: Arc<dyn Material>,
 }
 
 impl Constant {
     pub fn new(
-        primitive: Box<dyn Intersect>,
+        primitive: Arc<dyn Intersect>,
         density: f64,
         reflectance_texture: Arc<dyn Texture>,
     ) -> Self {
         let emittance_texture = Arc::new(SolidColor::BLACK);
         Self {
-            primitive,
+            primitive: Arc::clone(&primitive),
             negative_inverse_density: -1.0 / density,
             phase_function: Arc::new(Isotropic::new(reflectance_texture, emittance_texture)),
         }

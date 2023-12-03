@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::{
     geometry::{primitives::AABB, Intersect, Point, Ray, RayHit, Vector},
     utils::{Angle, Interval},
@@ -5,7 +7,7 @@ use crate::{
 
 #[derive(Clone)]
 pub struct RotateYAxis {
-    primitive: Box<dyn Intersect>,
+    primitive: Arc<dyn Intersect>,
     translation: Vector,
     sin_theta: f64,
     cos_theta: f64,
@@ -13,7 +15,7 @@ pub struct RotateYAxis {
 }
 
 impl RotateYAxis {
-    pub fn new(primitive: Box<dyn Intersect>, angle: Angle, around: Point) -> Self {
+    pub fn new(primitive: Arc<dyn Intersect>, angle: Angle, around: Point) -> Self {
         let translation = around.0;
         let primitive_bbox = primitive.bounding_box() - translation;
 
@@ -47,7 +49,7 @@ impl RotateYAxis {
         }
 
         Self {
-            primitive,
+            primitive: Arc::clone(&primitive),
             translation,
             sin_theta,
             cos_theta,

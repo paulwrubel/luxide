@@ -1,4 +1,4 @@
-use std::cmp::Ordering;
+use std::{cmp::Ordering, sync::Arc};
 
 use crate::{
     geometry::{primitives::AABB, Intersect, Ray, RayHit},
@@ -9,8 +9,8 @@ use super::List;
 
 #[derive(Clone)]
 enum BVHNode {
-    Branch { left: Box<BVH>, right: Box<BVH> },
-    Leaf(Box<dyn Intersect>),
+    Branch { left: Arc<BVH>, right: Arc<BVH> },
+    Leaf(Arc<dyn Intersect>),
 }
 
 #[derive(Clone)]
@@ -20,10 +20,10 @@ pub struct BVH {
 }
 
 impl BVH {
-    pub fn new(mut intersectables: Vec<Box<dyn Intersect>>) -> Self {
+    pub fn new(mut intersectables: Vec<Arc<dyn Intersect>>) -> Self {
         fn box_compare(
             axis: usize,
-        ) -> impl FnMut(&Box<dyn Intersect>, &Box<dyn Intersect>) -> Ordering {
+        ) -> impl FnMut(&Arc<dyn Intersect>, &Arc<dyn Intersect>) -> Ordering {
             move |a, b| {
                 let a_bbox = a.bounding_box();
                 let b_bbox = b.bounding_box();
@@ -34,7 +34,7 @@ impl BVH {
             }
         }
 
-        fn axis_range(intersectables: &Vec<Box<dyn Intersect>>, axis: usize) -> f64 {
+        fn axis_range(intersectables: &Vec<Arc<dyn Intersect>>, axis: usize) -> f64 {
             let (min, max) = intersectables
                 .iter()
                 .fold((f64::MAX, f64::MIN), |(bmin, bmax), p| {
@@ -66,8 +66,8 @@ impl BVH {
                 let right = Self::new(intersectables.drain(list_length / 2..).collect());
                 let left = Self::new(intersectables);
                 BVHNode::Branch {
-                    left: Box::new(left),
-                    right: Box::new(right),
+                    left: Arc::new(left),
+                    right: Arc::new(right),
                 }
             }
         };

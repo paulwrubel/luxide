@@ -2,7 +2,6 @@ use std::{
     collections::{HashMap, VecDeque},
     fs,
     io::{self, stdout, Write},
-    path::Path,
     sync::mpsc,
     thread,
     time::Instant,
@@ -13,7 +12,7 @@ use rand::seq::SliceRandom;
 use rayon::prelude::*;
 use time::{OffsetDateTime, UtcOffset};
 
-use crate::{parameters::Parameters, shading::Color, utils};
+use crate::{parameters::Parameters, scene::Scene, shading::Color, utils};
 
 pub struct Tracer {
     thread_pool: rayon::ThreadPool,
@@ -31,9 +30,24 @@ impl Tracer {
         }
     }
 
-    pub fn render(&mut self, parameters: &Parameters, indentation: usize) -> Result<(), String> {
+    pub fn render(
+        &mut self,
+        parameters: &Parameters,
+        scene: &Scene,
+        indentation: usize,
+    ) -> Result<(), String> {
         let mut img_data = HashMap::new();
         let mut round = 1;
+
+        let now = OffsetDateTime::now_utc().to_offset(self.local_utc_offset);
+        let formatted_timestamp = utils::get_formatted_timestamp_for(now);
+        let output_dir = format!(
+            "{}/{}_{}",
+            parameters.output_dir, scene.name, formatted_timestamp
+        );
+        println!("Initializing output directory: {output_dir}");
+        fs::create_dir_all(&output_dir).map_err(|err| err.to_string())?;
+
         loop {
             let round_limit_string = match parameters.round_limit {
                 Some(limit) => format!("/{}", limit),
@@ -48,14 +62,20 @@ impl Tracer {
             );
 
             let round_img_buffer =
-                self.render_round(round, &mut img_data, parameters, indentation + 2);
+                self.render_round(round, &mut img_data, parameters, scene, indentation + 2);
 
             println!(
                 "{}Writing round {} data to file...",
                 " ".repeat(indentation),
                 round
             );
-            self.write_to_file(&round_img_buffer, round, parameters, indentation)?;
+            self.write_to_file(
+                &round_img_buffer,
+                round,
+                parameters,
+                &output_dir,
+                indentation,
+            )?;
 
             if let Some(limit) = parameters.round_limit {
                 if limit == round {
@@ -72,19 +92,27 @@ impl Tracer {
         round: u32,
         img_data: &mut HashMap<(u32, u32), Color>,
         parameters: &Parameters,
+        scene: &Scene,
         indentation: usize,
     ) -> RgbaImage {
         // get self as immutable reference
 
-        self.thread_pool
-            .install(|| self.parallel_render_round(round, img_data, parameters, indentation));
+        self.thread_pool.install(|| {
+            self.parallel_render_round(round, img_data, parameters, scene, indentation)
+        });
 
         println!("{}Writing data to image buffer...", " ".repeat(indentation));
         let (width, height) = parameters.image_dimensions;
         let mut buffer = ImageBuffer::new(width, height);
         for ((x, y), color) in img_data {
             let pixel = buffer.get_pixel_mut(*x, *y);
-            *pixel = color.as_gamma_corrected_rgba_u8(1.0 / parameters.gamma_correction);
+            *pixel = if parameters.use_scaling_truncation {
+                color
+                    .scale_down(1.0)
+                    .as_gamma_corrected_rgba_u8(1.0 / parameters.gamma_correction)
+            } else {
+                color.as_gamma_corrected_rgba_u8(1.0 / parameters.gamma_correction)
+            }
         }
 
         buffer
@@ -95,14 +123,15 @@ impl Tracer {
         round: u32,
         img_data: &mut HashMap<(u32, u32), Color>,
         parameters: &Parameters,
+        scene: &Scene,
         indentation: usize,
     ) {
-        let world = &parameters.scene.world;
-        let mut cam = parameters.scene.camera.clone();
+        let world = &scene.world;
+        let mut cam = scene.camera.clone();
         let (width, height) = parameters.image_dimensions;
 
         println!("{}Initializing camera...", " ".repeat(indentation));
-        cam.initialize(parameters);
+        cam.initialize(parameters, scene);
 
         // let start = Instant::now();
         // let pixel_count = parameters.image_width * parameters.image_height;
@@ -198,13 +227,14 @@ impl Tracer {
         buffer: &RgbaImage,
         round: u32,
         p: &Parameters,
+        output_dir: &str,
         indentation: usize,
     ) -> Result<(), String> {
         let filepath = match Self::get_final_image_path(
             round * p.samples_per_round,
-            p.output_dir,
-            p.file_basename,
-            p.file_ext,
+            output_dir,
+            &p.file_basename,
+            &p.file_ext,
             self.local_utc_offset,
             indentation,
         ) {
@@ -223,7 +253,7 @@ impl Tracer {
 
     fn get_final_image_path(
         total_samples: u32,
-        output_dir: &Path,
+        output_dir: &str,
         file_basename: &str,
         file_ext: &str,
         local_offset: time::UtcOffset,
@@ -235,8 +265,7 @@ impl Tracer {
         let formatted_timestamp = utils::get_formatted_timestamp_for(now);
         let filepath = format!(
             "{}/{file_basename}_{total_samples}s_{}.{file_ext}",
-            output_dir.display(),
-            formatted_timestamp
+            output_dir, formatted_timestamp
         );
         Ok(filepath)
     }

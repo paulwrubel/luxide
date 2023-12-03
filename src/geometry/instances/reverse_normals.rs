@@ -1,14 +1,16 @@
+use std::sync::Arc;
+
 use crate::{
     geometry::{primitives::AABB, Intersect, Ray, RayHit},
     utils::Interval,
 };
 
 #[derive(Clone)]
-pub struct ReverseNormals(Box<dyn Intersect>);
+pub struct ReverseNormals(Arc<dyn Intersect>);
 
 impl ReverseNormals {
-    pub fn new(intersectable: Box<dyn Intersect>) -> Self {
-        Self(intersectable)
+    pub fn new(intersectable: Arc<dyn Intersect>) -> Self {
+        Self(Arc::clone(&intersectable))
     }
 }
 

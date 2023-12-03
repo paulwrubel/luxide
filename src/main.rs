@@ -1,6 +1,4 @@
-use std::{
-    collections::HashMap, fs, num::NonZeroUsize, path::Path, sync::Arc, thread, time::Instant,
-};
+use std::{collections::HashMap, env, fs, num::NonZeroUsize, sync::Arc, thread, time::Instant};
 
 use luxide::{
     camera::Camera,
@@ -34,12 +32,59 @@ const _16K: (u32, u32) = (15360, 8640);
 
 const OUTPUT_DIR: &str = "./output";
 
-fn main() -> std::io::Result<()> {
+fn main() -> Result<(), String> {
     println!("Starting Luxide...");
+
+    let args: Vec<String> = env::args().collect();
+    if args.len() > 1 {
+        run(&args[1])
+    } else {
+        run_legacy()
+    }
+}
+
+fn run(config_filename: &str) -> Result<(), String> {
+    println!("Parsing configuration file...");
+    let (parameters, scene) = luxide::deserialization::parse_yaml(config_filename)?;
 
     let local_utc_offset = time::UtcOffset::current_local_offset().unwrap();
 
+    let now = OffsetDateTime::now_utc().to_offset(local_utc_offset);
+    let formatted_timestamp = utils::get_formatted_timestamp_for(now);
+
+    let sub_folder = format!("{}_{}", scene.name, formatted_timestamp);
+
+    let output_dir = format!("{OUTPUT_DIR}/{sub_folder}");
+    println!("Initializing output directory: {output_dir}");
+    fs::create_dir_all(&output_dir).map_err(|err| err.to_string())?;
+
+    let thread_count = thread::available_parallelism()
+        .unwrap_or(NonZeroUsize::new(24).unwrap())
+        .get();
+
+    let mut tracer = Tracer::new(thread_count, local_utc_offset);
+    println!(
+        "Rendering scene \"{}\" with {} threads...",
+        scene.name, thread_count
+    );
+    let start = Instant::now();
+    match tracer.render(&parameters, &scene, 2) {
+        Ok(()) => {
+            println!("Saved image!");
+        }
+        Err(e) => {
+            println!("Failed to save image: {e}");
+        }
+    };
+    let elapsed = start.elapsed();
+    println!("Done in {}", utils::format_duration(elapsed));
+    Ok(())
+}
+
+fn run_legacy() -> Result<(), String> {
     let selected_scene_name = "final_scene";
+
+    let local_utc_offset = time::UtcOffset::current_local_offset().unwrap();
 
     println!("Assembling scenes...");
     let mut scenes = HashMap::new();
@@ -56,18 +101,18 @@ fn main() -> std::io::Result<()> {
 
     let now = OffsetDateTime::now_utc().to_offset(local_utc_offset);
     let formatted_timestamp = utils::get_formatted_timestamp_for(now);
-
-    let sub_folder = format!("{selected_scene_name}_{formatted_timestamp}");
-
-    let output_dir_string = format!("{OUTPUT_DIR}/{sub_folder}");
-    let output_dir = Path::new(&output_dir_string);
-    println!("Initializing output directory: {output_dir_string}");
-    fs::create_dir_all(output_dir)?;
+    let output_dir = format!(
+        "{}/{}_{}",
+        OUTPUT_DIR, selected_scene_name, formatted_timestamp
+    );
+    println!("Initializing output directory: {output_dir}");
+    fs::create_dir_all(&output_dir).map_err(|err| err.to_string())?;
 
     let parameters = Parameters {
-        output_dir,
-        file_basename: selected_scene_name,
-        file_ext: "png",
+        output_dir: OUTPUT_DIR.to_string(),
+        use_subdir: true,
+        file_basename: selected_scene_name.to_string(),
+        file_ext: "png".to_string(),
         image_dimensions: (6000, 6000),
         tile_dimensions: (10, 10),
 
@@ -75,11 +120,10 @@ fn main() -> std::io::Result<()> {
         samples_per_round: 25,
         round_limit: None,
         max_bounces: 40,
+        use_scaling_truncation: true,
 
         pixels_per_progress_update: 100000,
         progress_memory: 50,
-
-        scene: &scene,
     };
 
     let thread_count = thread::available_parallelism()
@@ -89,7 +133,7 @@ fn main() -> std::io::Result<()> {
     let mut tracer = Tracer::new(thread_count, local_utc_offset);
     println!("Rendering scene \"{selected_scene_name}\" with {thread_count} threads...");
     let start = Instant::now();
-    match tracer.render(&parameters, 2) {
+    match tracer.render(&parameters, &scene, 2) {
         Ok(()) => {
             println!("Saved image!");
         }
@@ -185,7 +229,7 @@ fn final_scene() -> Scene {
             let y1 = rng.gen_range(1.0..101.0);
             let z1 = z0 + width;
 
-            ground_boxes.push(Box::new(AxisAlignedPBox::new(
+            ground_boxes.push(Arc::new(AxisAlignedPBox::new(
                 Point::new(x0, y0, z0),
                 Point::new(x1, y1, z1),
                 true,
@@ -193,9 +237,9 @@ fn final_scene() -> Scene {
             )))
         }
     }
-    world.push(Box::new(BVH::from_list(ground_boxes)));
+    world.push(Arc::new(BVH::from_list(ground_boxes)));
 
-    let light_panel = Box::new(Parallelogram::new(
+    let light_panel = Arc::new(Parallelogram::new(
         Point::new(123.0, 554.0, 147.0),
         Vector::new(300.0, 0.0, 0.0),
         Vector::new(0.0, 0.0, 265.0),
@@ -206,7 +250,7 @@ fn final_scene() -> Scene {
 
     let center1 = Point::new(400.0, 400.0, 200.0);
     let center2 = center1 + Vector::new(30.0, 0.0, 0.0);
-    let motion_sphere = Box::new(Sphere::new_in_motion(
+    let motion_sphere = Arc::new(Sphere::new_in_motion(
         center1,
         center2,
         50.0,
@@ -214,49 +258,49 @@ fn final_scene() -> Scene {
     ));
     world.push(motion_sphere);
 
-    let clear_glass_sphere = Box::new(Sphere::new(
+    let clear_glass_sphere = Arc::new(Sphere::new(
         Point::new(260.0, 150.0, 45.0),
         50.0,
         Arc::clone(&dielectric_glass),
     ));
     world.push(clear_glass_sphere);
 
-    let frosted_metal_sphere = Box::new(Sphere::new(
+    let frosted_metal_sphere = Arc::new(Sphere::new(
         Point::new(0.0, 150.0, 145.0),
         50.0,
         Arc::clone(&specular_frosted_metal),
     ));
     world.push(frosted_metal_sphere);
 
-    let blue_glass_sphere = Box::new(Sphere::new(
+    let blue_glass_sphere = Arc::new(Sphere::new(
         Point::new(360.0, 150.0, 145.0),
         70.0,
         Arc::clone(&dielectric_glass),
     ));
     let blue_glass_sphere_volume_boundary = blue_glass_sphere.clone();
     world.push(blue_glass_sphere);
-    let blue_glass_sphere_volume = Box::new(volumes::Constant::new(
+    let blue_glass_sphere_volume = Arc::new(volumes::Constant::new(
         blue_glass_sphere_volume_boundary,
         0.2,
         Arc::clone(&solid_blue_glass),
     ));
     world.push(blue_glass_sphere_volume);
 
-    let world_volume = Box::new(Sphere::new(
+    let world_volume = Arc::new(Sphere::new(
         Point::new(0.0, 0.0, 0.0),
         0.0001,
         Arc::clone(&lambertian_white_pure),
     ));
     world.push(world_volume);
 
-    let earth_sphere = Box::new(Sphere::new(
+    let earth_sphere = Arc::new(Sphere::new(
         Point::new(400.0, 200.0, 400.0),
         100.0,
         Arc::clone(&lambertian_earth_day),
     ));
     world.push(earth_sphere);
 
-    let perlin_noise_sphere = Box::new(Sphere::new(
+    let perlin_noise_sphere = Arc::new(Sphere::new(
         Point::new(220.0, 280.0, 300.0),
         80.0,
         Arc::clone(&lambertian_perlin_noise),
@@ -265,26 +309,26 @@ fn final_scene() -> Scene {
 
     let mut sphere_box = List::new();
     for _ in 0..1000 {
-        sphere_box.push(Box::new(Sphere::new(
+        sphere_box.push(Arc::new(Sphere::new(
             Point::from_vector(Vector::random_range(0.0, 165.0)),
             10.0,
             Arc::clone(&lambertian_light_grey),
         )))
     }
-    let sphere_box = Box::new(BVH::from_list(sphere_box));
-    let sphere_box = Box::new(RotateYAxis::new(
+    let sphere_box = Arc::new(BVH::from_list(sphere_box));
+    let sphere_box = Arc::new(RotateYAxis::new(
         sphere_box,
         Angle::Degrees(15.0),
         Point::ORIGIN,
     ));
-    let sphere_box = Box::new(Translate::new(
+    let sphere_box = Arc::new(Translate::new(
         sphere_box,
         Vector::new(-100.0, 270.0, 395.0),
     ));
     world.push(sphere_box);
 
     // create BVH from world
-    let world = Box::new(BVH::from_list(world));
+    let world = Arc::new(BVH::from_list(world));
 
     // Camera
     let vertical_field_of_view_degrees = 40.0;
@@ -305,6 +349,7 @@ fn final_scene() -> Scene {
     );
 
     Scene {
+        name: "final_scene".to_string(),
         camera,
         world,
         background_color: Color::BLACK,
@@ -338,9 +383,9 @@ fn cornell_box() -> Scene {
     ));
 
     // Primitives
-    let mut world = Box::new(List::new());
+    let mut world = List::new();
     // left wall (green)
-    world.push(Box::new(Parallelogram::new(
+    world.push(Arc::new(Parallelogram::new(
         Point::new(0.0, 0.0, 0.0),
         Vector::new(0.0, 0.0, -1.0),
         Vector::new(0.0, 1.0, 0.0),
@@ -348,7 +393,7 @@ fn cornell_box() -> Scene {
         Arc::clone(&lambertian_green),
     )));
     // right wall (red)
-    world.push(Box::new(Parallelogram::new(
+    world.push(Arc::new(Parallelogram::new(
         Point::new(1.0, 0.0, -1.0),
         Vector::new(0.0, 0.0, 1.0),
         Vector::new(0.0, 1.0, 0.0),
@@ -356,7 +401,7 @@ fn cornell_box() -> Scene {
         Arc::clone(&lambertian_red),
     )));
     // floor (white)
-    world.push(Box::new(Parallelogram::new(
+    world.push(Arc::new(Parallelogram::new(
         Point::new(0.0, 0.0, 0.0),
         Vector::new(1.0, 0.0, 0.0),
         Vector::new(0.0, 0.0, -1.0),
@@ -364,7 +409,7 @@ fn cornell_box() -> Scene {
         Arc::clone(&lambertian_white),
     )));
     // ceiling (white)
-    world.push(Box::new(Parallelogram::new(
+    world.push(Arc::new(Parallelogram::new(
         Point::new(0.0, 1.0, -1.0),
         Vector::new(1.0, 0.0, 0.0),
         Vector::new(0.0, 0.0, 1.0),
@@ -372,7 +417,7 @@ fn cornell_box() -> Scene {
         Arc::clone(&lambertian_white),
     )));
     // back wall (white)
-    world.push(Box::new(Parallelogram::new(
+    world.push(Arc::new(Parallelogram::new(
         Point::new(0.0, 0.0, -1.0),
         Vector::new(1.0, 0.0, 0.0),
         Vector::new(0.0, 1.0, 0.0),
@@ -380,7 +425,7 @@ fn cornell_box() -> Scene {
         Arc::clone(&lambertian_white),
     )));
     // ceiling light
-    world.push(Box::new(Parallelogram::new(
+    world.push(Arc::new(Parallelogram::new(
         Point::new(1.0 - (343.0 / 555.0), 554.0 / 555.0, -332.0 / 555.0),
         Vector::new(130.0 / 555.0, 0.0, 0.0),
         Vector::new(0.0, 0.0, 105.0 / 555.0),
@@ -389,22 +434,22 @@ fn cornell_box() -> Scene {
     )));
 
     // far left box
-    let far_left_box = Box::new(AxisAlignedPBox::new(
+    let far_left_box = Arc::new(AxisAlignedPBox::new(
         Point::ZERO,
         Point::ZERO + Vector::new(-165.0, 330.0, -165.0) / 555.0,
         false,
         Arc::clone(&lambertian_white),
     ));
-    let far_left_box = Box::new(RotateYAxis::new(
+    let far_left_box = Arc::new(RotateYAxis::new(
         far_left_box,
         Angle::Degrees(15.0),
         Point::ORIGIN,
     ));
-    let far_left_box = Box::new(Translate::new(
+    let far_left_box = Arc::new(Translate::new(
         far_left_box,
         Vector::new(1.0 - (265.0 / 555.0), 0.0, -295.0 / 555.0),
     ));
-    let far_left_box = Box::new(volumes::Constant::new(
+    let far_left_box = Arc::new(volumes::Constant::new(
         far_left_box,
         0.01 * 555.0,
         Arc::new(SolidColor::BLACK),
@@ -412,22 +457,22 @@ fn cornell_box() -> Scene {
     world.push(far_left_box);
 
     // near right box
-    let near_right_box = Box::new(AxisAlignedPBox::new(
+    let near_right_box = Arc::new(AxisAlignedPBox::new(
         Point::ZERO,
         Point::ZERO + Vector::new(-165.0, 165.0, -165.0) / 555.0,
         false,
         Arc::clone(&lambertian_white),
     ));
-    let near_right_box = Box::new(RotateYAxis::new(
+    let near_right_box = Arc::new(RotateYAxis::new(
         near_right_box,
         Angle::Degrees(-18.0),
         Point::ORIGIN,
     ));
-    let near_right_box = Box::new(Translate::new(
+    let near_right_box = Arc::new(Translate::new(
         near_right_box,
         Vector::new(1.0 - (130.0 / 555.0), 0.0, -65.0 / 555.0),
     ));
-    let near_right_box = Box::new(volumes::Constant::new(
+    let near_right_box = Arc::new(volumes::Constant::new(
         near_right_box,
         0.01 * 555.0,
         Arc::new(SolidColor::WHITE),
@@ -453,8 +498,9 @@ fn cornell_box() -> Scene {
     );
 
     Scene {
+        name: "cornell_box".to_string(),
         camera,
-        world,
+        world: Arc::new(world),
         background_color: Color::BLACK,
     }
 }
@@ -491,25 +537,25 @@ fn simple_light() -> Scene {
     ));
 
     // Primitives
-    let mut world = Box::new(List::new());
-    world.push(Box::new(Sphere::new(
+    let mut world = List::new();
+    world.push(Arc::new(Sphere::new(
         Point::new(0.0, -1000.0, 0.0),
         1000.0,
         Arc::clone(&lambertian_perlin),
     )));
-    world.push(Box::new(Sphere::new(
+    world.push(Arc::new(Sphere::new(
         Point::new(0.0, 2.0, 0.0),
         2.0,
         Arc::clone(&lambertian_perlin),
     )));
-    world.push(Box::new(Parallelogram::new(
+    world.push(Arc::new(Parallelogram::new(
         Point::new(3.0, 1.0, -2.0),
         Vector::new(2.0, 0.0, 0.0),
         Vector::new(0.0, 2.0, 0.0),
         true,
         Arc::clone(&lambertian_light),
     )));
-    world.push(Box::new(Sphere::new(
+    world.push(Arc::new(Sphere::new(
         Point::new(0.0, 7.0, 0.0),
         2.0,
         Arc::clone(&lambertian_light),
@@ -534,8 +580,9 @@ fn simple_light() -> Scene {
     );
 
     Scene {
+        name: "simple_light".to_string(),
         camera,
-        world,
+        world: Arc::new(world),
         background_color: Color::BLACK,
     }
 }
@@ -573,36 +620,36 @@ fn quads() -> Scene {
 
     // Primitives
     let is_culled = false;
-    let mut world = Box::new(List::new());
-    world.push(Box::new(Parallelogram::new(
+    let mut world = List::new();
+    world.push(Arc::new(Parallelogram::new(
         Point::new(-3.0, -2.0, 5.0),
         Vector::new(0.0, 0.0, -4.0),
         Vector::new(0.0, 4.0, 0.0),
         is_culled,
         Arc::clone(&lambertian_red),
     )));
-    world.push(Box::new(Parallelogram::new(
+    world.push(Arc::new(Parallelogram::new(
         Point::new(-2.0, -2.0, 0.0),
         Vector::new(4.0, 0.0, 0.0),
         Vector::new(0.0, 4.0, 0.0),
         is_culled,
         Arc::clone(&lambertian_green),
     )));
-    world.push(Box::new(Parallelogram::new(
+    world.push(Arc::new(Parallelogram::new(
         Point::new(3.0, -2.0, 1.0),
         Vector::new(0.0, 0.0, 4.0),
         Vector::new(0.0, 4.0, 0.0),
         is_culled,
         Arc::clone(&lambertian_blue),
     )));
-    world.push(Box::new(Parallelogram::new(
+    world.push(Arc::new(Parallelogram::new(
         Point::new(-2.0, 3.0, 1.0),
         Vector::new(4.0, 0.0, 0.0),
         Vector::new(0.0, 0.0, 4.0),
         is_culled,
         Arc::clone(&lambertian_orange),
     )));
-    world.push(Box::new(Parallelogram::new(
+    world.push(Arc::new(Parallelogram::new(
         Point::new(-2.0, -3.0, 5.0),
         Vector::new(4.0, 0.0, 0.0),
         Vector::new(0.0, 0.0, -4.0),
@@ -629,8 +676,9 @@ fn quads() -> Scene {
     );
 
     Scene {
+        name: "quads".to_string(),
         camera,
-        world,
+        world: Arc::new(world),
         background_color: Color::new(0.7, 0.8, 1.0),
     }
 }
@@ -662,13 +710,13 @@ fn two_perlin_spheres() -> Scene {
     ));
 
     // Primitives
-    let mut world = Box::new(List::new());
-    world.push(Box::new(Sphere::new(
+    let mut world = List::new();
+    world.push(Arc::new(Sphere::new(
         Point::new(0.0, -1000.0, 0.0),
         1000.0,
         Arc::clone(&lambertian_perlin),
     )));
-    world.push(Box::new(Sphere::new(
+    world.push(Arc::new(Sphere::new(
         Point::new(0.0, 2.0, 0.0),
         2.0,
         Arc::clone(&lambertian_perlin),
@@ -693,8 +741,9 @@ fn two_perlin_spheres() -> Scene {
     );
 
     Scene {
+        name: "two_perlin_spheres".to_string(),
         camera,
-        world,
+        world: Arc::new(world),
         background_color: Color::new(0.7, 0.8, 1.0),
     }
 }
@@ -731,24 +780,24 @@ fn earth() -> Scene {
     ));
 
     // Primitives
-    let mut world = Box::new(List::new());
-    world.push(Box::new(Sphere::new(
+    let mut world = List::new();
+    world.push(Arc::new(Sphere::new(
         Point::new(0.0, 0.0, 0.0),
         2.0,
         Arc::clone(&lambertian_earth_day),
     )));
-    world.push(Box::new(Sphere::new(
+    world.push(Arc::new(Sphere::new(
         Point::new(-1.5, 0.0, 3.0),
         0.7,
         Arc::clone(&lambertian_moon),
     )));
-    world.push(Box::new(Sphere::new(
+    world.push(Arc::new(Sphere::new(
         Point::new(-0.3, 0.0, 6.5),
         0.5,
         Arc::clone(&dielectric_glass),
     )));
 
-    let world = Box::new(BVH::new(world.take_items()));
+    let world = BVH::new(world.take_items());
 
     // Camera
     let vertical_field_of_view_degrees = 30.0;
@@ -769,8 +818,9 @@ fn earth() -> Scene {
     );
 
     Scene {
+        name: "earth".to_string(),
         camera,
-        world,
+        world: Arc::new(world),
         background_color: Color::new(0.7, 0.8, 1.0),
     }
 }
@@ -789,13 +839,13 @@ fn two_spheres() -> Scene {
     ));
 
     // Primitives
-    let mut world = Box::new(List::new());
-    world.push(Box::new(Sphere::new(
+    let mut world = List::new();
+    world.push(Arc::new(Sphere::new(
         Point::new(0.0, -10.0, 0.0),
         10.0,
         Arc::clone(&lambertian_checker),
     )));
-    world.push(Box::new(Sphere::new(
+    world.push(Arc::new(Sphere::new(
         Point::new(0.0, 10.0, 0.0),
         10.0,
         Arc::clone(&lambertian_checker),
@@ -820,7 +870,8 @@ fn two_spheres() -> Scene {
     );
 
     Scene {
-        world,
+        name: "two_spheres".to_string(),
+        world: Arc::new(world),
         camera,
         background_color: Color::new(0.7, 0.8, 1.0),
     }
@@ -862,7 +913,7 @@ fn random_spheres() -> Scene {
     let mut world_list = List::new();
 
     // the ground
-    world_list.push(Box::new(Sphere::new(
+    world_list.push(Arc::new(Sphere::new(
         Point::new(0.0, -100000.0, 0.0),
         100000.0,
         Arc::clone(&lambertian_checker),
@@ -887,7 +938,7 @@ fn random_spheres() -> Scene {
                     let lambertian =
                         Arc::new(Lambertian::new(reflectance, Arc::clone(&solid_black)));
                     let center_2 = center + Vector::new(0.0, 0.5 * rand::random::<f64>(), 0.0);
-                    world_list.push(Box::new(Sphere::new_in_motion(
+                    world_list.push(Arc::new(Sphere::new_in_motion(
                         center, center_2, 0.2, lambertian,
                     )));
                 } else if choose_mat < 0.95 {
@@ -900,7 +951,7 @@ fn random_spheres() -> Scene {
                         Arc::clone(&solid_black),
                         fuzz,
                     ));
-                    world_list.push(Box::new(Sphere::new(center, 0.2, specular)));
+                    world_list.push(Arc::new(Sphere::new(center, 0.2, specular)));
                 } else {
                     // dielectric
                     let albedo: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::WHITE));
@@ -909,32 +960,32 @@ fn random_spheres() -> Scene {
                         Arc::clone(&solid_black),
                         1.5,
                     ));
-                    world_list.push(Box::new(Sphere::new(center, 0.2, dielectric)));
+                    world_list.push(Arc::new(Sphere::new(center, 0.2, dielectric)));
                 }
             }
         }
     }
 
     // large spheres
-    world_list.push(Box::new(Sphere::new(
+    world_list.push(Arc::new(Sphere::new(
         Point::new(0.0, 1.0, 0.0),
         1.0,
         Arc::clone(&dielectric_glass),
     )));
-    world_list.push(Box::new(Sphere::new(
+    world_list.push(Arc::new(Sphere::new(
         Point::new(-4.0, 1.0, 0.0),
         1.0,
         Arc::clone(&lambertian_brown),
     )));
-    world_list.push(Box::new(Sphere::new(
+    world_list.push(Arc::new(Sphere::new(
         Point::new(4.0, 1.0, 0.0),
         1.0,
         Arc::clone(&specular_amber),
     )));
 
     // World
-    let world: Box<dyn Intersect> = Box::new(BVH::from_list(world_list));
-    // let world: Box<dyn Intersect> = Box::new(world_list);
+    let world: Arc<dyn Intersect> = Arc::new(BVH::from_list(world_list));
+    // let world: Arc<dyn Intersect> = Arc::new(world_list);
 
     // Camera
     let vertical_field_of_view_degrees = 20.0;
@@ -955,6 +1006,7 @@ fn random_spheres() -> Scene {
     );
 
     Scene {
+        name: "random_spheres".to_string(),
         world,
         camera,
         background_color: Color::new(0.7, 0.8, 1.0),
