@@ -1,7 +1,7 @@
 use std::{f64::consts::PI, sync::Arc};
 
 use crate::{
-    geometry::{Intersect, Point, Ray, RayHit, Vector},
+    geometry::{Geometric, Point, Ray, RayHit, Vector},
     shading::materials::{Lambertian, Material},
     utils::Interval,
 };
@@ -73,7 +73,7 @@ impl Sphere {
     }
 }
 
-impl Intersect for Sphere {
+impl Geometric for Sphere {
     fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit> {
         let center = self.center(ray.time);
 

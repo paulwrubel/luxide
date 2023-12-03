@@ -1,13 +1,13 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{primitives::AABB, Intersect, Point, Ray, RayHit, Vector},
+    geometry::{primitives::AABB, Geometric, Point, Ray, RayHit, Vector},
     utils::{Angle, Interval},
 };
 
 #[derive(Clone)]
 pub struct RotateYAxis {
-    primitive: Arc<dyn Intersect>,
+    primitive: Arc<dyn Geometric>,
     translation: Vector,
     sin_theta: f64,
     cos_theta: f64,
@@ -15,7 +15,7 @@ pub struct RotateYAxis {
 }
 
 impl RotateYAxis {
-    pub fn new(primitive: Arc<dyn Intersect>, angle: Angle, around: Point) -> Self {
+    pub fn new(primitive: Arc<dyn Geometric>, angle: Angle, around: Point) -> Self {
         let translation = around.0;
         let primitive_bbox = primitive.bounding_box() - translation;
 
@@ -76,7 +76,7 @@ impl RotateYAxis {
     }
 }
 
-impl Intersect for RotateYAxis {
+impl Geometric for RotateYAxis {
     fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit> {
         // change the ray from world coordinates to object coordinates
         let mut local_ray = ray;

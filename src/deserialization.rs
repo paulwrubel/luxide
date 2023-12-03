@@ -7,7 +7,7 @@ use crate::{
     geometry::{
         compounds::{List, BVH},
         primitives::Sphere,
-        Intersect, Point,
+        Geometric, Point,
     },
     parameters::Parameters,
     scene::Scene,
@@ -289,8 +289,8 @@ fn build_materials(
 fn build_geometrics(
     geometric_data: &HashMap<String, GeometricData>,
     materials: &HashMap<String, Arc<dyn Material>>,
-) -> Result<HashMap<String, Arc<dyn Intersect>>, String> {
-    let mut geometrics: HashMap<String, Arc<dyn Intersect>> = HashMap::new();
+) -> Result<HashMap<String, Arc<dyn Geometric>>, String> {
+    let mut geometrics: HashMap<String, Arc<dyn Geometric>> = HashMap::new();
     for (name, geometric) in geometric_data {
         match geometric {
             GeometricData::Sphere {
@@ -342,7 +342,7 @@ fn build_cameras(
 
 fn build_scenes(
     scene_data: &HashMap<String, SceneData>,
-    geometrics: &HashMap<String, Arc<dyn Intersect>>,
+    geometrics: &HashMap<String, Arc<dyn Geometric>>,
     cameras: &HashMap<String, Camera>,
 ) -> Result<HashMap<String, Scene>, String> {
     let mut scenes: HashMap<String, Scene> = HashMap::new();

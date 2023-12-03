@@ -1,7 +1,7 @@
 use std::{cmp::Ordering, sync::Arc};
 
 use crate::{
-    geometry::{primitives::AABB, Intersect, Ray, RayHit},
+    geometry::{primitives::AABB, Geometric, Ray, RayHit},
     utils::Interval,
 };
 
@@ -10,7 +10,7 @@ use super::List;
 #[derive(Clone)]
 enum BVHNode {
     Branch { left: Arc<BVH>, right: Arc<BVH> },
-    Leaf(Arc<dyn Intersect>),
+    Leaf(Arc<dyn Geometric>),
 }
 
 #[derive(Clone)]
@@ -20,10 +20,10 @@ pub struct BVH {
 }
 
 impl BVH {
-    pub fn new(mut intersectables: Vec<Arc<dyn Intersect>>) -> Self {
+    pub fn new(mut intersectables: Vec<Arc<dyn Geometric>>) -> Self {
         fn box_compare(
             axis: usize,
-        ) -> impl FnMut(&Arc<dyn Intersect>, &Arc<dyn Intersect>) -> Ordering {
+        ) -> impl FnMut(&Arc<dyn Geometric>, &Arc<dyn Geometric>) -> Ordering {
             move |a, b| {
                 let a_bbox = a.bounding_box();
                 let b_bbox = b.bounding_box();
@@ -34,7 +34,7 @@ impl BVH {
             }
         }
 
-        fn axis_range(intersectables: &Vec<Arc<dyn Intersect>>, axis: usize) -> f64 {
+        fn axis_range(intersectables: &Vec<Arc<dyn Geometric>>, axis: usize) -> f64 {
             let (min, max) = intersectables
                 .iter()
                 .fold((f64::MAX, f64::MIN), |(bmin, bmax), p| {
@@ -91,7 +91,7 @@ impl BVH {
     }
 }
 
-impl Intersect for BVH {
+impl Geometric for BVH {
     fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit> {
         if !self.bounding_box.hit(ray, ray_t) {
             return None;

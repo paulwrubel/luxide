@@ -1,13 +1,13 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{primitives::AABB, Intersect, Ray, RayHit},
+    geometry::{primitives::AABB, Geometric, Ray, RayHit},
     utils::Interval,
 };
 
 #[derive(Clone)]
 pub struct List {
-    pub list: Vec<Arc<dyn Intersect>>,
+    pub list: Vec<Arc<dyn Geometric>>,
     bounding_box: AABB,
 }
 
@@ -19,7 +19,7 @@ impl List {
         }
     }
 
-    pub fn from_vec(primitives: Vec<Arc<dyn Intersect>>) -> Self {
+    pub fn from_vec(primitives: Vec<Arc<dyn Geometric>>) -> Self {
         let bounding_box = primitives
             .iter()
             .map(|p| p.bounding_box())
@@ -32,12 +32,12 @@ impl List {
         }
     }
 
-    pub fn push(&mut self, primitive: Arc<dyn Intersect>) {
+    pub fn push(&mut self, primitive: Arc<dyn Geometric>) {
         self.bounding_box = self.bounding_box.expand(primitive.bounding_box());
         self.list.push(primitive);
     }
 
-    pub fn push_all(&mut self, primitives: &mut Vec<Arc<dyn Intersect>>) {
+    pub fn push_all(&mut self, primitives: &mut Vec<Arc<dyn Geometric>>) {
         self.list.append(primitives)
     }
 
@@ -46,12 +46,12 @@ impl List {
         self.list.clear();
     }
 
-    pub fn items(&self) -> &Vec<Arc<dyn Intersect>> {
+    pub fn items(&self) -> &Vec<Arc<dyn Geometric>> {
         &self.list
     }
 
     // items but give ownership
-    pub fn take_items(self) -> Vec<Arc<dyn Intersect>> {
+    pub fn take_items(self) -> Vec<Arc<dyn Geometric>> {
         self.list
     }
 
@@ -64,7 +64,7 @@ impl List {
     }
 }
 
-impl Intersect for List {
+impl Geometric for List {
     fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit> {
         let mut closest_t_so_far = ray_t.maximum;
         let mut closest_hit_record = None;

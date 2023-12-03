@@ -6,7 +6,7 @@ use luxide::{
         compounds::{AxisAlignedPBox, List, BVH},
         instances::{RotateYAxis, Translate},
         primitives::{Parallelogram, Sphere},
-        volumes, Intersect, Point, Vector,
+        volumes, Geometric, Point, Vector,
     },
     parameters::Parameters,
     scene::Scene,
@@ -984,7 +984,7 @@ fn random_spheres() -> Scene {
     )));
 
     // World
-    let world: Arc<dyn Intersect> = Arc::new(BVH::from_list(world_list));
+    let world: Arc<dyn Geometric> = Arc::new(BVH::from_list(world_list));
     // let world: Arc<dyn Intersect> = Arc::new(world_list);
 
     // Camera

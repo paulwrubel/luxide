@@ -3,7 +3,7 @@ use std::f64::consts::PI;
 use rand::Rng;
 
 use crate::{
-    geometry::{Intersect, Point, Ray, Vector},
+    geometry::{Geometric, Point, Ray, Vector},
     parameters::Parameters,
     scene::Scene,
     shading::Color,
@@ -13,10 +13,6 @@ use crate::{
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Camera {
     // "public" fields
-    // aspect_ratio: f64,
-    // image_width: u32,
-    // samples_per_pixel: u32,
-    // max_bounces: u32,
     eye_location: Point,
     target_location: Point,
     view_up: Vector,
@@ -132,7 +128,7 @@ impl Camera {
         x_offset + y_offset
     }
 
-    pub fn ray_color(&self, ray: Ray, primitive: &dyn Intersect, remaining_bounces: u32) -> Color {
+    pub fn ray_color(&self, ray: Ray, primitive: &dyn Geometric, remaining_bounces: u32) -> Color {
         // if we've bounced too many times, just say the ray is black
         if remaining_bounces <= 0 {
             return Color::BLACK;

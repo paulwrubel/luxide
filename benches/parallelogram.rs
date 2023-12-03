@@ -1,6 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, BatchSize, Criterion};
 use luxide::{
-    geometry::{primitives::Parallelogram, Intersect, Point, Ray, RayHit, Vector},
+    geometry::{primitives::Parallelogram, Geometric, Point, Ray, RayHit, Vector},
     utils::Interval,
 };
 use rand::{rngs::ThreadRng, Rng};

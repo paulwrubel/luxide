@@ -3,8 +3,8 @@ pub mod instances;
 pub mod primitives;
 pub mod volumes;
 
-mod intersect;
-pub use intersect::Intersect;
+mod geometric;
+pub use geometric::Geometric;
 
 mod point;
 pub use point::Point;

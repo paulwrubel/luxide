@@ -3,7 +3,7 @@ use std::sync::Arc;
 use rand::Rng;
 
 use crate::{
-    geometry::{primitives::AABB, Intersect, Ray, RayHit, Vector},
+    geometry::{primitives::AABB, Geometric, Ray, RayHit, Vector},
     shading::{
         materials::{Isotropic, Material},
         textures::SolidColor,
@@ -14,14 +14,14 @@ use crate::{
 
 #[derive(Clone)]
 pub struct Constant {
-    primitive: Arc<dyn Intersect>,
+    primitive: Arc<dyn Geometric>,
     negative_inverse_density: f64,
     phase_function: Arc<dyn Material>,
 }
 
 impl Constant {
     pub fn new(
-        primitive: Arc<dyn Intersect>,
+        primitive: Arc<dyn Geometric>,
         density: f64,
         reflectance_texture: Arc<dyn Texture>,
     ) -> Self {
@@ -34,7 +34,7 @@ impl Constant {
     }
 }
 
-impl Intersect for Constant {
+impl Geometric for Constant {
     fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit> {
         // check for first intersection, which may be behind us
         let first_interval = Interval::UNIVERSE;

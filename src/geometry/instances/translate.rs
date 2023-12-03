@@ -1,19 +1,19 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{primitives::AABB, Intersect, Ray, RayHit, Vector},
+    geometry::{primitives::AABB, Geometric, Ray, RayHit, Vector},
     utils::Interval,
 };
 
 #[derive(Clone)]
 pub struct Translate {
-    primitive: Arc<dyn Intersect>,
+    primitive: Arc<dyn Geometric>,
     translation: Vector,
     bounding_box: AABB,
 }
 
 impl Translate {
-    pub fn new(primitive: Arc<dyn Intersect>, translation: Vector) -> Self {
+    pub fn new(primitive: Arc<dyn Geometric>, translation: Vector) -> Self {
         let bounding_box = primitive.bounding_box() + translation;
         Self {
             primitive: Arc::clone(&primitive),
@@ -31,7 +31,7 @@ impl Translate {
     }
 }
 
-impl Intersect for Translate {
+impl Geometric for Translate {
     fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit> {
         let mut local_ray = ray;
 
