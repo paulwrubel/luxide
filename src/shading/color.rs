@@ -34,6 +34,10 @@ impl Color {
         ))
     }
 
+    pub fn scale_down(&self, scale: f64) -> Self {
+        Self(self.0.scale_down(scale))
+    }
+
     pub fn as_rgba_u8(&self) -> image::Rgba<u8> {
         image::Rgba([
             (self.0.x.clamp(0.0, 1.0) * u8::MAX as f64).round() as u8,
@@ -50,6 +54,12 @@ impl Color {
             (self.0.z.powf(gamma).clamp(0.0, 1.0) * u8::MAX as f64).round() as u8,
             u8::MAX,
         ])
+    }
+}
+
+impl From<[f64; 3]> for Color {
+    fn from(v: [f64; 3]) -> Self {
+        Self::new(v[0], v[1], v[2])
     }
 }
 

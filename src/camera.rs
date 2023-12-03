@@ -5,6 +5,7 @@ use rand::Rng;
 use crate::{
     geometry::{Intersect, Point, Ray, Vector},
     parameters::Parameters,
+    scene::Scene,
     shading::Color,
     utils::{Angle, Interval},
 };
@@ -58,9 +59,9 @@ impl Camera {
         }
     }
 
-    pub fn initialize(&mut self, parameters: &Parameters) {
+    pub fn initialize(&mut self, parameters: &Parameters, scene: &Scene) {
         self.center = self.eye_location;
-        self.background_color = parameters.scene.background_color;
+        self.background_color = scene.background_color;
 
         let (width, height) = parameters.image_dimensions;
 

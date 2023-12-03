@@ -25,7 +25,7 @@ impl AxisAlignedPBox {
 
         let mut faces = List::new();
         // front
-        faces.push(Box::new(Parallelogram::new(
+        faces.push(Arc::new(Parallelogram::new(
             Point::new(min.0.x, min.0.y, max.0.z),
             dx,
             dy,
@@ -33,7 +33,7 @@ impl AxisAlignedPBox {
             Arc::clone(&material),
         )));
         // right
-        faces.push(Box::new(Parallelogram::new(
+        faces.push(Arc::new(Parallelogram::new(
             Point::new(max.0.x, min.0.y, max.0.z),
             -dz,
             dy,
@@ -41,7 +41,7 @@ impl AxisAlignedPBox {
             Arc::clone(&material),
         )));
         // back
-        faces.push(Box::new(Parallelogram::new(
+        faces.push(Arc::new(Parallelogram::new(
             Point::new(max.0.x, min.0.y, min.0.z),
             -dx,
             dy,
@@ -49,7 +49,7 @@ impl AxisAlignedPBox {
             Arc::clone(&material),
         )));
         // left
-        faces.push(Box::new(Parallelogram::new(
+        faces.push(Arc::new(Parallelogram::new(
             Point::new(min.0.x, min.0.y, min.0.z),
             dz,
             dy,
@@ -57,7 +57,7 @@ impl AxisAlignedPBox {
             Arc::clone(&material),
         )));
         // top
-        faces.push(Box::new(Parallelogram::new(
+        faces.push(Arc::new(Parallelogram::new(
             Point::new(min.0.x, max.0.y, max.0.z),
             dx,
             -dz,
@@ -65,7 +65,7 @@ impl AxisAlignedPBox {
             Arc::clone(&material),
         )));
         // bottom
-        faces.push(Box::new(Parallelogram::new(
+        faces.push(Arc::new(Parallelogram::new(
             Point::new(min.0.x, min.0.y, min.0.z),
             dx,
             dz,

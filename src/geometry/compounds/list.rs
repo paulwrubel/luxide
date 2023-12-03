@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::{
     geometry::{primitives::AABB, Intersect, Ray, RayHit},
     utils::Interval,
@@ -5,7 +7,7 @@ use crate::{
 
 #[derive(Clone)]
 pub struct List {
-    pub list: Vec<Box<dyn Intersect>>,
+    pub list: Vec<Arc<dyn Intersect>>,
     bounding_box: AABB,
 }
 
@@ -17,7 +19,7 @@ impl List {
         }
     }
 
-    pub fn from_vec(primitives: Vec<Box<dyn Intersect>>) -> Self {
+    pub fn from_vec(primitives: Vec<Arc<dyn Intersect>>) -> Self {
         let bounding_box = primitives
             .iter()
             .map(|p| p.bounding_box())
@@ -30,12 +32,12 @@ impl List {
         }
     }
 
-    pub fn push(&mut self, primitive: Box<dyn Intersect>) {
+    pub fn push(&mut self, primitive: Arc<dyn Intersect>) {
         self.bounding_box = self.bounding_box.expand(primitive.bounding_box());
         self.list.push(primitive);
     }
 
-    pub fn push_all(&mut self, primitives: &mut Vec<Box<dyn Intersect>>) {
+    pub fn push_all(&mut self, primitives: &mut Vec<Arc<dyn Intersect>>) {
         self.list.append(primitives)
     }
 
@@ -44,12 +46,12 @@ impl List {
         self.list.clear();
     }
 
-    pub fn items(&self) -> &Vec<Box<dyn Intersect>> {
+    pub fn items(&self) -> &Vec<Arc<dyn Intersect>> {
         &self.list
     }
 
     // items but give ownership
-    pub fn take_items(self) -> Vec<Box<dyn Intersect>> {
+    pub fn take_items(self) -> Vec<Arc<dyn Intersect>> {
         self.list
     }
 

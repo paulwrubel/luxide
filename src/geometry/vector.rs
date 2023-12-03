@@ -155,6 +155,25 @@ impl Vector {
             * normal;
         perpendicular_component + parallel_component
     }
+
+    pub fn scale_down(&self, scale: f64) -> Self {
+        let max = self.x.max(self.y).max(self.z);
+        if max > scale {
+            *self / (max / scale)
+        } else {
+            *self
+        }
+    }
+}
+
+impl From<[f64; 3]> for Vector {
+    fn from(v: [f64; 3]) -> Self {
+        Self {
+            x: v[0],
+            y: v[1],
+            z: v[2],
+        }
+    }
 }
 
 impl Neg for Vector {
