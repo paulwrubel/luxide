@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::{
     geometry::{
         primitives::{Parallelogram, AABB},
-        Intersect, Point, Ray, RayHit, Vector,
+        Geometric, Point, Ray, RayHit, Vector,
     },
     shading::materials::Material,
     utils::Interval,
@@ -77,7 +77,7 @@ impl AxisAlignedPBox {
     }
 }
 
-impl Intersect for AxisAlignedPBox {
+impl Geometric for AxisAlignedPBox {
     fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit> {
         self.0.intersect(ray, ray_t)
     }

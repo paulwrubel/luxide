@@ -1,76 +1,76 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{primitives::AABB, Intersect, Ray, RayHit},
+    geometry::{primitives::AABB, Geometric, Ray, RayHit},
     utils::Interval,
 };
 
 #[derive(Clone)]
 pub struct List {
-    pub list: Vec<Arc<dyn Intersect>>,
+    pub items: Vec<Arc<dyn Geometric>>,
     bounding_box: AABB,
 }
 
 impl List {
     pub fn new() -> Self {
         Self {
-            list: vec![],
+            items: vec![],
             bounding_box: AABB::EMPTY,
         }
     }
 
-    pub fn from_vec(primitives: Vec<Arc<dyn Intersect>>) -> Self {
-        let bounding_box = primitives
+    pub fn from_vec(geometrics: Vec<Arc<dyn Geometric>>) -> Self {
+        let bounding_box = geometrics
             .iter()
             .map(|p| p.bounding_box())
             .reduce(|acc, bb| acc.expand(bb))
             .unwrap_or(AABB::EMPTY);
 
         Self {
-            list: primitives,
+            items: geometrics,
             bounding_box: bounding_box,
         }
     }
 
-    pub fn push(&mut self, primitive: Arc<dyn Intersect>) {
-        self.bounding_box = self.bounding_box.expand(primitive.bounding_box());
-        self.list.push(primitive);
+    pub fn push(&mut self, geometric: Arc<dyn Geometric>) {
+        self.bounding_box = self.bounding_box.expand(geometric.bounding_box());
+        self.items.push(geometric);
     }
 
-    pub fn push_all(&mut self, primitives: &mut Vec<Arc<dyn Intersect>>) {
-        self.list.append(primitives)
+    pub fn push_all(&mut self, geometrics: &mut Vec<Arc<dyn Geometric>>) {
+        self.items.append(geometrics)
     }
 
     pub fn clear(&mut self) {
         self.bounding_box = AABB::EMPTY;
-        self.list.clear();
+        self.items.clear();
     }
 
-    pub fn items(&self) -> &Vec<Arc<dyn Intersect>> {
-        &self.list
+    pub fn items(&self) -> &Vec<Arc<dyn Geometric>> {
+        &self.items
     }
 
     // items but give ownership
-    pub fn take_items(self) -> Vec<Arc<dyn Intersect>> {
-        self.list
+    pub fn take_items(self) -> Vec<Arc<dyn Geometric>> {
+        self.items
     }
 
     pub fn len(&self) -> usize {
-        self.list.len()
+        self.items.len()
     }
 
     pub fn is_empty(&self) -> bool {
-        self.list.is_empty()
+        self.items.is_empty()
     }
 }
 
-impl Intersect for List {
+impl Geometric for List {
     fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit> {
         let mut closest_t_so_far = ray_t.maximum;
         let mut closest_hit_record = None;
-        for primitive in &self.list {
+        for geometric in &self.items {
             if let Some(hit_record) =
-                primitive.intersect(ray, Interval::new(ray_t.minimum, closest_t_so_far))
+                geometric.intersect(ray, Interval::new(ray_t.minimum, closest_t_so_far))
             {
                 closest_t_so_far = hit_record.t;
                 closest_hit_record = Some(hit_record);
@@ -83,16 +83,3 @@ impl Intersect for List {
         self.bounding_box
     }
 }
-
-// impl Clone for List {
-//     fn clone(&self) -> Self {
-//         Self {
-//             list: self
-//                 .list
-//                 .iter()
-//                 .map(|p| Box::new((*p.as_ref()).clone()))
-//                 .collect(),
-//             bounding_box: self.bounding_box.clone(),
-//         }
-//     }
-// }

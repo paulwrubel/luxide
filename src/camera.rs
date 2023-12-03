@@ -3,7 +3,7 @@ use std::f64::consts::PI;
 use rand::Rng;
 
 use crate::{
-    geometry::{Intersect, Point, Ray, Vector},
+    geometry::{Geometric, Point, Ray, Vector},
     parameters::Parameters,
     scene::Scene,
     shading::Color,
@@ -13,10 +13,6 @@ use crate::{
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Camera {
     // "public" fields
-    // aspect_ratio: f64,
-    // image_width: u32,
-    // samples_per_pixel: u32,
-    // max_bounces: u32,
     eye_location: Point,
     target_location: Point,
     view_up: Vector,
@@ -132,14 +128,14 @@ impl Camera {
         x_offset + y_offset
     }
 
-    pub fn ray_color(&self, ray: Ray, primitive: &dyn Intersect, remaining_bounces: u32) -> Color {
+    pub fn ray_color(&self, ray: Ray, geometric: &dyn Geometric, remaining_bounces: u32) -> Color {
         // if we've bounced too many times, just say the ray is black
         if remaining_bounces <= 0 {
             return Color::BLACK;
         }
 
         // get the hit point color if we hit something
-        if let Some(ray_hit) = primitive.intersect(ray, Interval::new(0.001, f64::INFINITY)) {
+        if let Some(ray_hit) = geometric.intersect(ray, Interval::new(0.001, f64::INFINITY)) {
             let emittance = ray_hit
                 .material
                 .emittance(ray_hit.u, ray_hit.v, ray_hit.point);
@@ -162,7 +158,7 @@ impl Camera {
                     return emittance;
                 }
             };
-            let scattered_color = self.ray_color(scattered_ray, primitive, remaining_bounces - 1);
+            let scattered_color = self.ray_color(scattered_ray, geometric, remaining_bounces - 1);
 
             emittance + reflectance * scattered_color
         } else {

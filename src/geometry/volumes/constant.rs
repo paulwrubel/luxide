@@ -3,7 +3,7 @@ use std::sync::Arc;
 use rand::Rng;
 
 use crate::{
-    geometry::{primitives::AABB, Intersect, Ray, RayHit, Vector},
+    geometry::{primitives::AABB, Geometric, Ray, RayHit, Vector},
     shading::{
         materials::{Isotropic, Material},
         textures::SolidColor,
@@ -14,31 +14,31 @@ use crate::{
 
 #[derive(Clone)]
 pub struct Constant {
-    primitive: Arc<dyn Intersect>,
+    geometric: Arc<dyn Geometric>,
     negative_inverse_density: f64,
     phase_function: Arc<dyn Material>,
 }
 
 impl Constant {
     pub fn new(
-        primitive: Arc<dyn Intersect>,
+        geometric: Arc<dyn Geometric>,
         density: f64,
         reflectance_texture: Arc<dyn Texture>,
     ) -> Self {
         let emittance_texture = Arc::new(SolidColor::BLACK);
         Self {
-            primitive: Arc::clone(&primitive),
+            geometric: Arc::clone(&geometric),
             negative_inverse_density: -1.0 / density,
             phase_function: Arc::new(Isotropic::new(reflectance_texture, emittance_texture)),
         }
     }
 }
 
-impl Intersect for Constant {
+impl Geometric for Constant {
     fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit> {
         // check for first intersection, which may be behind us
         let first_interval = Interval::UNIVERSE;
-        let mut first_hit = match self.primitive.intersect(ray, first_interval) {
+        let mut first_hit = match self.geometric.intersect(ray, first_interval) {
             Some(hit) => hit,
             None => return None,
         };
@@ -46,7 +46,7 @@ impl Intersect for Constant {
         // check for second intersection, which is just any intersection past the first one.
         // this could still be behind us
         let second_interval = Interval::new(first_hit.t + 0.0001, f64::INFINITY);
-        let mut second_hit = match self.primitive.intersect(ray, second_interval) {
+        let mut second_hit = match self.geometric.intersect(ray, second_interval) {
             Some(hit) => hit,
             None => return None,
         };
@@ -92,6 +92,6 @@ impl Intersect for Constant {
     }
 
     fn bounding_box(&self) -> AABB {
-        self.primitive.bounding_box()
+        self.geometric.bounding_box()
     }
 }

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{Intersect, Point, Ray, RayHit, Vector},
+    geometry::{Geometric, Point, Ray, RayHit, Vector},
     shading::materials::{Lambertian, Material},
     utils::Interval,
 };
@@ -55,7 +55,7 @@ impl Parallelogram {
     }
 }
 
-impl Intersect for Parallelogram {
+impl Geometric for Parallelogram {
     fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit> {
         let denominator = self.normal.dot(ray.direction);
 
