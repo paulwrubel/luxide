@@ -7,7 +7,7 @@ use crate::{
     geometry::{
         compounds::{List, BVH},
         primitives::Sphere,
-        Intersect,
+        Intersect, Point,
     },
     parameters::Parameters,
     scene::Scene,
@@ -44,7 +44,15 @@ struct CameraData {
     target_location: [f64; 3],
     view_up: [f64; 3],
     defocus_angle_degrees: f64,
-    focus_distance: f64,
+    focus_distance: FocusDistance,
+}
+
+#[derive(Deserialize)]
+enum FocusDistance {
+    #[serde(rename = "exact")]
+    Exact(f64),
+    #[serde(rename = "eye_to_target")]
+    EyeToTarget,
 }
 
 #[derive(Deserialize)]
@@ -314,13 +322,18 @@ fn build_cameras(
 ) -> Result<HashMap<String, Camera>, String> {
     let mut cameras: HashMap<String, Camera> = HashMap::new();
     for (name, camera_data) in camera_data {
+        let eye_location: Point = camera_data.eye_location.into();
+        let target_location: Point = camera_data.target_location.into();
         let camera = Camera::new(
             camera_data.vertical_field_of_view_degrees,
-            camera_data.eye_location.into(),
-            camera_data.target_location.into(),
+            eye_location,
+            target_location,
             camera_data.view_up.into(),
             camera_data.defocus_angle_degrees,
-            camera_data.focus_distance,
+            match camera_data.focus_distance {
+                FocusDistance::Exact(distance) => distance,
+                FocusDistance::EyeToTarget => eye_location.to(target_location).length(),
+            },
         );
         cameras.insert((*name).clone(), camera);
     }
