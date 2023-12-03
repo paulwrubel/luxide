@@ -137,7 +137,7 @@ materials:
   specular_metal: !specular
     reflectance_texture: solid_white
     emittance_texture: solid_black
-    fuzziness: 0
+    roughness: 0
 
 textures:
   # pures

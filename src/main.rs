@@ -945,11 +945,11 @@ fn random_spheres() -> Scene {
                     // specular
                     let albedo = Color::random_range(0.5, 1.0);
                     let albedo: Arc<dyn Texture> = Arc::new(SolidColor::new(albedo));
-                    let fuzz = 0.5 * rand::random::<f64>();
+                    let roughness = 0.5 * rand::random::<f64>();
                     let specular = Arc::new(Specular::new(
                         Arc::clone(&albedo),
                         Arc::clone(&solid_black),
-                        fuzz,
+                        roughness,
                     ));
                     world_list.push(Arc::new(Sphere::new(center, 0.2, specular)));
                 } else {

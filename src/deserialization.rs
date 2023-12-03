@@ -87,7 +87,7 @@ enum MaterialData {
     Specular {
         reflectance_texture: String,
         emittance_texture: String,
-        fuzziness: f64,
+        roughness: f64,
     },
 }
 
@@ -252,7 +252,7 @@ fn build_materials(
             MaterialData::Specular {
                 reflectance_texture: reflectance_texture_name,
                 emittance_texture: emittance_texture_name,
-                fuzziness,
+                roughness,
             } => {
                 let reflectance_texture = match textures.get(reflectance_texture_name) {
                     Some(texture) => texture,
@@ -277,7 +277,7 @@ fn build_materials(
                     Arc::new(Specular::new(
                         Arc::clone(reflectance_texture),
                         Arc::clone(&emittance_texture),
-                        *fuzziness,
+                        *roughness,
                     )),
                 );
             }
