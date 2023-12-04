@@ -5,7 +5,7 @@ use crate::{
     utils::Interval,
 };
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct List {
     pub items: Vec<Arc<dyn Geometric>>,
     bounding_box: AABB,

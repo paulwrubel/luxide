@@ -4,6 +4,7 @@ use crate::{geometry::Point, shading::Color};
 
 use super::Texture;
 
+#[derive(Clone)]
 pub struct Noise<F, Input, Output>
 where
     F: NoiseFn<f64, 3> + Sync + Send,
@@ -14,6 +15,17 @@ where
     output_fn: Option<Output>,
     // source: Box<dyn NoiseTrait<F>>,
     source: F,
+}
+
+impl<F, Input, Output> std::fmt::Debug for Noise<F, Input, Output>
+where
+    F: NoiseFn<f64, 3> + Sync + Send,
+    Input: Fn(Point) -> Point + Sync + Send,
+    Output: Fn(f64, Point) -> f64 + Sync + Send,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("!Noise!")
+    }
 }
 
 impl<F, Input, Output> Noise<F, Input, Output>

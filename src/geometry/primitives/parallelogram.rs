@@ -6,7 +6,7 @@ use crate::{
     utils::Interval,
 };
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Parallelogram {
     lower_left: Point,
     u: Vector,

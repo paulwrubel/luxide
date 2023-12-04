@@ -7,13 +7,13 @@ use crate::{
 
 use super::List;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 enum BVHNode {
     Branch { left: Arc<BVH>, right: Arc<BVH> },
     Leaf(Arc<dyn Geometric>),
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct BVH {
     tree: BVHNode,
     bounding_box: AABB,

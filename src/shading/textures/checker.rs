@@ -4,6 +4,7 @@ use crate::{geometry::Point, shading::Color};
 
 use super::{SolidColor, Texture};
 
+#[derive(Debug, Clone)]
 pub struct Checker {
     inverse_scale: f64,
     even: Arc<dyn Texture>,

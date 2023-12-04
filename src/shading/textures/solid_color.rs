@@ -2,6 +2,7 @@ use crate::{geometry::Point, shading::Color};
 
 use super::Texture;
 
+#[derive(Debug, Clone)]
 pub struct SolidColor(Color);
 
 impl SolidColor {

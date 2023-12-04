@@ -1,0 +1,124 @@
+---
+
+parameters:
+  output_dir: ./output
+  use_subdir: true # This will pull all this run's images into a subdirectory in the output directory
+  file_basename: image
+  file_ext: png
+  # image_dimensions: [1920, 1080] # 1080p
+  # image_dimensions: [3840, 2160] # 4K
+  image_dimensions: [500, 500] # 8K
+  tile_dimensions: [1, 1] # Due to fun rayon/Rust quirks, a tile size of 1x1 is almost always the most efficient and fast.
+
+  gamma_correction: 2.0
+  samples_per_round: 50 # This is the number of samples per pixel. The higher the number, the less noisy the image is.
+  round_limit: null # This is the number of rounds. A new image is generated after each round, and the previous rounds are averages into all the following rounds.
+  max_bounces: 50 # This is the maximum number of bounces. After this many, the ray is terminated with color [0, 0, 0] (Black).
+  use_scaling_truncation: true
+
+  pixels_per_progress_update: 1000 # I'd like to be able to remove this parameter, but I haven't worked out the maths yet.
+  progress_memory: 50 # This determines how "reactive" the progress tracker is. A lower number means more reactive.
+
+scene: cornell_box_rotate
+scenes:
+  cornell_box_rotate:
+    geometrics:
+      - left_wall
+      - right_wall
+      - floor
+      - top_wall
+      - bottom_wall
+
+      - top_light
+      - bottom_light
+
+      - center_box_rotated
+    use_bvh: false
+    camera: basic
+    background_color: [0.0, 0.0, 0.0]
+
+cameras:
+  basic:
+    vertical_field_of_view_degrees: 40
+    eye_location: [0.5, 1.44144, -0.5]
+    target_location: [0.5, 0.5, -0.5]
+    view_up: [0, 0, -1]
+    defocus_angle_degrees: 0
+    focus_distance: !eye_to_target
+
+geometrics:
+  left_wall: !parallelogram
+    lower_left: [0, 0, 0]
+    u: [0, 0, -1]
+    v: [0, 1, 0]
+    material: lambertian_cb_green
+  right_wall: !parallelogram
+    lower_left: [1, 0, -1]
+    u: [0, 0, 1]
+    v: [0, 1, 0]
+    material: lambertian_cb_red
+  floor: !parallelogram
+    lower_left: [0, 0, 0]
+    u: [1, 0, 0]
+    v: [0, 0, -1]
+    material: lambertian_cb_white
+  bottom_wall: !parallelogram
+    lower_left: [1, 0, 0]
+    u: [-1, 0, 0]
+    v: [0, 1, 0]
+    material: lambertian_cb_white
+  top_wall: !parallelogram
+    lower_left: [0, 0, -1]
+    u: [1, 0, 0]
+    v: [0, 1, 0]
+    material: lambertian_cb_white
+
+  top_light: !parallelogram
+    lower_left: [0.35, 0.35, -0.999]
+    u: [0.3, 0, 0]
+    v: [0, 0.3, 0]
+    material: lambertian_white_light
+  bottom_light: !parallelogram
+    lower_left: [0.35, 0.35, -0.001]
+    u: [0.3, 0, 0]
+    v: [0, 0.3, 0]
+    material: lambertian_white_light
+
+  center_box: !box
+    a: [0.4, 0, -0.4]
+    b: [0.6, 0.5, -0.6]
+    material: lambertian_cb_red
+  center_box_rotated: !rotate_y
+    geometric: center_box
+    angle: !degrees 45
+    around: [0.25, 0, -0.5]
+
+materials:
+  # lights
+  lambertian_white_light: !lambertian
+    reflectance_texture: solid_black
+    emittance_texture: solid_white_light
+
+  # lambertians
+  lambertian_cb_white: !lambertian
+    reflectance_texture: solid_cb_white
+    emittance_texture: solid_black
+  lambertian_cb_red: !lambertian
+    reflectance_texture: solid_cb_red
+    emittance_texture: solid_black
+  lambertian_cb_green: !lambertian
+    reflectance_texture: solid_cb_green
+    emittance_texture: solid_black
+
+textures:
+  # pures
+  solid_white: !solid_color [1, 1, 1]
+  solid_black: !solid_color [0, 0, 0]
+
+  # lights
+  solid_white_light: !solid_color [15, 15, 15]
+
+  # lambertians
+  solid_cb_white: !solid_color [0.73, 0.73, 0.73]
+  solid_cb_red: !solid_color [0.65, 0.05, 0.05]
+  solid_cb_green: !solid_color [0.12, 0.45, 0.15]
