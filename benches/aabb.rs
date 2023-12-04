@@ -1,6 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, BatchSize, Criterion};
 use luxide::{
-    geometry::{primitives::AABB, Point, Ray, Vector},
+    geometry::{Point, Ray, Vector, AABB},
     utils::Interval,
 };
 

@@ -1,12 +1,10 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{Geometric, Point, Ray, RayHit, Vector},
+    geometry::{Geometric, Point, Ray, RayHit, Vector, AABB},
     shading::materials::{Lambertian, Material},
     utils::Interval,
 };
-
-use super::AABB;
 
 #[derive(Clone)]
 pub struct Parallelogram {

@@ -3,7 +3,7 @@ use std::sync::Arc;
 use rand::Rng;
 
 use crate::{
-    geometry::{primitives::AABB, Geometric, Ray, RayHit, Vector},
+    geometry::{Geometric, Ray, RayHit, Vector, AABB},
     shading::{
         materials::{Isotropic, Material},
         textures::SolidColor,
