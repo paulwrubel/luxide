@@ -1,5 +1,9 @@
 use std::f64::consts::PI;
 
+use serde::Deserialize;
+
+#[derive(Debug, Copy, Clone, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum Angle {
     Degrees(f64),
     Radians(f64),

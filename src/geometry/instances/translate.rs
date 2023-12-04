@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{primitives::AABB, Geometric, Ray, RayHit, Vector},
+    geometry::{Geometric, Ray, RayHit, Vector, AABB},
     utils::Interval,
 };
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Translate {
     geometric: Arc<dyn Geometric>,
     translation: Vector,

@@ -398,6 +398,7 @@ checksum = "d530e1a18b1cb4c484e6e34556a0d948706958449fca0cab753d649f2bce3d1f"
 dependencies = [
  "equivalent",
  "hashbrown",
+ "serde",
 ]
 
 [[package]]
@@ -486,6 +487,7 @@ dependencies = [
  "criterion",
  "dyn-clone",
  "image",
+ "indexmap",
  "noise",
  "rand 0.8.5",
  "rayon",

@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{primitives::AABB, Geometric, Point, Ray, RayHit, Vector},
+    geometry::{Geometric, Point, Ray, RayHit, Vector, AABB},
     utils::{Angle, Interval},
 };
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct RotateYAxis {
     geometric: Arc<dyn Geometric>,
     translation: Vector,
@@ -57,22 +57,26 @@ impl RotateYAxis {
         }
     }
 
-    fn world_to_local(&self, v: Vector) -> Vector {
-        let v = v - self.translation;
+    fn world_to_local_point(&self, v: Point) -> Point {
+        Point::from_vector(self.world_to_local_vector(v.0 - self.translation)) + self.translation
+    }
 
+    fn world_to_local_vector(&self, v: Vector) -> Vector {
         let x = self.cos_theta * v.x - self.sin_theta * v.z;
         let z = self.sin_theta * v.x + self.cos_theta * v.z;
 
         Vector::new(x, v.y, z)
     }
 
-    fn local_to_world(&self, v: Vector) -> Vector {
+    fn local_to_world_point(&self, v: Point) -> Point {
+        Point::from_vector(self.local_to_world_vector(v.0 - self.translation)) + self.translation
+    }
+
+    fn local_to_world_vector(&self, v: Vector) -> Vector {
         let x = self.cos_theta * v.x + self.sin_theta * v.z;
         let z = -self.sin_theta * v.x + self.cos_theta * v.z;
 
-        let v = Vector::new(x, v.y, z);
-
-        v + self.translation
+        Vector::new(x, v.y, z)
     }
 }
 
@@ -80,8 +84,8 @@ impl Geometric for RotateYAxis {
     fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit> {
         // change the ray from world coordinates to object coordinates
         let mut local_ray = ray;
-        local_ray.origin.0 = self.world_to_local(local_ray.origin.0);
-        local_ray.direction = self.world_to_local(local_ray.direction);
+        local_ray.origin = self.world_to_local_point(local_ray.origin);
+        local_ray.direction = self.world_to_local_vector(local_ray.direction);
 
         // check intersection in object coordinates
         let mut rayhit = match self.geometric.intersect(local_ray, ray_t) {
@@ -90,8 +94,8 @@ impl Geometric for RotateYAxis {
         };
 
         // change the ray back to world coordinates
-        rayhit.point.0 = self.local_to_world(rayhit.point.0);
-        rayhit.normal = self.local_to_world(rayhit.normal);
+        rayhit.point = self.local_to_world_point(rayhit.point);
+        rayhit.normal = self.local_to_world_vector(rayhit.normal);
 
         Some(rayhit)
     }

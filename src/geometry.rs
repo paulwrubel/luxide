@@ -3,6 +3,9 @@ pub mod instances;
 pub mod primitives;
 pub mod volumes;
 
+mod aabb;
+pub use aabb::AABB;
+
 mod geometric;
 pub use geometric::Geometric;
 

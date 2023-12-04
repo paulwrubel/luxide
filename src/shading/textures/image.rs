@@ -4,6 +4,7 @@ use crate::{geometry::Point, shading::Color, utils::Interval};
 
 use super::Texture;
 
+#[derive(Debug, Clone)]
 pub struct Image8Bit {
     pub image: RgbaImage,
 }

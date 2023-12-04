@@ -7,6 +7,7 @@ use crate::{
 
 use super::Material;
 
+#[derive(Debug, Clone)]
 pub struct Isotropic {
     reflectance_texture: Arc<dyn Texture>,
     emittance_texture: Arc<dyn Texture>,

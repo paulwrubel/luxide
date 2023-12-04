@@ -1,19 +1,19 @@
 use std::{cmp::Ordering, sync::Arc};
 
 use crate::{
-    geometry::{primitives::AABB, Geometric, Ray, RayHit},
+    geometry::{Geometric, Ray, RayHit, AABB},
     utils::Interval,
 };
 
 use super::List;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 enum BVHNode {
     Branch { left: Arc<BVH>, right: Arc<BVH> },
     Leaf(Arc<dyn Geometric>),
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct BVH {
     tree: BVHNode,
     bounding_box: AABB,
