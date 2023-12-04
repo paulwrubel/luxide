@@ -6,7 +6,7 @@ use crate::{
     camera::Camera,
     geometry::{
         compounds::{List, BVH},
-        primitives::Sphere,
+        primitives::{Parallelogram, Sphere},
         Geometric, Point,
     },
     parameters::Parameters,
@@ -93,8 +93,16 @@ enum MaterialData {
 
 #[derive(Deserialize)]
 enum GeometricData {
+    #[serde(rename = "parallelogram")]
+    PrimitiveParallelogram {
+        lower_left: [f64; 3],
+        u: [f64; 3],
+        v: [f64; 3],
+        is_culled: Option<bool>,
+        material: String,
+    },
     #[serde(rename = "sphere")]
-    Sphere {
+    PrimitiveSphere {
         center: [f64; 3],
         radius: f64,
         material: String,
@@ -113,15 +121,10 @@ pub fn parse_yaml(filename: &str) -> Result<(Parameters, Scene), String> {
     let cameras = build_cameras(&parsed.cameras)?;
     let mut scenes = build_scenes(&parsed.scenes, &geometrics, &cameras)?;
 
-    let selected_scene = match scenes.remove(&parsed.scene) {
-        Some(scene) => scene,
-        None => {
-            return Err(format!(
-                "Scene {} not found. Is it specified in the scenes list?",
-                parsed.scene
-            ))
-        }
-    };
+    let selected_scene = scenes.remove(&parsed.scene).ok_or(format!(
+        "Scene {} not found. Is it specified in the scenes list?",
+        parsed.scene
+    ))?;
 
     Ok((parsed.parameters, selected_scene))
 }
@@ -137,36 +140,22 @@ fn build_textures(
                 even_texture: even_texture_name,
                 odd_texture: odd_texture_name,
             } => {
-                let even = match textures.get(even_texture_name) {
-                    Some(t) => t,
-                    None => {
-                        return Err(format!(
-                            "Texture {} not found. Is it specified *before* this one in the textures list?",
-                            even_texture_name
-                        ))
-                    }
-                };
-                let odd = match textures.get(odd_texture_name) {
-                    Some(t) => t,
-                    None => {
-                        return Err(format!(
-                            "Texture {} not found. Is it specified *before* this one in the textures list?",
-                            odd_texture_name
-                        ))
-                    }
-                };
+                let even = textures.get(even_texture_name).ok_or(format!(
+                    "Texture {} not found. Is it specified *before* this one in the textures list?",
+                    even_texture_name
+                ))?;
+                let odd = textures.get(even_texture_name).ok_or(format!(
+                    "Texture {} not found. Is it specified *before* this one in the textures list?",
+                    odd_texture_name
+                ))?;
                 textures.insert(
                     (*name).clone(),
                     Arc::new(Checker::new(*scale, Arc::clone(even), Arc::clone(odd))),
                 );
             }
             TextureData::Image { filename, gamma } => {
-                let image_texture = match Image8Bit::from_filename(filename, *gamma) {
-                    Ok(t) => t,
-                    Err(err) => {
-                        return Err(format!("Error loading image at \"{}\": {}", filename, err))
-                    }
-                };
+                let image_texture = Image8Bit::from_filename(filename, *gamma)
+                    .map_err(|err| (format!("Error loading image at \"{}\": {}", filename, err)))?;
                 textures.insert((*name).clone(), Arc::new(image_texture));
             }
             TextureData::SolidColor(color) => {
@@ -192,24 +181,14 @@ fn build_materials(
                 emittance_texture: emittance_texture_name,
                 index_of_refraction,
             } => {
-                let reflectance_texture = match textures.get(reflectance_texture_name) {
-                    Some(texture) => texture,
-                    None => {
-                        return Err(format!(
-                            "Texture {} not found. Is it specified in the textures list?",
-                            reflectance_texture_name
-                        ))
-                    }
-                };
-                let emittance_texture = match textures.get(emittance_texture_name) {
-                    Some(texture) => texture,
-                    None => {
-                        return Err(format!(
-                            "Texture {} not found. Is it specified in the textures list?",
-                            emittance_texture_name
-                        ))
-                    }
-                };
+                let reflectance_texture = textures.get(reflectance_texture_name).ok_or(format!(
+                    "Texture {} not found. Is it specified in the textures list?",
+                    reflectance_texture_name
+                ))?;
+                let emittance_texture = textures.get(emittance_texture_name).ok_or(format!(
+                    "Texture {} not found. Is it specified in the textures list?",
+                    emittance_texture_name
+                ))?;
                 materials.insert(
                     (*name).clone(),
                     Arc::new(Dielectric::new(
@@ -223,24 +202,14 @@ fn build_materials(
                 reflectance_texture: reflectance_texture_name,
                 emittance_texture: emittance_texture_name,
             } => {
-                let reflectance_texture = match textures.get(reflectance_texture_name) {
-                    Some(texture) => texture,
-                    None => {
-                        return Err(format!(
-                            "Texture {} not found. Is it specified in the textures list?",
-                            reflectance_texture_name
-                        ))
-                    }
-                };
-                let emittance_texture = match textures.get(emittance_texture_name) {
-                    Some(texture) => texture,
-                    None => {
-                        return Err(format!(
-                            "Texture {} not found. Is it specified in the textures list?",
-                            emittance_texture_name
-                        ))
-                    }
-                };
+                let reflectance_texture = textures.get(reflectance_texture_name).ok_or(format!(
+                    "Texture {} not found. Is it specified in the textures list?",
+                    reflectance_texture_name
+                ))?;
+                let emittance_texture = textures.get(emittance_texture_name).ok_or(format!(
+                    "Texture {} not found. Is it specified in the textures list?",
+                    emittance_texture_name
+                ))?;
                 materials.insert(
                     (*name).clone(),
                     Arc::new(Lambertian::new(
@@ -254,24 +223,14 @@ fn build_materials(
                 emittance_texture: emittance_texture_name,
                 roughness,
             } => {
-                let reflectance_texture = match textures.get(reflectance_texture_name) {
-                    Some(texture) => texture,
-                    None => {
-                        return Err(format!(
-                            "Texture {} not found. Is it specified in the textures list?",
-                            reflectance_texture_name
-                        ))
-                    }
-                };
-                let emittance_texture = match textures.get(emittance_texture_name) {
-                    Some(texture) => texture,
-                    None => {
-                        return Err(format!(
-                            "Texture {} not found. Is it specified in the textures list?",
-                            emittance_texture_name
-                        ))
-                    }
-                };
+                let reflectance_texture = textures.get(reflectance_texture_name).ok_or(format!(
+                    "Texture {} not found. Is it specified in the textures list?",
+                    reflectance_texture_name
+                ))?;
+                let emittance_texture = textures.get(emittance_texture_name).ok_or(format!(
+                    "Texture {} not found. Is it specified in the textures list?",
+                    emittance_texture_name
+                ))?;
                 materials.insert(
                     (*name).clone(),
                     Arc::new(Specular::new(
@@ -293,20 +252,37 @@ fn build_geometrics(
     let mut geometrics: HashMap<String, Arc<dyn Geometric>> = HashMap::new();
     for (name, geometric) in geometric_data {
         match geometric {
-            GeometricData::Sphere {
+            GeometricData::PrimitiveParallelogram {
+                lower_left,
+                u,
+                v,
+                is_culled,
+                material: material_name,
+            } => {
+                let material = materials.get(material_name).ok_or(format!(
+                    "Material {} not found. Is it specified in the materials list?",
+                    material_name
+                ))?;
+                geometrics.insert(
+                    (*name).clone(),
+                    Arc::new(Parallelogram::new(
+                        (*lower_left).into(),
+                        (*u).into(),
+                        (*v).into(),
+                        (*is_culled).unwrap_or(false),
+                        Arc::clone(material),
+                    )),
+                );
+            }
+            GeometricData::PrimitiveSphere {
                 center,
                 radius,
                 material: material_name,
             } => {
-                let material = match materials.get(material_name) {
-                    Some(m) => m,
-                    None => {
-                        return Err(format!(
-                            "Material {} not found. Is it specified in the materials list?",
-                            material_name
-                        ))
-                    }
-                };
+                let material = materials.get(material_name).ok_or(format!(
+                    "Material {} not found. Is it specified in the materials list?",
+                    material_name
+                ))?;
                 geometrics.insert(
                     (*name).clone(),
                     Arc::new(Sphere::new((*center).into(), *radius, Arc::clone(material))),
@@ -349,26 +325,16 @@ fn build_scenes(
     for (name, scene_data) in scene_data {
         let mut world = List::new();
         for geometric_name in &scene_data.geometrics {
-            let geometric = match geometrics.get(geometric_name) {
-                Some(g) => g,
-                None => {
-                    return Err(format!(
-                        "Geometric {} not found. Is it specified in the geometrics list?",
-                        geometric_name
-                    ))
-                }
-            };
+            let geometric = geometrics.get(geometric_name).ok_or(format!(
+                "Geometric {} not found. Is it specified in the geometrics list?",
+                geometric_name
+            ))?;
             world.push(Arc::clone(geometric));
         }
-        let camera = match cameras.get(&scene_data.camera) {
-            Some(c) => c,
-            None => {
-                return Err(format!(
-                    "Camera {} not found. Is it specified in the cameras list?",
-                    &scene_data.camera
-                ))
-            }
-        };
+        let camera = cameras.get(&scene_data.camera).ok_or(format!(
+            "Camera {} not found. Is it specified in the cameras list?",
+            &scene_data.camera
+        ))?;
         let scene = Scene {
             name: (*name).clone(),
             world: if scene_data.use_bvh {
