@@ -19,8 +19,8 @@ use super::{Build, Builts};
 
 #[derive(Deserialize)]
 #[serde(rename_all = "snake_case")]
-// #[serde(untagged)]
-#[serde(tag = "type")]
+#[serde(untagged)]
+// #[serde(tag = "type")]
 pub enum GeometricRefOrInline {
     Ref(String),
     // #[serde(flatten)]
@@ -58,6 +58,7 @@ pub enum GeometricData {
     #[serde(rename = "rotate_y")]
     InstanceRotateYAxis {
         geometric: GeometricRefOrInline,
+        #[serde(flatten)]
         angle: Angle,
         around: [f64; 3],
     },

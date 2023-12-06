@@ -72,7 +72,7 @@ impl Builts {
 #[derive(Deserialize)]
 struct RenderData {
     parameters: Parameters,
-    scene: SceneRefOrInline,
+    active_scene: SceneRefOrInline,
     #[serde(default)]
     scenes: IndexMap<String, SceneData>,
     #[serde(default)]
@@ -88,7 +88,7 @@ struct RenderData {
 pub fn parse_yaml(filename: &str) -> Result<(Parameters, Scene), String> {
     // get and parse file
     let unparsed = fs::read_to_string(filename).map_err(|err| err.to_string())?;
-    let parsed: RenderData = serde_yaml::from_str(&unparsed).map_err(|err| err.to_string())?;
+    let parsed: RenderData = serde_json::from_str(&unparsed).map_err(|err| err.to_string())?;
 
     let mut builts = Builts::new();
 
@@ -104,14 +104,14 @@ pub fn parse_yaml(filename: &str) -> Result<(Parameters, Scene), String> {
     //     SceneRefOrInline::Inline(SceneData { name, .. }) => name.clone(),
     // };
 
-    let selected_scene = parsed.scene.build(&builts)?;
+    let active_scene = parsed.active_scene.build(&builts)?;
 
     // let selected_scene = scenes.remove(&parsed.scene).ok_or(format!(
     //     "Scene {} not found. Is it specified in the scenes list?",
     //     parsed.scene
     // ))?;
 
-    Ok((parsed.parameters, selected_scene))
+    Ok((parsed.parameters, active_scene))
 }
 
 // #[derive(Deserialize)]

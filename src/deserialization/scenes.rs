@@ -16,6 +16,7 @@ use super::{Build, Builts};
 
 #[derive(Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[serde(untagged)]
 pub enum SceneRefOrInline {
     Ref(String),
     Inline(SceneData),
@@ -38,6 +39,7 @@ impl Build<Scene> for SceneRefOrInline {
 }
 
 #[derive(Deserialize)]
+// #[serde(deserialize_with = "deserialize_scene")]
 pub struct SceneData {
     name: String,
     geometrics: Vec<String>,

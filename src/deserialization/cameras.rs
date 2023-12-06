@@ -26,7 +26,10 @@ impl Build<Camera> for CameraData {
             self.defocus_angle_degrees,
             match self.focus_distance {
                 FocusDistance::Exact(distance) => distance,
-                FocusDistance::EyeToTarget => eye_location.to(target_location).length(),
+                // FocusDistance::EyeToTarget => eye_location.to(target_location).length(),
+                FocusDistance::Type(FocusDistanceType::EyeToTarget) => {
+                    eye_location.to(target_location).length()
+                }
             },
         );
 
@@ -36,7 +39,16 @@ impl Build<Camera> for CameraData {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[serde(untagged)]
 enum FocusDistance {
     Exact(f64),
+    // EyeToTarget,
+    // #[serde(untagged)]
+    Type(FocusDistanceType),
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "snake_case")]
+enum FocusDistanceType {
     EyeToTarget,
 }
