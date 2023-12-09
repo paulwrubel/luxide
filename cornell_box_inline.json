@@ -28,18 +28,15 @@
       "near_right_box_internal"
     ],
     "use_bvh": true,
-    "camera": "basic",
-    "background_color": [ 0, 0, 0 ]
-  },
-  "cameras": {
-    "basic": {
+    "camera": {
       "vertical_field_of_view_degrees": 40,
       "eye_location": [ 0.5, 0.5, 1.44144 ],
       "target_location": [ 0.5, 0.5, 0 ],
       "view_up": [ 0, 1, 0 ],
       "defocus_angle_degrees": 0,
       "focus_distance": "eye_to_target"
-    }
+    },
+    "background_color": [ 0, 0, 0 ]
   },
   "geometrics": {
     "left_wall": {
@@ -47,14 +44,22 @@
       "lower_left": [ 0, 0, 0 ],
       "u": [ 0, 0, -1 ],
       "v": [ 0, 1, 0 ],
-      "material": "lambertian_cb_green"
+      "material": {
+        "type": "lambertian",
+        "reflectance_texture": "solid_cb_green",
+        "emittance_texture": "solid_black"
+      }
     },
     "right_wall": {
       "type": "parallelogram",
       "lower_left": [ 1, 0, -1 ],
       "u": [ 0, 0, 1 ],
       "v": [ 0, 1, 0 ],
-      "material": "lambertian_cb_red"
+      "material": {
+        "type": "lambertian",
+        "reflectance_texture": "solid_cb_red",
+        "emittance_texture": "solid_black"
+      }
     },
     "floor": {
       "type": "parallelogram",
@@ -105,18 +110,6 @@
       "b": [ 0.5, 0.6, -0.8 ],
       "material": "dielectric_glass"
     },
-    "near_right_box_core": {
-      "type": "box",
-      "a": [ 0.5, 0, -0.2 ],
-      "b": [ 0.8, 0.3, -0.5 ],
-      "material": "dielectric_glass"
-    },
-    "near_right_box_core_internal": {
-      "type": "box",
-      "a": [ 0.52, 0.02, -0.22 ],
-      "b": [ 0.78, 0.28, -0.48 ],
-      "material": "lambertian_mike_face_glow"
-    },
     "far_left_box": {
       "type": "rotate_y",
       "geometric": {
@@ -130,13 +123,23 @@
     },
     "near_right_box": {
       "type": "rotate_y",
-      "geometric": "near_right_box_core",
+      "geometric": {
+        "type": "box",
+        "a": [ 0.5, 0, -0.2 ],
+        "b": [ 0.8, 0.3, -0.5 ],
+        "material": "dielectric_glass"
+      },
       "degrees": -18,
       "around": [ 0.65, 0, -0.35 ]
     },
     "near_right_box_internal": {
       "type": "rotate_y",
-      "geometric": "near_right_box_core_internal",
+      "geometric": {
+        "type": "box",
+        "a": [ 0.52, 0.02, -0.22 ],
+        "b": [ 0.78, 0.28, -0.48 ],
+        "material": "lambertian_mike_face_glow"
+      },
       "degrees": -18,
       "around": [ 0.65, 0, -0.35 ]
     }
@@ -145,36 +148,41 @@
     "lambertian_white_light": {
       "type": "lambertian",
       "reflectance_texture": "solid_black",
-      "emittance_texture": "solid_white_light"
+      "emittance_texture": {
+        "type": "color",
+        "color": [ 7, 7, 7 ]
+      }
     },
     "lambertian_white_light_dim": {
       "type": "lambertian",
       "reflectance_texture": "solid_black",
-      "emittance_texture": "solid_white_light_dim"
+      "emittance_texture": {
+        "type": "color",
+        "color": [ 3, 3, 3 ]
+      }
     },
     "lambertian_cb_red_light_dim": {
       "type": "lambertian",
       "reflectance_texture": "solid_cb_red",
-      "emittance_texture": "solid_cb_red_light_dim"
+      "emittance_texture": {
+        "type": "color",
+        "color": [ 0.325, 0.025, 0.025 ]
+      }
     },
     "lambertian_cb_green_light_dim": {
       "type": "lambertian",
       "reflectance_texture": "solid_cb_green",
-      "emittance_texture": "solid_cb_green_light_dim"
+      "emittance_texture": {
+        "type": "color",
+        "color": [ 0.06, 0.225, 0.075 ]
+      }
     },
     "lambertian_cb_white": {
       "type": "lambertian",
-      "reflectance_texture": "solid_cb_white",
-      "emittance_texture": "solid_black"
-    },
-    "lambertian_cb_red": {
-      "type": "lambertian",
-      "reflectance_texture": "solid_cb_red",
-      "emittance_texture": "solid_black"
-    },
-    "lambertian_cb_green": {
-      "type": "lambertian",
-      "reflectance_texture": "solid_cb_green",
+      "reflectance_texture": {
+        "type": "color",
+        "color": [ 0.73, 0.73, 0.73 ]
+      },
       "emittance_texture": "solid_black"
     },
     "lambertian_mike_face": {
@@ -209,33 +217,13 @@
       "type": "color",
       "color": [ 0, 0, 0 ]
     },
-    "solid_white_light": {
+    "solid_cb_green": {
       "type": "color",
-      "color": [ 7, 7, 7 ]
-    },
-    "solid_white_light_dim": {
-      "type": "color",
-      "color": [ 3, 3, 3 ]
-    },
-    "solid_cb_red_light_dim": {
-      "type": "color",
-      "color": [ 0.325, 0.025, 0.025 ]
-    },
-    "solid_cb_green_light_dim": {
-      "type": "color",
-      "color": [ 0.06, 0.225, 0.075 ]
-    },
-    "solid_cb_white": {
-      "type": "color",
-      "color": [ 0.73, 0.73, 0.73 ]
+      "color": [ 0.12, 0.45, 0.15 ]
     },
     "solid_cb_red": {
       "type": "color",
       "color": [ 0.65, 0.05, 0.05 ]
-    },
-    "solid_cb_green": {
-      "type": "color",
-      "color": [ 0.12, 0.45, 0.15 ]
     },
     "image_mike_face": {
       "type": "image",

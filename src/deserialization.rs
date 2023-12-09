@@ -1,24 +1,14 @@
-use std::{fs, marker::PhantomData, sync::Arc};
+use std::{fs, sync::Arc};
 
 use indexmap::IndexMap;
 use serde::Deserialize;
 
 use crate::{
     camera::Camera,
-    geometry::{
-        compounds::{AxisAlignedPBox, List, BVH},
-        instances::{RotateYAxis, Translate},
-        primitives::{Parallelogram, Sphere},
-        volumes, Geometric, Point,
-    },
+    geometry::Geometric,
     parameters::Parameters,
     scene::Scene,
-    shading::{
-        materials::{Dielectric, Lambertian, Material, Specular},
-        textures::{Checker, Image8Bit, SolidColor},
-        Texture,
-    },
-    utils::Angle,
+    shading::{materials::Material, Texture},
 };
 
 mod scenes;
@@ -35,15 +25,6 @@ use self::materials::MaterialData;
 
 mod textures;
 use self::textures::TextureData;
-
-/*
-  _______   _____   __     __             _    _____    ____    _   _         _____   _   _    _____   _______   ______              _____
- |__   __| |  __ \  \ \   / /            | |  / ____|  / __ \  | \ | |       |_   _| | \ | |  / ____| |__   __| |  ____|     /\     |  __ \
-    | |    | |__) |  \ \_/ /             | | | (___   | |  | | |  \| |         | |   |  \| | | (___      | |    | |__       /  \    | |  | |
-    | |    |  _  /    \   /          _   | |  \___ \  | |  | | | . ` |         | |   | . ` |  \___ \     | |    |  __|     / /\ \   | |  | |
-    | |    | | \ \     | |          | |__| |  ____) | | |__| | | |\  |        _| |_  | |\  |  ____) |    | |    | |____   / ____ \  | |__| |
-    |_|    |_|  \_\    |_|           \____/  |_____/   \____/  |_| \_|       |_____| |_| \_| |_____/     |_|    |______| /_/    \_\ |_____/
-*/
 
 pub trait Build<Inst> {
     fn build(&self, builts: &Builts) -> Result<Inst, String>;
@@ -99,72 +80,10 @@ pub fn parse_yaml(filename: &str) -> Result<(Parameters, Scene), String> {
     build_cameras(&parsed.cameras, &mut builts)?;
     build_scenes(&parsed.scenes, &mut builts)?;
 
-    // let scene_name = match &parsed.scene {
-    //     SceneRefOrInline::Ref(name) => name.clone(),
-    //     SceneRefOrInline::Inline(SceneData { name, .. }) => name.clone(),
-    // };
-
     let active_scene = parsed.active_scene.build(&builts)?;
-
-    // let selected_scene = scenes.remove(&parsed.scene).ok_or(format!(
-    //     "Scene {} not found. Is it specified in the scenes list?",
-    //     parsed.scene
-    // ))?;
 
     Ok((parsed.parameters, active_scene))
 }
-
-// #[derive(Deserialize)]
-// #[serde(rename_all = "snake_case")]
-// pub enum RefOrInline<Data, Inst> {
-//     Ref(String),
-//     Inline(Data, PhantomData<Inst>),
-// }
-
-// impl<Data, Inst> RefOrInline<Data, Inst>
-// where
-//     Data: Build<Inst>,
-// {
-//     fn build(&self, source: &IndexMap<String, Inst>, builts: &Builts) -> Result<Inst, String> {
-//         match self {
-//             Self::Ref(name) => Ok(*source
-//                 .get(name)
-//                 .ok_or(format!("Reference {} not found", name))?),
-// Self::Ref(name) => match property {
-//     Property::Scene => Ok(builts
-//         .scenes
-//         .get(name)
-//         .ok_or(format!("Scene Reference {} not found", name))?),
-//     Property::Camera => Ok(builts
-//         .cameras
-//         .get(name)
-//         .ok_or(format!("Camera Reference {} not found", name))?),
-//     Property::Geometric => Ok(builts
-//         .geometrics
-//         .get(name)
-//         .ok_or(format!("Geometric Reference {} not found", name))?),
-//     Property::Material => Ok(builts
-//         .materials
-//         .get(name)
-//         .ok_or(format!("Material Reference {} not found", name))?),
-//     Property::Texture => Ok(builts
-//         .textures
-//         .get(name)
-//         .ok_or(format!("Texture Reference {} not found", name))?),
-// },
-//             Self::Inline(data, _) => data.build(builts),
-//         }
-//     }
-// }
-
-// impl<Data: Build<Inst>, Inst> RefOrInline<Data> {
-//     fn build_or_deref(&self, source: &IndexMap<String, Inst>) -> Result<Inst, String> {
-//         match self {
-//             Self::Ref(name) => source.get(name)?,
-//             Self::Inline(data) => data.build()?,
-//         }
-//     }
-// }
 
 fn build_textures(
     texture_data: &IndexMap<String, TextureData>,

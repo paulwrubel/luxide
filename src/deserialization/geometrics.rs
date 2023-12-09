@@ -1,8 +1,6 @@
 use std::sync::Arc;
 
-use indexmap::IndexMap;
 use serde::Deserialize;
-use textures::Texture;
 
 use crate::{
     geometry::{
@@ -11,19 +9,16 @@ use crate::{
         primitives::{Parallelogram, Sphere},
         volumes, Geometric,
     },
-    shading::{materials::Material, textures},
     utils::Angle,
 };
 
-use super::{Build, Builts};
+use super::{materials::MaterialRefOrInline, Build, Builts};
 
 #[derive(Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(untagged)]
-// #[serde(tag = "type")]
 pub enum GeometricRefOrInline {
     Ref(String),
-    // #[serde(flatten)]
     Inline(Box<GeometricData>),
 }
 
@@ -40,7 +35,6 @@ impl Build<Arc<dyn Geometric>> for GeometricRefOrInline {
 }
 
 #[derive(Deserialize)]
-// #[serde(untagged)]
 #[serde(tag = "type")]
 pub enum GeometricData {
     #[serde(rename = "box")]
@@ -48,7 +42,7 @@ pub enum GeometricData {
         a: [f64; 3],
         b: [f64; 3],
         is_culled: Option<bool>,
-        material: String,
+        material: MaterialRefOrInline,
     },
     #[serde(rename = "list")]
     CompoundList {
@@ -73,13 +67,13 @@ pub enum GeometricData {
         u: [f64; 3],
         v: [f64; 3],
         is_culled: Option<bool>,
-        material: String,
+        material: MaterialRefOrInline,
     },
     #[serde(rename = "sphere")]
     PrimitiveSphere {
         center: [f64; 3],
         radius: f64,
-        material: String,
+        material: MaterialRefOrInline,
     },
     #[serde(rename = "constant_volume")]
     VolumeConstant {
@@ -102,18 +96,15 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
                 a,
                 b,
                 is_culled,
-                material: material_name,
+                material,
             } => {
-                let material = builts.materials.get(material_name).ok_or(format!(
-                    "Material {} not found. Is it specified in the materials list?",
-                    material_name
-                ))?;
+                let material = material.build(builts)?;
 
                 Ok(Arc::new(AxisAlignedPBox::new(
                     (*a).into(),
                     (*b).into(),
                     (*is_culled).unwrap_or(false),
-                    Arc::clone(material),
+                    material,
                 )))
             }
             Self::CompoundList {
@@ -123,10 +114,6 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
                 let mut list = List::new();
                 for geometric_ref in geometric_refs {
                     let geometric = geometric_ref.build(builts)?;
-                    // let geometric = builts.geometrics.get(name).ok_or(format!(
-                    //     "Geometric {} not found. Is it specified in the geometrics list?",
-                    //     name
-                    // ))?;
                     list.push(geometric);
                 }
 
@@ -142,10 +129,6 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
                 around,
             } => {
                 let geometric = geometric_ref.build(builts)?;
-                // let geometric = builts.geometrics.get(geometric_name).ok_or(format!(
-                //     "Geometric {} not found. Is it specified in the geometrics list?",
-                //     geometric_name
-                // ))?;
 
                 Ok(Arc::new(RotateYAxis::new(
                     geometric,
@@ -158,10 +141,6 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
                 translation,
             } => {
                 let geometric = geometric_ref.build(builts)?;
-                // let geometric = builts.geometrics.get(geometric_name).ok_or(format!(
-                //     "Geometric {} not found. Is it specified in the geometrics list?",
-                //     geometric_name
-                // ))?;
 
                 Ok(Arc::new(Translate::new(geometric, (*translation).into())))
             }
@@ -170,36 +149,26 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
                 u,
                 v,
                 is_culled,
-                material: material_name,
+                material,
             } => {
-                let material = builts.materials.get(material_name).ok_or(format!(
-                    "Material {} not found. Is it specified in the materials list?",
-                    material_name
-                ))?;
+                let material = material.build(builts)?;
 
                 Ok(Arc::new(Parallelogram::new(
                     (*lower_left).into(),
                     (*u).into(),
                     (*v).into(),
                     (*is_culled).unwrap_or(false),
-                    Arc::clone(material),
+                    material,
                 )))
             }
             Self::PrimitiveSphere {
                 center,
                 radius,
-                material: material_name,
+                material,
             } => {
-                let material = builts.materials.get(material_name).ok_or(format!(
-                    "Material {} not found. Is it specified in the materials list?",
-                    material_name
-                ))?;
+                let material = material.build(builts)?;
 
-                Ok(Arc::new(Sphere::new(
-                    (*center).into(),
-                    *radius,
-                    Arc::clone(material),
-                )))
+                Ok(Arc::new(Sphere::new((*center).into(), *radius, material)))
             }
             Self::VolumeConstant {
                 geometric: geometric_ref,
@@ -207,10 +176,7 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
                 reflectance_texture: reflectance_texture_name,
             } => {
                 let geometric = geometric_ref.build(builts)?;
-                // let geometric = builts.geometrics.get(geometric_name).ok_or(format!(
-                //     "Geometric {} not found. Is it specified in the geometrics list?",
-                //     geometric_name
-                // ))?;
+
                 let reflectance_texture =
                     builts
                         .textures

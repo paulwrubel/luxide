@@ -5,6 +5,30 @@ use crate::{camera::Camera, geometry::Point};
 use super::{Build, Builts};
 
 #[derive(Deserialize)]
+#[serde(rename_all = "snake_case")]
+#[serde(untagged)]
+pub enum CameraRefOrInline {
+    Ref(String),
+    Inline(Box<CameraData>),
+}
+
+impl Build<Camera> for CameraRefOrInline {
+    fn build(&self, builts: &Builts) -> Result<Camera, String> {
+        match self {
+            Self::Ref(name) => Ok(builts
+                .cameras
+                .get(name)
+                .ok_or(format!(
+                    "Camera {} not found. Is it specified in the cameras list?",
+                    name
+                ))?
+                .clone()),
+            Self::Inline(data) => data.build(builts),
+        }
+    }
+}
+
+#[derive(Deserialize)]
 pub struct CameraData {
     vertical_field_of_view_degrees: f64,
     eye_location: [f64; 3],
@@ -26,7 +50,6 @@ impl Build<Camera> for CameraData {
             self.defocus_angle_degrees,
             match self.focus_distance {
                 FocusDistance::Exact(distance) => distance,
-                // FocusDistance::EyeToTarget => eye_location.to(target_location).length(),
                 FocusDistance::Type(FocusDistanceType::EyeToTarget) => {
                     eye_location.to(target_location).length()
                 }
@@ -42,8 +65,6 @@ impl Build<Camera> for CameraData {
 #[serde(untagged)]
 enum FocusDistance {
     Exact(f64),
-    // EyeToTarget,
-    // #[serde(untagged)]
     Type(FocusDistanceType),
 }
 

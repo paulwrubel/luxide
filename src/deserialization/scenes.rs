@@ -1,18 +1,13 @@
 use std::sync::Arc;
 
-use indexmap::IndexMap;
 use serde::Deserialize;
 
 use crate::{
-    camera::Camera,
-    geometry::{
-        compounds::{List, BVH},
-        Geometric,
-    },
+    geometry::compounds::{List, BVH},
     scene::Scene,
 };
 
-use super::{Build, Builts};
+use super::{cameras::CameraRefOrInline, geometrics::GeometricRefOrInline, Build, Builts};
 
 #[derive(Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -42,26 +37,20 @@ impl Build<Scene> for SceneRefOrInline {
 // #[serde(deserialize_with = "deserialize_scene")]
 pub struct SceneData {
     name: String,
-    geometrics: Vec<String>,
+    geometrics: Vec<GeometricRefOrInline>,
     use_bvh: bool,
-    camera: String,
+    camera: CameraRefOrInline,
     background_color: [f64; 3],
 }
 
 impl Build<Scene> for SceneData {
     fn build(&self, builts: &Builts) -> Result<Scene, String> {
         let mut world = List::new();
-        for geometric_name in &self.geometrics {
-            let geometric = builts.geometrics.get(geometric_name).ok_or(format!(
-                "Geometric {} not found. Is it specified in the geometrics list?",
-                geometric_name
-            ))?;
-            world.push(Arc::clone(geometric));
+        for geometric in &self.geometrics {
+            let geometric = geometric.build(builts)?;
+            world.push(geometric);
         }
-        let camera = builts.cameras.get(&self.camera).ok_or(format!(
-            "Camera {} not found. Is it specified in the cameras list?",
-            &self.camera
-        ))?;
+        let camera = self.camera.build(builts)?;
         let scene = Scene {
             name: self.name.clone(),
             world: if self.use_bvh {
@@ -69,7 +58,7 @@ impl Build<Scene> for SceneData {
             } else {
                 Arc::new(world)
             },
-            camera: (*camera).clone(),
+            camera,
             background_color: self.background_color.into(),
         };
 
