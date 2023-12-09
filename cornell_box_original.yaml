@@ -50,83 +50,72 @@ cameras:
     focus_distance: !eye_to_target
 
 geometrics:
-  left_wall: 
-    type: parallelogram
+  left_wall: !parallelogram
     lower_left: [0, 0, 0]
     u: [0, 0, -1]
     v: [0, 1, 0]
     material: lambertian_cb_green
-  right_wall:
-    type: parallelogram
+  right_wall: !parallelogram
     lower_left: [1, 0, -1]
     u: [0, 0, 1]
     v: [0, 1, 0]
     material: lambertian_cb_red
-  floor:
-    type: parallelogram
+  floor: !parallelogram
     lower_left: [0, 0, 0]
     u: [1, 0, 0]
     v: [0, 0, -1]
     # material: lambertian_cb_white
     material: lambertian_mike_face
-  ceiling:
-    type: parallelogram
+  ceiling: !parallelogram
     lower_left: [0, 1, -1]
     u: [1, 0, 0]
     v: [0, 0, 1]
     # material: lambertian_cb_white
     material: lambertian_mike_face_glow
-  back_wall:
-    type: parallelogram
+  back_wall: !parallelogram
     lower_left: [0, 0, -1]
     u: [1, 0, 0]
     v: [0, 1, 0]
     # material: lambertian_cb_white
     material: lambertian_mike_face
-  front_wall:
-    type: parallelogram
+  front_wall: !parallelogram
     lower_left: [1, 0, 0]
     u: [-1, 0, 0]
     v: [0, 1, 0]
     is_culled: true
     material: lambertian_cb_white
 
-  ceiling_light:
-    type: parallelogram
+  ceiling_light: !parallelogram
     lower_left: [0.35, 0.999, -0.65]
     u: [0.3, 0, 0]
     v: [0, 0, 0.3]
     material: lambertian_white_light
-  ceiling_light_dim:
-    type: parallelogram
+  ceiling_light_dim: !parallelogram
     lower_left: [0.35, 0.999, -0.65]
     u: [0.3, 0, 0]
     v: [0, 0, 0.3]
     material: lambertian_white_light_dim
 
-  far_left_box_core:
-    type: box
+  far_left_box_core: !box
     a: [0.2, 0, -0.5]
     b: [0.5, 0.6, -0.8]
     # material: lambertian_cb_white
     material: dielectric_glass
-  near_right_box_core:
-    type: box
+  near_right_box_core: !box
     a: [0.5, 0, -0.2]
     b: [0.8, 0.3, -0.5]
     # material: lambertian_cb_white
     material: dielectric_glass
     # material: lambertian_mike_face_glow
-  near_right_box_core_internal:
-    type: box
+  near_right_box_core_internal: !box
     a: [0.52, 0.02, -0.22]
     b: [0.78, 0.28, -0.48]
     # material: lambertian_cb_white
     # material: dielectric_glass
     material: lambertian_mike_face_glow
   
-  far_left_box:
-    type: rotate_y
+  far_left_box: !rotate_y
+    # type: rotate_y
     geometric: # !inline
       type: inline
       # a: [0.2, 0, -0.5]
@@ -135,13 +124,11 @@ geometrics:
       # material: dielectric_glass
     # angle: !degrees 15
     # around: [0.35, 0, -0.65]
-  near_right_box:
-    type: rotate_y
+  near_right_box: !rotate_y
     geometric: !ref near_right_box_core
     angle: !degrees -18
     around: [0.65, 0, -0.35]
-  near_right_box_internal:
-    type: rotate_y
+  near_right_box_internal: !rotate_y
     geometric: !ref near_right_box_core_internal
     angle: !degrees -18
     around: [0.65, 0, -0.35]
