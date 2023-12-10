@@ -66,7 +66,7 @@ struct RenderData {
     geometrics: IndexMap<String, GeometricData>,
 }
 
-pub fn parse_yaml(filename: &str) -> Result<(Parameters, Scene), String> {
+pub fn parse_json(filename: &str) -> Result<(Parameters, Scene), String> {
     // get and parse file
     let unparsed = fs::read_to_string(filename).map_err(|err| err.to_string())?;
     let parsed: RenderData = serde_json::from_str(&unparsed).map_err(|err| err.to_string())?;

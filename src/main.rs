@@ -47,7 +47,7 @@ fn run(config_filename: &str) -> Result<(), String> {
     let local_utc_offset = time::UtcOffset::current_local_offset().unwrap();
 
     println!("Parsing configuration file...");
-    let (parameters, scene) = luxide::deserialization::parse_yaml(config_filename)?;
+    let (parameters, scene) = luxide::deserialization::parse_json(config_filename)?;
 
     let now = OffsetDateTime::now_utc().to_offset(local_utc_offset);
     let formatted_timestamp = utils::get_formatted_timestamp_for(now);
