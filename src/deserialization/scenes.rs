@@ -34,7 +34,7 @@ impl Build<Scene> for SceneRefOrInline {
 }
 
 #[derive(Deserialize)]
-// #[serde(deserialize_with = "deserialize_scene")]
+#[serde(deny_unknown_fields)]
 pub struct SceneData {
     name: String,
     geometrics: Vec<GeometricRefOrInline>,

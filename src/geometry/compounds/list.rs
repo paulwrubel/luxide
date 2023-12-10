@@ -23,22 +23,21 @@ impl List {
         let bounding_box = geometrics
             .iter()
             .map(|p| p.bounding_box())
-            .reduce(|acc, bb| acc.expand(bb))
+            .reduce(|acc, bb| acc.expand(bb).pad(0.00001))
             .unwrap_or(AABB::EMPTY);
 
         Self {
             items: geometrics,
-            bounding_box: bounding_box,
+            bounding_box,
         }
     }
 
     pub fn push(&mut self, geometric: Arc<dyn Geometric>) {
-        self.bounding_box = self.bounding_box.expand(geometric.bounding_box());
+        self.bounding_box = self
+            .bounding_box
+            .expand(geometric.bounding_box())
+            .pad(0.00001);
         self.items.push(geometric);
-    }
-
-    pub fn push_all(&mut self, geometrics: &mut Vec<Arc<dyn Geometric>>) {
-        self.items.append(geometrics)
     }
 
     pub fn clear(&mut self) {

@@ -4,7 +4,7 @@ use serde::Deserialize;
 
 use crate::{
     geometry::{
-        compounds::{AxisAlignedPBox, List, BVH},
+        compounds::{AxisAlignedPBox, List, ModelObj, BVH},
         instances::{RotateYAxis, Translate},
         primitives::{Parallelogram, Sphere, Triangle},
         volumes, Geometric,
@@ -36,6 +36,7 @@ impl Build<Arc<dyn Geometric>> for GeometricRefOrInline {
 
 #[derive(Deserialize)]
 #[serde(tag = "type")]
+#[serde(deny_unknown_fields)]
 pub enum GeometricData {
     #[serde(rename = "box")]
     CompoundAxisAlignedPBox {
@@ -48,6 +49,15 @@ pub enum GeometricData {
     CompoundList {
         use_bvh: Option<bool>,
         geometrics: Vec<GeometricRefOrInline>,
+    },
+    #[serde(rename = "obj_model")]
+    CompoundModelObj {
+        filename: String,
+        origin: Option<[f64; 3]>,
+        scale: Option<f64>,
+        recalculate_normals: Option<bool>,
+        use_bvh: Option<bool>,
+        material: MaterialRefOrInline,
     },
     #[serde(rename = "rotate_y")]
     InstanceRotateYAxis {
@@ -130,6 +140,27 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
                 } else {
                     Ok(Arc::new(list))
                 }
+            }
+            Self::CompoundModelObj {
+                filename,
+                origin,
+                scale,
+                recalculate_normals,
+                use_bvh,
+                material,
+            } => {
+                let material = material.build(builts)?;
+
+                let model = ModelObj::from_filename(
+                    filename,
+                    (*origin).unwrap_or([0.0, 0.0, 0.0]).into(),
+                    (*scale).unwrap_or(1.0),
+                    (*recalculate_normals).unwrap_or(false),
+                    (*use_bvh).unwrap_or(false),
+                    material,
+                )?;
+
+                Ok(Arc::new(model))
             }
             Self::InstanceRotateYAxis {
                 geometric: geometric_ref,

@@ -6,3 +6,6 @@ pub use bvh::BVH;
 
 mod list;
 pub use list::List;
+
+mod model_obj;
+pub use model_obj::ModelObj;
