@@ -32,6 +32,7 @@ impl Build<Arc<dyn Texture>> for TextureRefOrInline {
 #[derive(Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "type")]
+#[serde(deny_unknown_fields)]
 pub enum TextureData {
     Checker {
         scale: f64,

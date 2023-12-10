@@ -29,6 +29,7 @@ impl Build<Arc<dyn Material>> for MaterialRefOrInline {
 #[derive(Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "type")]
+#[serde(deny_unknown_fields)]
 pub enum MaterialData {
     Dielectric {
         reflectance_texture: TextureRefOrInline,

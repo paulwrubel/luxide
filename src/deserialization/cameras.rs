@@ -29,6 +29,7 @@ impl Build<Camera> for CameraRefOrInline {
 }
 
 #[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct CameraData {
     vertical_field_of_view_degrees: f64,
     eye_location: [f64; 3],
