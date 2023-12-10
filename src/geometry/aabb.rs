@@ -29,11 +29,13 @@ impl AABB {
         }
     }
 
-    pub fn from_points(a: Point, b: Point) -> Self {
+    pub fn from_points(points: &[Point]) -> Self {
+        let min_point = Point::min_components_from_list(&points);
+        let max_point = Point::max_components_from_list(&points);
         Self {
-            x_interval: Interval::new(a.0.x.min(b.0.x), a.0.x.max(b.0.x)),
-            y_interval: Interval::new(a.0.y.min(b.0.y), a.0.y.max(b.0.y)),
-            z_interval: Interval::new(a.0.z.min(b.0.z), a.0.z.max(b.0.z)),
+            x_interval: Interval::new(min_point.0.x, max_point.0.x),
+            y_interval: Interval::new(min_point.0.y, max_point.0.y),
+            z_interval: Interval::new(min_point.0.z, max_point.0.z),
         }
     }
 

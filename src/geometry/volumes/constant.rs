@@ -12,7 +12,7 @@ use crate::{
     utils::Interval,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Constant {
     geometric: Arc<dyn Geometric>,
     negative_inverse_density: f64,

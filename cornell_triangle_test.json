@@ -1,0 +1,160 @@
+{
+    "parameters": {
+        "output_dir": "./output",
+        "use_subdir": true,
+        "file_basename": "image",
+        "file_ext": "png",
+        "image_dimensions": [ 500, 500 ],
+        "tile_dimensions": [ 1, 1 ],
+        "gamma_correction": 2,
+        "samples_per_round": 100,
+        "round_limit": null,
+        "max_bounces": 50,
+        "use_scaling_truncation": true,
+        "pixels_per_progress_update": 100,
+        "progress_memory": 50
+    },
+    "active_scene": {
+        "name": "cornell_triangle_test",
+        "geometrics": [
+            "cornell_box",
+            {
+                "type": "triangle",
+                "a": [ 0.2, 0.2, -0.2 ],
+                "b": [ 0.8, 0.2, -0.2 ],
+                "c": [ 0.2, 0.2, -0.8 ],
+                "material": {
+                    "type": "dielectric",
+                    "reflectance_texture": {
+                        "type": "color",
+                        "color": [ 0.05, 0.05, 0.75 ]
+                    },
+                    "emittance_texture": "solid_black",
+                    "index_of_refraction": 1.5
+                }
+            }
+        ],
+        "use_bvh": true,
+        "camera": {
+            "vertical_field_of_view_degrees": 40,
+            "eye_location": [ 0.5, 0.5, 1.44144 ],
+            "target_location": [ 0.5, 0.5, 0 ],
+            "view_up": [ 0, 1, 0 ],
+            "defocus_angle_degrees": 0,
+            "focus_distance": "eye_to_target"
+        },
+        "background_color": [ 0, 0, 0 ]
+    },
+    "geometrics": {
+        "cb_left_wall": {
+            "type": "parallelogram",
+            "lower_left": [ 0, 0, 0 ],
+            "u": [ 0, 0, -1 ],
+            "v": [ 0, 1, 0 ],
+            "material": {
+                "type": "lambertian",
+                "reflectance_texture": "solid_cb_green",
+                "emittance_texture": "solid_black"
+            }
+        },
+        "cb_right_wall": {
+            "type": "parallelogram",
+            "lower_left": [ 1, 0, -1 ],
+            "u": [ 0, 0, 1 ],
+            "v": [ 0, 1, 0 ],
+            "material": {
+                "type": "lambertian",
+                "reflectance_texture": "solid_cb_red",
+                "emittance_texture": "solid_black"
+            }
+        },
+        "cb_floor": {
+            "type": "parallelogram",
+            "lower_left": [ 0, 0, 0 ],
+            "u": [ 1, 0, 0 ],
+            "v": [ 0, 0, -1 ],
+            "material": "lambertian_cb_white"
+        },
+        "cb_ceiling": {
+            "type": "parallelogram",
+            "lower_left": [ 0, 1, -1 ],
+            "u": [ 1, 0, 0 ],
+            "v": [ 0, 0, 1 ],
+            "material": "lambertian_cb_white"
+        },
+        "cb_back_wall": {
+            "type": "parallelogram",
+            "lower_left": [ 0, 0, -1 ],
+            "u": [ 1, 0, 0 ],
+            "v": [ 0, 1, 0 ],
+            "material": "lambertian_cb_white"
+        },
+        "cb_ceiling_light": {
+            "type": "parallelogram",
+            "lower_left": [ 0.35, 0.999, -0.65 ],
+            "u": [ 0.3, 0, 0 ],
+            "v": [ 0, 0, 0.3 ],
+            "material": "lambertian_white_light"
+        },
+        "cornell_box": {
+            "type": "list",
+            "use_bvh": true,
+            "geometrics": [
+                "cb_left_wall",
+                "cb_right_wall",
+                "cb_floor",
+                "cb_ceiling",
+                "cb_back_wall",
+                "cb_ceiling_light"
+            ]
+        }
+    },
+    "materials": {
+        "lambertian_white_light": {
+            "type": "lambertian",
+            "reflectance_texture": "solid_black",
+            "emittance_texture": {
+                "type": "color",
+                "color": [ 10, 10, 10 ]
+            }
+        },
+        "lambertian_cb_white": {
+            "type": "lambertian",
+            "reflectance_texture": {
+                "type": "color",
+                "color": [ 0.73, 0.73, 0.73 ]
+            },
+            "emittance_texture": "solid_black"
+        },
+        "dielectric_glass": {
+            "type": "dielectric",
+            "reflectance_texture": "solid_white",
+            "emittance_texture": "solid_black",
+            "index_of_refraction": 1.5
+        },
+        "specular_mirror": {
+            "type": "specular",
+            "reflectance_texture": "solid_white",
+            "emittance_texture": "solid_black",
+            "roughness": 0
+        }
+    },
+    "textures": {
+        "solid_white": {
+            "type": "color",
+            "color": [ 1, 1, 1 ]
+        },
+        "solid_black": {
+            "type": "color",
+            "color": [ 0, 0, 0 ]
+        },
+        "solid_cb_green": {
+            "type": "color",
+            "color": [ 0.12, 0.45, 0.15 ]
+        },
+        "solid_cb_red": {
+            "type": "color",
+            "color": [ 0.65, 0.05, 0.05 ]
+        }
+    }
+}

@@ -6,7 +6,7 @@ use crate::{
     utils::Interval,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Parallelogram {
     lower_left: Point,
     u: Vector,
@@ -38,7 +38,7 @@ impl Parallelogram {
             plane_d: lower_left.0.dot(normal),
             w: n / n.dot(n),
             material,
-            bounding_box: AABB::from_points(lower_left, lower_left + u + v).pad(0.0001),
+            bounding_box: AABB::from_points(&[lower_left, lower_left + u + v]).pad(0.0001),
         }
     }
 
