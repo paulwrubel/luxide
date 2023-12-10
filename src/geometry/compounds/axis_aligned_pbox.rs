@@ -8,7 +8,7 @@ use crate::{
 
 use super::List;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct AxisAlignedPBox(List);
 
 impl AxisAlignedPBox {

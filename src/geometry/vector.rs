@@ -25,6 +25,12 @@ impl Vector {
         z: 1.0,
     };
 
+    pub const INFINITY: Self = Self {
+        x: f64::INFINITY,
+        y: f64::INFINITY,
+        z: f64::INFINITY,
+    };
+
     pub const RIGHT: Self = Self {
         x: 1.0,
         y: 0.0,

@@ -6,7 +6,7 @@ use crate::{
     geometry::{
         compounds::{AxisAlignedPBox, List, BVH},
         instances::{RotateYAxis, Translate},
-        primitives::{Parallelogram, Sphere},
+        primitives::{Parallelogram, Sphere, Triangle},
         volumes, Geometric,
     },
     utils::Angle,
@@ -73,6 +73,14 @@ pub enum GeometricData {
     PrimitiveSphere {
         center: [f64; 3],
         radius: f64,
+        material: MaterialRefOrInline,
+    },
+    #[serde(rename = "triangle")]
+    PrimitiveTriangle {
+        a: [f64; 3],
+        b: [f64; 3],
+        c: [f64; 3],
+        is_culled: Option<bool>,
         material: MaterialRefOrInline,
     },
     #[serde(rename = "constant_volume")]
@@ -169,6 +177,23 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
                 let material = material.build(builts)?;
 
                 Ok(Arc::new(Sphere::new((*center).into(), *radius, material)))
+            }
+            Self::PrimitiveTriangle {
+                a,
+                b,
+                c,
+                is_culled,
+                material,
+            } => {
+                let material = material.build(builts)?;
+
+                Ok(Arc::new(Triangle::new(
+                    (*a).into(),
+                    (*b).into(),
+                    (*c).into(),
+                    (*is_culled).unwrap_or(false),
+                    material,
+                )))
             }
             Self::VolumeConstant {
                 geometric: geometric_ref,

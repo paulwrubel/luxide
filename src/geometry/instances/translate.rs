@@ -5,7 +5,7 @@ use crate::{
     utils::Interval,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Translate {
     geometric: Arc<dyn Geometric>,
     translation: Vector,

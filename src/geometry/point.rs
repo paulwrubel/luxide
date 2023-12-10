@@ -1,4 +1,4 @@
-use std::ops::{Index, IndexMut};
+use std::ops::{Index, IndexMut, Neg};
 
 use auto_ops::impl_op_ex;
 
@@ -11,6 +11,7 @@ impl Point {
     pub const ZERO: Point = Self(Vector::ZERO);
     pub const ONE: Point = Self(Vector::ONE);
     pub const ORIGIN: Point = Self::ZERO;
+    pub const INFINITY: Point = Self(Vector::INFINITY);
 
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Self(Vector::new(x, y, z))
@@ -36,6 +37,24 @@ impl Point {
         )
     }
 
+    pub fn min_components_from_list(points: &[Self]) -> Point {
+        if points.len() == 0 {
+            panic!("Cannot get min point from empty list");
+        }
+        points
+            .iter()
+            .fold(Point::INFINITY, |a, b| a.min_components_point(*b))
+    }
+
+    pub fn max_components_from_list(points: &[Self]) -> Point {
+        if points.len() == 0 {
+            panic!("Cannot get max point from empty list");
+        }
+        points
+            .iter()
+            .fold(-Point::INFINITY, |a, b| a.max_components_point(*b))
+    }
+
     pub fn to(&self, other: Self) -> Vector {
         other - self
     }
@@ -52,6 +71,14 @@ impl Point {
 impl From<[f64; 3]> for Point {
     fn from(v: [f64; 3]) -> Self {
         Self(Vector::new(v[0], v[1], v[2]))
+    }
+}
+
+impl Neg for Point {
+    type Output = Point;
+
+    fn neg(self) -> Self::Output {
+        Point::from_vector(self.0 * -1.0)
     }
 }
 

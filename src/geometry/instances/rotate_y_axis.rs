@@ -5,7 +5,7 @@ use crate::{
     utils::{Angle, Interval},
 };
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct RotateYAxis {
     geometric: Arc<dyn Geometric>,
     translation: Vector,
@@ -53,7 +53,7 @@ impl RotateYAxis {
             translation,
             sin_theta,
             cos_theta,
-            bounding_box: AABB::from_points(min_extent, max_extent) + translation,
+            bounding_box: AABB::from_points(&[min_extent, max_extent]) + translation,
         }
     }
 

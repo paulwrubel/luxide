@@ -6,7 +6,7 @@ use crate::{
     utils::Interval,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Sphere {
     center_1: Point,
     center_vector: Option<Vector>,
@@ -23,7 +23,7 @@ impl Sphere {
             center_vector: None,
             radius,
             material: Arc::clone(&material),
-            bounding_box: AABB::from_points(center - radius_vector, center + radius_vector),
+            bounding_box: AABB::from_points(&[center - radius_vector, center + radius_vector]),
         }
     }
 
@@ -34,8 +34,10 @@ impl Sphere {
         material: Arc<dyn Material>,
     ) -> Self {
         let radius_vector = Vector::new(radius, radius, radius);
-        let bounding_box_1 = AABB::from_points(center_1 - radius_vector, center_1 + radius_vector);
-        let bounding_box_2 = AABB::from_points(center_2 - radius_vector, center_2 + radius_vector);
+        let bounding_box_1 =
+            AABB::from_points(&[center_1 - radius_vector, center_1 + radius_vector]);
+        let bounding_box_2 =
+            AABB::from_points(&[center_2 - radius_vector, center_2 + radius_vector]);
         Self {
             center_1,
             center_vector: Some(center_1.to(center_2)),
