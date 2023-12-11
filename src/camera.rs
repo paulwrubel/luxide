@@ -128,17 +128,23 @@ impl Camera {
         x_offset + y_offset
     }
 
-    pub fn ray_color(&self, ray: Ray, geometric: &dyn Geometric, remaining_bounces: u32) -> Color {
+    pub fn ray_color(&self, mut ray: Ray, geometric: &dyn Geometric, max_bounces: u32) -> Color {
+        let mut accumulated_color = Color::BLACK;
+        let mut attentuation_strength = Color::WHITE;
+
         // if we've bounced too many times, just say the ray is black
-        if remaining_bounces <= 0 {
-            return Color::BLACK;
-        }
+        // if remaining_bounces <= 0 {
+        //     return Color::BLACK;
+        // }
 
         // get the hit point color if we hit something
-        if let Some(ray_hit) = geometric.intersect(ray, Interval::new(0.001, f64::INFINITY)) {
+        let mut bounces = 0;
+        while let Some(ray_hit) = geometric.intersect(ray, Interval::new(0.001, f64::INFINITY)) {
             let emittance = ray_hit
                 .material
                 .emittance(ray_hit.u, ray_hit.v, ray_hit.point);
+
+            accumulated_color += attentuation_strength * emittance;
 
             let reflectance = ray_hit
                 .material
@@ -147,23 +153,29 @@ impl Camera {
             // if the surface is black, it's not going to let any incoming light contribute to the outgoing color
             // so we can safely say no light is reflected and simply return the emittance of the material
             if reflectance == Color::BLACK {
-                return emittance;
+                return accumulated_color;
             }
 
             // get scattered ray, if possible
-            let scattered_ray = match ray_hit.material.scatter(ray, &ray_hit) {
-                Some(scatter) => scatter,
+            match ray_hit.material.scatter(ray, &ray_hit) {
+                Some(scatter) => {
+                    ray = scatter;
+                    attentuation_strength *= reflectance;
+                }
                 None => {
                     // return just emitted light, since we didn't scatter
-                    return emittance;
+                    return accumulated_color;
                 }
             };
-            let scattered_color = self.ray_color(scattered_ray, geometric, remaining_bounces - 1);
 
-            emittance + reflectance * scattered_color
-        } else {
-            // otherwise, get the background color
-            self.background_color
+            if bounces == max_bounces {
+                return accumulated_color;
+            }
+
+            bounces += 1;
         }
+
+        // otherwise, get the background color
+        self.background_color
     }
 }
