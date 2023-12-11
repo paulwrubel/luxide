@@ -7,7 +7,7 @@
         "image_dimensions": [ 3000, 3000 ],
         "tile_dimensions": [ 1, 1 ],
         "gamma_correction": 2,
-        "samples_per_round": 500,
+        "samples_per_round": 100,
         "round_limit": null,
         "max_bounces": 50,
         "use_scaling_truncation": true,
@@ -19,20 +19,47 @@
         "geometrics": [
             "cornell_box",
             {
-                "type": "obj_model",
-                "filename": "./models/teapot.obj",
-                "origin": [ 0.5, 0.2, -0.5 ],
-                "scale": 0.1,
-                "recalculate_normals": true,
-                "use_bvh": true,
-                "material": {
-                    "type": "dielectric",
-                    "reflectance_texture": "solid_white",
-                    "emittance_texture": {
-                        "type": "color",
-                        "color": [ 0.05, 0.05, 0.05 ]
-                    },
-                    "index_of_refraction": 1.5
+                "type": "rotate_y",
+                "degrees": -60,
+                "around": [ 0.3, 0.000001, -0.7 ],
+                "geometric": {
+                    "type": "obj_model",
+                    "filename": "./models/teapot.obj",
+                    "origin": [ 0.3, 0.000001, -0.7 ],
+                    "scale": 0.08,
+                    "recalculate_normals": true,
+                    "use_bvh": true,
+                    "material": {
+                        "type": "dielectric",
+                        "reflectance_texture": {
+                            "type": "color",
+                            "color": [ 0.95, 0.95, 1.0 ]
+                        },
+                        "emittance_texture": {
+                            "type": "color",
+                            "color": [ 0.0, 0.0, 0.0 ]
+                        },
+                        "index_of_refraction": 1.5
+                    }
+                }
+            },
+            {
+                "type": "rotate_y",
+                "degrees": -120,
+                "around": [ 0.7, 0.000001, -0.3 ],
+                "geometric": {
+                    "type": "obj_model",
+                    "filename": "./models/teapot.obj",
+                    "origin": [ 0.7, 0.000001, -0.3 ],
+                    "scale": 0.08,
+                    "recalculate_normals": true,
+                    "use_bvh": true,
+                    "material": {
+                        "type": "specular",
+                        "reflectance_texture": "solid_white",
+                        "emittance_texture": "solid_black",
+                        "roughness": 0.2
+                    }
                 }
             }
         ],

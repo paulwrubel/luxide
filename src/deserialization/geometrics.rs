@@ -5,7 +5,7 @@ use serde::Deserialize;
 use crate::{
     geometry::{
         compounds::{AxisAlignedPBox, List, ModelObj, BVH},
-        instances::{RotateYAxis, Translate},
+        instances::{RotateXAxis, RotateYAxis, RotateZAxis, Translate},
         primitives::{Parallelogram, Sphere, Triangle},
         volumes, Geometric,
     },
@@ -59,12 +59,26 @@ pub enum GeometricData {
         use_bvh: Option<bool>,
         material: MaterialRefOrInline,
     },
+    #[serde(rename = "rotate_x")]
+    InstanceRotateXAxis {
+        geometric: GeometricRefOrInline,
+        #[serde(flatten)]
+        angle: Angle,
+        around: Option<[f64; 3]>,
+    },
     #[serde(rename = "rotate_y")]
     InstanceRotateYAxis {
         geometric: GeometricRefOrInline,
         #[serde(flatten)]
         angle: Angle,
-        around: [f64; 3],
+        around: Option<[f64; 3]>,
+    },
+    #[serde(rename = "rotate_z")]
+    InstanceRotateZAxis {
+        geometric: GeometricRefOrInline,
+        #[serde(flatten)]
+        angle: Angle,
+        around: Option<[f64; 3]>,
     },
     #[serde(rename = "translate")]
     InstanceTranslate {
@@ -162,6 +176,19 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
 
                 Ok(Arc::new(model))
             }
+            Self::InstanceRotateXAxis {
+                geometric: geometric_ref,
+                angle,
+                around,
+            } => {
+                let geometric = geometric_ref.build(builts)?;
+
+                Ok(Arc::new(RotateXAxis::new(
+                    geometric,
+                    *angle,
+                    around.unwrap_or([0.0, 0.0, 0.0]).into(),
+                )))
+            }
             Self::InstanceRotateYAxis {
                 geometric: geometric_ref,
                 angle,
@@ -172,7 +199,20 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
                 Ok(Arc::new(RotateYAxis::new(
                     geometric,
                     *angle,
-                    (*around).into(),
+                    around.unwrap_or([0.0, 0.0, 0.0]).into(),
+                )))
+            }
+            Self::InstanceRotateZAxis {
+                geometric: geometric_ref,
+                angle,
+                around,
+            } => {
+                let geometric = geometric_ref.build(builts)?;
+
+                Ok(Arc::new(RotateZAxis::new(
+                    geometric,
+                    *angle,
+                    around.unwrap_or([0.0, 0.0, 0.0]).into(),
                 )))
             }
             Self::InstanceTranslate {
