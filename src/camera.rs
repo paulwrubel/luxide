@@ -128,42 +128,63 @@ impl Camera {
         x_offset + y_offset
     }
 
-    pub fn ray_color(&self, ray: Ray, geometric: &dyn Geometric, remaining_bounces: u32) -> Color {
-        // if we've bounced too many times, just say the ray is black
-        if remaining_bounces <= 0 {
-            return Color::BLACK;
-        }
+    pub fn ray_color(&self, mut ray: Ray, geometric: &dyn Geometric, max_bounces: u32) -> Color {
+        // accumulated color contributions of each geometric we intersect along the rays' paths.
+        let mut accumulated_color = Color::BLACK;
+        // accumulated attentuation (color) of surfaces we encounter.
+        // unless we find a dual reflective/emissive surface, this is will always deteriorate in value,
+        // which represents that only a portion of the light received from that point will be reflected instead of absorbed.
+        let mut attentuation_strength = Color::WHITE;
 
-        // get the hit point color if we hit something
-        if let Some(ray_hit) = geometric.intersect(ray, Interval::new(0.001, f64::INFINITY)) {
+        // iterate over geometrics until we fail to intersect, reach max bounces, or find a non-reflective surface
+        let mut bounces = 0;
+        while let Some(ray_hit) = geometric.intersect(ray, Interval::new(0.001, f64::INFINITY)) {
             let emittance = ray_hit
                 .material
                 .emittance(ray_hit.u, ray_hit.v, ray_hit.point);
+
+            // update our accumulated color
+            accumulated_color += attentuation_strength * emittance;
 
             let reflectance = ray_hit
                 .material
                 .reflectance(ray_hit.u, ray_hit.v, ray_hit.point);
 
             // if the surface is black, it's not going to let any incoming light contribute to the outgoing color
-            // so we can safely say no light is reflected and simply return the emittance of the material
-            if reflectance == Color::BLACK {
-                return emittance;
+            // so we can safely say no light is reflected and simply return the accumulated color so far
+            if bounces == max_bounces && reflectance == Color::BLACK {
+                return accumulated_color;
             }
 
             // get scattered ray, if possible
-            let scattered_ray = match ray_hit.material.scatter(ray, &ray_hit) {
-                Some(scatter) => scatter,
+            match ray_hit.material.scatter(ray, &ray_hit) {
+                Some(scatter) => {
+                    // redirect the ray
+                    ray = scatter;
+                    // update the attenuation by the effect this surface has on the light rays
+                    attentuation_strength *= reflectance;
+                }
                 None => {
-                    // return just emitted light, since we didn't scatter
-                    return emittance;
+                    // the surface absorbed this ray, so we can return the accumulated color
+                    return accumulated_color;
                 }
             };
-            let scattered_color = self.ray_color(scattered_ray, geometric, remaining_bounces - 1);
 
-            emittance + reflectance * scattered_color
-        } else {
-            // otherwise, get the background color
-            self.background_color
+            bounces += 1;
         }
+
+        // at this point, we must have failed to intersect.
+        //
+        // normally, we could just return the background color.
+        // however, because of a desgin decision I made, it is completely possible
+        // to have a material be both reflective and emissive. this means we need to
+        // account for cases where the accumulated_color is non-zero due to emissive
+        // materials AND the ray is reflected.
+
+        // first, update our accumulated color to account for a non-black background
+        accumulated_color += attentuation_strength * self.background_color;
+
+        // then, we can finally return the accumulated color
+        accumulated_color
     }
 }
