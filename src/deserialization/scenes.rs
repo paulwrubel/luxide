@@ -4,7 +4,7 @@ use serde::Deserialize;
 
 use crate::{
     geometry::compounds::{List, BVH},
-    scene::Scene,
+    tracing::Scene,
 };
 
 use super::{cameras::CameraRefOrInline, geometrics::GeometricRefOrInline, Build, Builts};

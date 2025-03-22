@@ -6,9 +6,8 @@ use serde::Deserialize;
 use crate::{
     camera::Camera,
     geometry::Geometric,
-    parameters::Parameters,
-    scene::Scene,
     shading::{materials::Material, Texture},
+    tracing::{Parameters, Scene},
 };
 
 mod scenes;

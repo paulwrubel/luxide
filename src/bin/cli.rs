@@ -1,5 +1,6 @@
-use std::{collections::HashMap, env, fs, num::NonZeroUsize, sync::Arc, thread, time::Instant};
+use std::{collections::HashMap, fs, num::NonZeroUsize, sync::Arc, thread, time::Instant};
 
+use clap::Parser;
 use luxide::{
     camera::Camera,
     geometry::{
@@ -8,14 +9,12 @@ use luxide::{
         primitives::{Parallelogram, Sphere},
         volumes, Geometric, Point, Vector,
     },
-    parameters::Parameters,
-    scene::Scene,
     shading::{
         materials::{Dielectric, Lambertian, Material, Specular},
         textures::{Checker, Image8Bit, Noise, SolidColor},
         Color, Texture,
     },
-    tracer::Tracer,
+    tracing::{Parameters, Scene, Tracer},
     utils::{self, Angle},
 };
 use noise::{Perlin, Turbulence};
@@ -32,13 +31,22 @@ const _16K: (u32, u32) = (15360, 8640);
 
 const OUTPUT_DIR: &str = "./output";
 
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    config_filename: Option<String>,
+}
+
 fn main() -> Result<(), String> {
     println!("Starting Luxide...");
 
-    let args: Vec<String> = env::args().collect();
-    if args.len() > 1 {
-        run(&args[1])
+    let args = Args::parse();
+
+    if let Some(config_filename) = args.config_filename {
+        println!("Using configuration file: {config_filename}");
+        run(&config_filename)
     } else {
+        println!("Using legacy configuration...");
         run_legacy()
     }
 }

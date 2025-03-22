@@ -12,7 +12,9 @@ use rand::seq::SliceRandom;
 use rayon::prelude::*;
 use time::{OffsetDateTime, UtcOffset};
 
-use crate::{parameters::Parameters, scene::Scene, shading::Color, utils};
+use super::{Parameters, Scene};
+
+use crate::{shading::Color, utils};
 
 pub struct Tracer {
     thread_pool: rayon::ThreadPool,

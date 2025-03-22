@@ -37,7 +37,6 @@ impl ModelObj {
         let offset = origin.0;
 
         let mut triangles = List::new();
-        let mut bounding_box = AABB::EMPTY;
         for model in models {
             let mesh = &model.mesh;
 

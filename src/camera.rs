@@ -4,9 +4,8 @@ use rand::Rng;
 
 use crate::{
     geometry::{Geometric, Point, Ray, Vector},
-    parameters::Parameters,
-    scene::Scene,
     shading::Color,
+    tracing::{Parameters, Scene},
     utils::{Angle, Interval},
 };
 
@@ -176,7 +175,7 @@ impl Camera {
         // at this point, we must have failed to intersect.
         //
         // normally, we could just return the background color.
-        // however, because of a desgin decision I made, it is completely possible
+        // however, because of a design decision I made, it is completely possible
         // to have a material be both reflective and emissive. this means we need to
         // account for cases where the accumulated_color is non-zero due to emissive
         // materials AND the ray is reflected.

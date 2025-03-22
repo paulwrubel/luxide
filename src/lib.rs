@@ -3,8 +3,7 @@
 pub mod camera;
 pub mod deserialization;
 pub mod geometry;
-pub mod parameters;
-pub mod scene;
+pub mod http;
 pub mod shading;
-pub mod tracer;
+pub mod tracing;
 pub mod utils;
