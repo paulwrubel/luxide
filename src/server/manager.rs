@@ -1,8 +1,14 @@
-use std::sync::{Arc, Mutex};
+use std::{
+    num::NonZeroUsize,
+    sync::{Arc, Mutex},
+};
 
 use serde::Serialize;
 
-use crate::{deserialization::CompiledRenderData, tracing::Tracer};
+use crate::{
+    deserialization::CompiledRenderData,
+    tracing::{Threads, Tracer},
+};
 
 #[derive(Debug, Clone, Copy, Serialize)]
 pub struct RenderJobInfo {
@@ -28,7 +34,7 @@ impl RenderJobManager {
         println!("Creating job with id {}", id);
         println!("Jobs: {:#?}", self.jobs);
 
-        let mut tracer = Tracer::new(2);
+        let mut tracer = Tracer::new(Threads::AllWithDefault(NonZeroUsize::new(24).unwrap()));
 
         tokio::task::spawn_blocking(move || match tracer.render(&render_data, 2) {
             Ok(()) => {

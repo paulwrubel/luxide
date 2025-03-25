@@ -1,8 +1,11 @@
+mod output;
+pub use output::*;
+
 mod parameters;
-pub use parameters::Parameters;
+pub use parameters::*;
 
 mod scene;
-pub use scene::Scene;
+pub use scene::*;
 
 mod tracer;
-pub use tracer::Tracer;
+pub use tracer::*;

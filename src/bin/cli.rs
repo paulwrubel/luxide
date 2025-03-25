@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs, num::NonZeroUsize, sync::Arc, thread, time::Instant};
+use std::{collections::HashMap, fs, num::NonZeroUsize, sync::Arc, time::Instant};
 
 use clap::Parser;
 use luxide::{
@@ -15,7 +15,7 @@ use luxide::{
         textures::{Checker, Image8Bit, Noise, SolidColor},
         Color, Texture,
     },
-    tracing::{Parameters, Scene, Tracer},
+    tracing::{Parameters, Scene, Threads, Tracer},
     utils::{self, Angle},
 };
 use noise::{Perlin, Turbulence};
@@ -66,14 +66,13 @@ fn run(config_filename: &str) -> Result<(), String> {
     println!("Initializing output directory: {output_dir}");
     fs::create_dir_all(&output_dir).map_err(|err| err.to_string())?;
 
-    let thread_count = thread::available_parallelism()
-        .unwrap_or(NonZeroUsize::new(24).unwrap())
-        .get();
+    let threads = Threads::AllWithDefault(NonZeroUsize::new(24).unwrap());
 
-    let mut tracer = Tracer::new(thread_count);
+    let mut tracer = Tracer::new(threads);
     println!(
         "Rendering scene \"{}\" with {} threads...",
-        scene.name, thread_count
+        scene.name,
+        threads.effective_count()
     );
     let start = Instant::now();
     match tracer.render(&compiled_render_data, 2) {
@@ -132,12 +131,14 @@ fn run_legacy() -> Result<(), String> {
         progress_memory: 50,
     };
 
-    let thread_count = thread::available_parallelism()
-        .unwrap_or(NonZeroUsize::new(24).unwrap())
-        .get();
+    let threads = Threads::AllWithDefault(NonZeroUsize::new(24).unwrap());
 
-    let mut tracer = Tracer::new(thread_count);
-    println!("Rendering scene \"{selected_scene_name}\" with {thread_count} threads...");
+    let mut tracer = Tracer::new(threads);
+    println!(
+        "Rendering scene \"{}\" with {} threads...",
+        selected_scene_name,
+        threads.effective_count()
+    );
     let start = Instant::now();
     match tracer.render(&CompiledRenderData { parameters, scene }, 2) {
         Ok(()) => {

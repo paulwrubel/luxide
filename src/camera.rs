@@ -5,7 +5,7 @@ use rand::Rng;
 use crate::{
     geometry::{Geometric, Point, Ray, Vector},
     shading::Color,
-    tracing::{Parameters, Scene},
+    tracing::{RenderParameters, Scene},
     utils::{Angle, Interval},
 };
 
@@ -54,7 +54,7 @@ impl Camera {
         }
     }
 
-    pub fn initialize(&mut self, parameters: &Parameters, scene: &Scene) {
+    pub fn initialize(&mut self, parameters: &RenderParameters, scene: &Scene) {
         self.center = self.eye_location;
         self.background_color = scene.background_color;
 

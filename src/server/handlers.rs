@@ -5,7 +5,7 @@ use axum::{
     Json,
 };
 
-use crate::deserialization::RenderData;
+use crate::deserialization::RenderConfig;
 
 use super::RenderJobManager;
 
@@ -16,11 +16,11 @@ pub async fn index() -> String {
 
 pub async fn create_render_job(
     State(job_manager): State<RenderJobManager>,
-    Json(render_data): Json<RenderData>,
+    Json(render_config): Json<RenderConfig>,
 ) -> Response {
     println!("Handing request for create_render_job...");
 
-    let compiled_render_data = match render_data.compile() {
+    let render_data = match render_config.compile() {
         Ok(data) => data,
         Err(e) => {
             println!("Failed to compile render data: {e}");
@@ -28,7 +28,7 @@ pub async fn create_render_job(
         }
     };
 
-    let created_job_info = job_manager.create_job(compiled_render_data);
+    let created_job_info = job_manager.create_job(render_data);
 
     (StatusCode::CREATED, Json(created_job_info)).into_response()
 }

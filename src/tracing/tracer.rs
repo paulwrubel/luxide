@@ -2,6 +2,7 @@ use std::{
     collections::{HashMap, VecDeque},
     fs,
     io::{self, stdout, Write},
+    num::NonZeroUsize,
     sync::mpsc,
     thread,
     time::Instant,
@@ -12,19 +13,21 @@ use rand::seq::SliceRandom;
 use rayon::prelude::*;
 use time::OffsetDateTime;
 
-use super::{Parameters, Scene};
+use super::{CheckpointDestination, OutputFileParameters, RenderParameters, Scene};
 
-use crate::{deserialization::CompiledRenderData, shading::Color, utils};
+use crate::{deserialization::RenderData, shading::Color, utils};
+
+pub type PixelData = HashMap<(u32, u32), Color>;
 
 pub struct Tracer {
     thread_pool: rayon::ThreadPool,
 }
 
 impl Tracer {
-    pub fn new(thread_count: usize) -> Self {
+    pub fn new(threads: Threads) -> Self {
         Self {
             thread_pool: rayon::ThreadPoolBuilder::new()
-                .num_threads(thread_count)
+                .num_threads(threads.effective_count())
                 .build()
                 .unwrap(),
         }
@@ -32,98 +35,101 @@ impl Tracer {
 
     pub fn render(
         &mut self,
-        render_data: &CompiledRenderData,
+        render_data: &RenderData,
+        output: impl CheckpointDestination,
+        progress_recv: mpsc::Receiver<f64>,
         indentation: usize,
     ) -> Result<(), String> {
-        let CompiledRenderData { parameters, scene } = render_data;
+        let RenderData { parameters, scene } = render_data;
 
-        let mut img_data = HashMap::new();
-        let mut round = 1;
+        let mut pixel_data = PixelData::new();
+        let mut checkpoint = 1;
 
-        let now = OffsetDateTime::now_utc();
-        let formatted_timestamp = utils::get_formatted_timestamp_for(now);
-        let output_dir = format!(
-            "{}/{}_{}",
-            parameters.output_dir, scene.name, formatted_timestamp
-        );
-        println!("Initializing output directory: {output_dir}");
-        fs::create_dir_all(&output_dir).map_err(|err| err.to_string())?;
+        // let now = OffsetDateTime::now_utc();
+        // let formatted_timestamp = utils::get_formatted_timestamp_for(now);
+        // let output_dir = format!(
+        //     "{}/{}_{}",
+        //     parameters.output_dir, scene.name, formatted_timestamp
+        // );
+        // println!("Initializing output directory: {output_dir}");
+        // fs::create_dir_all(&output_dir).map_err(|err| err.to_string())?;
 
         loop {
-            let round_limit_string = match parameters.round_limit {
-                Some(limit) => format!("/{}", limit),
-                None => String::new(),
-            };
+            let checkpoint_limit_string = format!("/{}", parameters.checkpoints);
 
             println!(
                 "{}Rendering round {}{}...",
                 " ".repeat(indentation),
-                round,
-                round_limit_string
+                checkpoint,
+                checkpoint_limit_string
             );
 
-            let round_img_buffer =
-                self.render_round(round, &mut img_data, parameters, scene, indentation + 2);
-
-            println!(
-                "{}Writing round {} data to file...",
-                " ".repeat(indentation),
-                round
-            );
-            self.write_to_file(
-                &round_img_buffer,
-                round,
+            let checkpoint_pixel_data = self.render_to_checkpoint(
+                checkpoint,
+                &mut pixel_data,
                 parameters,
-                &output_dir,
-                indentation,
-            )?;
+                scene,
+                indentation + 2,
+            );
 
-            if let Some(limit) = parameters.round_limit {
-                if limit == round {
-                    break;
-                }
+            // println!(
+            //     "{}Writing round {} data to file...",
+            //     " ".repeat(indentation),
+            //     round
+            // );
+            // self.write_to_file(
+            //     &round_img_buffer,
+            //     round,
+            //     parameters,
+            //     &output_dir,
+            //     indentation,
+            // )?;
+
+            if parameters.checkpoints == checkpoint {
+                break;
             }
-            round += 1;
+
+            checkpoint += 1;
         }
         Ok(())
     }
 
-    fn render_round(
+    fn render_to_checkpoint(
         &self,
         round: u32,
-        img_data: &mut HashMap<(u32, u32), Color>,
-        parameters: &Parameters,
+        pixel_data: &mut PixelData,
+        parameters: &RenderParameters,
         scene: &Scene,
         indentation: usize,
-    ) -> RgbaImage {
-        // get self as immutable reference
-
+    ) -> &mut PixelData {
         self.thread_pool.install(|| {
-            self.parallel_render_round(round, img_data, parameters, scene, indentation)
+            self.parallel_render_round(round, pixel_data, parameters, scene, indentation)
         });
 
-        println!("{}Writing data to image buffer...", " ".repeat(indentation));
-        let (width, height) = parameters.image_dimensions;
-        let mut buffer = ImageBuffer::new(width, height);
-        for ((x, y), color) in img_data {
-            let pixel = buffer.get_pixel_mut(*x, *y);
-            *pixel = if parameters.use_scaling_truncation {
-                color
-                    .scale_down(1.0)
-                    .as_gamma_corrected_rgba_u8(1.0 / parameters.gamma_correction)
-            } else {
-                color.as_gamma_corrected_rgba_u8(1.0 / parameters.gamma_correction)
-            }
-        }
+        // println!("{}Writing data to image buffer...", " ".repeat(indentation));
+        // let (width, height) = parameters.image_dimensions;
+        // let mut buffer = ImageBuffer::new(width, height);
+        // for ((x, y), color) in pixel_data {
+        //     let pixel = buffer.get_pixel_mut(*x, *y);
+        //     *pixel = if parameters.use_scaling_truncation {
+        //         color
+        //             .scale_down(1.0)
+        //             .as_gamma_corrected_rgba_u8(1.0 / parameters.gamma_correction)
+        //     } else {
+        //         color.as_gamma_corrected_rgba_u8(1.0 / parameters.gamma_correction)
+        //     }
+        // }
 
-        buffer
+        // buffer
+
+        pixel_data
     }
 
     fn parallel_render_round(
         &self,
         round: u32,
-        img_data: &mut HashMap<(u32, u32), Color>,
-        parameters: &Parameters,
+        pixel_data: &mut PixelData,
+        parameters: &RenderParameters,
         scene: &Scene,
         indentation: usize,
     ) {
@@ -143,8 +149,8 @@ impl Tracer {
 
         let start: Instant = Instant::now();
         let total = width * height;
-        let batch_size = parameters.pixels_per_progress_update;
-        let memory = parameters.progress_memory;
+        let batch_size = 100;
+        let memory = 50;
         let progress_handle = thread::spawn(move || {
             let mut instants: VecDeque<Instant> = VecDeque::new();
             let mut current = 0;
@@ -186,7 +192,7 @@ impl Tracer {
                 let tile_colors: HashMap<(u32, u32), Color> = tile
                     .map(|(x, y)| {
                         let color =
-                            (0..parameters.samples_per_round).fold(Color::BLACK, |acc, _| {
+                            (0..parameters.samples_per_checkpoint).fold(Color::BLACK, |acc, _| {
                                 let ray = cam.get_ray(x, y);
                                 acc + cam.ray_color(ray, world.as_ref(), parameters.max_bounces)
                             });
@@ -196,10 +202,10 @@ impl Tracer {
                         sender.send((round, (x, y))).unwrap();
 
                         // average samples together
-                        let scaled_color = color / parameters.samples_per_round as f64;
+                        let scaled_color = color / parameters.samples_per_checkpoint as f64;
 
                         // scale relative to the current round
-                        let img_color = img_data.get(&(x, y)).unwrap_or(&Color::BLACK);
+                        let img_color = pixel_data.get(&(x, y)).unwrap_or(&Color::BLACK);
                         let weighted_color =
                             (img_color * (round - 1) as f64 + scaled_color) / round as f64;
 
@@ -215,7 +221,7 @@ impl Tracer {
             .collect();
 
         for ((x, y), color) in colors {
-            img_data.insert((x, y), color);
+            pixel_data.insert((x, y), color);
         }
 
         drop(sender);
@@ -227,15 +233,16 @@ impl Tracer {
         &self,
         buffer: &RgbaImage,
         round: u32,
-        p: &Parameters,
-        output_dir: &str,
+        p: &RenderParameters,
+        output_config: &OutputFileParameters,
+        // output_dir: &str,
         indentation: usize,
     ) -> Result<(), String> {
         let filepath = match Self::get_final_image_path(
-            round * p.samples_per_round,
-            output_dir,
-            &p.file_basename,
-            &p.file_ext,
+            round * p.samples_per_checkpoint,
+            &output_config.output_dir,
+            &output_config.file_basename,
+            &output_config.file_ext,
             indentation,
         ) {
             Ok(filepath) => Ok(filepath),
@@ -352,5 +359,22 @@ impl Iterator for Tile {
         self.current.0 += 1;
 
         Some(location)
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum Threads {
+    Count(NonZeroUsize),
+    AllWithDefault(NonZeroUsize),
+}
+
+impl Threads {
+    pub fn effective_count(&self) -> usize {
+        match self {
+            Threads::Count(count) => (*count).get(),
+            Threads::AllWithDefault(default) => {
+                thread::available_parallelism().unwrap_or(*default).get()
+            }
+        }
     }
 }

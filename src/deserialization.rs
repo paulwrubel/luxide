@@ -7,7 +7,7 @@ use crate::{
     camera::Camera,
     geometry::Geometric,
     shading::{materials::Material, Texture},
-    tracing::{Parameters, Scene},
+    tracing::{OutputFileParameters, RenderParameters, Scene},
 };
 
 mod scenes;
@@ -50,8 +50,8 @@ impl Builts {
 }
 
 #[derive(Deserialize)]
-pub struct RenderData {
-    parameters: Parameters,
+pub struct RenderConfig {
+    parameters: RenderParameters,
     active_scene: SceneRefOrInline,
     #[serde(default)]
     scenes: IndexMap<String, SceneData>,
@@ -65,8 +65,16 @@ pub struct RenderData {
     geometrics: IndexMap<String, GeometricData>,
 }
 
-impl RenderData {
-    pub fn compile(&self) -> Result<CompiledRenderData, String> {
+#[derive(Deserialize)]
+pub struct FileConfig {
+    output: OutputFileParameters,
+
+    #[serde(flatten)]
+    config: RenderConfig,
+}
+
+impl RenderConfig {
+    pub fn compile(&self) -> Result<RenderData, String> {
         let mut builts = Builts::new();
 
         // setup named properties
@@ -78,24 +86,24 @@ impl RenderData {
 
         let active_scene = self.active_scene.build(&builts)?;
 
-        Ok(CompiledRenderData {
+        Ok(RenderData {
             parameters: self.parameters.clone(),
             scene: active_scene,
         })
     }
 }
 
-pub struct CompiledRenderData {
-    pub parameters: Parameters,
+pub struct RenderData {
+    pub parameters: RenderParameters,
     pub scene: Scene,
 }
 
-pub fn parse_json_file(filename: &str) -> Result<CompiledRenderData, String> {
+pub fn parse_json_file(filename: &str) -> Result<(OutputFileParameters, RenderData), String> {
     // get and parse file
     let unparsed = fs::read_to_string(filename).map_err(|err| err.to_string())?;
-    let parsed: RenderData = serde_json::from_str(&unparsed).map_err(|err| err.to_string())?;
+    let parsed: FileConfig = serde_json::from_str(&unparsed).map_err(|err| err.to_string())?;
 
-    parsed.compile()
+    parsed.config.compile().map(|data| (parsed.output, data))
 }
 
 fn build_textures(
