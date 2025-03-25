@@ -50,7 +50,7 @@ impl Builts {
 }
 
 #[derive(Deserialize)]
-struct RenderData {
+pub struct RenderData {
     parameters: Parameters,
     active_scene: SceneRefOrInline,
     #[serde(default)]
@@ -65,23 +65,37 @@ struct RenderData {
     geometrics: IndexMap<String, GeometricData>,
 }
 
-pub fn parse_json(filename: &str) -> Result<(Parameters, Scene), String> {
+impl RenderData {
+    pub fn compile(&self) -> Result<CompiledRenderData, String> {
+        let mut builts = Builts::new();
+
+        // setup named properties
+        build_textures(&self.textures, &mut builts)?;
+        build_materials(&self.materials, &mut builts)?;
+        build_geometrics(&self.geometrics, &mut builts)?;
+        build_cameras(&self.cameras, &mut builts)?;
+        build_scenes(&self.scenes, &mut builts)?;
+
+        let active_scene = self.active_scene.build(&builts)?;
+
+        Ok(CompiledRenderData {
+            parameters: self.parameters.clone(),
+            scene: active_scene,
+        })
+    }
+}
+
+pub struct CompiledRenderData {
+    pub parameters: Parameters,
+    pub scene: Scene,
+}
+
+pub fn parse_json_file(filename: &str) -> Result<CompiledRenderData, String> {
     // get and parse file
     let unparsed = fs::read_to_string(filename).map_err(|err| err.to_string())?;
     let parsed: RenderData = serde_json::from_str(&unparsed).map_err(|err| err.to_string())?;
 
-    let mut builts = Builts::new();
-
-    // setup named properties
-    build_textures(&parsed.textures, &mut builts)?;
-    build_materials(&parsed.materials, &mut builts)?;
-    build_geometrics(&parsed.geometrics, &mut builts)?;
-    build_cameras(&parsed.cameras, &mut builts)?;
-    build_scenes(&parsed.scenes, &mut builts)?;
-
-    let active_scene = parsed.active_scene.build(&builts)?;
-
-    Ok((parsed.parameters, active_scene))
+    parsed.compile()
 }
 
 fn build_textures(

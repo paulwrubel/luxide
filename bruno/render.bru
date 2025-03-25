@@ -1,0 +1,260 @@
+meta {
+  name: render
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:8080/render
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "parameters": {
+      "output_dir": "./output",
+      "use_subdir": true,
+      "file_basename": "image",
+      "file_ext": "png",
+      "image_dimensions": [ 100, 100 ],
+      "tile_dimensions": [ 1, 1 ],
+      "gamma_correction": 2,
+      "samples_per_round": 5,
+      "round_limit": null,
+      "max_bounces": 50,
+      "use_scaling_truncation": true,
+      "pixels_per_progress_update": 100,
+      "progress_memory": 50
+    },
+    "active_scene": {
+      "name": "cornell_box_2",
+      "geometrics": [
+        "left_wall",
+        "right_wall",
+        "floor",
+        "ceiling",
+        "back_wall",
+        "front_wall",
+        "far_left_box",
+        "near_right_box",
+        "near_right_box_internal"
+      ],
+      "use_bvh": true,
+      "camera": "basic",
+      "background_color": [ 0, 0, 0 ]
+    },
+    "cameras": {
+      "basic": {
+        "vertical_field_of_view_degrees": 40,
+        "eye_location": [ 0.5, 0.5, 1.44144 ],
+        "target_location": [ 0.5, 0.5, 0 ],
+        "view_up": [ 0, 1, 0 ],
+        "defocus_angle_degrees": 0,
+        "focus_distance": "eye_to_target"
+      }
+    },
+    "geometrics": {
+      "left_wall": {
+        "type": "parallelogram",
+        "lower_left": [ 0, 0, 0 ],
+        "u": [ 0, 0, -1 ],
+        "v": [ 0, 1, 0 ],
+        "material": "lambertian_cb_green"
+      },
+      "right_wall": {
+        "type": "parallelogram",
+        "lower_left": [ 1, 0, -1 ],
+        "u": [ 0, 0, 1 ],
+        "v": [ 0, 1, 0 ],
+        "material": "lambertian_cb_red"
+      },
+      "floor": {
+        "type": "parallelogram",
+        "lower_left": [ 0, 0, 0 ],
+        "u": [ 1, 0, 0 ],
+        "v": [ 0, 0, -1 ],
+        "material": "lambertian_mike_face"
+      },
+      "ceiling": {
+        "type": "parallelogram",
+        "lower_left": [ 0, 1, -1 ],
+        "u": [ 1, 0, 0 ],
+        "v": [ 0, 0, 1 ],
+        "material": "lambertian_mike_face_glow"
+      },
+      "back_wall": {
+        "type": "parallelogram",
+        "lower_left": [ 0, 0, -1 ],
+        "u": [ 1, 0, 0 ],
+        "v": [ 0, 1, 0 ],
+        "material": "lambertian_mike_face"
+      },
+      "front_wall": {
+        "type": "parallelogram",
+        "lower_left": [ 1, 0, 0 ],
+        "u": [ -1, 0, 0 ],
+        "v": [ 0, 1, 0 ],
+        "is_culled": true,
+        "material": "lambertian_cb_white"
+      },
+      "ceiling_light": {
+        "type": "parallelogram",
+        "lower_left": [ 0.35, 0.999, -0.65 ],
+        "u": [ 0.3, 0, 0 ],
+        "v": [ 0, 0, 0.3 ],
+        "material": "lambertian_white_light"
+      },
+      "ceiling_light_dim": {
+        "type": "parallelogram",
+        "lower_left": [ 0.35, 0.999, -0.65 ],
+        "u": [ 0.3, 0, 0 ],
+        "v": [ 0, 0, 0.3 ],
+        "material": "lambertian_white_light_dim"
+      },
+      "far_left_box_core": {
+        "type": "box",
+        "a": [ 0.2, 0, -0.5 ],
+        "b": [ 0.5, 0.6, -0.8 ],
+        "material": "dielectric_glass"
+      },
+      "near_right_box_core": {
+        "type": "box",
+        "a": [ 0.5, 0, -0.2 ],
+        "b": [ 0.8, 0.3, -0.5 ],
+        "material": "dielectric_glass"
+      },
+      "near_right_box_core_internal": {
+        "type": "box",
+        "a": [ 0.52, 0.02, -0.22 ],
+        "b": [ 0.78, 0.28, -0.48 ],
+        "material": "lambertian_mike_face_glow"
+      },
+      "far_left_box": {
+        "type": "rotate_y",
+        "geometric": {
+          "type": "box",
+          "a": [ 0.2, 0, -0.5 ],
+          "b": [ 0.5, 0.6, -0.8 ],
+          "material": "dielectric_glass"
+        },
+        "degrees": 15,
+        "around": [ 0.35, 0, -0.65 ]
+      },
+      "near_right_box": {
+        "type": "rotate_y",
+        "geometric": "near_right_box_core",
+        "degrees": -18,
+        "around": [ 0.65, 0, -0.35 ]
+      },
+      "near_right_box_internal": {
+        "type": "rotate_y",
+        "geometric": "near_right_box_core_internal",
+        "degrees": -18,
+        "around": [ 0.65, 0, -0.35 ]
+      }
+    },
+    "materials": {
+      "lambertian_white_light": {
+        "type": "lambertian",
+        "reflectance_texture": "solid_black",
+        "emittance_texture": "solid_white_light"
+      },
+      "lambertian_white_light_dim": {
+        "type": "lambertian",
+        "reflectance_texture": "solid_black",
+        "emittance_texture": "solid_white_light_dim"
+      },
+      "lambertian_cb_red_light_dim": {
+        "type": "lambertian",
+        "reflectance_texture": "solid_cb_red",
+        "emittance_texture": "solid_cb_red_light_dim"
+      },
+      "lambertian_cb_green_light_dim": {
+        "type": "lambertian",
+        "reflectance_texture": "solid_cb_green",
+        "emittance_texture": "solid_cb_green_light_dim"
+      },
+      "lambertian_cb_white": {
+        "type": "lambertian",
+        "reflectance_texture": "solid_cb_white",
+        "emittance_texture": "solid_black"
+      },
+      "lambertian_cb_red": {
+        "type": "lambertian",
+        "reflectance_texture": "solid_cb_red",
+        "emittance_texture": "solid_black"
+      },
+      "lambertian_cb_green": {
+        "type": "lambertian",
+        "reflectance_texture": "solid_cb_green",
+        "emittance_texture": "solid_black"
+      },
+      "lambertian_mike_face": {
+        "type": "lambertian",
+        "reflectance_texture": "image_mike_face",
+        "emittance_texture": "solid_black"
+      },
+      "lambertian_mike_face_glow": {
+        "type": "lambertian",
+        "reflectance_texture": "image_mike_face",
+        "emittance_texture": "image_mike_face"
+      },
+      "dielectric_glass": {
+        "type": "dielectric",
+        "reflectance_texture": "solid_white",
+        "emittance_texture": "solid_black",
+        "index_of_refraction": 1.5
+      },
+      "specular_mirror": {
+        "type": "specular",
+        "reflectance_texture": "solid_white",
+        "emittance_texture": "solid_black",
+        "roughness": 0
+      }
+    },
+    "textures": {
+      "solid_white": {
+        "type": "color",
+        "color": [ 1, 1, 1 ]
+      },
+      "solid_black": {
+        "type": "color",
+        "color": [ 0, 0, 0 ]
+      },
+      "solid_white_light": {
+        "type": "color",
+        "color": [ 7, 7, 7 ]
+      },
+      "solid_white_light_dim": {
+        "type": "color",
+        "color": [ 3, 3, 3 ]
+      },
+      "solid_cb_red_light_dim": {
+        "type": "color",
+        "color": [ 0.325, 0.025, 0.025 ]
+      },
+      "solid_cb_green_light_dim": {
+        "type": "color",
+        "color": [ 0.06, 0.225, 0.075 ]
+      },
+      "solid_cb_white": {
+        "type": "color",
+        "color": [ 0.73, 0.73, 0.73 ]
+      },
+      "solid_cb_red": {
+        "type": "color",
+        "color": [ 0.65, 0.05, 0.05 ]
+      },
+      "solid_cb_green": {
+        "type": "color",
+        "color": [ 0.12, 0.45, 0.15 ]
+      },
+      "image_mike_face": {
+        "type": "image",
+        "filename": "texture_images/mike_face.png",
+        "gamma": 2
+      }
+    }
+  }
+}

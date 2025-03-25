@@ -3,6 +3,7 @@ use std::{collections::HashMap, fs, num::NonZeroUsize, sync::Arc, thread, time::
 use clap::Parser;
 use luxide::{
     camera::Camera,
+    deserialization::CompiledRenderData,
     geometry::{
         compounds::{AxisAlignedPBox, List, BVH},
         instances::{RotateYAxis, Translate},
@@ -52,12 +53,11 @@ fn main() -> Result<(), String> {
 }
 
 fn run(config_filename: &str) -> Result<(), String> {
-    let local_utc_offset = time::UtcOffset::current_local_offset().unwrap();
-
     println!("Parsing configuration file...");
-    let (parameters, scene) = luxide::deserialization::parse_json(config_filename)?;
+    let compiled_render_data = luxide::deserialization::parse_json_file(config_filename)?;
+    let scene = &compiled_render_data.scene;
 
-    let now = OffsetDateTime::now_utc().to_offset(local_utc_offset);
+    let now = OffsetDateTime::now_utc();
     let formatted_timestamp = utils::get_formatted_timestamp_for(now);
 
     let sub_folder = format!("{}_{}", scene.name, formatted_timestamp);
@@ -70,13 +70,13 @@ fn run(config_filename: &str) -> Result<(), String> {
         .unwrap_or(NonZeroUsize::new(24).unwrap())
         .get();
 
-    let mut tracer = Tracer::new(thread_count, local_utc_offset);
+    let mut tracer = Tracer::new(thread_count);
     println!(
         "Rendering scene \"{}\" with {} threads...",
         scene.name, thread_count
     );
     let start = Instant::now();
-    match tracer.render(&parameters, &scene, 2) {
+    match tracer.render(&compiled_render_data, 2) {
         Ok(()) => {
             println!("Saved image!");
         }
@@ -92,8 +92,6 @@ fn run(config_filename: &str) -> Result<(), String> {
 fn run_legacy() -> Result<(), String> {
     let selected_scene_name = "final_scene";
 
-    let local_utc_offset = time::UtcOffset::current_local_offset().unwrap();
-
     println!("Assembling scenes...");
     let mut scenes = HashMap::new();
     scenes.insert("random_spheres", random_spheres());
@@ -105,9 +103,9 @@ fn run_legacy() -> Result<(), String> {
     scenes.insert("cornell_box", cornell_box());
     scenes.insert("final_scene", final_scene());
 
-    let scene = scenes.get_mut(selected_scene_name).unwrap();
+    let scene = scenes.get_mut(selected_scene_name).unwrap().clone();
 
-    let now = OffsetDateTime::now_utc().to_offset(local_utc_offset);
+    let now = OffsetDateTime::now_utc();
     let formatted_timestamp = utils::get_formatted_timestamp_for(now);
     let output_dir = format!(
         "{}/{}_{}",
@@ -138,10 +136,10 @@ fn run_legacy() -> Result<(), String> {
         .unwrap_or(NonZeroUsize::new(24).unwrap())
         .get();
 
-    let mut tracer = Tracer::new(thread_count, local_utc_offset);
+    let mut tracer = Tracer::new(thread_count);
     println!("Rendering scene \"{selected_scene_name}\" with {thread_count} threads...");
     let start = Instant::now();
-    match tracer.render(&parameters, &scene, 2) {
+    match tracer.render(&CompiledRenderData { parameters, scene }, 2) {
         Ok(()) => {
             println!("Saved image!");
         }

@@ -10,38 +10,37 @@ use std::{
 use image::{ImageBuffer, RgbaImage};
 use rand::seq::SliceRandom;
 use rayon::prelude::*;
-use time::{OffsetDateTime, UtcOffset};
+use time::OffsetDateTime;
 
 use super::{Parameters, Scene};
 
-use crate::{shading::Color, utils};
+use crate::{deserialization::CompiledRenderData, shading::Color, utils};
 
 pub struct Tracer {
     thread_pool: rayon::ThreadPool,
-    local_utc_offset: UtcOffset,
 }
 
 impl Tracer {
-    pub fn new(thread_count: usize, local_utc_offset: UtcOffset) -> Self {
+    pub fn new(thread_count: usize) -> Self {
         Self {
             thread_pool: rayon::ThreadPoolBuilder::new()
                 .num_threads(thread_count)
                 .build()
                 .unwrap(),
-            local_utc_offset,
         }
     }
 
     pub fn render(
         &mut self,
-        parameters: &Parameters,
-        scene: &Scene,
+        render_data: &CompiledRenderData,
         indentation: usize,
     ) -> Result<(), String> {
+        let CompiledRenderData { parameters, scene } = render_data;
+
         let mut img_data = HashMap::new();
         let mut round = 1;
 
-        let now = OffsetDateTime::now_utc().to_offset(self.local_utc_offset);
+        let now = OffsetDateTime::now_utc();
         let formatted_timestamp = utils::get_formatted_timestamp_for(now);
         let output_dir = format!(
             "{}/{}_{}",
@@ -237,7 +236,6 @@ impl Tracer {
             output_dir,
             &p.file_basename,
             &p.file_ext,
-            self.local_utc_offset,
             indentation,
         ) {
             Ok(filepath) => Ok(filepath),
@@ -258,12 +256,11 @@ impl Tracer {
         output_dir: &str,
         file_basename: &str,
         file_ext: &str,
-        local_offset: time::UtcOffset,
         indentation: usize,
     ) -> Result<String, io::Error> {
         println!("{}Determining output filename...", " ".repeat(indentation));
         fs::create_dir_all(output_dir)?;
-        let now = OffsetDateTime::now_utc().to_offset(local_offset);
+        let now = OffsetDateTime::now_utc();
         let formatted_timestamp = utils::get_formatted_timestamp_for(now);
         let filepath = format!(
             "{}/{file_basename}_{total_samples}s_{}.{file_ext}",

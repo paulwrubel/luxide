@@ -1,4 +1,4 @@
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Debug, Clone)]
 pub struct Parameters {
     pub output_dir: String,
     pub use_subdir: bool,
