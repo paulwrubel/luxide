@@ -10,7 +10,8 @@ use super::{handlers, RenderJobManager};
 pub fn build_router() -> Router<RenderJobManager> {
     Router::new()
         .route("/", get(handlers::index))
-        .route("/render", post(handlers::create_render_job))
+        .route("/renders", post(handlers::create_render_job))
+        .route("/renders", get(handlers::get_all_render_jobs_info))
 }
 
 pub async fn serve(router: Router, address: &str, port: u16) -> Result<(), String> {

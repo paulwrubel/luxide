@@ -1,11 +1,11 @@
 meta {
-  name: render
+  name: Create Render
   type: http
   seq: 3
 }
 
 post {
-  url: http://localhost:8080/render
+  url: http://localhost:8080/renders
   body: json
   auth: inherit
 }
@@ -20,8 +20,8 @@ body:json {
       "image_dimensions": [ 100, 100 ],
       "tile_dimensions": [ 1, 1 ],
       "gamma_correction": 2,
-      "samples_per_round": 5,
-      "round_limit": null,
+      "samples_per_checkpoint": 5,
+      "checkpoints": 1,
       "max_bounces": 50,
       "use_scaling_truncation": true,
       "pixels_per_progress_update": 100,

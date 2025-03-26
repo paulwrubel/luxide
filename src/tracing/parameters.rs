@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct OutputFileParameters {
@@ -8,7 +8,7 @@ pub struct OutputFileParameters {
     pub file_ext: String,
 }
 
-#[derive(Deserialize, Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct RenderParameters {
     pub image_dimensions: (u32, u32),
     pub tile_dimensions: (u32, u32),

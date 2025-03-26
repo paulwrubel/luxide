@@ -1,7 +1,7 @@
 use std::{fs, sync::Arc};
 
 use indexmap::IndexMap;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     camera::Camera,
@@ -51,7 +51,7 @@ impl Builts {
 
 #[derive(Deserialize)]
 pub struct RenderConfig {
-    parameters: RenderParameters,
+    pub parameters: RenderParameters,
     active_scene: SceneRefOrInline,
     #[serde(default)]
     scenes: IndexMap<String, SceneData>,
@@ -93,6 +93,7 @@ impl RenderConfig {
     }
 }
 
+#[derive(Clone)]
 pub struct RenderData {
     pub parameters: RenderParameters,
     pub scene: Scene,

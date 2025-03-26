@@ -17,7 +17,11 @@ async fn main() -> Result<(), String> {
 
     println!("Starting API server at {}/{}", args.address, args.port);
 
-    let router = build_router().with_state(RenderJobManager::new());
+    let mut job_manager = RenderJobManager::new();
+
+    let router = build_router().with_state(job_manager.clone());
+
+    rayon::spawn(move || job_manager.start());
 
     server::serve(router, &args.address, args.port).await
 }

@@ -40,7 +40,7 @@ impl Tracer {
         progress_recv: mpsc::Receiver<f64>,
         indentation: usize,
     ) -> Result<(), String> {
-        let RenderData { parameters, scene } = render_data;
+        let total_checkpoints = render_data.parameters.checkpoints;
 
         let mut pixel_data = PixelData::new();
         let mut checkpoint = 1;
@@ -55,7 +55,7 @@ impl Tracer {
         // fs::create_dir_all(&output_dir).map_err(|err| err.to_string())?;
 
         loop {
-            let checkpoint_limit_string = format!("/{}", parameters.checkpoints);
+            let checkpoint_limit_string = format!("/{}", render_data.parameters.checkpoints);
 
             println!(
                 "{}Rendering round {}{}...",
@@ -67,8 +67,7 @@ impl Tracer {
             let checkpoint_pixel_data = self.render_to_checkpoint(
                 checkpoint,
                 &mut pixel_data,
-                parameters,
-                scene,
+                render_data,
                 indentation + 2,
             );
 
@@ -85,7 +84,7 @@ impl Tracer {
             //     indentation,
             // )?;
 
-            if parameters.checkpoints == checkpoint {
+            if total_checkpoints == checkpoint {
                 break;
             }
 
@@ -94,16 +93,15 @@ impl Tracer {
         Ok(())
     }
 
-    fn render_to_checkpoint(
-        &self,
-        round: u32,
-        pixel_data: &mut PixelData,
-        parameters: &RenderParameters,
-        scene: &Scene,
+    pub fn render_to_checkpoint<'a>(
+        &'a self,
+        checkpoint: u32,
+        pixel_data: &'a mut PixelData,
+        render_data: &RenderData,
         indentation: usize,
-    ) -> &mut PixelData {
+    ) {
         self.thread_pool.install(|| {
-            self.parallel_render_round(round, pixel_data, parameters, scene, indentation)
+            self.parallel_render_round(checkpoint, pixel_data, render_data, indentation)
         });
 
         // println!("{}Writing data to image buffer...", " ".repeat(indentation));
@@ -122,17 +120,18 @@ impl Tracer {
 
         // buffer
 
-        pixel_data
+        // pixel_data
     }
 
     fn parallel_render_round(
         &self,
-        round: u32,
+        checkpoint: u32,
         pixel_data: &mut PixelData,
-        parameters: &RenderParameters,
-        scene: &Scene,
+        render_data: &RenderData,
         indentation: usize,
     ) {
+        let RenderData { parameters, scene } = render_data;
+
         let world = &scene.world;
         let mut cam = scene.camera.clone();
         let (width, height) = parameters.image_dimensions;
@@ -199,15 +198,15 @@ impl Tracer {
                         // done with pixel!
 
                         // send progress
-                        sender.send((round, (x, y))).unwrap();
+                        sender.send((checkpoint, (x, y))).unwrap();
 
                         // average samples together
                         let scaled_color = color / parameters.samples_per_checkpoint as f64;
 
                         // scale relative to the current round
                         let img_color = pixel_data.get(&(x, y)).unwrap_or(&Color::BLACK);
-                        let weighted_color =
-                            (img_color * (round - 1) as f64 + scaled_color) / round as f64;
+                        let weighted_color = (img_color * (checkpoint - 1) as f64 + scaled_color)
+                            / checkpoint as f64;
 
                         // send final pixel color
                         ((x, y), weighted_color)
