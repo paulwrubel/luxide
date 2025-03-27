@@ -1,5 +1,5 @@
 use clap::Parser;
-use luxide::server::{self, build_router, RenderJobManager};
+use luxide::server::{self, build_router, RenderManager};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -17,11 +17,11 @@ async fn main() -> Result<(), String> {
 
     println!("Starting API server at {}/{}", args.address, args.port);
 
-    let job_manager = RenderJobManager::new();
+    let render_manager = RenderManager::new();
 
-    let router = build_router().with_state(job_manager.clone());
+    let router = build_router().with_state(render_manager.clone());
 
-    rayon::spawn(move || job_manager.start());
+    rayon::spawn(move || render_manager.start());
 
     server::serve(router, &args.address, args.port).await
 }

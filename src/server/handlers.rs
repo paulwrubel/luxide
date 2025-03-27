@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use axum::{
     extract::{Path, State},
     http::StatusCode,
@@ -10,7 +8,7 @@ use serde::Serialize;
 
 use crate::deserialization::RenderConfig;
 
-use super::{RenderJobInfo, RenderJobManager};
+use super::{RenderInfo, RenderManager};
 
 pub async fn index() -> String {
     println!("Handing request for index...");
@@ -18,18 +16,18 @@ pub async fn index() -> String {
 }
 
 #[derive(Serialize)]
-pub struct RenderJobInfoResponse {
+pub struct RenderInfoResponse {
     id: u64,
 
     #[serde(flatten)]
-    render_job_info: RenderJobInfo,
+    render_info: RenderInfo,
 }
 
-pub async fn create_render_job(
-    State(job_manager): State<RenderJobManager>,
+pub async fn create_render(
+    State(render_manager): State<RenderManager>,
     Json(render_config): Json<RenderConfig>,
 ) -> Response {
-    println!("Handing request for create_render_job...");
+    println!("Handing request for create_render...");
 
     let render_data = match render_config.compile() {
         Ok(data) => data,
@@ -39,43 +37,43 @@ pub async fn create_render_job(
         }
     };
 
-    let (id, created_job_info) = job_manager.create_job(render_data);
+    let (id, created_render_info) = render_manager.create_render(render_data);
 
     (
         StatusCode::CREATED,
-        Json(RenderJobInfoResponse {
+        Json(RenderInfoResponse {
             id,
-            render_job_info: created_job_info,
+            render_info: created_render_info,
         }),
     )
         .into_response()
 }
 
-pub async fn get_all_render_jobs_info(
-    State(job_manager): State<RenderJobManager>,
-) -> Json<Vec<RenderJobInfoResponse>> {
-    println!("Handing request for get_all_job_info...");
+pub async fn get_all_render_info(
+    State(render_manager): State<RenderManager>,
+) -> Json<Vec<RenderInfoResponse>> {
+    println!("Handing request for get_all_render_info...");
 
-    let jobs_info = job_manager.get_all_job_info();
+    let renders_info = render_manager.get_all_render_info();
 
     Json(
-        jobs_info
+        renders_info
             .iter()
-            .map(|(&id, info)| RenderJobInfoResponse {
+            .map(|(&id, info)| RenderInfoResponse {
                 id,
-                render_job_info: info.clone(),
+                render_info: info.clone(),
             })
             .collect(),
     )
 }
 
-pub async fn get_render_job_info(
-    State(job_manager): State<RenderJobManager>,
+pub async fn get_render_info(
+    State(render_manager): State<RenderManager>,
     Path(id): Path<u64>,
 ) -> Response {
-    println!("Handing request for get_render_job_info...");
+    println!("Handing request for get_render_info...");
 
-    match job_manager.get_job_info(id) {
+    match render_manager.get_render_info(id) {
         Some(info) => Json(info).into_response(),
         None => StatusCode::NOT_FOUND.into_response(),
     }
