@@ -11,8 +11,9 @@ pub fn build_router() -> Router<RenderManager> {
     Router::new()
         .route("/", get(handlers::index))
         .route("/renders", post(handlers::create_render))
-        .route("/renders", get(handlers::get_all_render_info))
-        .route("/renders/{id}", get(handlers::get_render_info))
+        .route("/renders/info", get(handlers::get_all_render_info))
+        .route("/renders/{id}/info", get(handlers::get_render_info))
+        .route("/renders/{id}/image", get(handlers::get_render_image))
 }
 
 pub async fn serve(router: Router, address: &str, port: u16) -> Result<(), String> {

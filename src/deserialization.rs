@@ -1,7 +1,7 @@
 use std::{fs, sync::Arc};
 
 use indexmap::IndexMap;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 use crate::{
     camera::Camera,
