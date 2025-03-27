@@ -28,7 +28,7 @@ pub struct RenderJobInfo {
 
 #[derive(Clone)]
 pub struct RenderJob {
-    pub state: RenderJobState,
+    pub state: Arc<RwLock<RenderJobState>>,
     pub render_data: RenderData,
     pub pixel_data: Arc<Mutex<PixelData>>,
     pub progress: f64,
@@ -37,7 +37,7 @@ pub struct RenderJob {
 impl RenderJob {
     fn new(render_data: RenderData) -> Self {
         Self {
-            state: RenderJobState::Created,
+            state: Arc::new(RwLock::new(RenderJobState::Created)),
             render_data,
             pixel_data: Arc::new(Mutex::new(PixelData::new())),
             progress: 0.0,
@@ -47,18 +47,7 @@ impl RenderJob {
     fn info(&self) -> RenderJobInfo {
         RenderJobInfo {
             name: self.render_data.scene.name.clone(),
-            state: self.state,
-            progress: self.progress,
-            parameters: self.render_data.parameters,
-        }
-    }
-}
-
-impl Into<RenderJobInfo> for RenderJob {
-    fn into(self) -> RenderJobInfo {
-        RenderJobInfo {
-            name: self.render_data.scene.name,
-            state: self.state,
+            state: self.state.read().expect("RwLock is poisoned").clone(),
             progress: self.progress,
             parameters: self.render_data.parameters,
         }
@@ -67,10 +56,10 @@ impl Into<RenderJobInfo> for RenderJob {
 
 #[derive(Clone)]
 pub struct RenderJobManager {
-    jobs: Arc<RwLock<HashMap<u64, RenderJob>>>,
+    jobs: Arc<RwLock<HashMap<u64, Arc<RwLock<RenderJob>>>>>,
 }
 
-const POLLING_INTERVAL_MS: u64 = 50;
+const POLLING_INTERVAL_MS: u64 = 1000;
 
 impl RenderJobManager {
     pub fn new() -> Self {
@@ -79,44 +68,51 @@ impl RenderJobManager {
         }
     }
 
-    pub fn start(&mut self) {
+    pub fn start(&self) {
         loop {
             {
                 println!("Polling jobs...");
-                // let mut job = self.jobs.lock().expect("mutex is poisoned");
-
-                // let local_jobs = self.jobs.clone();
 
                 // borrow jobs statically
-                let mut jobs = self.jobs.write().expect("mutex is poisoned");
+                let jobs = self.jobs.read().expect("mutex is poisoned");
 
                 // move Created jobs to Running
-                let created_jobs = jobs
-                    .iter_mut()
-                    .filter(|(_, j)| j.state == RenderJobState::Created);
+                let created_jobs = jobs.iter().filter(|(_, j)| {
+                    *j.read().unwrap().state.read().unwrap() == RenderJobState::Created
+                });
 
                 for (id, job) in created_jobs {
-                    let pixel_data_copy = job.pixel_data.clone();
-                    let render_data_copy = job.render_data.clone();
+                    let job_copy = job.clone();
+                    let id = *id;
 
                     rayon::spawn(move || {
                         let tracer =
                             Tracer::new(Threads::AllWithDefault(NonZeroUsize::new(24).unwrap()));
 
-                        let mut pixel_data = pixel_data_copy.lock().expect("mutex is poisoned");
+                        let job_read = job_copy.read().unwrap();
+                        let mut pixel_data = job_read.pixel_data.lock().unwrap();
 
-                        // let mut pixel_data = job.pixel_data.clone();
+                        let render_data_copy = job_copy.read().unwrap().render_data.clone();
+
+                        {
+                            let mut state = job_read.state.write().unwrap();
+
+                            *state = RenderJobState::RunningToCheckpoint(1);
+                            println!("MOVING JOB {} TO STATE: RunningToCheckpoint(1)", id);
+                        }
 
                         println!("Rendering to checkpoint 1");
                         tracer.render_to_checkpoint(1, &mut pixel_data, &render_data_copy, 2);
                         println!("Finished rendering to checkpoint 1");
+
+                        {
+                            let mut state = job_read.state.write().unwrap();
+
+                            *state = RenderJobState::FinishedCheckpoint(1);
+                            println!("MOVING JOB {} TO STATE: FinishedCheckpoint(1)", id);
+                        }
                     });
-
-                    job.state = RenderJobState::RunningToCheckpoint(1);
-                    println!("MOVING JOB {} TO STATE: RUNNING", id);
                 }
-
-                // move Runn
             }
 
             // sleep until time to poll again
@@ -127,10 +123,18 @@ impl RenderJobManager {
     pub fn get_all_job_info(&self) -> HashMap<u64, RenderJobInfo> {
         self.jobs
             .read()
-            .expect("mutex is poisoned")
+            .unwrap()
             .iter()
-            .map(|(id, job)| (*id, job.info()))
+            .map(|(id, job)| (*id, job.read().unwrap().info()))
             .collect()
+    }
+
+    pub fn get_job_info(&self, id: u64) -> Option<RenderJobInfo> {
+        self.jobs
+            .read()
+            .unwrap()
+            .get(&id)
+            .map(|job| job.read().unwrap().info())
     }
 
     pub fn create_job(&self, render_data: RenderData) -> (u64, RenderJobInfo) {
@@ -158,8 +162,8 @@ impl RenderJobManager {
         {
             self.jobs
                 .write()
-                .expect("mutex is poisoned")
-                .insert(id, job);
+                .unwrap()
+                .insert(id, Arc::new(RwLock::new(job)));
         }
 
         // println!("NEW Jobs: {:#?}", self.jobs);

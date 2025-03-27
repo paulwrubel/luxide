@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use axum::{
-    extract::State,
+    extract::{Path, State},
     http::StatusCode,
     response::{IntoResponse, Response},
     Json,
@@ -53,10 +53,30 @@ pub async fn create_render_job(
 
 pub async fn get_all_render_jobs_info(
     State(job_manager): State<RenderJobManager>,
-) -> Json<HashMap<u64, RenderJobInfo>> {
+) -> Json<Vec<RenderJobInfoResponse>> {
     println!("Handing request for get_all_job_info...");
 
     let jobs_info = job_manager.get_all_job_info();
 
-    Json(jobs_info)
+    Json(
+        jobs_info
+            .iter()
+            .map(|(&id, info)| RenderJobInfoResponse {
+                id,
+                render_job_info: info.clone(),
+            })
+            .collect(),
+    )
+}
+
+pub async fn get_render_job_info(
+    State(job_manager): State<RenderJobManager>,
+    Path(id): Path<u64>,
+) -> Response {
+    println!("Handing request for get_render_job_info...");
+
+    match job_manager.get_job_info(id) {
+        Some(info) => Json(info).into_response(),
+        None => StatusCode::NOT_FOUND.into_response(),
+    }
 }

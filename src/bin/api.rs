@@ -17,7 +17,7 @@ async fn main() -> Result<(), String> {
 
     println!("Starting API server at {}/{}", args.address, args.port);
 
-    let mut job_manager = RenderJobManager::new();
+    let job_manager = RenderJobManager::new();
 
     let router = build_router().with_state(job_manager.clone());
 

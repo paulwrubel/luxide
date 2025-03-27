@@ -12,6 +12,7 @@ pub fn build_router() -> Router<RenderJobManager> {
         .route("/", get(handlers::index))
         .route("/renders", post(handlers::create_render_job))
         .route("/renders", get(handlers::get_all_render_jobs_info))
+        .route("/renders/{id}", get(handlers::get_render_job_info))
 }
 
 pub async fn serve(router: Router, address: &str, port: u16) -> Result<(), String> {

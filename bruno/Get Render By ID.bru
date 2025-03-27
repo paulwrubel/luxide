@@ -1,0 +1,15 @@
+meta {
+  name: Get Render By ID
+  type: http
+  seq: 5
+}
+
+get {
+  url: http://localhost:8080/renders/:id
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: bazinga
+}
