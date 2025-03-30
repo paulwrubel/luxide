@@ -1,8 +1,14 @@
+mod arc_lock;
+pub use arc_lock::*;
+
 mod interval;
 pub use interval::Interval;
 
 mod progress;
 pub use progress::*;
+
+mod synchronizer;
+pub use synchronizer::*;
 
 mod time;
 pub use time::*;

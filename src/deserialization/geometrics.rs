@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     geometry::{
@@ -14,7 +14,7 @@ use crate::{
 
 use super::{materials::MaterialRefOrInline, Build, Builts};
 
-#[derive(Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(untagged)]
 pub enum GeometricRefOrInline {
@@ -34,7 +34,7 @@ impl Build<Arc<dyn Geometric>> for GeometricRefOrInline {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
 #[serde(deny_unknown_fields)]
 pub enum GeometricData {

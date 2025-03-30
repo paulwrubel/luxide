@@ -1,7 +1,7 @@
 use std::{
     collections::{HashMap, VecDeque},
     fs,
-    io::{self, stdout, Write},
+    io::{self, Write, stdout},
     num::NonZeroUsize,
     sync::mpsc,
     thread,
@@ -13,7 +13,7 @@ use rand::seq::SliceRandom;
 use rayon::prelude::*;
 use time::OffsetDateTime;
 
-use super::{CheckpointDestination, OutputFileParameters, RenderParameters, Scene};
+use super::{OutputFileParameters, RenderParameters, Scene};
 
 use crate::{deserialization::RenderData, shading::Color, utils};
 
@@ -36,8 +36,8 @@ impl Tracer {
     pub fn render(
         &mut self,
         render_data: &RenderData,
-        output: impl CheckpointDestination,
-        progress_recv: mpsc::Receiver<f64>,
+        // output: impl CheckpointDestination,
+        // progress_recv: mpsc::Receiver<f64>,
         indentation: usize,
     ) -> Result<(), String> {
         let total_checkpoints = render_data.parameters.checkpoints;
@@ -64,7 +64,7 @@ impl Tracer {
                 checkpoint_limit_string
             );
 
-            let checkpoint_pixel_data = self.render_to_checkpoint(
+            self.render_to_checkpoint_iteration(
                 checkpoint,
                 &mut pixel_data,
                 render_data,
@@ -93,7 +93,7 @@ impl Tracer {
         Ok(())
     }
 
-    pub fn render_to_checkpoint<'a>(
+    pub fn render_to_checkpoint_iteration<'a>(
         &'a self,
         checkpoint: u32,
         pixel_data: &'a mut PixelData,

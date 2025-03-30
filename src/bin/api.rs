@@ -1,5 +1,10 @@
+use std::sync::Arc;
+
 use clap::Parser;
-use luxide::server::{self, build_router, RenderManager};
+use luxide::{
+    server::{self, build_router},
+    tracing::{InMemoryStorage, RenderManager},
+};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -17,7 +22,9 @@ async fn main() -> Result<(), String> {
 
     println!("Starting API server at {}/{}", args.address, args.port);
 
-    let render_manager = RenderManager::new();
+    let inmem_storage = Arc::new(InMemoryStorage::new());
+
+    let render_manager = RenderManager::new(Arc::clone(&inmem_storage));
 
     let router = build_router().with_state(render_manager.clone());
 

@@ -1,15 +1,16 @@
 meta {
   name: Get Render Image By ID
   type: http
-  seq: 6
+  seq: 5
 }
 
 get {
-  url: http://localhost:8080/renders/:id/info
+  url: http://localhost:8080/renders/:id/checkpoint/:checkpoint_iteration
   body: none
   auth: inherit
 }
 
 params:path {
+  checkpoint_iteration: 1
   id: 1
 }

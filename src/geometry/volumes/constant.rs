@@ -3,11 +3,11 @@ use std::sync::Arc;
 use rand::Rng;
 
 use crate::{
-    geometry::{Geometric, Ray, RayHit, Vector, AABB},
+    geometry::{AABB, Geometric, Ray, RayHit, Vector},
     shading::{
+        Texture,
         materials::{Isotropic, Material},
         textures::SolidColor,
-        Texture,
     },
     utils::Interval,
 };
@@ -73,7 +73,7 @@ impl Geometric for Constant {
         let ray_length = ray.direction.length();
         let distance_inside_boundary = (second_hit.t - first_hit.t) * ray_length;
         let hit_distance: f64 =
-            self.negative_inverse_density * rand::thread_rng().gen::<f64>().ln();
+            self.negative_inverse_density * rand::thread_rng().r#gen::<f64>().ln();
 
         // check if the ray made it through the volume
         if hit_distance > distance_inside_boundary {

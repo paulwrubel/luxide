@@ -1,10 +1,10 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{camera::Camera, geometry::Point};
 
 use super::{Build, Builts};
 
-#[derive(Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(untagged)]
 pub enum CameraRefOrInline {
@@ -28,7 +28,7 @@ impl Build<Camera> for CameraRefOrInline {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CameraData {
     vertical_field_of_view_degrees: f64,
@@ -61,7 +61,7 @@ impl Build<Camera> for CameraData {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(untagged)]
 enum FocusDistance {
@@ -69,7 +69,7 @@ enum FocusDistance {
     Type(FocusDistanceType),
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 enum FocusDistanceType {
     EyeToTarget,
