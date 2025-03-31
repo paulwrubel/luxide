@@ -4,15 +4,16 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     geometry::{
-        compounds::{AxisAlignedPBox, List, ModelObj, BVH},
+        Geometric,
+        compounds::{AxisAlignedPBox, BVH, List, ModelObj},
         instances::{RotateXAxis, RotateYAxis, RotateZAxis, Translate},
         primitives::{Parallelogram, Sphere, Triangle},
-        volumes, Geometric,
+        volumes,
     },
     utils::Angle,
 };
 
-use super::{materials::MaterialRefOrInline, Build, Builts};
+use super::{Build, Builts, materials::MaterialRefOrInline};
 
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]

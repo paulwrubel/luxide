@@ -3,11 +3,11 @@ use std::{collections::HashMap, sync::Arc};
 use futures::StreamExt;
 use tokio::sync::RwLock;
 
-use super::{Render, RenderCheckpoint, RenderID, RenderState, RenderStorage};
+use super::{Render, RenderCheckpoint, RenderID, RenderState, RenderStorage, RenderStorageError};
 
 #[derive(Clone)]
 pub struct InMemoryStorage {
-    renders: Arc<RwLock<HashMap<u64, Arc<RwLock<Render>>>>>,
+    renders: Arc<RwLock<HashMap<RenderID, Arc<RwLock<Render>>>>>,
     checkpoints: Arc<RwLock<Vec<RenderCheckpoint>>>,
 }
 
@@ -22,21 +22,21 @@ impl InMemoryStorage {
 
 #[async_trait::async_trait]
 impl RenderStorage for InMemoryStorage {
-    async fn get_render(&self, id: RenderID) -> Option<Render> {
-        match self.renders.read().await.get(&id) {
+    async fn get_render(&self, id: RenderID) -> Result<Option<Render>, RenderStorageError> {
+        Ok(match self.renders.read().await.get(&id) {
             Some(r) => Some(r.read().await.clone()),
             None => None,
-        }
+        })
     }
 
-    async fn get_all_renders(&self) -> Vec<Render> {
-        tokio_stream::iter(self.renders.read().await.values())
+    async fn get_all_renders(&self) -> Result<Vec<Render>, RenderStorageError> {
+        Ok(tokio_stream::iter(self.renders.read().await.values())
             .then(async |r| r.read().await.clone())
             .collect::<Vec<Render>>()
-            .await
+            .await)
     }
 
-    async fn create_render(&self, render: Render) -> Result<Render, String> {
+    async fn create_render(&self, render: Render) -> Result<Render, RenderStorageError> {
         println!("Creating render with id: {}", render.id);
         {
             self.renders
@@ -52,8 +52,8 @@ impl RenderStorage for InMemoryStorage {
         &self,
         id: RenderID,
         new_state: RenderState,
-    ) -> Result<(), String> {
-        println!("Updating render state for id: {id} to {new_state:?}");
+    ) -> Result<(), RenderStorageError> {
+        // println!("Updating render state for id: {id} to {new_state:?}");
 
         match self.renders.write().await.get_mut(&id) {
             Some(render) => {
@@ -67,7 +67,7 @@ impl RenderStorage for InMemoryStorage {
     async fn create_render_checkpoint(
         &self,
         render_checkpoint: RenderCheckpoint,
-    ) -> Result<(), String> {
+    ) -> Result<(), RenderStorageError> {
         println!(
             "Creating render checkpoint {} for id: {}",
             render_checkpoint.iteration, render_checkpoint.render_id
@@ -83,19 +83,20 @@ impl RenderStorage for InMemoryStorage {
         &self,
         render_id: RenderID,
         iteration: u32,
-    ) -> Option<RenderCheckpoint> {
-        self.checkpoints
+    ) -> Result<Option<RenderCheckpoint>, RenderStorageError> {
+        Ok(self
+            .checkpoints
             .read()
             .await
             .iter()
             .find(|c| c.render_id == render_id && c.iteration == iteration)
-            .cloned()
+            .cloned())
     }
 
-    async fn get_next_id(&self) -> RenderID {
-        match self.renders.read().await.keys().max() {
+    async fn get_next_id(&self) -> Result<RenderID, RenderStorageError> {
+        Ok(match self.renders.read().await.keys().max() {
             Some(id) => id + 1,
             None => 1,
-        }
+        })
     }
 }

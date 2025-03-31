@@ -1,6 +1,6 @@
 use std::{
     num::NonZeroUsize,
-    sync::{Arc, Mutex},
+    sync::{Arc, Mutex, mpsc},
 };
 
 use image::RgbaImage;
@@ -8,10 +8,10 @@ use image::RgbaImage;
 use crate::{
     deserialization::RenderConfig,
     tracing::{PixelData, RenderState, Threads, Tracer},
-    utils::Synchronizer,
+    utils::{self, ProgressInfo, ProgressTracker, Synchronizer},
 };
 
-use super::{Render, RenderCheckpoint, RenderID, RenderStorage};
+use super::{Render, RenderCheckpoint, RenderID, RenderStorage, RenderStorageError};
 
 #[derive(Clone)]
 pub struct RenderManager<S: RenderStorage> {
@@ -35,10 +35,18 @@ impl<S: RenderStorage> RenderManager<S> {
                 println!("Polling renders...");
 
                 let renders = {
-                    self.sync
+                    match self
+                        .sync
                         .lock()
                         .unwrap()
                         .block_on(self.storage.get_all_renders())
+                    {
+                        Ok(renders) => renders,
+                        Err(e) => {
+                            println!("Failed to get renders: {e}");
+                            continue;
+                        }
+                    }
                 };
 
                 // move Created renders to Running
@@ -57,14 +65,22 @@ impl<S: RenderStorage> RenderManager<S> {
                     _ => false,
                 });
                 for render in checkpointed_renders.cloned() {
-                    let previous_checkpoint = match render.state {
-                        RenderState::FinishedCheckpointIteration(checkpoint) => self
-                            .sync
-                            .lock()
-                            .unwrap()
-                            .block_on(self.storage.get_render_checkpoint(render.id, checkpoint)),
-                        _ => None,
-                    };
+                    let previous_checkpoint =
+                        match render.state {
+                            RenderState::FinishedCheckpointIteration(checkpoint) => {
+                                match self.sync.lock().unwrap().block_on(
+                                    self.storage.get_render_checkpoint(render.id, checkpoint),
+                                ) {
+                                    Ok(Some(checkpoint)) => Some(checkpoint),
+                                    Ok(None) => None,
+                                    Err(e) => {
+                                        println!("Failed to get render checkpoint: {e}");
+                                        continue;
+                                    }
+                                }
+                            }
+                            _ => None,
+                        };
 
                     self.spawn_tracer_thread_to_next_checkpoint(render, previous_checkpoint);
                 }
@@ -98,7 +114,7 @@ impl<S: RenderStorage> RenderManager<S> {
                         render.id,
                         RenderState::Running {
                             checkpoint_iteration: iteration,
-                            progress_percent: 0.0,
+                            progress_info: ProgressInfo::default(),
                         },
                     ),
             ) {
@@ -118,14 +134,66 @@ impl<S: RenderStorage> RenderManager<S> {
                 .compile()
                 .expect("Failing to compile render config at tracing time!");
 
-            println!("Rendering to checkpoint {iteration}");
-            tracer.render_to_checkpoint_iteration(
-                iteration,
-                &mut initial_pixel_data,
-                &render_data,
-                2,
-            );
-            println!("Finished rendering to checkpoint {iteration}");
+            let (sender, receiver) = mpsc::channel();
+
+            let (width, height) = render.config.parameters.image_dimensions;
+
+            // let start: Instant = Instant::now();
+            // let total = width * height;
+            // let batch_size = 100;
+            // let memory = 50;
+            {
+                let storage: Arc<S> = Arc::clone(&storage);
+                let sync = Arc::clone(&sync);
+
+                rayon::join(
+                    || {
+                        // let storage_3: Arc<S> = Arc::clone(&storage_2);
+                        let update_fn = storage.get_update_progress_fn(render.id, iteration);
+
+                        let mut progress_tracker = ProgressTracker::new(
+                            u64::from(width) * u64::from(height),
+                            50,
+                            100,
+                            move |progress_info| {
+                                sync.lock().unwrap().block_on(update_fn(progress_info));
+                            },
+                        );
+                        // let mut current = 0;
+                        for _ in receiver {
+                            progress_tracker.mark();
+                            // current += 1;
+                            // if current % batch_size == 0 || current == total {
+                            //     let progress_info = progress_tracker.progress_info(current);
+                            // let progress_string = utils::progress_string(
+                            //     &mut instants,
+                            //     current,
+                            //     batch_size,
+                            //     total,
+                            //     start,
+                            //     memory,
+                            // );
+                            // print!(
+                            //     "\r{}{}{}",
+                            //     " ".repeat(indentation),
+                            //     progress_string,
+                            //     " ".repeat(10)
+                            // );
+                            // stdout().flush().unwrap();
+                        }
+                    },
+                    || {
+                        println!("Rendering to checkpoint {iteration}");
+                        tracer.render_to_checkpoint_iteration(
+                            iteration,
+                            &mut initial_pixel_data,
+                            &render_data,
+                            sender,
+                        );
+                        println!("Finished rendering to checkpoint {iteration}");
+                    },
+                );
+            }
 
             println!("Saving pixel_data...");
 
@@ -163,22 +231,25 @@ impl<S: RenderStorage> RenderManager<S> {
         });
     }
 
-    pub async fn get_render(&self, id: RenderID) -> Option<Render> {
+    pub async fn get_render(&self, id: RenderID) -> Result<Option<Render>, RenderStorageError> {
         self.storage.get_render(id).await
     }
 
-    pub async fn get_all_renders(&self) -> Vec<Render> {
+    pub async fn get_all_renders(&self) -> Result<Vec<Render>, RenderStorageError> {
         self.storage.get_all_renders().await
     }
 
-    pub async fn create_render(&self, render_config: RenderConfig) -> Result<Render, String> {
+    pub async fn create_render(
+        &self,
+        render_config: RenderConfig,
+    ) -> Result<Render, RenderStorageError> {
         // compile just for validation purposes
         if let Err(e) = render_config.compile() {
             return Err(e.to_string());
         }
 
-        let render = Render::new(self.storage.get_next_id().await, render_config);
-
+        let next_id = self.storage.get_next_id().await?;
+        let render = Render::new(next_id, render_config);
         self.storage.create_render(render).await
     }
 
@@ -186,7 +257,7 @@ impl<S: RenderStorage> RenderManager<S> {
         &self,
         id: RenderID,
         iteration: u32,
-    ) -> Option<RenderCheckpoint> {
+    ) -> Result<Option<RenderCheckpoint>, RenderStorageError> {
         self.storage.get_render_checkpoint(id, iteration).await
     }
 
@@ -194,12 +265,14 @@ impl<S: RenderStorage> RenderManager<S> {
         &self,
         id: RenderID,
         iteration: u32,
-    ) -> Option<RgbaImage> {
-        let params = self.storage.get_render(id).await?.config.parameters;
+    ) -> Result<Option<RgbaImage>, RenderStorageError> {
+        let render = self.storage.get_render(id).await?;
+        let params = match render {
+            Some(r) => r.config.parameters,
+            None => return Ok(None),
+        };
 
-        match self.storage.get_render_checkpoint(id, iteration).await {
-            Some(rcp) => Some(rcp.as_image(&params)),
-            None => None,
-        }
+        let checkpoint = self.storage.get_render_checkpoint(id, iteration).await?;
+        Ok(checkpoint.map(|rcp| rcp.as_image(&params)))
     }
 }

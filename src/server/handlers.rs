@@ -46,19 +46,21 @@ pub async fn get_render<S: RenderStorage>(
     println!("Handing request for get_render...");
 
     match render_manager.get_render(id).await {
-        Some(render) => Json(render).into_response(),
-        None => StatusCode::NOT_FOUND.into_response(),
+        Ok(Some(render)) => Json(render).into_response(),
+        Ok(None) => StatusCode::NOT_FOUND.into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e).into_response(),
     }
 }
 
 pub async fn get_all_renders<S: RenderStorage>(
     State(render_manager): State<RenderManager<S>>,
-) -> Json<Vec<Render>> {
+) -> Response {
     println!("Handing request for get_all_renders...");
 
-    let renders = render_manager.get_all_renders().await;
-
-    Json(renders)
+    match render_manager.get_all_renders().await {
+        Ok(renders) => Json(renders).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e).into_response(),
+    }
 }
 
 pub async fn get_render_checkpoint_image<S: RenderStorage>(
@@ -71,7 +73,7 @@ pub async fn get_render_checkpoint_image<S: RenderStorage>(
         .get_render_checkpoint_as_image(id, checkpoint_iteration)
         .await
     {
-        Some(image) => {
+        Ok(Some(image)) => {
             // write image to intermediate buffer
             let mut img_buffer = Vec::new();
 
@@ -90,6 +92,7 @@ pub async fn get_render_checkpoint_image<S: RenderStorage>(
             )
                 .into_response()
         }
-        None => StatusCode::NOT_FOUND.into_response(),
+        Ok(None) => StatusCode::NOT_FOUND.into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e).into_response(),
     }
 }

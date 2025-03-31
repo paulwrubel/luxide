@@ -1,6 +1,9 @@
 mod arc_lock;
 pub use arc_lock::*;
 
+mod binary;
+pub use binary::*;
+
 mod interval;
 pub use interval::Interval;
 

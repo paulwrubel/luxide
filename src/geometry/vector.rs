@@ -1,11 +1,12 @@
 use std::ops::{Index, IndexMut, Neg};
 
 use auto_ops::{impl_op_ex, impl_op_ex_commutative};
+use bincode::{Encode, Decode};
 use rand::Rng;
 
 use crate::utils::Angle;
 
-#[derive(Debug, Copy, Clone, PartialEq, Default)]
+#[derive(Debug, Copy, Clone, PartialEq, Default, Encode, Decode)]
 pub struct Vector {
     pub x: f64,
     pub y: f64,

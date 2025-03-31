@@ -3,7 +3,6 @@ use std::{collections::HashMap, fs, num::NonZeroUsize, sync::Arc, time::Instant}
 use clap::Parser;
 use luxide::{
     camera::Camera,
-    deserialization::CompiledRenderData,
     geometry::{
         Geometric, Point, Vector,
         compounds::{AxisAlignedPBox, BVH, List},
@@ -16,7 +15,7 @@ use luxide::{
         materials::{Dielectric, Lambertian, Material, Specular},
         textures::{Checker, Image8Bit, Noise, SolidColor},
     },
-    tracing::{Parameters, Scene, Threads, Tracer},
+    tracing::{RenderParameters, Scene, Threads, Tracer},
     utils::{self, Angle},
 };
 use noise::{Perlin, Turbulence};
@@ -44,115 +43,117 @@ fn main() -> Result<(), String> {
 
     let args = Args::parse();
 
-    if let Some(config_filename) = args.config_filename {
-        println!("Using configuration file: {config_filename}");
-        run(&config_filename)
-    } else {
-        println!("Using legacy configuration...");
-        run_legacy()
-    }
-}
+    // if let Some(config_filename) = args.config_filename {
+    //     println!("Using configuration file: {config_filename}");
+    //     run(&config_filename)
+    // } else {
+    //     println!("Using legacy configuration...");
+    //     run_legacy()
+    // }
 
-fn run(config_filename: &str) -> Result<(), String> {
-    println!("Parsing configuration file...");
-    let compiled_render_data = luxide::deserialization::parse_json_file(config_filename)?;
-    let scene = &compiled_render_data.scene;
-
-    let now = OffsetDateTime::now_utc();
-    let formatted_timestamp = utils::get_formatted_timestamp_for(now);
-
-    let sub_folder = format!("{}_{}", scene.name, formatted_timestamp);
-
-    let output_dir = format!("{OUTPUT_DIR}/{sub_folder}");
-    println!("Initializing output directory: {output_dir}");
-    fs::create_dir_all(&output_dir).map_err(|err| err.to_string())?;
-
-    let threads = Threads::AllWithDefault(NonZeroUsize::new(24).unwrap());
-
-    let mut tracer = Tracer::new(threads);
-    println!(
-        "Rendering scene \"{}\" with {} threads...",
-        scene.name,
-        threads.effective_count()
-    );
-    let start = Instant::now();
-    match tracer.render(&compiled_render_data, 2) {
-        Ok(()) => {
-            println!("Saved image!");
-        }
-        Err(e) => {
-            println!("Failed to save image: {e}");
-        }
-    };
-    let elapsed = start.elapsed();
-    println!("Done in {}", utils::format_duration(elapsed));
     Ok(())
 }
 
-fn run_legacy() -> Result<(), String> {
-    let selected_scene_name = "final_scene";
+// fn run(config_filename: &str) -> Result<(), String> {
+//     println!("Parsing configuration file...");
+//     let compiled_render_data = luxide::deserialization::parse_json_file(config_filename)?;
+//     let scene = &compiled_render_data.scene;
 
-    println!("Assembling scenes...");
-    let mut scenes = HashMap::new();
-    scenes.insert("random_spheres", random_spheres());
-    scenes.insert("two_spheres", two_spheres());
-    scenes.insert("earth", earth());
-    scenes.insert("two_perlin_spheres", two_perlin_spheres());
-    scenes.insert("quads", quads());
-    scenes.insert("simple_light", simple_light());
-    scenes.insert("cornell_box", cornell_box());
-    scenes.insert("final_scene", final_scene());
+//     let now = OffsetDateTime::now_utc();
+//     let formatted_timestamp = utils::get_formatted_timestamp_for(now);
 
-    let scene = scenes.get_mut(selected_scene_name).unwrap().clone();
+//     let sub_folder = format!("{}_{}", scene.name, formatted_timestamp);
 
-    let now = OffsetDateTime::now_utc();
-    let formatted_timestamp = utils::get_formatted_timestamp_for(now);
-    let output_dir = format!(
-        "{}/{}_{}",
-        OUTPUT_DIR, selected_scene_name, formatted_timestamp
-    );
-    println!("Initializing output directory: {output_dir}");
-    fs::create_dir_all(&output_dir).map_err(|err| err.to_string())?;
+//     let output_dir = format!("{OUTPUT_DIR}/{sub_folder}");
+//     println!("Initializing output directory: {output_dir}");
+//     fs::create_dir_all(&output_dir).map_err(|err| err.to_string())?;
 
-    let parameters = Parameters {
-        output_dir: OUTPUT_DIR.to_string(),
-        use_subdir: true,
-        file_basename: selected_scene_name.to_string(),
-        file_ext: "png".to_string(),
-        image_dimensions: (6000, 6000),
-        tile_dimensions: (10, 10),
+//     let threads = Threads::AllWithDefault(NonZeroUsize::new(24).unwrap());
 
-        gamma_correction: 2.0,
-        samples_per_round: 25,
-        round_limit: None,
-        max_bounces: 40,
-        use_scaling_truncation: true,
+//     let mut tracer = Tracer::new(threads);
+//     println!(
+//         "Rendering scene \"{}\" with {} threads...",
+//         scene.name,
+//         threads.effective_count()
+//     );
+//     let start = Instant::now();
+//     match tracer.render(&compiled_render_data, 2) {
+//         Ok(()) => {
+//             println!("Saved image!");
+//         }
+//         Err(e) => {
+//             println!("Failed to save image: {e}");
+//         }
+//     };
+//     let elapsed = start.elapsed();
+//     println!("Done in {}", utils::format_duration(elapsed));
+//     Ok(())
+// }
 
-        pixels_per_progress_update: 100000,
-        progress_memory: 50,
-    };
+// fn run_legacy() -> Result<(), String> {
+//     let selected_scene_name = "final_scene";
 
-    let threads = Threads::AllWithDefault(NonZeroUsize::new(24).unwrap());
+//     println!("Assembling scenes...");
+//     let mut scenes = HashMap::new();
+//     scenes.insert("random_spheres", random_spheres());
+//     scenes.insert("two_spheres", two_spheres());
+//     scenes.insert("earth", earth());
+//     scenes.insert("two_perlin_spheres", two_perlin_spheres());
+//     scenes.insert("quads", quads());
+//     scenes.insert("simple_light", simple_light());
+//     scenes.insert("cornell_box", cornell_box());
+//     scenes.insert("final_scene", final_scene());
 
-    let mut tracer = Tracer::new(threads);
-    println!(
-        "Rendering scene \"{}\" with {} threads...",
-        selected_scene_name,
-        threads.effective_count()
-    );
-    let start = Instant::now();
-    match tracer.render(&CompiledRenderData { parameters, scene }, 2) {
-        Ok(()) => {
-            println!("Saved image!");
-        }
-        Err(e) => {
-            println!("Failed to save image: {e}");
-        }
-    };
-    let elapsed = start.elapsed();
-    println!("Done in {}", utils::format_duration(elapsed));
-    Ok(())
-}
+//     let scene = scenes.get_mut(selected_scene_name).unwrap().clone();
+
+//     let now = OffsetDateTime::now_utc();
+//     let formatted_timestamp = utils::get_formatted_timestamp_for(now);
+//     let output_dir = format!(
+//         "{}/{}_{}",
+//         OUTPUT_DIR, selected_scene_name, formatted_timestamp
+//     );
+//     println!("Initializing output directory: {output_dir}");
+//     fs::create_dir_all(&output_dir).map_err(|err| err.to_string())?;
+
+//     let parameters = RenderParameters {
+//         output_dir: OUTPUT_DIR.to_string(),
+//         use_subdir: true,
+//         file_basename: selected_scene_name.to_string(),
+//         file_ext: "png".to_string(),
+//         image_dimensions: (6000, 6000),
+//         tile_dimensions: (10, 10),
+
+//         gamma_correction: 2.0,
+//         samples_per_round: 25,
+//         round_limit: None,
+//         max_bounces: 40,
+//         use_scaling_truncation: true,
+
+//         pixels_per_progress_update: 100000,
+//         progress_memory: 50,
+//     };
+
+//     let threads = Threads::AllWithDefault(NonZeroUsize::new(24).unwrap());
+
+//     let mut tracer = Tracer::new(threads);
+//     println!(
+//         "Rendering scene \"{}\" with {} threads...",
+//         selected_scene_name,
+//         threads.effective_count()
+//     );
+//     let start = Instant::now();
+//     match tracer.render(&CompiledRenderData { parameters, scene }, 2) {
+//         Ok(()) => {
+//             println!("Saved image!");
+//         }
+//         Err(e) => {
+//             println!("Failed to save image: {e}");
+//         }
+//     };
+//     let elapsed = start.elapsed();
+//     println!("Done in {}", utils::format_duration(elapsed));
+//     Ok(())
+// }
 
 fn final_scene() -> Scene {
     let mut rng = rand::thread_rng();

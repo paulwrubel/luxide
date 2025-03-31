@@ -1,12 +1,14 @@
 use std::{fs, sync::Arc};
 
+use geometrics::GeometricRefOrInline;
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
+use textures::TextureRefOrInline;
 
 use crate::{
     camera::Camera,
     geometry::Geometric,
-    shading::{materials::Material, Texture},
+    shading::{Texture, materials::Material},
     tracing::{OutputFileParameters, RenderParameters, Scene},
 };
 
@@ -111,10 +113,50 @@ fn build_textures(
     texture_data: &IndexMap<String, TextureData>,
     builts: &mut Builts,
 ) -> Result<(), String> {
-    for (name, texture) in texture_data {
-        builts
-            .textures
-            .insert((*name).clone(), texture.build(builts)?);
+    let mut building = std::collections::HashSet::new();
+
+    // Function to get dependencies from a texture
+    let get_dependencies = |texture: &TextureData| {
+        let mut deps = Vec::new();
+        match texture {
+            TextureData::Checker {
+                even_texture,
+                odd_texture,
+                ..
+            } => {
+                if let TextureRefOrInline::Ref(ref_name) = even_texture {
+                    deps.push(ref_name.clone());
+                }
+                if let TextureRefOrInline::Ref(ref_name) = odd_texture {
+                    deps.push(ref_name.clone());
+                }
+            }
+            _ => {}
+        }
+        deps
+    };
+
+    // Function to build and insert a texture
+    let build_and_insert = |name: &str, texture: &TextureData, builts: &mut Builts| {
+        if !builts.textures.contains_key(name) {
+            let built = texture.build(builts)?;
+            builts.textures.insert(name.to_string(), built);
+        }
+        Ok(())
+    };
+
+    // Build all textures
+    for name in texture_data.keys() {
+        build_resource_recursive(
+            name,
+            texture_data,
+            builts,
+            &mut building,
+            get_dependencies,
+            build_and_insert,
+            "texture",
+            0,
+        )?
     }
     Ok(())
 }
@@ -135,11 +177,112 @@ fn build_geometrics(
     geometric_data: &IndexMap<String, GeometricData>,
     builts: &mut Builts,
 ) -> Result<(), String> {
-    for (name, geometric) in geometric_data {
-        builts
-            .geometrics
-            .insert((*name).clone(), geometric.build(builts)?);
+    let mut building = std::collections::HashSet::new();
+
+    // Function to get dependencies from a geometric
+    let get_dependencies = |geometric: &GeometricData| {
+        let mut deps = Vec::new();
+        match geometric {
+            GeometricData::CompoundList { geometrics, .. } => {
+                for g in geometrics {
+                    if let GeometricRefOrInline::Ref(ref_name) = g {
+                        deps.push(ref_name.clone());
+                    }
+                }
+            }
+            GeometricData::InstanceRotateXAxis { geometric, .. }
+            | GeometricData::InstanceRotateYAxis { geometric, .. }
+            | GeometricData::InstanceRotateZAxis { geometric, .. }
+            | GeometricData::InstanceTranslate { geometric, .. } => {
+                if let GeometricRefOrInline::Ref(ref_name) = geometric {
+                    deps.push(ref_name.clone());
+                }
+            }
+            _ => {}
+        }
+        deps
+    };
+
+    // Function to build and insert a geometric
+    let build_and_insert = |name: &str, geometric: &GeometricData, builts: &mut Builts| {
+        if !builts.geometrics.contains_key(name) {
+            let built = geometric.build(builts)?;
+            builts.geometrics.insert(name.to_string(), built);
+        }
+        Ok(())
+    };
+
+    // Build all geometrics
+    for name in geometric_data.keys() {
+        build_resource_recursive(
+            name,
+            geometric_data,
+            builts,
+            &mut building,
+            get_dependencies,
+            build_and_insert,
+            "geometric",
+            0,
+        )?
     }
+    Ok(())
+}
+
+const MAX_RECURSION_DEPTH: usize = 100;
+
+fn build_resource_recursive<T>(
+    name: &str,
+    resource_data: &IndexMap<String, T>,
+    builts: &mut Builts,
+    building: &mut std::collections::HashSet<String>,
+    get_dependencies: impl Fn(&T) -> Vec<String> + Copy,
+    build_and_insert: impl Fn(&str, &T, &mut Builts) -> Result<(), String> + Copy,
+    resource_type: &str,
+    depth: usize,
+) -> Result<(), String> {
+    // Check for maximum recursion depth
+    if depth >= MAX_RECURSION_DEPTH {
+        return Err(format!(
+            "Maximum recursion depth ({}) exceeded while building {} '{}'. This may indicate a cyclic dependency.",
+            MAX_RECURSION_DEPTH, resource_type, name
+        ));
+    }
+
+    // If we've already built this resource, we're done
+    if building.contains(name) {
+        return Err(format!(
+            "Cycle detected in {} dependencies involving {}",
+            resource_type, name
+        ));
+    }
+
+    // Get the resource data
+    let resource = resource_data.get(name).ok_or(format!(
+        "{} {} not found. Is it specified in the {} list?",
+        resource_type, name, resource_type
+    ))?;
+
+    // Mark that we're building this resource
+    building.insert(name.to_string());
+
+    // Build any referenced resources first
+    for dep_name in get_dependencies(resource) {
+        build_resource_recursive(
+            &dep_name,
+            resource_data,
+            builts,
+            building,
+            get_dependencies,
+            build_and_insert,
+            resource_type,
+            depth + 1,
+        )?
+    }
+
+    // Now build this resource if it hasn't been built yet
+    build_and_insert(name, resource, builts)?;
+    building.remove(name);
+
     Ok(())
 }
 

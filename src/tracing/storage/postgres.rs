@@ -1,0 +1,215 @@
+use sqlx::{Pool, Postgres};
+
+use crate::utils::{decode_pixel_data, encode_pixel_data};
+
+use super::{Render, RenderCheckpoint, RenderID, RenderState, RenderStorage, RenderStorageError};
+
+#[derive(Clone)]
+pub struct PostgresStorage {
+    pool: Pool<Postgres>,
+}
+
+impl PostgresStorage {
+    pub async fn new(
+        addr: &str,
+        username: &str,
+        password: &str,
+        database: &str,
+    ) -> Result<Self, String> {
+        let conn_string = format!("postgres://{}:{}@{}/{}", username, password, addr, database);
+
+        let pool = sqlx::postgres::PgPoolOptions::new()
+            .max_connections(5)
+            .connect(&conn_string)
+            .await
+            .map_err(|e| e.to_string())?;
+
+        Ok(Self { pool })
+    }
+}
+
+#[async_trait::async_trait]
+impl RenderStorage for PostgresStorage {
+    async fn get_render(&self, id: RenderID) -> Result<Option<Render>, String> {
+        match sqlx::query!(
+            r#"
+                SELECT id, state, config 
+                FROM renders
+                WHERE id = $1
+            "#,
+            id as i32
+        )
+        .fetch_optional(&self.pool)
+        .await
+        {
+            Ok(Some(row)) => {
+                let state = serde_json::from_value(row.state)
+                    .map_err(|e| format!("Failed to deserialize render state: {}", e))?;
+
+                let config = serde_json::from_value(row.config)
+                    .map_err(|e| format!("Failed to deserialize render config: {}", e))?;
+
+                Ok(Some(Render { id, state, config }))
+            }
+            Ok(None) => Ok(None),
+            Err(e) => Err(format!("Failed to get render with id {id}: {e}")),
+        }
+    }
+
+    async fn get_all_renders(&self) -> Result<Vec<Render>, RenderStorageError> {
+        let rows = sqlx::query!(
+            r#"
+                SELECT id, state, config
+                FROM renders
+                ORDER BY id ASC
+            "#
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(|e| format!("Failed to get all renders: {}", e))?;
+
+        let mut renders = Vec::with_capacity(rows.len());
+        for row in rows {
+            let state = serde_json::from_value(row.state)
+                .map_err(|e| format!("Failed to deserialize render state: {}", e))?;
+            let config = serde_json::from_value(row.config)
+                .map_err(|e| format!("Failed to deserialize render config: {}", e))?;
+
+            renders.push(Render {
+                id: row.id as u32,
+                state,
+                config,
+            });
+        }
+
+        Ok(renders)
+    }
+
+    async fn create_render(&self, render: Render) -> Result<Render, RenderStorageError> {
+        match sqlx::query!(
+            r#"
+                INSERT INTO renders (id, state, config)
+                VALUES ($1, $2, $3)
+            "#,
+            render.id as i32,
+            serde_json::to_value(&render.state)
+                .map_err(|e| format!("Failed to serialize render state: {}", e))?,
+            serde_json::to_value(&render.config)
+                .map_err(|e| format!("Failed to serialize render config: {}", e))?,
+        )
+        .execute(&self.pool)
+        .await
+        {
+            Ok(res) => match res.rows_affected() {
+                1 => Ok(render),
+                n => Err(format!(
+                    "Failed to create render. Expecting 1 row affected, got {n}"
+                )),
+            },
+            Err(e) => Err(format!("Failed to create render: {e}")),
+        }
+    }
+
+    async fn update_render_state(
+        &self,
+        id: RenderID,
+        new_state: RenderState,
+    ) -> Result<(), RenderStorageError> {
+        match sqlx::query!(
+            r#"
+                UPDATE renders
+                SET state = $1
+                WHERE id = $2
+            "#,
+            serde_json::to_value(&new_state)
+                .map_err(|e| format!("Failed to serialize render state: {}", e))?,
+            id as i32,
+        )
+        .execute(&self.pool)
+        .await
+        {
+            Ok(res) => match res.rows_affected() {
+                1 => Ok(()),
+                n => Err(format!(
+                    "Failed to update render state. Expecting 1 row affected, got {n}"
+                )),
+            },
+            Err(e) => Err(format!("Failed to update render state: {e}")),
+        }
+    }
+
+    async fn create_render_checkpoint(
+        &self,
+        render_checkpoint: RenderCheckpoint,
+    ) -> Result<(), RenderStorageError> {
+        let pixel_data = encode_pixel_data(&render_checkpoint.pixel_data)
+            .map_err(|e| format!("Failed to encode pixel data: {}", e))?;
+
+        match sqlx::query!(
+            r#"
+                INSERT INTO checkpoints (render_id, iteration, pixel_data)
+                VALUES ($1, $2, $3)
+            "#,
+            render_checkpoint.render_id as i32,
+            render_checkpoint.iteration as i32,
+            &pixel_data,
+        )
+        .execute(&self.pool)
+        .await
+        {
+            Ok(res) => match res.rows_affected() {
+                1 => Ok(()),
+                n => Err(format!(
+                    "Failed to create render checkpoint. Expecting 1 row affected, got {n}"
+                )),
+            },
+            Err(e) => Err(format!("Failed to create render checkpoint: {e}")),
+        }
+    }
+
+    async fn get_render_checkpoint(
+        &self,
+        render_id: RenderID,
+        iteration: u32,
+    ) -> Result<Option<RenderCheckpoint>, RenderStorageError> {
+        match sqlx::query!(
+            r#"
+                SELECT pixel_data
+                FROM checkpoints
+                WHERE render_id = $1 AND iteration = $2
+            "#,
+            render_id as i32,
+            iteration as i32,
+        )
+        .fetch_optional(&self.pool)
+        .await
+        {
+            Ok(Some(row)) => {
+                let pixel_data = decode_pixel_data(&row.pixel_data)
+                    .map_err(|e| format!("Failed to decode pixel data: {}", e))?;
+
+                Ok(Some(RenderCheckpoint {
+                    render_id,
+                    iteration,
+                    pixel_data,
+                }))
+            }
+            Ok(None) => Ok(None),
+            Err(e) => Err(format!("Failed to get render checkpoint: {}", e)),
+        }
+    }
+
+    async fn get_next_id(&self) -> Result<RenderID, RenderStorageError> {
+        let row = sqlx::query!(
+            r#"
+                SELECT COALESCE(MAX(id), 0) as max_id
+                FROM renders
+            "#
+        )
+        .fetch_one(&self.pool)
+        .await
+        .map_err(|e| format!("Failed to get next render ID: {}", e))?;
+
+        Ok((row.max_id.unwrap_or(0) + 1) as RenderID)
+    }
+}

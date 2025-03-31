@@ -1,9 +1,10 @@
 use auto_ops::{impl_op_ex, impl_op_ex_commutative};
+use bincode::{Encode, Decode};
 use image::Rgba;
 
 use crate::geometry::Vector;
 
-#[derive(Debug, Copy, Clone, PartialEq, Default)]
+#[derive(Debug, Copy, Clone, PartialEq, Default, Encode, Decode)]
 pub struct Color(Vector);
 
 impl Color {
