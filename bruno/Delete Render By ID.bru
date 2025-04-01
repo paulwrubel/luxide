@@ -1,15 +1,15 @@
 meta {
-  name: Get Render By ID
+  name: Delete Render By ID
   type: http
-  seq: 3
+  seq: 6
 }
 
-get {
+delete {
   url: http://localhost:8080/renders/:id
   body: none
   auth: inherit
 }
 
 params:path {
-  id: 3
+  id: 6
 }

@@ -3,7 +3,7 @@ use std::sync::Arc;
 use clap::Parser;
 use luxide::{
     server::{self, build_router},
-    tracing::{InMemoryStorage, PostgresStorage, RenderManager},
+    tracing::{FileStorage, RenderManager},
 };
 
 #[derive(Parser, Debug)]
@@ -22,13 +22,20 @@ async fn main() -> Result<(), String> {
 
     println!("Starting API server at {}/{}", args.address, args.port);
 
-    let pg_storage = PostgresStorage::new("localhost:5432", "luxide", "luxide", "luxide")
+    // let storage = Arc::new(
+    //     PostgresStorage::new("localhost:5432", "luxide", "luxide", "luxide")
+    //         .await
+    //         .map_err(|e| format!("Failed to connect to database: {}", e))?,
+    // );
+
+    let storage = Arc::new(
+        FileStorage::new("./output".into())
+            .map_err(|e| format!("Failed to initialize file storage: {}", e))?,
+    );
+
+    let render_manager = RenderManager::new(Arc::clone(&storage))
         .await
-        .map_err(|e| format!("Failed to connect to database: {}", e))?;
-
-    let pg_storage = Arc::new(pg_storage);
-
-    let render_manager = RenderManager::new(Arc::clone(&pg_storage));
+        .map_err(|e| format!("Failed to initialize render manager: {}", e))?;
 
     let router = build_router().with_state(render_manager.clone());
 

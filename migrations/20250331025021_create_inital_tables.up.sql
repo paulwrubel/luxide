@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS checkpoints (
     pixel_data BYTEA NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY (render_id, iteration),
-    FOREIGN KEY (render_id) REFERENCES renders(id)
+    FOREIGN KEY (render_id) REFERENCES renders(id) ON DELETE CASCADE
 );
 
 COMMIT;

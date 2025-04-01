@@ -13,6 +13,52 @@ pub struct ProgressInfo {
     estimated_total: Duration,
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct FormattedProgressInfo {
+    progress: String,
+    elapsed: String,
+    estimated_remaining: String,
+    estimated_total: String,
+}
+
+/// Formats a progress value (0.0 to 1.0) as a percentage string with dynamic precision.
+///
+/// Works by converting the float to a fixed-point integer with 4 significant digits,
+/// then determines precision by checking trailing digits:
+/// - If last two digits are 00 (4200), returns "42%"
+/// - If last digit is 0 (4250), returns "42.5%"
+/// - If has non-zero trailing digits (4257), returns "42.57%"
+fn format_percentage(p: f64) -> String {
+    // Convert to fixed-point with 4 decimal places (e.g. 0.4257 -> 4257)
+    let progress_significand = (p * 10_000.0).round() as u32;
+
+    // Determine precision by checking trailing digits
+    let precision = if progress_significand % 100 == 0 {
+        // If last two digits are 00, no decimals needed
+        0
+    } else if progress_significand % 10 == 0 {
+        // If last digit is 0, one decimal needed
+        1
+    } else {
+        // Has non-zero trailing digits, two decimals needed
+        2
+    };
+
+    // Convert back to percentage and format with computed precision
+    format!("{:.1$}%", progress_significand as f64 / 100.0, precision)
+}
+
+impl From<ProgressInfo> for FormattedProgressInfo {
+    fn from(info: ProgressInfo) -> Self {
+        Self {
+            progress: format_percentage(info.progress),
+            elapsed: format_duration(info.elapsed),
+            estimated_remaining: format_duration(info.estimated_remaining),
+            estimated_total: format_duration(info.estimated_total),
+        }
+    }
+}
+
 impl ProgressInfo {
     pub fn default() -> Self {
         Self {

@@ -3,11 +3,11 @@ use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    geometry::compounds::{List, BVH},
+    geometry::compounds::{BVH, List},
     tracing::Scene,
 };
 
-use super::{cameras::CameraRefOrInline, geometrics::GeometricRefOrInline, Build, Builts};
+use super::{Build, Builts, cameras::CameraRefOrInline, geometrics::GeometricRefOrInline};
 
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -36,7 +36,7 @@ impl Build<Scene> for SceneRefOrInline {
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SceneData {
-    name: String,
+    pub name: String,
     geometrics: Vec<GeometricRefOrInline>,
     use_bvh: bool,
     camera: CameraRefOrInline,

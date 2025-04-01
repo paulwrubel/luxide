@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT pixel_data\n                FROM checkpoints\n                WHERE render_id = $1 AND iteration = $2\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "pixel_data",
+        "type_info": "Bytea"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "3fdc0dc3c5c1d957be2c1b239e537366e6db26058ef60a294d93a81c5511ce1c"
+}

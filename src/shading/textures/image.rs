@@ -19,7 +19,7 @@ impl Image8Bit {
 
         // gamma correction
         for p in image.pixels_mut() {
-            *p = Color::from_rgba(p).as_gamma_corrected_rgba_u8(gamma);
+            *p = Color::from_rgba_u8(p).as_gamma_corrected_rgba_u8(gamma);
         }
 
         Ok(Self::new(image))

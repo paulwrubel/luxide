@@ -1,5 +1,5 @@
 use auto_ops::{impl_op_ex, impl_op_ex_commutative};
-use bincode::{Encode, Decode};
+use bincode::{Decode, Encode};
 use image::Rgba;
 
 use crate::geometry::Vector;
@@ -27,11 +27,19 @@ impl Color {
         Self(vector)
     }
 
-    pub fn from_rgba(rgba: &Rgba<u8>) -> Self {
+    pub fn from_rgba_u8(rgba: &Rgba<u8>) -> Self {
         Self(Vector::new(
             rgba.0[0] as f64 / u8::MAX as f64,
             rgba.0[1] as f64 / u8::MAX as f64,
             rgba.0[2] as f64 / u8::MAX as f64,
+        ))
+    }
+
+    pub fn from_gamma_corrected_rgba_u8(rgba: &Rgba<u8>, decoding_gamma: f64) -> Self {
+        Self(Vector::new(
+            (rgba.0[0] as f64 / u8::MAX as f64).powf(decoding_gamma),
+            (rgba.0[1] as f64 / u8::MAX as f64).powf(decoding_gamma),
+            (rgba.0[2] as f64 / u8::MAX as f64).powf(decoding_gamma),
         ))
     }
 
@@ -48,11 +56,11 @@ impl Color {
         ])
     }
 
-    pub fn as_gamma_corrected_rgba_u8(&self, gamma: f64) -> image::Rgba<u8> {
+    pub fn as_gamma_corrected_rgba_u8(&self, encoding_gamma: f64) -> image::Rgba<u8> {
         image::Rgba([
-            (self.0.x.powf(gamma).clamp(0.0, 1.0) * u8::MAX as f64).round() as u8,
-            (self.0.y.powf(gamma).clamp(0.0, 1.0) * u8::MAX as f64).round() as u8,
-            (self.0.z.powf(gamma).clamp(0.0, 1.0) * u8::MAX as f64).round() as u8,
+            (self.0.x.powf(encoding_gamma).clamp(0.0, 1.0) * u8::MAX as f64).round() as u8,
+            (self.0.y.powf(encoding_gamma).clamp(0.0, 1.0) * u8::MAX as f64).round() as u8,
+            (self.0.z.powf(encoding_gamma).clamp(0.0, 1.0) * u8::MAX as f64).round() as u8,
             u8::MAX,
         ])
     }

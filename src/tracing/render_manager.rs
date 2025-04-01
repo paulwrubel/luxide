@@ -8,25 +8,41 @@ use image::RgbaImage;
 use crate::{
     deserialization::RenderConfig,
     tracing::{PixelData, RenderState, Threads, Tracer},
-    utils::{self, ProgressInfo, ProgressTracker, Synchronizer},
+    utils::{ProgressInfo, ProgressTracker, Synchronizer},
 };
 
 use super::{Render, RenderCheckpoint, RenderID, RenderStorage, RenderStorageError};
+
+use std::collections::HashSet;
 
 #[derive(Clone)]
 pub struct RenderManager<S: RenderStorage> {
     storage: Arc<S>,
     sync: Arc<Mutex<Synchronizer>>,
+    running_renders: Arc<Mutex<HashSet<RenderID>>>,
 }
 
 const POLLING_INTERVAL_MS: u64 = 1000;
 
 impl<S: RenderStorage> RenderManager<S> {
-    pub fn new(storage: Arc<S>) -> Self {
-        Self {
+    pub async fn new(storage: Arc<S>) -> Result<Self, RenderStorageError> {
+        // find any renders that were left in Running state
+        let running_renders = storage.find_running_renders().await?;
+
+        // revert them to their last checkpoint
+        for render in running_renders {
+            println!(
+                "Reverting interrupted render {} to last checkpoint",
+                render.id
+            );
+            storage.revert_to_last_checkpoint(render.id).await?;
+        }
+
+        Ok(Self {
             storage,
             sync: Arc::new(Mutex::new(Synchronizer::new())),
-        }
+            running_renders: Arc::new(Mutex::new(HashSet::new())),
+        })
     }
 
     pub fn start(&self) {
@@ -96,6 +112,10 @@ impl<S: RenderStorage> RenderManager<S> {
         render: Render,
         previous_checkpoint: Option<RenderCheckpoint>,
     ) {
+        // add render to running set
+        self.running_renders.lock().unwrap().insert(render.id);
+
+        let running_renders = Arc::clone(&self.running_renders);
         let storage: Arc<S> = Arc::clone(&self.storage);
         let sync = Arc::clone(&self.sync);
 
@@ -107,19 +127,18 @@ impl<S: RenderStorage> RenderManager<S> {
                 None => 1,
             };
 
-            match sync.lock().unwrap().block_on(
-                storage
-                    // .read().unwrap()
-                    .update_render_state(
-                        render.id,
-                        RenderState::Running {
-                            checkpoint_iteration: iteration,
-                            progress_info: ProgressInfo::default(),
-                        },
-                    ),
-            ) {
+            match sync.lock().unwrap().block_on(storage.update_render_state(
+                render.id,
+                RenderState::Running {
+                    checkpoint_iteration: iteration,
+                    progress_info: ProgressInfo::default(),
+                },
+            )) {
                 Err(e) => {
                     println!("Failed to update render state: {e}");
+                    // remove from running set on error
+                    running_renders.lock().unwrap().remove(&render.id);
+                    return;
                 }
                 Ok(_) => (),
             }
@@ -149,12 +168,13 @@ impl<S: RenderStorage> RenderManager<S> {
                 rayon::join(
                     || {
                         // let storage_3: Arc<S> = Arc::clone(&storage_2);
-                        let update_fn = storage.get_update_progress_fn(render.id, iteration);
+                        let update_fn = storage.get_update_progress_fn(render.id);
 
+                        let total = u64::from(width) * u64::from(height);
                         let mut progress_tracker = ProgressTracker::new(
-                            u64::from(width) * u64::from(height),
+                            total,
                             50,
-                            100,
+                            (total / 1000).max(1),
                             move |progress_info| {
                                 sync.lock().unwrap().block_on(update_fn(progress_info));
                             },
@@ -197,36 +217,81 @@ impl<S: RenderStorage> RenderManager<S> {
 
             println!("Saving pixel_data...");
 
-            match sync.lock().unwrap().block_on(
-                storage
-                    // .read()
-                    // .unwrap()
-                    .create_render_checkpoint(RenderCheckpoint {
-                        render_id: render.id,
-                        iteration,
-                        pixel_data: initial_pixel_data,
-                    }),
-            ) {
+            match sync
+                .lock()
+                .unwrap()
+                .block_on(storage.create_render_checkpoint(RenderCheckpoint {
+                    render_id: render.id,
+                    iteration,
+                    pixel_data: initial_pixel_data,
+                })) {
                 Err(e) => {
                     println!("Failed to create render checkpoint: {e}");
+                    // remove from running set on error
+                    running_renders.lock().unwrap().remove(&render.id);
+                    return;
                 }
                 Ok(_) => (),
             }
 
             println!("Finished saving pixel_data");
 
-            match sync.lock().unwrap().block_on(
-                storage
-                    // .read().unwrap()
-                    .update_render_state(
+            // check if render was paused
+            let current_state = match sync.lock().unwrap().block_on(storage.get_render(render.id)) {
+                Ok(Some(r)) => r.state,
+                Ok(None) => {
+                    println!("Render {} not found", render.id);
+                    running_renders.lock().unwrap().remove(&render.id);
+                    return;
+                }
+                Err(e) => {
+                    println!("Failed to get render state: {e}");
+                    running_renders.lock().unwrap().remove(&render.id);
+                    return;
+                }
+            };
+
+            // check current state to handle completion
+            match current_state {
+                RenderState::Running { .. } => {
+                    match sync.lock().unwrap().block_on(storage.update_render_state(
                         render.id,
                         RenderState::FinishedCheckpointIteration(iteration),
-                    ),
-            ) {
-                Err(e) => {
-                    println!("Failed to update render state: {e}");
+                    )) {
+                        Ok(_) => {
+                            // remove render from running set
+                            println!(
+                                "Render {} completed checkpoint iteration {}",
+                                render.id, iteration
+                            );
+                            running_renders.lock().unwrap().remove(&render.id);
+                        }
+                        Err(e) => {
+                            println!("Failed to update render state: {e}");
+                        }
+                    }
                 }
-                Ok(_) => (),
+                RenderState::Pausing { .. } => {
+                    // render was paused during this checkpoint, transition to fully paused
+                    match sync.lock().unwrap().block_on(
+                        storage.update_render_state(render.id, RenderState::Paused(iteration)),
+                    ) {
+                        Ok(_) => {
+                            println!("Render {} paused at checkpoint {}", render.id, iteration);
+                        }
+                        Err(e) => {
+                            println!("Failed to update paused render state: {e}");
+                        }
+                    }
+                    running_renders.lock().unwrap().remove(&render.id);
+                }
+                _ => {
+                    println!(
+                        "Render {} in unexpected state {:?}",
+                        render.id, current_state
+                    );
+                    running_renders.lock().unwrap().remove(&render.id);
+                }
             }
         });
     }
@@ -259,6 +324,53 @@ impl<S: RenderStorage> RenderManager<S> {
         iteration: u32,
     ) -> Result<Option<RenderCheckpoint>, RenderStorageError> {
         self.storage.get_render_checkpoint(id, iteration).await
+    }
+
+    pub async fn delete_render_and_checkpoints(
+        &self,
+        id: RenderID,
+    ) -> Result<(), RenderStorageError> {
+        // check if render is running
+        let is_running = self.running_renders.lock().unwrap().contains(&id);
+        if is_running {
+            return Err("Cannot delete a render while it is running".to_string());
+        }
+
+        // delete the render and its checkpoints
+        self.storage.delete_render_and_checkpoints(id).await
+    }
+
+    pub async fn pause_render(&self, id: RenderID) -> Result<(), RenderStorageError> {
+        // get current state
+        let render = match self.get_render(id).await? {
+            Some(r) => r,
+            None => return Err(format!("Render {id} not found")),
+        };
+
+        // can only pause a running render
+        match render.state {
+            RenderState::Running {
+                checkpoint_iteration,
+                progress_info,
+            } => {
+                // when pausing, we first mark it as Pausing at the current checkpoint
+                // the render thread will see this and transition to Paused when done
+                println!("Pausing render {id} at checkpoint {checkpoint_iteration}");
+                self.storage
+                    .update_render_state(
+                        id,
+                        RenderState::Pausing {
+                            checkpoint_iteration,
+                            progress_info,
+                        },
+                    )
+                    .await
+            }
+            _ => Err(format!(
+                "Cannot pause render {id} in state {:?}",
+                render.state
+            )),
+        }
     }
 
     pub async fn get_render_checkpoint_as_image(

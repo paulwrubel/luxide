@@ -1,21 +1,9 @@
-use std::{
-    collections::{HashMap, VecDeque},
-    fs,
-    io::{self, Write, stdout},
-    num::NonZeroUsize,
-    sync::mpsc,
-    thread,
-    time::Instant,
-};
+use std::{collections::HashMap, num::NonZeroUsize, sync::mpsc, thread};
 
-use image::{ImageBuffer, RgbaImage};
 use rand::seq::SliceRandom;
 use rayon::prelude::*;
-use time::OffsetDateTime;
 
-use super::{OutputFileParameters, RenderParameters, Scene};
-
-use crate::{deserialization::RenderData, shading::Color, utils};
+use crate::{deserialization::RenderData, shading::Color};
 
 pub type PixelData = HashMap<(u32, u32), Color>;
 
@@ -142,7 +130,7 @@ impl Tracer {
 
         let world = &scene.world;
         let mut cam = scene.camera.clone();
-        let (width, height) = parameters.image_dimensions;
+        // let (width, height) = parameters.image_dimensions;
 
         // println!("{}Initializing camera...", " ".repeat(indentation));
         cam.initialize(parameters, scene);
@@ -154,10 +142,10 @@ impl Tracer {
         // println!("{}Starting progress worker...", " ".repeat(indentation));
         // let (sender, receivers) = mpsc::channel();
 
-        let start: Instant = Instant::now();
-        let total = width * height;
-        let batch_size = 100;
-        let memory = 50;
+        // let start: Instant = Instant::now();
+        // let total = width * height;
+        // let batch_size = 100;
+        // let memory = 50;
         // let progress_handle = thread::spawn(move || {
         //     let mut instants: VecDeque<Instant> = VecDeque::new();
         //     let mut current = 0;
@@ -183,17 +171,14 @@ impl Tracer {
         //     }
         // });
 
-        // println!("{}Creating tiles...", " ".repeat(indentation));
         let tiles = Tiles::new(parameters.image_dimensions, parameters.tile_dimensions);
 
         let mut rng = rand::thread_rng();
 
-        // println!("{}Preparing tiles...", " ".repeat(indentation));
         let mut tiles = tiles.collect::<Vec<Tile>>();
         tiles.shuffle(&mut rng);
         let tiles = tiles.par_iter();
 
-        // println!("{}Rendering tiles...", " ".repeat(indentation));
         let colors: HashMap<(u32, u32), Color> = tiles
             .flat_map(|tile| {
                 let tile_colors: HashMap<(u32, u32), Color> = tile
@@ -232,57 +217,6 @@ impl Tracer {
         for ((x, y), color) in colors {
             pixel_data.insert((x, y), color);
         }
-
-        // drop(progress_sender);
-        // progress_handle.join().unwrap();
-        // println!("");
-    }
-
-    fn write_to_file(
-        &self,
-        buffer: &RgbaImage,
-        round: u32,
-        p: &RenderParameters,
-        output_config: &OutputFileParameters,
-        // output_dir: &str,
-        indentation: usize,
-    ) -> Result<(), String> {
-        let filepath = match Self::get_final_image_path(
-            round * p.samples_per_checkpoint,
-            &output_config.output_dir,
-            &output_config.file_basename,
-            &output_config.file_ext,
-            indentation,
-        ) {
-            Ok(filepath) => Ok(filepath),
-            Err(e) => Err(e.to_string()),
-        }?;
-        println!(
-            "{}Saving image buffer to {filepath}...",
-            " ".repeat(indentation)
-        );
-        match buffer.save(filepath) {
-            Ok(_) => Ok(()),
-            Err(e) => Err(e.to_string()),
-        }
-    }
-
-    fn get_final_image_path(
-        total_samples: u32,
-        output_dir: &str,
-        file_basename: &str,
-        file_ext: &str,
-        indentation: usize,
-    ) -> Result<String, io::Error> {
-        println!("{}Determining output filename...", " ".repeat(indentation));
-        fs::create_dir_all(output_dir)?;
-        let now = OffsetDateTime::now_utc();
-        let formatted_timestamp = utils::get_formatted_timestamp_for(now);
-        let filepath = format!(
-            "{}/{file_basename}_{total_samples}s_{}.{file_ext}",
-            output_dir, formatted_timestamp
-        );
-        Ok(filepath)
     }
 }
 

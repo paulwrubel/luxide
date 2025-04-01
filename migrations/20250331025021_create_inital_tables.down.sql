@@ -1,3 +1,8 @@
 -- Add down migration script here
-DROP TABLE IF EXISTS renders;
+BEGIN;
+
 DROP TABLE IF EXISTS checkpoints;
+DROP TABLE IF EXISTS renders;
+
+COMMIT;
+

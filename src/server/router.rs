@@ -2,7 +2,7 @@ use std::net::{Ipv4Addr, SocketAddr};
 
 use axum::{
     Router,
-    routing::{get, post},
+    routing::{get, post, delete},
 };
 
 use crate::tracing::{RenderManager, RenderStorage};
@@ -19,6 +19,8 @@ pub fn build_router<S: RenderStorage>() -> Router<RenderManager<S>> {
             "/renders/{id}/checkpoint/{checkpoint_iteration}",
             get(handlers::get_render_checkpoint_image::<S>),
         )
+        .route("/renders/{id}", delete(handlers::delete_render::<S>))
+        .route("/renders/{id}/pause", post(handlers::pause_render::<S>))
 }
 
 pub async fn serve(router: Router, address: &str, port: u16) -> Result<(), String> {

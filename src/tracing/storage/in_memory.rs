@@ -3,6 +3,8 @@ use std::{collections::HashMap, sync::Arc};
 use futures::StreamExt;
 use tokio::sync::RwLock;
 
+use crate::utils::ProgressInfo;
+
 use super::{Render, RenderCheckpoint, RenderID, RenderState, RenderStorage, RenderStorageError};
 
 #[derive(Clone)]
@@ -64,6 +66,43 @@ impl RenderStorage for InMemoryStorage {
         }
     }
 
+    async fn update_render_progress(
+        &self,
+        render_id: RenderID,
+        progress_info: ProgressInfo,
+    ) -> Result<(), RenderStorageError> {
+        let renders = self.renders.read().await;
+        let render = match renders.get(&render_id) {
+            Some(r) => r,
+            None => return Err(format!("render {render_id} not found")),
+        };
+
+        let mut render = render.write().await;
+        match render.state {
+            RenderState::Running {
+                checkpoint_iteration,
+                ..
+            } => {
+                render.state = RenderState::Running {
+                    checkpoint_iteration,
+                    progress_info,
+                };
+                Ok(())
+            }
+            RenderState::Pausing {
+                checkpoint_iteration,
+                progress_info,
+            } => {
+                render.state = RenderState::Pausing {
+                    checkpoint_iteration,
+                    progress_info,
+                };
+                Ok(())
+            }
+            _ => Ok(()), // don't update progress for non-running states
+        }
+    }
+
     async fn create_render_checkpoint(
         &self,
         render_checkpoint: RenderCheckpoint,
@@ -91,6 +130,17 @@ impl RenderStorage for InMemoryStorage {
             .iter()
             .find(|c| c.render_id == render_id && c.iteration == iteration)
             .cloned())
+    }
+
+    async fn delete_render_and_checkpoints(&self, id: RenderID) -> Result<(), RenderStorageError> {
+        // Remove render
+        self.renders.write().await.remove(&id);
+
+        // Remove associated checkpoints
+        let mut checkpoints = self.checkpoints.write().await;
+        checkpoints.retain(|c| c.render_id != id);
+
+        Ok(())
     }
 
     async fn get_next_id(&self) -> Result<RenderID, RenderStorageError> {

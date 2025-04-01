@@ -1,6 +1,6 @@
 use sqlx::{Pool, Postgres};
 
-use crate::utils::{decode_pixel_data, encode_pixel_data};
+use crate::utils::{ProgressInfo, decode_pixel_data, encode_pixel_data};
 
 use super::{Render, RenderCheckpoint, RenderID, RenderState, RenderStorage, RenderStorageError};
 
@@ -49,7 +49,15 @@ impl RenderStorage for PostgresStorage {
                 let config = serde_json::from_value(row.config)
                     .map_err(|e| format!("Failed to deserialize render config: {}", e))?;
 
-                Ok(Some(Render { id, state, config }))
+                let db_id: RenderID = row
+                    .id
+                    .try_into()
+                    .map_err(|_| "Invalid render ID (negative or too large)".to_string())?;
+                Ok(Some(Render {
+                    id: db_id,
+                    state,
+                    config,
+                }))
             }
             Ok(None) => Ok(None),
             Err(e) => Err(format!("Failed to get render with id {id}: {e}")),
@@ -76,7 +84,10 @@ impl RenderStorage for PostgresStorage {
                 .map_err(|e| format!("Failed to deserialize render config: {}", e))?;
 
             renders.push(Render {
-                id: row.id as u32,
+                id: row
+                    .id
+                    .try_into()
+                    .map_err(|_| "Invalid render ID (negative or too large)".to_string())?,
                 state,
                 config,
             });
@@ -136,6 +147,33 @@ impl RenderStorage for PostgresStorage {
             },
             Err(e) => Err(format!("Failed to update render state: {e}")),
         }
+    }
+
+    async fn update_render_progress(
+        &self,
+        render_id: RenderID,
+        progress_info: ProgressInfo,
+    ) -> Result<(), RenderStorageError> {
+        // only update if current state is Running or Pausing, preserving the checkpoint_iteration
+        sqlx::query!(
+            r#"
+                UPDATE renders
+                SET state = CASE
+                    WHEN state ? 'running' THEN jsonb_set(state, '{running,progress_info}', $1::jsonb)
+                    WHEN state ? 'pausing' THEN jsonb_set(state, '{pausing,progress_info}', $1::jsonb)
+                    ELSE state
+                END
+                WHERE id = $2
+                AND (state ? 'running' OR state ? 'pausing')
+            "#,
+            serde_json::to_value(&progress_info).map_err(|e| e.to_string())?,
+            render_id as i64
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        Ok(())
     }
 
     async fn create_render_checkpoint(
@@ -199,6 +237,45 @@ impl RenderStorage for PostgresStorage {
         }
     }
 
+    async fn delete_render_and_checkpoints(&self, id: RenderID) -> Result<(), RenderStorageError> {
+        let mut tx = self
+            .pool
+            .begin()
+            .await
+            .map_err(|e| format!("Failed to begin transaction: {}", e))?;
+
+        // Delete checkpoints first (foreign key constraint will prevent orphaned checkpoints)
+        sqlx::query!(
+            r#"
+                DELETE FROM checkpoints
+                WHERE render_id = $1
+            "#,
+            id as i32
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| format!("Failed to delete checkpoints: {}", e))?;
+
+        // Delete the render
+        sqlx::query!(
+            r#"
+                DELETE FROM renders
+                WHERE id = $1
+            "#,
+            id as i32
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| format!("Failed to delete render: {}", e))?;
+
+        // Commit the transaction
+        tx.commit()
+            .await
+            .map_err(|e| format!("Failed to commit transaction: {}", e))?;
+
+        Ok(())
+    }
+
     async fn get_next_id(&self) -> Result<RenderID, RenderStorageError> {
         let row = sqlx::query!(
             r#"
@@ -210,6 +287,9 @@ impl RenderStorage for PostgresStorage {
         .await
         .map_err(|e| format!("Failed to get next render ID: {}", e))?;
 
-        Ok((row.max_id.unwrap_or(0) + 1) as RenderID)
+        let next_id = row.max_id.unwrap_or(0) + 1;
+        Ok(next_id
+            .try_into()
+            .map_err(|_| "Next render ID is too large".to_string())?)
     }
 }

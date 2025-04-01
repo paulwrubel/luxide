@@ -14,8 +14,70 @@ use image::ImageOutputFormat;
 
 use crate::{
     deserialization::RenderConfig,
-    tracing::{Render, RenderID, RenderManager, RenderStorage},
+    tracing::{Render, RenderID, RenderManager, RenderState, RenderStorage},
+    utils::FormattedProgressInfo,
 };
+
+use serde::Serialize;
+
+#[derive(Serialize)]
+struct FormattedRender {
+    id: RenderID,
+    state: FormattedRenderState,
+    config: RenderConfig,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "snake_case")]
+enum FormattedRenderState {
+    Created,
+    Running {
+        checkpoint_iteration: u32,
+        progress_info: FormattedProgressInfo,
+    },
+    FinishedCheckpointIteration(u32),
+    Pausing {
+        checkpoint_iteration: u32,
+        progress_info: FormattedProgressInfo,
+    },
+    Paused(u32),
+}
+
+impl From<RenderState> for FormattedRenderState {
+    fn from(state: RenderState) -> Self {
+        match state {
+            RenderState::Created => FormattedRenderState::Created,
+            RenderState::Running {
+                checkpoint_iteration,
+                progress_info,
+            } => FormattedRenderState::Running {
+                checkpoint_iteration,
+                progress_info: progress_info.into(),
+            },
+            RenderState::FinishedCheckpointIteration(i) => {
+                FormattedRenderState::FinishedCheckpointIteration(i)
+            }
+            RenderState::Pausing {
+                checkpoint_iteration,
+                progress_info,
+            } => FormattedRenderState::Pausing {
+                checkpoint_iteration,
+                progress_info: progress_info.into(),
+            },
+            RenderState::Paused(i) => FormattedRenderState::Paused(i),
+        }
+    }
+}
+
+impl From<Render> for FormattedRender {
+    fn from(render: Render) -> Self {
+        Self {
+            id: render.id,
+            config: render.config,
+            state: render.state.into(),
+        }
+    }
+}
 
 pub async fn index() -> String {
     println!("Handing request for index...");
@@ -46,7 +108,7 @@ pub async fn get_render<S: RenderStorage>(
     println!("Handing request for get_render...");
 
     match render_manager.get_render(id).await {
-        Ok(Some(render)) => Json(render).into_response(),
+        Ok(Some(render)) => Json(FormattedRender::from(render)).into_response(),
         Ok(None) => StatusCode::NOT_FOUND.into_response(),
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e).into_response(),
     }
@@ -58,7 +120,31 @@ pub async fn get_all_renders<S: RenderStorage>(
     println!("Handing request for get_all_renders...");
 
     match render_manager.get_all_renders().await {
-        Ok(renders) => Json(renders).into_response(),
+        Ok(renders) => {
+            let formatted_renders: Vec<FormattedRender> =
+                renders.into_iter().map(FormattedRender::from).collect();
+            Json(formatted_renders).into_response()
+        }
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e).into_response(),
+    }
+}
+
+pub async fn delete_render<S: RenderStorage>(
+    State(render_manager): State<RenderManager<S>>,
+    Path(id): Path<RenderID>,
+) -> Response {
+    match render_manager.delete_render_and_checkpoints(id).await {
+        Ok(()) => StatusCode::NO_CONTENT.into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e).into_response(),
+    }
+}
+
+pub async fn pause_render<S: RenderStorage>(
+    State(render_manager): State<RenderManager<S>>,
+    Path(id): Path<RenderID>,
+) -> Response {
+    match render_manager.pause_render(id).await {
+        Ok(_) => StatusCode::NO_CONTENT.into_response(),
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e).into_response(),
     }
 }

@@ -1,4 +1,4 @@
-use std::{fs, sync::Arc};
+use std::sync::Arc;
 
 use geometrics::GeometricRefOrInline;
 use indexmap::IndexMap;
@@ -9,7 +9,7 @@ use crate::{
     camera::Camera,
     geometry::Geometric,
     shading::{Texture, materials::Material},
-    tracing::{OutputFileParameters, RenderParameters, Scene},
+    tracing::{RenderParameters, Scene},
 };
 
 mod scenes;
@@ -54,25 +54,26 @@ impl Builts {
 #[derive(Clone, Serialize, Deserialize)]
 pub struct RenderConfig {
     pub parameters: RenderParameters,
-    active_scene: SceneRefOrInline,
+    pub active_scene: SceneRefOrInline,
     #[serde(default)]
-    scenes: IndexMap<String, SceneData>,
+    pub scenes: IndexMap<String, SceneData>,
     #[serde(default)]
-    cameras: IndexMap<String, CameraData>,
+    pub cameras: IndexMap<String, CameraData>,
     #[serde(default)]
-    textures: IndexMap<String, TextureData>,
+    pub textures: IndexMap<String, TextureData>,
     #[serde(default)]
-    materials: IndexMap<String, MaterialData>,
+    pub materials: IndexMap<String, MaterialData>,
     #[serde(default)]
-    geometrics: IndexMap<String, GeometricData>,
+    pub geometrics: IndexMap<String, GeometricData>,
 }
 
-#[derive(Deserialize)]
-pub struct FileConfig {
-    output: OutputFileParameters,
-
-    #[serde(flatten)]
-    config: RenderConfig,
+impl RenderConfig {
+    pub fn name(&self) -> &str {
+        match &self.active_scene {
+            SceneRefOrInline::Ref(name) => name,
+            SceneRefOrInline::Inline(s) => &s.name,
+        }
+    }
 }
 
 impl RenderConfig {
@@ -101,13 +102,13 @@ pub struct RenderData {
     pub scene: Scene,
 }
 
-pub fn parse_json_file(filename: &str) -> Result<(OutputFileParameters, RenderData), String> {
-    // get and parse file
-    let unparsed = fs::read_to_string(filename).map_err(|err| err.to_string())?;
-    let parsed: FileConfig = serde_json::from_str(&unparsed).map_err(|err| err.to_string())?;
+// pub fn parse_json_file(filename: &str) -> Result<(OutputFileParameters, RenderData), String> {
+//     // get and parse file
+//     let unparsed = fs::read_to_string(filename).map_err(|err| err.to_string())?;
+//     let parsed: FileConfig = serde_json::from_str(&unparsed).map_err(|err| err.to_string())?;
 
-    parsed.config.compile().map(|data| (parsed.output, data))
-}
+//     parsed.config.compile().map(|data| (parsed.output, data))
+// }
 
 fn build_textures(
     texture_data: &IndexMap<String, TextureData>,
