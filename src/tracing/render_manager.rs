@@ -16,16 +16,16 @@ use super::{Render, RenderCheckpoint, RenderID, RenderStorage, RenderStorageErro
 use std::collections::HashSet;
 
 #[derive(Clone)]
-pub struct RenderManager<S: RenderStorage> {
-    storage: Arc<S>,
+pub struct RenderManager {
+    storage: Arc<dyn RenderStorage>,
     sync: Arc<Mutex<Synchronizer>>,
     running_renders: Arc<Mutex<HashSet<RenderID>>>,
 }
 
 const POLLING_INTERVAL_MS: u64 = 1000;
 
-impl<S: RenderStorage> RenderManager<S> {
-    pub async fn new(storage: Arc<S>) -> Result<Self, RenderStorageError> {
+impl RenderManager {
+    pub async fn new(storage: Arc<dyn RenderStorage>) -> Result<Self, RenderStorageError> {
         // find any renders that were left in Running state
         let running_renders = storage.find_running_renders().await?;
 
@@ -116,7 +116,7 @@ impl<S: RenderStorage> RenderManager<S> {
         self.running_renders.lock().unwrap().insert(render.id);
 
         let running_renders = Arc::clone(&self.running_renders);
-        let storage: Arc<S> = Arc::clone(&self.storage);
+        let storage = Arc::clone(&self.storage);
         let sync = Arc::clone(&self.sync);
 
         rayon::spawn(move || {
@@ -162,13 +162,22 @@ impl<S: RenderStorage> RenderManager<S> {
             // let batch_size = 100;
             // let memory = 50;
             {
-                let storage: Arc<S> = Arc::clone(&storage);
+                let storage = Arc::clone(&storage);
                 let sync = Arc::clone(&sync);
 
                 rayon::join(
                     || {
                         // let storage_3: Arc<S> = Arc::clone(&storage_2);
-                        let update_fn = storage.get_update_progress_fn(render.id);
+                        // let update_fn = storage.get_update_progress_fn(render.id);
+
+                        let update_fn = async move |progress_info| {
+                            if let Err(e) = storage
+                                .update_render_progress(render.id, progress_info)
+                                .await
+                            {
+                                println!("Failed to update render state: {e}");
+                            }
+                        };
 
                         let total = u64::from(width) * u64::from(height);
                         let mut progress_tracker = ProgressTracker::new(

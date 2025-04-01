@@ -8,7 +8,7 @@ use crate::{
     utils,
 };
 
-use super::{ProgressInfo, RenderStorage, RenderStorageError};
+use super::{AsyncProgressFn, ProgressInfo, RenderStorage, RenderStorageError};
 
 #[derive(Clone)]
 pub struct FileStorage {
@@ -134,32 +134,6 @@ impl RenderStorage for FileStorage {
         }
     }
 
-    fn get_update_progress_fn<'a>(&'a self, render_id: RenderID) -> impl AsyncFn(ProgressInfo) {
-        async move |progress_info: ProgressInfo| {
-            if let Err(e) = self.update_render_progress(render_id, progress_info).await {
-                println!("Failed to update render state: {e}");
-            }
-
-            // TODO: print info out here! this is the spot!
-        }
-    }
-
-    async fn find_running_renders(&self) -> Result<Vec<Render>, RenderStorageError> {
-        Ok(self
-            .renders
-            .read()
-            .await
-            .iter()
-            .filter_map(|(r, _)| {
-                if matches!(r.state, RenderState::Running { .. }) {
-                    Some(r.clone())
-                } else {
-                    None
-                }
-            })
-            .collect())
-    }
-
     async fn create_render_checkpoint(
         &self,
         checkpoint: RenderCheckpoint,
@@ -239,6 +213,71 @@ impl RenderStorage for FileStorage {
         // remove render directory
         if dir.exists() {
             fs::remove_dir_all(dir).map_err(|e| e.to_string())?;
+        }
+
+        Ok(())
+    }
+
+    fn get_update_progress_fn<'a>(&'a self, render_id: RenderID) -> AsyncProgressFn<'a> {
+        Box::new(move |progress_info: ProgressInfo| {
+            Box::pin(async move {
+                if let Err(e) = self.update_render_progress(render_id, progress_info).await {
+                    println!("Failed to update render state: {e}");
+                }
+
+                // TODO: print info out here! this is the spot!
+            })
+        })
+    }
+
+    async fn find_running_renders(&self) -> Result<Vec<Render>, RenderStorageError> {
+        Ok(self
+            .renders
+            .read()
+            .await
+            .iter()
+            .filter_map(|(r, _)| {
+                if matches!(r.state, RenderState::Running { .. }) {
+                    Some(r.clone())
+                } else {
+                    None
+                }
+            })
+            .collect())
+    }
+
+    async fn revert_to_last_checkpoint(&self, id: RenderID) -> Result<(), RenderStorageError> {
+        let render = match self.get_render(id).await? {
+            Some(r) => r,
+            None => return Err(format!("Render {} not found", id)),
+        };
+
+        // get the last checkpoint from the current running state
+        let last_checkpoint = match render.state {
+            RenderState::Running {
+                checkpoint_iteration,
+                ..
+            } => {
+                if checkpoint_iteration > 0 {
+                    Some(checkpoint_iteration - 1)
+                } else {
+                    None
+                }
+            }
+            _ => return Ok(()), // not running, nothing to do
+        };
+
+        // update the render state
+        match last_checkpoint {
+            Some(last_cpi) => {
+                // found a checkpoint, revert to that state
+                self.update_render_state(id, RenderState::FinishedCheckpointIteration(last_cpi))
+                    .await?
+            }
+            None => {
+                // no checkpoints found, revert to Created state
+                self.update_render_state(id, RenderState::Created).await?
+            }
         }
 
         Ok(())

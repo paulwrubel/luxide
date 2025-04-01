@@ -19,7 +19,7 @@ body:json {
       "samples_per_checkpoint": 1,
       "checkpoints": 100,
       "max_bounces": 50,
-      "use_scaling_truncation": true,
+      "use_scaling_truncation": true
     },
     "active_scene": {
       "name": "cornell_box_10",
@@ -31,8 +31,7 @@ body:json {
         "back_wall",
         "front_wall",
         "far_left_box",
-        "near_right_box",
-        "near_right_box_internal"
+        "near_right_box"
       ],
       "use_bvh": true,
       "camera": "basic",
@@ -68,21 +67,21 @@ body:json {
         "lower_left": [ 0, 0, 0 ],
         "u": [ 1, 0, 0 ],
         "v": [ 0, 0, -1 ],
-        "material": "lambertian_mike_face"
+        "material": "lambertian_cb_white"
       },
       "ceiling": {
         "type": "parallelogram",
         "lower_left": [ 0, 1, -1 ],
         "u": [ 1, 0, 0 ],
         "v": [ 0, 0, 1 ],
-        "material": "lambertian_mike_face_glow"
+        "material": "lambertian_cb_white"
       },
       "back_wall": {
         "type": "parallelogram",
         "lower_left": [ 0, 0, -1 ],
         "u": [ 1, 0, 0 ],
         "v": [ 0, 1, 0 ],
-        "material": "lambertian_mike_face"
+        "material": "lambertian_cb_white"
       },
       "front_wall": {
         "type": "parallelogram",
@@ -106,24 +105,6 @@ body:json {
         "v": [ 0, 0, 0.3 ],
         "material": "lambertian_white_light_dim"
       },
-      "far_left_box_core": {
-        "type": "box",
-        "a": [ 0.2, 0, -0.5 ],
-        "b": [ 0.5, 0.6, -0.8 ],
-        "material": "dielectric_glass"
-      },
-      "near_right_box_core": {
-        "type": "box",
-        "a": [ 0.5, 0, -0.2 ],
-        "b": [ 0.8, 0.3, -0.5 ],
-        "material": "dielectric_glass"
-      },
-      "near_right_box_core_internal": {
-        "type": "box",
-        "a": [ 0.52, 0.02, -0.22 ],
-        "b": [ 0.78, 0.28, -0.48 ],
-        "material": "lambertian_mike_face_glow"
-      },
       "far_left_box": {
         "type": "rotate_y",
         "geometric": {
@@ -137,13 +118,12 @@ body:json {
       },
       "near_right_box": {
         "type": "rotate_y",
-        "geometric": "near_right_box_core",
-        "degrees": -18,
-        "around": [ 0.65, 0, -0.35 ]
-      },
-      "near_right_box_internal": {
-        "type": "rotate_y",
-        "geometric": "near_right_box_core_internal",
+        "geometric": {
+          "type": "box",
+          "a": [ 0.5, 0, -0.2 ],
+          "b": [ 0.8, 0.3, -0.5 ],
+          "material": "dielectric_glass"
+        },
         "degrees": -18,
         "around": [ 0.65, 0, -0.35 ]
       }
@@ -183,16 +163,6 @@ body:json {
         "type": "lambertian",
         "reflectance_texture": "solid_cb_green",
         "emittance_texture": "solid_black"
-      },
-      "lambertian_mike_face": {
-        "type": "lambertian",
-        "reflectance_texture": "image_mike_face",
-        "emittance_texture": "solid_black"
-      },
-      "lambertian_mike_face_glow": {
-        "type": "lambertian",
-        "reflectance_texture": "image_mike_face",
-        "emittance_texture": "image_mike_face"
       },
       "dielectric_glass": {
         "type": "dielectric",
@@ -243,11 +213,6 @@ body:json {
       "solid_cb_green": {
         "type": "color",
         "color": [ 0.12, 0.45, 0.15 ]
-      },
-      "image_mike_face": {
-        "type": "image",
-        "filename": "texture_images/mike_face.png",
-        "gamma": 2
       }
     }
   }

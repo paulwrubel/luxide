@@ -16,7 +16,7 @@ use luxide::{
         materials::{Dielectric, Lambertian, Material, Specular},
         textures::{Checker, Image8Bit, Noise, SolidColor},
     },
-    tracing::{FileStorage, RenderManager, RenderState, Scene},
+    tracing::{FileStorage, RenderManager, RenderState, RenderStorage, Scene},
     utils::Angle,
 };
 use noise::{Perlin, Turbulence};
@@ -62,7 +62,7 @@ fn main() -> Result<(), String> {
 
 #[tokio::main]
 async fn run_with_config(
-    storage: Arc<FileStorage>,
+    storage: Arc<dyn RenderStorage>,
     render_config: RenderConfig,
 ) -> Result<(), String> {
     // Create render manager

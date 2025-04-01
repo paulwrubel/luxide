@@ -1,4 +1,4 @@
-use std::io::Cursor;
+use std::{io::Cursor, sync::Arc};
 
 use axum::{
     Json,
@@ -79,13 +79,15 @@ impl From<Render> for FormattedRender {
     }
 }
 
+pub type LuxideState = State<Arc<RenderManager>>;
+
 pub async fn index() -> String {
     println!("Handing request for index...");
     String::from("Hello, world!\n")
 }
 
-pub async fn create_render<S: RenderStorage>(
-    State(render_manager): State<RenderManager<S>>,
+pub async fn create_render(
+    State(render_manager): LuxideState,
     Json(render_config): Json<RenderConfig>,
 ) -> Response {
     println!("Handing request for create_render...");
@@ -101,10 +103,7 @@ pub async fn create_render<S: RenderStorage>(
     }
 }
 
-pub async fn get_render<S: RenderStorage>(
-    State(render_manager): State<RenderManager<S>>,
-    Path(id): Path<RenderID>,
-) -> Response {
+pub async fn get_render(State(render_manager): LuxideState, Path(id): Path<RenderID>) -> Response {
     println!("Handing request for get_render...");
 
     match render_manager.get_render(id).await {
@@ -114,9 +113,7 @@ pub async fn get_render<S: RenderStorage>(
     }
 }
 
-pub async fn get_all_renders<S: RenderStorage>(
-    State(render_manager): State<RenderManager<S>>,
-) -> Response {
+pub async fn get_all_renders(State(render_manager): LuxideState) -> Response {
     println!("Handing request for get_all_renders...");
 
     match render_manager.get_all_renders().await {
@@ -129,8 +126,8 @@ pub async fn get_all_renders<S: RenderStorage>(
     }
 }
 
-pub async fn delete_render<S: RenderStorage>(
-    State(render_manager): State<RenderManager<S>>,
+pub async fn delete_render(
+    State(render_manager): LuxideState,
     Path(id): Path<RenderID>,
 ) -> Response {
     match render_manager.delete_render_and_checkpoints(id).await {
@@ -139,8 +136,8 @@ pub async fn delete_render<S: RenderStorage>(
     }
 }
 
-pub async fn pause_render<S: RenderStorage>(
-    State(render_manager): State<RenderManager<S>>,
+pub async fn pause_render(
+    State(render_manager): LuxideState,
     Path(id): Path<RenderID>,
 ) -> Response {
     match render_manager.pause_render(id).await {
@@ -149,8 +146,8 @@ pub async fn pause_render<S: RenderStorage>(
     }
 }
 
-pub async fn get_render_checkpoint_image<S: RenderStorage>(
-    State(render_manager): State<RenderManager<S>>,
+pub async fn get_render_checkpoint_image(
+    State(render_manager): LuxideState,
     Path((id, checkpoint_iteration)): Path<(RenderID, u32)>,
 ) -> Response {
     println!("Handing request for get_render_checkpoint...");

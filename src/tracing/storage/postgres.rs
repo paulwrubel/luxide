@@ -2,7 +2,10 @@ use sqlx::{Pool, Postgres};
 
 use crate::utils::{ProgressInfo, decode_pixel_data, encode_pixel_data};
 
-use super::{Render, RenderCheckpoint, RenderID, RenderState, RenderStorage, RenderStorageError};
+use super::{
+    AsyncProgressFn, Render, RenderCheckpoint, RenderID, RenderState, RenderStorage,
+    RenderStorageError,
+};
 
 #[derive(Clone)]
 pub struct PostgresStorage {
@@ -291,5 +294,61 @@ impl RenderStorage for PostgresStorage {
         Ok(next_id
             .try_into()
             .map_err(|_| "Next render ID is too large".to_string())?)
+    }
+
+    fn get_update_progress_fn<'a>(&'a self, render_id: RenderID) -> AsyncProgressFn<'a> {
+        Box::new(move |progress_info: ProgressInfo| {
+            Box::pin(async move {
+                if let Err(e) = self.update_render_progress(render_id, progress_info).await {
+                    println!("Failed to update render state: {e}");
+                }
+            })
+        })
+    }
+
+    async fn find_running_renders(&self) -> Result<Vec<Render>, RenderStorageError> {
+        Ok(self
+            .get_all_renders()
+            .await?
+            .into_iter()
+            .filter(|r| matches!(r.state, RenderState::Running { .. }))
+            .collect())
+    }
+
+    async fn revert_to_last_checkpoint(&self, id: RenderID) -> Result<(), RenderStorageError> {
+        let render = match self.get_render(id).await? {
+            Some(r) => r,
+            None => return Err(format!("Render {} not found", id)),
+        };
+
+        // get the last checkpoint from the current running state
+        let last_checkpoint = match render.state {
+            RenderState::Running {
+                checkpoint_iteration,
+                ..
+            } => {
+                if checkpoint_iteration > 0 {
+                    Some(checkpoint_iteration - 1)
+                } else {
+                    None
+                }
+            }
+            _ => return Ok(()), // not running, nothing to do
+        };
+
+        // update the render state
+        match last_checkpoint {
+            Some(last_cpi) => {
+                // found a checkpoint, revert to that state
+                self.update_render_state(id, RenderState::FinishedCheckpointIteration(last_cpi))
+                    .await?
+            }
+            None => {
+                // no checkpoints found, revert to Created state
+                self.update_render_state(id, RenderState::Created).await?
+            }
+        }
+
+        Ok(())
     }
 }

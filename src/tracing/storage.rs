@@ -1,4 +1,6 @@
 mod in_memory;
+use std::pin::Pin;
+
 pub use in_memory::*;
 
 mod postgres;
@@ -16,6 +18,8 @@ use crate::{deserialization::RenderConfig, shading::Color, utils::ProgressInfo};
 use super::{PixelData, RenderParameters};
 
 pub type RenderID = u32;
+pub type AsyncProgressFn<'a> =
+    Box<dyn Fn(ProgressInfo) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>> + Send + Sync + 'a>;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -117,15 +121,19 @@ impl RenderCheckpoint {
 pub type RenderStorageError = String;
 
 #[async_trait::async_trait]
-pub trait RenderStorage: Clone + Send + Sync + 'static {
+pub trait RenderStorage: Send + Sync + 'static {
     async fn get_render(&self, id: RenderID) -> Result<Option<Render>, RenderStorageError>;
+
     async fn get_all_renders(&self) -> Result<Vec<Render>, RenderStorageError>;
+
     async fn create_render(&self, render: Render) -> Result<Render, RenderStorageError>;
+
     async fn update_render_state(
         &self,
         id: RenderID,
         new_state: RenderState,
     ) -> Result<(), RenderStorageError>;
+
     /// update progress info only if render is in Running or Pausing state
     async fn update_render_progress(
         &self,
@@ -137,6 +145,7 @@ pub trait RenderStorage: Clone + Send + Sync + 'static {
         &self,
         render_checkpoint: RenderCheckpoint,
     ) -> Result<(), String>;
+
     async fn get_render_checkpoint(
         &self,
         render_id: RenderID,
@@ -148,59 +157,11 @@ pub trait RenderStorage: Clone + Send + Sync + 'static {
     /// Delete a render and all its associated checkpoints
     async fn delete_render_and_checkpoints(&self, id: RenderID) -> Result<(), RenderStorageError>;
 
-    fn get_update_progress_fn<'a>(&'a self, render_id: RenderID) -> impl AsyncFn(ProgressInfo) {
-        async move |progress_info: ProgressInfo| {
-            if let Err(e) = self.update_render_progress(render_id, progress_info).await {
-                println!("Failed to update render state: {e}");
-            }
-        }
-    }
+    fn get_update_progress_fn<'a>(&'a self, render_id: RenderID) -> AsyncProgressFn<'a>;
 
     /// Find all renders that are in the Running state
-    async fn find_running_renders(&self) -> Result<Vec<Render>, RenderStorageError> {
-        Ok(self
-            .get_all_renders()
-            .await?
-            .into_iter()
-            .filter(|r| matches!(r.state, RenderState::Running { .. }))
-            .collect())
-    }
+    async fn find_running_renders(&self) -> Result<Vec<Render>, RenderStorageError>;
 
     /// Revert a render to its last checkpoint state
-    async fn revert_to_last_checkpoint(&self, id: RenderID) -> Result<(), RenderStorageError> {
-        let render = match self.get_render(id).await? {
-            Some(r) => r,
-            None => return Err(format!("Render {} not found", id)),
-        };
-
-        // get the last checkpoint from the current running state
-        let last_checkpoint = match render.state {
-            RenderState::Running {
-                checkpoint_iteration,
-                ..
-            } => {
-                if checkpoint_iteration > 0 {
-                    Some(checkpoint_iteration - 1)
-                } else {
-                    None
-                }
-            }
-            _ => return Ok(()), // not running, nothing to do
-        };
-
-        // update the render state
-        match last_checkpoint {
-            Some(last_cpi) => {
-                // found a checkpoint, revert to that state
-                self.update_render_state(id, RenderState::FinishedCheckpointIteration(last_cpi))
-                    .await?
-            }
-            None => {
-                // no checkpoints found, revert to Created state
-                self.update_render_state(id, RenderState::Created).await?
-            }
-        }
-
-        Ok(())
-    }
+    async fn revert_to_last_checkpoint(&self, id: RenderID) -> Result<(), RenderStorageError>;
 }
