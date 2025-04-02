@@ -13,21 +13,22 @@ post {
 body:json {
   {
     "parameters": {
-      "image_dimensions": [ 1000, 1000 ],
+      "image_dimensions": [ 300, 300 ],
       "tile_dimensions": [ 1, 1 ],
       "gamma_correction": 2,
       "samples_per_checkpoint": 1,
-      "checkpoints": 100,
+      "checkpoints": 1,
       "max_bounces": 50,
       "use_scaling_truncation": true
     },
     "active_scene": {
-      "name": "cornell_box_10",
+      "name": "cornell_box",
       "geometrics": [
         "left_wall",
         "right_wall",
         "floor",
         "ceiling",
+        "ceiling_light",
         "back_wall",
         "front_wall",
         "far_left_box",

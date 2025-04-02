@@ -226,60 +226,15 @@ impl RenderStorage for FileStorage {
                 }
 
                 // TODO: print info out here! this is the spot!
+
+                // print!(
+                //     "\r{}{}{}",
+                //     " ".repeat(indentation),
+                //     progress_string,
+                //     " ".repeat(10)
+                // );
+                // stdout().flush().unwrap();
             })
         })
-    }
-
-    async fn find_running_renders(&self) -> Result<Vec<Render>, RenderStorageError> {
-        Ok(self
-            .renders
-            .read()
-            .await
-            .iter()
-            .filter_map(|(r, _)| {
-                if matches!(r.state, RenderState::Running { .. }) {
-                    Some(r.clone())
-                } else {
-                    None
-                }
-            })
-            .collect())
-    }
-
-    async fn revert_to_last_checkpoint(&self, id: RenderID) -> Result<(), RenderStorageError> {
-        let render = match self.get_render(id).await? {
-            Some(r) => r,
-            None => return Err(format!("Render {} not found", id)),
-        };
-
-        // get the last checkpoint from the current running state
-        let last_checkpoint = match render.state {
-            RenderState::Running {
-                checkpoint_iteration,
-                ..
-            } => {
-                if checkpoint_iteration > 0 {
-                    Some(checkpoint_iteration - 1)
-                } else {
-                    None
-                }
-            }
-            _ => return Ok(()), // not running, nothing to do
-        };
-
-        // update the render state
-        match last_checkpoint {
-            Some(last_cpi) => {
-                // found a checkpoint, revert to that state
-                self.update_render_state(id, RenderState::FinishedCheckpointIteration(last_cpi))
-                    .await?
-            }
-            None => {
-                // no checkpoints found, revert to Created state
-                self.update_render_state(id, RenderState::Created).await?
-            }
-        }
-
-        Ok(())
     }
 }

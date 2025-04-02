@@ -157,11 +157,74 @@ pub trait RenderStorage: Send + Sync + 'static {
     /// Delete a render and all its associated checkpoints
     async fn delete_render_and_checkpoints(&self, id: RenderID) -> Result<(), RenderStorageError>;
 
-    fn get_update_progress_fn<'a>(&'a self, render_id: RenderID) -> AsyncProgressFn<'a>;
+    fn get_update_progress_fn<'a>(&'a self, render_id: RenderID) -> AsyncProgressFn<'a> {
+        Box::new(move |progress_info: ProgressInfo| {
+            Box::pin(async move {
+                if let Err(e) = self.update_render_progress(render_id, progress_info).await {
+                    println!("Failed to update render state: {e}");
+                }
+            })
+        })
+    }
 
     /// Find all renders that are in the Running state
-    async fn find_running_renders(&self) -> Result<Vec<Render>, RenderStorageError>;
+    async fn find_renders_in_state(
+        &self,
+        state: RenderState,
+    ) -> Result<Vec<Render>, RenderStorageError> {
+        Ok(self
+            .get_all_renders()
+            .await?
+            .into_iter()
+            .filter(|r| match (r.state, state) {
+                (RenderState::Created, RenderState::Created) => true,
+                (RenderState::Running { .. }, RenderState::Running { .. }) => true,
+                (
+                    RenderState::FinishedCheckpointIteration { .. },
+                    RenderState::FinishedCheckpointIteration { .. },
+                ) => true,
+                (RenderState::Pausing { .. }, RenderState::Pausing { .. }) => true,
+                (RenderState::Paused(_), RenderState::Paused(_)) => true,
+                _ => false,
+            })
+            .collect())
+    }
 
     /// Revert a render to its last checkpoint state
-    async fn revert_to_last_checkpoint(&self, id: RenderID) -> Result<(), RenderStorageError>;
+    async fn revert_to_last_checkpoint(&self, id: RenderID) -> Result<(), RenderStorageError> {
+        {
+            let render = match self.get_render(id).await? {
+                Some(r) => r,
+                None => return Err(format!("Render {} not found", id)),
+            };
+
+            // get the last checkpoint from the current running state
+            match render.state {
+                RenderState::Running {
+                    checkpoint_iteration: cpi,
+                    ..
+                } => {
+                    self.update_render_state(
+                        id,
+                        if cpi > 1 {
+                            RenderState::FinishedCheckpointIteration(cpi - 1)
+                        } else {
+                            RenderState::Created
+                        },
+                    )
+                    .await?;
+                }
+                RenderState::Pausing {
+                    checkpoint_iteration: cpi,
+                    ..
+                } => {
+                    self.update_render_state(id, RenderState::Paused(cpi - 1))
+                        .await?;
+                }
+                _ => (), // not running or pausing, nothing to do
+            };
+
+            Ok(())
+        }
+    }
 }

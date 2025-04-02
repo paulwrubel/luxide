@@ -14,7 +14,7 @@ use image::ImageOutputFormat;
 
 use crate::{
     deserialization::RenderConfig,
-    tracing::{Render, RenderID, RenderManager, RenderState, RenderStorage},
+    tracing::{Render, RenderID, RenderManager, RenderState},
     utils::FormattedProgressInfo,
 };
 

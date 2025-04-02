@@ -1,4 +1,9 @@
-use std::{collections::HashMap, num::NonZeroUsize, sync::mpsc, thread};
+use std::{
+    collections::HashMap,
+    num::{NonZero, NonZeroUsize},
+    sync::{Arc, mpsc},
+    thread,
+};
 
 use rand::seq::SliceRandom;
 use rayon::prelude::*;
@@ -13,78 +18,13 @@ pub struct ProgressPacket {
 }
 
 pub struct Tracer {
-    thread_pool: rayon::ThreadPool,
+    thread_pool: Arc<rayon::ThreadPool>,
 }
 
 impl Tracer {
-    pub fn new(threads: Threads) -> Self {
-        Self {
-            thread_pool: rayon::ThreadPoolBuilder::new()
-                .num_threads(threads.effective_count())
-                .build()
-                .unwrap(),
-        }
+    pub fn new(thread_pool: Arc<rayon::ThreadPool>) -> Self {
+        Self { thread_pool }
     }
-
-    // pub fn render(
-    //     &mut self,
-    //     render_data: &RenderData,
-    //     // output: impl CheckpointDestination,
-    //     // progress_recv: mpsc::Receiver<f64>,
-    //     indentation: usize,
-    // ) -> Result<(), String> {
-    //     let total_checkpoints = render_data.parameters.checkpoints;
-
-    //     let mut pixel_data = PixelData::new();
-    //     let mut checkpoint = 1;
-
-    //     // let now = OffsetDateTime::now_utc();
-    //     // let formatted_timestamp = utils::get_formatted_timestamp_for(now);
-    //     // let output_dir = format!(
-    //     //     "{}/{}_{}",
-    //     //     parameters.output_dir, scene.name, formatted_timestamp
-    //     // );
-    //     // println!("Initializing output directory: {output_dir}");
-    //     // fs::create_dir_all(&output_dir).map_err(|err| err.to_string())?;
-
-    //     loop {
-    //         let checkpoint_limit_string = format!("/{}", render_data.parameters.checkpoints);
-
-    //         println!(
-    //             "{}Rendering round {}{}...",
-    //             " ".repeat(indentation),
-    //             checkpoint,
-    //             checkpoint_limit_string
-    //         );
-
-    //         self.render_to_checkpoint_iteration(
-    //             checkpoint,
-    //             &mut pixel_data,
-    //             render_data,
-    //             indentation + 2,
-    //         );
-
-    //         // println!(
-    //         //     "{}Writing round {} data to file...",
-    //         //     " ".repeat(indentation),
-    //         //     round
-    //         // );
-    //         // self.write_to_file(
-    //         //     &round_img_buffer,
-    //         //     round,
-    //         //     parameters,
-    //         //     &output_dir,
-    //         //     indentation,
-    //         // )?;
-
-    //         if total_checkpoints == checkpoint {
-    //             break;
-    //         }
-
-    //         checkpoint += 1;
-    //     }
-    //     Ok(())
-    // }
 
     pub fn render_to_checkpoint_iteration<'a>(
         &'a self,
@@ -98,24 +38,6 @@ impl Tracer {
             // self.parallel_render_round(checkpoint, pixel_data, render_data, indentation)
             self.parallel_render_round(checkpoint, pixel_data, render_data, progress_sender)
         });
-
-        // println!("{}Writing data to image buffer...", " ".repeat(indentation));
-        // let (width, height) = parameters.image_dimensions;
-        // let mut buffer = ImageBuffer::new(width, height);
-        // for ((x, y), color) in pixel_data {
-        //     let pixel = buffer.get_pixel_mut(*x, *y);
-        //     *pixel = if parameters.use_scaling_truncation {
-        //         color
-        //             .scale_down(1.0)
-        //             .as_gamma_corrected_rgba_u8(1.0 / parameters.gamma_correction)
-        //     } else {
-        //         color.as_gamma_corrected_rgba_u8(1.0 / parameters.gamma_correction)
-        //     }
-        // }
-
-        // buffer
-
-        // pixel_data
     }
 
     fn parallel_render_round(
@@ -130,46 +52,8 @@ impl Tracer {
 
         let world = &scene.world;
         let mut cam = scene.camera.clone();
-        // let (width, height) = parameters.image_dimensions;
 
-        // println!("{}Initializing camera...", " ".repeat(indentation));
         cam.initialize(parameters, scene);
-
-        // let start = Instant::now();
-        // let pixel_count = parameters.image_width * parameters.image_height;
-        // let mut current_pixel = 0;
-
-        // println!("{}Starting progress worker...", " ".repeat(indentation));
-        // let (sender, receivers) = mpsc::channel();
-
-        // let start: Instant = Instant::now();
-        // let total = width * height;
-        // let batch_size = 100;
-        // let memory = 50;
-        // let progress_handle = thread::spawn(move || {
-        //     let mut instants: VecDeque<Instant> = VecDeque::new();
-        //     let mut current = 0;
-        //     for (_round, (_x, _y)) in receiver {
-        //         current += 1;
-        //         if current % batch_size == 0 || current == total {
-        //             let progress_string = utils::progress_string(
-        //                 &mut instants,
-        //                 current,
-        //                 batch_size,
-        //                 total,
-        //                 start,
-        //                 memory,
-        //             );
-        //             print!(
-        //                 "\r{}{}{}",
-        //                 " ".repeat(indentation),
-        //                 progress_string,
-        //                 " ".repeat(10)
-        //             );
-        //             stdout().flush().unwrap();
-        //         }
-        //     }
-        // });
 
         let tiles = Tiles::new(parameters.image_dimensions, parameters.tile_dimensions);
 
@@ -307,8 +191,8 @@ impl Iterator for Tile {
 
 #[derive(Debug, Clone, Copy)]
 pub enum Threads {
-    Count(NonZeroUsize),
-    AllWithDefault(NonZeroUsize),
+    Count(NonZero<usize>),
+    AllWithDefault(NonZero<usize>),
 }
 
 impl Threads {

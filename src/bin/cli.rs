@@ -1,4 +1,4 @@
-use std::{fs, path::PathBuf, sync::Arc};
+use std::{fs, num::NonZero, path::PathBuf, sync::Arc};
 
 use clap::Parser;
 use luxide::{
@@ -16,7 +16,7 @@ use luxide::{
         materials::{Dielectric, Lambertian, Material, Specular},
         textures::{Checker, Image8Bit, Noise, SolidColor},
     },
-    tracing::{FileStorage, RenderManager, RenderState, RenderStorage, Scene},
+    tracing::{FileStorage, RenderManager, RenderState, RenderStorage, Scene, Threads},
     utils::Angle,
 };
 use noise::{Perlin, Turbulence};
@@ -66,9 +66,12 @@ async fn run_with_config(
     render_config: RenderConfig,
 ) -> Result<(), String> {
     // Create render manager
-    let render_manager = RenderManager::new(Arc::clone(&storage))
-        .await
-        .map_err(|e| format!("Failed to initialize render manager: {}", e))?;
+    let render_manager = RenderManager::new(
+        Arc::clone(&storage),
+        Threads::AllWithDefault(NonZero::new(24).unwrap()),
+    )
+    .await
+    .map_err(|e| format!("Failed to initialize render manager: {}", e))?;
 
     let rm = render_manager.clone();
     rayon::spawn(move || rm.start());

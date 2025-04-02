@@ -18,6 +18,7 @@ use std::collections::HashSet;
 #[derive(Clone)]
 pub struct RenderManager {
     storage: Arc<dyn RenderStorage>,
+    thread_pool: Arc<rayon::ThreadPool>,
     sync: Arc<Mutex<Synchronizer>>,
     running_renders: Arc<Mutex<HashSet<RenderID>>>,
 }
@@ -25,12 +26,28 @@ pub struct RenderManager {
 const POLLING_INTERVAL_MS: u64 = 1000;
 
 impl RenderManager {
-    pub async fn new(storage: Arc<dyn RenderStorage>) -> Result<Self, RenderStorageError> {
-        // find any renders that were left in Running state
-        let running_renders = storage.find_running_renders().await?;
+    pub async fn new(
+        storage: Arc<dyn RenderStorage>,
+        threads: Threads,
+    ) -> Result<Self, RenderStorageError> {
+        // find any renders that were left in Running or Pausing state
+        let mut running_or_pausing_renders = storage
+            .find_renders_in_state(RenderState::Running {
+                checkpoint_iteration: 0,
+                progress_info: ProgressInfo::empty(),
+            })
+            .await?;
+        running_or_pausing_renders.extend(
+            storage
+                .find_renders_in_state(RenderState::Pausing {
+                    checkpoint_iteration: 0,
+                    progress_info: ProgressInfo::empty(),
+                })
+                .await?,
+        );
 
         // revert them to their last checkpoint
-        for render in running_renders {
+        for render in running_or_pausing_renders {
             println!(
                 "Reverting interrupted render {} to last checkpoint",
                 render.id
@@ -40,6 +57,12 @@ impl RenderManager {
 
         Ok(Self {
             storage,
+            thread_pool: Arc::new(
+                rayon::ThreadPoolBuilder::new()
+                    .num_threads(threads.effective_count())
+                    .build()
+                    .unwrap(),
+            ),
             sync: Arc::new(Mutex::new(Synchronizer::new())),
             running_renders: Arc::new(Mutex::new(HashSet::new())),
         })
@@ -118,9 +141,10 @@ impl RenderManager {
         let running_renders = Arc::clone(&self.running_renders);
         let storage = Arc::clone(&self.storage);
         let sync = Arc::clone(&self.sync);
+        let thread_pool = Arc::clone(&self.thread_pool);
 
         rayon::spawn(move || {
-            let tracer = Tracer::new(Threads::AllWithDefault(NonZeroUsize::new(24).unwrap()));
+            let tracer = Tracer::new(thread_pool);
 
             let iteration = match previous_checkpoint {
                 Some(ref rcp) => rcp.iteration + 1,
@@ -167,17 +191,7 @@ impl RenderManager {
 
                 rayon::join(
                     || {
-                        // let storage_3: Arc<S> = Arc::clone(&storage_2);
-                        // let update_fn = storage.get_update_progress_fn(render.id);
-
-                        let update_fn = async move |progress_info| {
-                            if let Err(e) = storage
-                                .update_render_progress(render.id, progress_info)
-                                .await
-                            {
-                                println!("Failed to update render state: {e}");
-                            }
-                        };
+                        let update_fn = storage.get_update_progress_fn(render.id);
 
                         let total = u64::from(width) * u64::from(height);
                         let mut progress_tracker = ProgressTracker::new(
@@ -188,27 +202,8 @@ impl RenderManager {
                                 sync.lock().unwrap().block_on(update_fn(progress_info));
                             },
                         );
-                        // let mut current = 0;
                         for _ in receiver {
                             progress_tracker.mark();
-                            // current += 1;
-                            // if current % batch_size == 0 || current == total {
-                            //     let progress_info = progress_tracker.progress_info(current);
-                            // let progress_string = utils::progress_string(
-                            //     &mut instants,
-                            //     current,
-                            //     batch_size,
-                            //     total,
-                            //     start,
-                            //     memory,
-                            // );
-                            // print!(
-                            //     "\r{}{}{}",
-                            //     " ".repeat(indentation),
-                            //     progress_string,
-                            //     " ".repeat(10)
-                            // );
-                            // stdout().flush().unwrap();
                         }
                     },
                     || {

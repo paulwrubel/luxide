@@ -8,7 +8,7 @@ use axum::{
     routing::{delete, get, post},
 };
 
-use crate::tracing::{RenderManager, RenderStorage};
+use crate::tracing::RenderManager;
 
 use super::handlers;
 

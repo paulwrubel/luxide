@@ -13,6 +13,17 @@ pub struct ProgressInfo {
     estimated_total: Duration,
 }
 
+impl ProgressInfo {
+    pub fn empty() -> Self {
+        Self {
+            progress: 0.0,
+            elapsed: Duration::from_secs(0),
+            estimated_remaining: Duration::from_secs(0),
+            estimated_total: Duration::from_secs(0),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct FormattedProgressInfo {
     progress: String,
