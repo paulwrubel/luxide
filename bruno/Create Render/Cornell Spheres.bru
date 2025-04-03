@@ -1,5 +1,5 @@
 meta {
-  name: Create Cornell Box Render
+  name: Cornell Spheres
   type: http
   seq: 2
 }
@@ -14,31 +14,31 @@ body:json {
   {
     "parameters": {
       "image_dimensions": [
-        1500,
-        1500
+        800,
+        800
       ],
       "tile_dimensions": [
         1,
         1
       ],
       "gamma_correction": 2,
-      "samples_per_checkpoint": 10,
-      "checkpoints": 10,
+      "samples_per_checkpoint": 1,
+      "checkpoints": 500,
       "max_bounces": 50,
       "use_scaling_truncation": true
     },
     "active_scene": {
-      "name": "cornell_box_ultra_hd",
+      "name": "cornell_box_spheres_mirror_hd_fast",
       "geometrics": [
         "left_wall",
         "right_wall",
         "floor",
         "ceiling",
-        "ceiling_light",
+        "ceiling_light_wide",
         "back_wall",
         "front_wall",
-        "far_left_box",
-        "near_right_box"
+        "far_left_sphere",
+        "near_right_sphere"
       ],
       "use_bvh": true,
       "camera": "basic",
@@ -205,70 +205,44 @@ body:json {
         ],
         "material": "lambertian_white_light"
       },
-      "ceiling_light_dim": {
+      "ceiling_light_wide": {
         "type": "parallelogram",
         "lower_left": [
-          0.35,
+          0.1,
           0.999,
-          -0.65
+          -0.9
         ],
         "u": [
-          0.3,
+          0.8,
           0,
           0
         ],
         "v": [
           0,
           0,
-          0.3
+          0.8
         ],
         "material": "lambertian_white_light_dim"
       },
-      "far_left_box": {
-        "type": "rotate_y",
-        "geometric": {
-          "type": "box",
-          "a": [
-            0.2,
-            0,
-            -0.5
-          ],
-          "b": [
-            0.5,
-            0.6,
-            -0.8
-          ],
-          "material": "lambertian_cb_white"
-        },
-        "degrees": 15,
-        "around": [
-          0.35,
-          0,
-          -0.65
-        ]
+      "far_left_sphere": {
+        "type": "sphere",
+        "center": [
+          0.3,
+          0.2001,
+          -0.7
+        ],
+        "radius": 0.2,
+        "material": "specular_mirror"
       },
-      "near_right_box": {
-        "type": "rotate_y",
-        "geometric": {
-          "type": "box",
-          "a": [
-            0.5,
-            0,
-            -0.2
-          ],
-          "b": [
-            0.8,
-            0.3,
-            -0.5
-          ],
-          "material": "lambertian_cb_white"
-        },
-        "degrees": -18,
-        "around": [
-          0.65,
-          0,
-          -0.35
-        ]
+      "near_right_sphere": {
+        "type": "sphere",
+        "center": [
+          0.7,
+          0.2001,
+          -0.3
+        ],
+        "radius": 0.2,
+        "material": "dielectric_glass"
       }
     },
     "materials": {
@@ -348,9 +322,9 @@ body:json {
       "solid_white_light_dim": {
         "type": "color",
         "color": [
-          3,
-          3,
-          3
+          1,
+          1,
+          1
         ]
       },
       "solid_cb_red_light_dim": {

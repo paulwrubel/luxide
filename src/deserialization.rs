@@ -102,14 +102,6 @@ pub struct RenderData {
     pub scene: Scene,
 }
 
-// pub fn parse_json_file(filename: &str) -> Result<(OutputFileParameters, RenderData), String> {
-//     // get and parse file
-//     let unparsed = fs::read_to_string(filename).map_err(|err| err.to_string())?;
-//     let parsed: FileConfig = serde_json::from_str(&unparsed).map_err(|err| err.to_string())?;
-
-//     parsed.config.compile().map(|data| (parsed.output, data))
-// }
-
 fn build_textures(
     texture_data: &IndexMap<String, TextureData>,
     builts: &mut Builts,
