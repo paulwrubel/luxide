@@ -28,13 +28,12 @@ body:json {
       "use_scaling_truncation": true
     },
     "active_scene": {
-      "name": "cornell_box_spheres_hd_fast",
+      "name": "cornell_box_spheres_mirror_hd_fast",
       "geometrics": [
         "left_wall",
         "right_wall",
         "floor",
         "ceiling",
-        "ceiling_light",
         "ceiling_light_wide",
         "back_wall",
         "front_wall",
@@ -229,21 +228,21 @@ body:json {
         "type": "sphere",
         "center": [
           0.3,
-          0.2,
+          0.2001,
           -0.7
         ],
         "radius": 0.2,
-        "material": "lambertian_cb_white"
+        "material": "specular_mirror"
       },
       "near_right_sphere": {
         "type": "sphere",
         "center": [
           0.7,
-          0.2,
+          0.2001,
           -0.3
         ],
         "radius": 0.2,
-        "material": "specular_mirror"
+        "material": "dielectric_glass"
       }
     },
     "materials": {

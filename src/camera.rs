@@ -138,6 +138,10 @@ impl Camera {
         // iterate over geometrics until we fail to intersect, reach max bounces, or find a non-reflective surface
         let mut bounces = 0;
         while let Some(ray_hit) = geometric.intersect(ray, Interval::new(0.001, f64::INFINITY)) {
+            // println!(
+            //     "[internal-2] intersected, bounces so far: {}/{}",
+            //     bounces, max_bounces
+            // );
             let emittance = ray_hit
                 .material
                 .emittance(ray_hit.u, ray_hit.v, ray_hit.point);
@@ -151,7 +155,7 @@ impl Camera {
 
             // if the surface is black, it's not going to let any incoming light contribute to the outgoing color
             // so we can safely say no light is reflected and simply return the accumulated color so far
-            if bounces == max_bounces && reflectance == Color::BLACK {
+            if bounces == max_bounces || reflectance == Color::BLACK {
                 return accumulated_color;
             }
 
@@ -171,6 +175,8 @@ impl Camera {
 
             bounces += 1;
         }
+
+        // println!("[internal-2] we failed... :(");
 
         // at this point, we must have failed to intersect.
         //
