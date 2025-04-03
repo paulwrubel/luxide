@@ -1,6 +1,6 @@
 use std::{
     collections::HashMap,
-    num::{NonZero, NonZeroUsize},
+    num::NonZero,
     sync::{Arc, mpsc},
     thread,
 };

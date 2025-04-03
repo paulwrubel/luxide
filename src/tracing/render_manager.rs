@@ -1,7 +1,4 @@
-use std::{
-    num::NonZeroUsize,
-    sync::{Arc, Mutex, mpsc},
-};
+use std::sync::{Arc, Mutex, mpsc};
 
 use image::RgbaImage;
 
@@ -69,10 +66,10 @@ impl RenderManager {
     }
 
     pub fn start(&self) {
+        println!("Starting render manager...");
+
         loop {
             {
-                println!("Polling renders...");
-
                 let renders = {
                     match self
                         .sync
@@ -180,11 +177,6 @@ impl RenderManager {
             let (sender, receiver) = mpsc::channel();
 
             let (width, height) = render.config.parameters.image_dimensions;
-
-            // let start: Instant = Instant::now();
-            // let total = width * height;
-            // let batch_size = 100;
-            // let memory = 50;
             {
                 let storage = Arc::clone(&storage);
                 let sync = Arc::clone(&sync);

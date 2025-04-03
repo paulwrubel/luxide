@@ -13,16 +13,16 @@ post {
 body:json {
   {
     "parameters": {
-      "image_dimensions": [ 300, 300 ],
+      "image_dimensions": [ 1000, 1000 ],
       "tile_dimensions": [ 1, 1 ],
       "gamma_correction": 2,
-      "samples_per_checkpoint": 1,
-      "checkpoints": 1,
+      "samples_per_checkpoint": 10,
+      "checkpoints": 100,
       "max_bounces": 50,
       "use_scaling_truncation": true
     },
     "active_scene": {
-      "name": "cornell_box",
+      "name": "cornell_box_hd",
       "geometrics": [
         "left_wall",
         "right_wall",
@@ -112,7 +112,7 @@ body:json {
           "type": "box",
           "a": [ 0.2, 0, -0.5 ],
           "b": [ 0.5, 0.6, -0.8 ],
-          "material": "dielectric_glass"
+          "material": "lambertian_cb_white"
         },
         "degrees": 15,
         "around": [ 0.35, 0, -0.65 ]
@@ -123,7 +123,7 @@ body:json {
           "type": "box",
           "a": [ 0.5, 0, -0.2 ],
           "b": [ 0.8, 0.3, -0.5 ],
-          "material": "dielectric_glass"
+          "material": "lambertian_cb_white"
         },
         "degrees": -18,
         "around": [ 0.65, 0, -0.35 ]

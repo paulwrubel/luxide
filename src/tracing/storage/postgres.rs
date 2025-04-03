@@ -2,10 +2,7 @@ use sqlx::{Pool, Postgres};
 
 use crate::utils::{ProgressInfo, decode_pixel_data, encode_pixel_data};
 
-use super::{
-    AsyncProgressFn, Render, RenderCheckpoint, RenderID, RenderState, RenderStorage,
-    RenderStorageError,
-};
+use super::{Render, RenderCheckpoint, RenderID, RenderState, RenderStorage, RenderStorageError};
 
 #[derive(Clone)]
 pub struct PostgresStorage {

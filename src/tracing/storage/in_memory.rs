@@ -5,10 +5,7 @@ use tokio::sync::RwLock;
 
 use crate::utils::ProgressInfo;
 
-use super::{
-    AsyncProgressFn, Render, RenderCheckpoint, RenderID, RenderState, RenderStorage,
-    RenderStorageError,
-};
+use super::{Render, RenderCheckpoint, RenderID, RenderState, RenderStorage, RenderStorageError};
 
 #[derive(Clone)]
 pub struct InMemoryStorage {
