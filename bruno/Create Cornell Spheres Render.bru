@@ -1,7 +1,7 @@
 meta {
-  name: Create Render
+  name: Create Cornell Spheres Render
   type: http
-  seq: 2
+  seq: 3
 }
 
 post {
@@ -13,16 +13,22 @@ post {
 body:json {
   {
     "parameters": {
-      "image_dimensions": [ 10000, 10000 ],
-      "tile_dimensions": [ 1, 1 ],
+      "image_dimensions": [
+        1200,
+        1200
+      ],
+      "tile_dimensions": [
+        1,
+        1
+      ],
       "gamma_correction": 2,
       "samples_per_checkpoint": 1,
-      "checkpoints": 10,
+      "checkpoints": 500,
       "max_bounces": 50,
       "use_scaling_truncation": true
     },
     "active_scene": {
-      "name": "cornell_box_huge_image",
+      "name": "cornell_box_spheres_hd",
       "geometrics": [
         "left_wall",
         "right_wall",
@@ -31,19 +37,35 @@ body:json {
         "ceiling_light",
         "back_wall",
         "front_wall",
-        "far_left_box",
-        "near_right_box"
+        "far_left_sphere",
+        "near_right_sphere"
       ],
       "use_bvh": true,
       "camera": "basic",
-      "background_color": [ 0, 0, 0 ]
+      "background_color": [
+        0,
+        0,
+        0
+      ]
     },
     "cameras": {
       "basic": {
         "vertical_field_of_view_degrees": 40,
-        "eye_location": [ 0.5, 0.5, 1.44144 ],
-        "target_location": [ 0.5, 0.5, 0 ],
-        "view_up": [ 0, 1, 0 ],
+        "eye_location": [
+          0.5,
+          0.5,
+          1.44144
+        ],
+        "target_location": [
+          0.5,
+          0.5,
+          0
+        ],
+        "view_up": [
+          0,
+          1,
+          0
+        ],
         "defocus_angle_degrees": 0,
         "focus_distance": "eye_to_target"
       }
@@ -51,82 +73,176 @@ body:json {
     "geometrics": {
       "left_wall": {
         "type": "parallelogram",
-        "lower_left": [ 0, 0, 0 ],
-        "u": [ 0, 0, -1 ],
-        "v": [ 0, 1, 0 ],
+        "lower_left": [
+          0,
+          0,
+          0
+        ],
+        "u": [
+          0,
+          0,
+          -1
+        ],
+        "v": [
+          0,
+          1,
+          0
+        ],
         "material": "lambertian_cb_green"
       },
       "right_wall": {
         "type": "parallelogram",
-        "lower_left": [ 1, 0, -1 ],
-        "u": [ 0, 0, 1 ],
-        "v": [ 0, 1, 0 ],
+        "lower_left": [
+          1,
+          0,
+          -1
+        ],
+        "u": [
+          0,
+          0,
+          1
+        ],
+        "v": [
+          0,
+          1,
+          0
+        ],
         "material": "lambertian_cb_red"
       },
       "floor": {
         "type": "parallelogram",
-        "lower_left": [ 0, 0, 0 ],
-        "u": [ 1, 0, 0 ],
-        "v": [ 0, 0, -1 ],
+        "lower_left": [
+          0,
+          0,
+          0
+        ],
+        "u": [
+          1,
+          0,
+          0
+        ],
+        "v": [
+          0,
+          0,
+          -1
+        ],
         "material": "lambertian_cb_white"
       },
       "ceiling": {
         "type": "parallelogram",
-        "lower_left": [ 0, 1, -1 ],
-        "u": [ 1, 0, 0 ],
-        "v": [ 0, 0, 1 ],
+        "lower_left": [
+          0,
+          1,
+          -1
+        ],
+        "u": [
+          1,
+          0,
+          0
+        ],
+        "v": [
+          0,
+          0,
+          1
+        ],
         "material": "lambertian_cb_white"
       },
       "back_wall": {
         "type": "parallelogram",
-        "lower_left": [ 0, 0, -1 ],
-        "u": [ 1, 0, 0 ],
-        "v": [ 0, 1, 0 ],
+        "lower_left": [
+          0,
+          0,
+          -1
+        ],
+        "u": [
+          1,
+          0,
+          0
+        ],
+        "v": [
+          0,
+          1,
+          0
+        ],
         "material": "lambertian_cb_white"
       },
       "front_wall": {
         "type": "parallelogram",
-        "lower_left": [ 1, 0, 0 ],
-        "u": [ -1, 0, 0 ],
-        "v": [ 0, 1, 0 ],
+        "lower_left": [
+          1,
+          0,
+          0
+        ],
+        "u": [
+          -1,
+          0,
+          0
+        ],
+        "v": [
+          0,
+          1,
+          0
+        ],
         "is_culled": true,
         "material": "lambertian_cb_white"
       },
       "ceiling_light": {
         "type": "parallelogram",
-        "lower_left": [ 0.35, 0.999, -0.65 ],
-        "u": [ 0.3, 0, 0 ],
-        "v": [ 0, 0, 0.3 ],
+        "lower_left": [
+          0.35,
+          0.999,
+          -0.65
+        ],
+        "u": [
+          0.3,
+          0,
+          0
+        ],
+        "v": [
+          0,
+          0,
+          0.3
+        ],
         "material": "lambertian_white_light"
       },
       "ceiling_light_dim": {
         "type": "parallelogram",
-        "lower_left": [ 0.35, 0.999, -0.65 ],
-        "u": [ 0.3, 0, 0 ],
-        "v": [ 0, 0, 0.3 ],
+        "lower_left": [
+          0.35,
+          0.999,
+          -0.65
+        ],
+        "u": [
+          0.3,
+          0,
+          0
+        ],
+        "v": [
+          0,
+          0,
+          0.3
+        ],
         "material": "lambertian_white_light_dim"
       },
-      "far_left_box": {
-        "type": "rotate_y",
-        "geometric": {
-          "type": "box",
-          "a": [ 0.2, 0, -0.5 ],
-          "b": [ 0.5, 0.6, -0.8 ],
-          "material": "lambertian_cb_white"
-        },
-        "degrees": 15,
-        "around": [ 0.35, 0, -0.65 ]
+      "far_left_sphere": {
+        "type": "sphere",
+        "center": [
+          0.3,
+          0.2,
+          -0.7
+        ],
+        "radius": 0.2,
+        "material": "lambertian_cb_white"
       },
-      "near_right_box": {
-        "type": "rotate_y",
-        "geometric": {
-          "type": "box",
-          "a": [ 0.5, 0, -0.2 ],
-          "b": [ 0.8, 0.3, -0.5 ],
-          "material": "lambertian_cb_white"
-        },
-        "degrees": -18,
-        "around": [ 0.65, 0, -0.35 ]
+      "near_right_sphere": {
+        "type": "sphere",
+        "center": [
+          0.7,
+          0.2,
+          -0.3
+        ],
+        "radius": 0.2,
+        "material": "specular_mirror"
       }
     },
     "materials": {
@@ -181,39 +297,75 @@ body:json {
     "textures": {
       "solid_white": {
         "type": "color",
-        "color": [ 1, 1, 1 ]
+        "color": [
+          1,
+          1,
+          1
+        ]
       },
       "solid_black": {
         "type": "color",
-        "color": [ 0, 0, 0 ]
+        "color": [
+          0,
+          0,
+          0
+        ]
       },
       "solid_white_light": {
         "type": "color",
-        "color": [ 7, 7, 7 ]
+        "color": [
+          7,
+          7,
+          7
+        ]
       },
       "solid_white_light_dim": {
         "type": "color",
-        "color": [ 3, 3, 3 ]
+        "color": [
+          3,
+          3,
+          3
+        ]
       },
       "solid_cb_red_light_dim": {
         "type": "color",
-        "color": [ 0.325, 0.025, 0.025 ]
+        "color": [
+          0.325,
+          0.025,
+          0.025
+        ]
       },
       "solid_cb_green_light_dim": {
         "type": "color",
-        "color": [ 0.06, 0.225, 0.075 ]
+        "color": [
+          0.06,
+          0.225,
+          0.075
+        ]
       },
       "solid_cb_white": {
         "type": "color",
-        "color": [ 0.73, 0.73, 0.73 ]
+        "color": [
+          0.73,
+          0.73,
+          0.73
+        ]
       },
       "solid_cb_red": {
         "type": "color",
-        "color": [ 0.65, 0.05, 0.05 ]
+        "color": [
+          0.65,
+          0.05,
+          0.05
+        ]
       },
       "solid_cb_green": {
         "type": "color",
-        "color": [ 0.12, 0.45, 0.15 ]
+        "color": [
+          0.12,
+          0.45,
+          0.15
+        ]
       }
     }
   }

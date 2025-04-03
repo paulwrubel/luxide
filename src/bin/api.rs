@@ -1,12 +1,10 @@
-use std::{num::NonZero, path::PathBuf, sync::Arc};
+use std::{path::PathBuf, sync::Arc};
 
 use clap::{Parser, ValueEnum};
 use luxide::{
     config::{StorageConfig, load_api_config},
     server::{self, build_router},
-    tracing::{
-        FileStorage, InMemoryStorage, PostgresStorage, RenderManager, RenderStorage, Threads,
-    },
+    tracing::{FileStorage, InMemoryStorage, PostgresStorage, RenderManager, RenderStorage},
 };
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -55,17 +53,17 @@ async fn main() -> Result<(), String> {
 
     // Create render manager
     let render_manager = Arc::new(
-        RenderManager::new(
-            Arc::clone(&storage),
-            Threads::AllWithDefault(NonZero::new(24).unwrap()),
-        )
-        .await
-        .map_err(|e| format!("Failed to initialize render manager: {}", e))?,
+        RenderManager::new(Arc::clone(&storage))
+            .await
+            .map_err(|e| format!("Failed to initialize render manager: {}", e))?,
     );
 
     let router = build_router().with_state(Arc::clone(&render_manager));
 
-    rayon::spawn(move || render_manager.start());
+    let (_, serve_result) = tokio::join!(
+        render_manager.start(),
+        server::serve(router, &config.address, config.port)
+    );
 
-    server::serve(router, &config.address, config.port).await
+    serve_result
 }

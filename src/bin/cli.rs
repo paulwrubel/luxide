@@ -1,4 +1,4 @@
-use std::{fs, num::NonZero, path::PathBuf, sync::Arc};
+use std::{fs, path::PathBuf, sync::Arc};
 
 use clap::Parser;
 use luxide::{
@@ -16,7 +16,7 @@ use luxide::{
         materials::{Dielectric, Lambertian, Material, Specular},
         textures::{Checker, Image8Bit, Noise, SolidColor},
     },
-    tracing::{FileStorage, RenderManager, RenderState, RenderStorage, Scene, Threads},
+    tracing::{FileStorage, RenderManager, RenderState, RenderStorage, Scene},
     utils::Angle,
 };
 use noise::{Perlin, Turbulence};
@@ -42,13 +42,15 @@ struct Args {
     output_dir: String,
 }
 
-fn main() -> Result<(), String> {
+#[tokio::main]
+async fn main() -> Result<(), String> {
     println!("Starting Luxide...");
 
     let args = Args::parse();
 
     // Create storage backend
-    let storage = Arc::new(FileStorage::new(PathBuf::from(&args.output_dir))?);
+    let storage: Arc<dyn RenderStorage> =
+        Arc::new(FileStorage::new(PathBuf::from(&args.output_dir))?);
 
     // Config file mode
     println!("Using configuration file: {}", args.config_filename);
@@ -57,25 +59,26 @@ fn main() -> Result<(), String> {
     let render_config: RenderConfig = serde_json::from_str(&render_config_str)
         .map_err(|err| format!("Failed to parse configuration file: {}", err))?;
 
-    run_with_config(storage, render_config)
+    // create render manager
+    let render_manager = Arc::new(
+        RenderManager::new(Arc::clone(&storage))
+            .await
+            .map_err(|e| format!("Failed to initialize render manager: {}", e))?,
+    );
+
+    // start render manager
+    let (_, res2) = tokio::join!(
+        render_manager.start(),
+        create_render_and_poll_completion(Arc::clone(&render_manager), render_config)
+    );
+
+    res2.map_err(|e| format!("Failed to create render: {}", e))
 }
 
-#[tokio::main]
-async fn run_with_config(
-    storage: Arc<dyn RenderStorage>,
+async fn create_render_and_poll_completion(
+    render_manager: Arc<RenderManager>,
     render_config: RenderConfig,
 ) -> Result<(), String> {
-    // Create render manager
-    let render_manager = RenderManager::new(
-        Arc::clone(&storage),
-        Threads::AllWithDefault(NonZero::new(24).unwrap()),
-    )
-    .await
-    .map_err(|e| format!("Failed to initialize render manager: {}", e))?;
-
-    let rm = render_manager.clone();
-    rayon::spawn(move || rm.start());
-
     let render = render_manager
         .create_render(render_config)
         .await

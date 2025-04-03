@@ -1,8 +1,7 @@
 mod in_memory;
 use std::{
-    fmt::{Display, Error, Pointer},
+    fmt::Display,
     ops::{Deref, DerefMut},
-    pin::Pin,
 };
 
 pub use in_memory::*;
@@ -19,11 +18,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::{deserialization::RenderConfig, shading::Color, utils::ProgressInfo};
 
-use super::{PixelData, RenderManagerError, RenderParameters};
+use super::{PixelData, RenderParameters};
 
 pub type RenderID = u32;
-pub type AsyncProgressFn<'a> =
-    Box<dyn Fn(ProgressInfo) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>> + Send + Sync + 'a>;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -206,14 +203,10 @@ pub trait RenderStorage: Send + Sync + 'static {
 
     async fn get_next_id(&self) -> Result<RenderID, RenderStorageError>;
 
-    fn get_update_progress_fn<'a>(&'a self, render_id: RenderID) -> AsyncProgressFn<'a> {
-        Box::new(move |progress_info: ProgressInfo| {
-            Box::pin(async move {
-                if let Err(e) = self.update_render_progress(render_id, progress_info).await {
-                    println!("Failed to update render state: {}", e);
-                }
-            })
-        })
+    async fn update_progress<'a>(&'a self, render_id: RenderID, progress_info: ProgressInfo) {
+        if let Err(e) = self.update_render_progress(render_id, progress_info).await {
+            println!("Failed to update render state: {}", e);
+        }
     }
 
     /// Find all renders that are in the Running state

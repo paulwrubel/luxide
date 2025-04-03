@@ -1,15 +1,16 @@
 use std::{
     fmt::Display,
-    sync::{Arc, Mutex, mpsc},
+    sync::{Arc, Mutex},
 };
 
 use axum::http::StatusCode;
 use image::RgbaImage;
+use tokio::sync::mpsc;
 
 use crate::{
     deserialization::RenderConfig,
     tracing::{PixelData, RenderState, Threads, Tracer},
-    utils::{ProgressInfo, ProgressTracker, Synchronizer},
+    utils::{ProgressInfo, ProgressTracker},
 };
 
 use super::{Render, RenderCheckpoint, RenderID, RenderStorage, RenderStorageError};
@@ -19,15 +20,37 @@ use std::collections::HashSet;
 #[derive(Clone)]
 pub struct RenderManager {
     storage: Arc<dyn RenderStorage>,
-    thread_pool: Arc<rayon::ThreadPool>,
-    sync: Arc<Mutex<Synchronizer>>,
+    global_thread_pool: Option<Arc<rayon::ThreadPool>>,
     running_renders: Arc<Mutex<HashSet<RenderID>>>,
 }
 
 const POLLING_INTERVAL_MS: u64 = 1000;
 
 impl RenderManager {
-    pub async fn new(storage: Arc<dyn RenderStorage>, threads: Threads) -> Result<Self, String> {
+    pub async fn new(storage: Arc<dyn RenderStorage>) -> Result<Self, String> {
+        Self::new_with_optional_global_thread_pool(storage, None).await
+    }
+
+    pub async fn new_with_global_thread_pool(
+        storage: Arc<dyn RenderStorage>,
+        threads: Threads,
+    ) -> Result<Self, String> {
+        Self::new_with_optional_global_thread_pool(
+            storage,
+            Some(Arc::new(
+                rayon::ThreadPoolBuilder::new()
+                    .num_threads(threads.effective_count())
+                    .build()
+                    .unwrap(),
+            )),
+        )
+        .await
+    }
+
+    async fn new_with_optional_global_thread_pool(
+        storage: Arc<dyn RenderStorage>,
+        thread_pool: Option<Arc<rayon::ThreadPool>>,
+    ) -> Result<Self, String> {
         // find any renders that were left in Running or Pausing state
         let mut running_or_pausing_renders = storage
             .find_renders_in_state(RenderState::Running {
@@ -55,29 +78,18 @@ impl RenderManager {
 
         Ok(Self {
             storage,
-            thread_pool: Arc::new(
-                rayon::ThreadPoolBuilder::new()
-                    .num_threads(threads.effective_count())
-                    .build()
-                    .unwrap(),
-            ),
-            sync: Arc::new(Mutex::new(Synchronizer::new())),
+            global_thread_pool: thread_pool,
             running_renders: Arc::new(Mutex::new(HashSet::new())),
         })
     }
 
-    pub fn start(&self) {
+    pub async fn start(&self) {
         println!("Starting render manager...");
 
         loop {
             {
                 let renders = {
-                    match self
-                        .sync
-                        .lock()
-                        .unwrap()
-                        .block_on(self.storage.get_all_renders())
-                    {
+                    match self.storage.get_all_renders().await {
                         Ok(renders) => renders,
                         Err(e) => {
                             println!("Failed to get renders: {e}");
@@ -91,7 +103,8 @@ impl RenderManager {
                     r.state == RenderState::Created && r.config.parameters.checkpoints > 0
                 });
                 for render in created_renders.cloned() {
-                    self.spawn_tracer_thread_to_next_checkpoint(render, None);
+                    self.spawn_tracer_thread_to_next_checkpoint(render, None)
+                        .await;
                 }
 
                 // move FinishedCheckpoint renders to next checkpoint if applicable
@@ -102,60 +115,67 @@ impl RenderManager {
                     _ => false,
                 });
                 for render in checkpointed_renders.cloned() {
-                    let previous_checkpoint =
-                        match render.state {
-                            RenderState::FinishedCheckpointIteration(checkpoint) => {
-                                match self.sync.lock().unwrap().block_on(
-                                    self.storage.get_render_checkpoint(render.id, checkpoint),
-                                ) {
-                                    Ok(Some(checkpoint)) => Some(checkpoint),
-                                    Ok(None) => None,
-                                    Err(e) => {
-                                        println!("Failed to get render checkpoint: {e}");
-                                        continue;
-                                    }
+                    let previous_checkpoint = match render.state {
+                        RenderState::FinishedCheckpointIteration(checkpoint) => {
+                            match self
+                                .storage
+                                .get_render_checkpoint(render.id, checkpoint)
+                                .await
+                            {
+                                Ok(Some(checkpoint)) => Some(checkpoint),
+                                Ok(None) => None,
+                                Err(e) => {
+                                    println!("Failed to get render checkpoint: {e}");
+                                    continue;
                                 }
                             }
-                            _ => None,
-                        };
+                        }
+                        _ => None,
+                    };
 
-                    self.spawn_tracer_thread_to_next_checkpoint(render, previous_checkpoint);
+                    self.spawn_tracer_thread_to_next_checkpoint(render, previous_checkpoint)
+                        .await;
                 }
             }
 
             // sleep until time to poll again
-            std::thread::sleep(std::time::Duration::from_millis(POLLING_INTERVAL_MS));
+            tokio::time::sleep(tokio::time::Duration::from_millis(POLLING_INTERVAL_MS)).await;
         }
     }
 
-    fn spawn_tracer_thread_to_next_checkpoint(
+    async fn spawn_tracer_thread_to_next_checkpoint(
         &self,
         render: Render,
         previous_checkpoint: Option<RenderCheckpoint>,
-    ) {
+    ) -> tokio::task::JoinHandle<()> {
         // add render to running set
         self.running_renders.lock().unwrap().insert(render.id);
 
         let running_renders = Arc::clone(&self.running_renders);
         let storage = Arc::clone(&self.storage);
-        let sync = Arc::clone(&self.sync);
-        let thread_pool = Arc::clone(&self.thread_pool);
+        let thread_pool = self.global_thread_pool.as_ref().cloned();
 
-        self.thread_pool.spawn(move || {
-            let tracer = Tracer::new(Arc::clone(&thread_pool));
+        let join_handle = tokio::spawn(async move {
+            let tracer = match thread_pool {
+                Some(pool) => Tracer::from_thread_pool(pool),
+                None => Tracer::new(),
+            };
 
             let iteration = match previous_checkpoint {
                 Some(ref rcp) => rcp.iteration + 1,
                 None => 1,
             };
 
-            match sync.lock().unwrap().block_on(storage.update_render_state(
-                render.id,
-                RenderState::Running {
-                    checkpoint_iteration: iteration,
-                    progress_info: ProgressInfo::default(),
-                },
-            )) {
+            match storage
+                .update_render_state(
+                    render.id,
+                    RenderState::Running {
+                        checkpoint_iteration: iteration,
+                        progress_info: ProgressInfo::default(),
+                    },
+                )
+                .await
+            {
                 Err(e) => {
                     println!("Failed to update render state: {e}");
                     // remove from running set on error
@@ -165,7 +185,7 @@ impl RenderManager {
                 Ok(_) => (),
             }
 
-            let mut initial_pixel_data = match previous_checkpoint {
+            let initial_pixel_data = match previous_checkpoint {
                 Some(rcp) => rcp.pixel_data,
                 None => PixelData::new(),
             };
@@ -175,54 +195,53 @@ impl RenderManager {
                 .compile()
                 .expect("Failing to compile render config at tracing time!");
 
-            let (sender, receiver) = mpsc::channel();
+            let (sender, mut receiver) = mpsc::channel(100);
 
             let (width, height) = render.config.parameters.image_dimensions;
-            {
+            let new_pixel_data = {
                 let storage = Arc::clone(&storage);
-                let sync = Arc::clone(&sync);
-                let initial_pixel_data = &mut initial_pixel_data;
 
-                thread_pool.join(
-                    move || {
-                        let update_fn = storage.get_update_progress_fn(render.id);
-
+                let (_, new_pixel_data) = tokio::join!(
+                    async move {
                         let total = u64::from(width) * u64::from(height);
                         let mut progress_tracker = ProgressTracker::new(
                             total,
                             50,
                             (total / 1000).max(1),
-                            move |progress_info| {
-                                sync.lock().unwrap().block_on(update_fn(progress_info));
-                            },
+                            |progress_info| storage.update_progress(render.id, progress_info),
                         );
-                        for _ in receiver {
-                            progress_tracker.mark();
+                        while let Some(_) = receiver.recv().await {
+                            progress_tracker.mark().await;
                         }
                     },
-                    move || {
-                        println!("Rendering to checkpoint {iteration}");
-                        tracer.render_to_checkpoint_iteration(
-                            iteration,
-                            initial_pixel_data,
-                            &render_data,
-                            sender,
-                        );
-                        println!("Finished rendering to checkpoint {iteration}");
+                    async move {
+                        let new_pixel_data = tokio::task::spawn_blocking(move || {
+                            let data = tracer.render_to_checkpoint_iteration(
+                                iteration,
+                                initial_pixel_data,
+                                &render_data,
+                                sender,
+                            );
+                            data
+                        })
+                        .await;
+
+                        new_pixel_data.expect("Failed to render to checkpoint")
                     },
                 );
-            }
+
+                new_pixel_data
+            };
 
             println!("Saving pixel_data...");
-
-            match sync
-                .lock()
-                .unwrap()
-                .block_on(storage.create_render_checkpoint(RenderCheckpoint {
+            match storage
+                .create_render_checkpoint(RenderCheckpoint {
                     render_id: render.id,
                     iteration,
-                    pixel_data: initial_pixel_data,
-                })) {
+                    pixel_data: new_pixel_data,
+                })
+                .await
+            {
                 Err(e) => {
                     println!("Failed to create render checkpoint: {e}");
                     // remove from running set on error
@@ -231,11 +250,10 @@ impl RenderManager {
                 }
                 Ok(_) => (),
             }
-
             println!("Finished saving pixel_data");
 
             // check if render was paused
-            let current_state = match sync.lock().unwrap().block_on(storage.get_render(render.id)) {
+            let current_state = match storage.get_render(render.id).await {
                 Ok(Some(r)) => r.state,
                 Ok(None) => {
                     println!("Render {} not found", render.id);
@@ -252,10 +270,13 @@ impl RenderManager {
             // check current state to handle completion
             match current_state {
                 RenderState::Running { .. } => {
-                    match sync.lock().unwrap().block_on(storage.update_render_state(
-                        render.id,
-                        RenderState::FinishedCheckpointIteration(iteration),
-                    )) {
+                    match storage
+                        .update_render_state(
+                            render.id,
+                            RenderState::FinishedCheckpointIteration(iteration),
+                        )
+                        .await
+                    {
                         Ok(_) => {
                             // remove render from running set
                             println!(
@@ -271,9 +292,10 @@ impl RenderManager {
                 }
                 RenderState::Pausing { .. } => {
                     // render was paused during this checkpoint, transition to fully paused
-                    match sync.lock().unwrap().block_on(
-                        storage.update_render_state(render.id, RenderState::Paused(iteration)),
-                    ) {
+                    match storage
+                        .update_render_state(render.id, RenderState::Paused(iteration))
+                        .await
+                    {
                         Ok(_) => {
                             println!("Render {} paused at checkpoint {}", render.id, iteration);
                         }
@@ -292,6 +314,8 @@ impl RenderManager {
                 }
             }
         });
+
+        join_handle
     }
 
     pub async fn get_render(&self, id: RenderID) -> Result<Option<Render>, RenderManagerError> {

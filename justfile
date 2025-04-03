@@ -18,15 +18,15 @@ run-postgres:
     docker compose up -d postgres
 
 [group('build')]
-build: clean
+build:
     cargo build --release
 
 [group('build')]
-build-api: clean
+build-api:
     cargo build --release --bin {{binary_name_api}}
 
 [group('build')]
-build-cli: clean
+build-cli:
     cargo build --release --bin {{binary_name_cli}}
 
 [group('misc')]

@@ -93,23 +93,26 @@ impl From<ProgressInfo> for String {
     }
 }
 
-pub struct ProgressTracker<'a> {
+pub struct ProgressTracker<C, F>
+where
+    C: Fn(ProgressInfo) -> F,
+    F: Future,
+{
     instants: VecDeque<Instant>,
     current: u64,
     total: u64,
     start: Instant,
     memory: usize,
     update_interval: u64,
-    update_fn: Box<dyn Fn(ProgressInfo) + 'a>,
+    update_fn: C,
 }
 
-impl<'a> ProgressTracker<'a> {
-    pub fn new(
-        total: u64,
-        memory: usize,
-        update_interval: u64,
-        update_fn: impl Fn(ProgressInfo) + 'a,
-    ) -> Self {
+impl<C, F> ProgressTracker<C, F>
+where
+    C: Fn(ProgressInfo) -> F,
+    F: Future,
+{
+    pub fn new(total: u64, memory: usize, update_interval: u64, update_fn: C) -> Self {
         Self {
             instants: VecDeque::with_capacity(memory),
             current: 0,
@@ -117,15 +120,15 @@ impl<'a> ProgressTracker<'a> {
             start: Instant::now(),
             memory,
             update_interval,
-            update_fn: Box::new(update_fn),
+            update_fn: update_fn,
         }
     }
 
-    pub fn mark(&mut self) {
+    pub async fn mark(&mut self) {
         self.current += 1;
         if self.current % self.update_interval == 0 || self.current == self.total {
             self.push_instant();
-            (self.update_fn)(self.get_progress_info());
+            (self.update_fn)(self.get_progress_info()).await;
         }
     }
 

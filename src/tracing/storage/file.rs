@@ -8,7 +8,7 @@ use crate::{
     utils,
 };
 
-use super::{AsyncProgressFn, ProgressInfo, RenderStorage, RenderStorageError};
+use super::{ProgressInfo, RenderStorage, RenderStorageError};
 
 #[derive(Clone)]
 pub struct FileStorage {
@@ -258,23 +258,19 @@ impl RenderStorage for FileStorage {
         Ok(max_id + 1)
     }
 
-    fn get_update_progress_fn<'a>(&'a self, render_id: RenderID) -> AsyncProgressFn<'a> {
-        Box::new(move |progress_info: ProgressInfo| {
-            Box::pin(async move {
-                if let Err(e) = self.update_render_progress(render_id, progress_info).await {
-                    println!("Failed to update render state: {e}");
-                }
+    async fn update_progress<'a>(&'a self, render_id: RenderID, progress_info: ProgressInfo) {
+        if let Err(e) = self.update_render_progress(render_id, progress_info).await {
+            println!("Failed to update render state: {}", e);
+        }
 
-                // TODO: print info out here! this is the spot!
+        // TODO: print info out here! this is the spot!
 
-                // print!(
-                //     "\r{}{}{}",
-                //     " ".repeat(indentation),
-                //     progress_string,
-                //     " ".repeat(10)
-                // );
-                // stdout().flush().unwrap();
-            })
-        })
+        // print!(
+        //     "\r{}{}{}",
+        //     " ".repeat(indentation),
+        //     progress_string,
+        //     " ".repeat(10)
+        // );
+        // stdout().flush().unwrap();
     }
 }
