@@ -1,5 +1,9 @@
 mod in_memory;
-use std::pin::Pin;
+use std::{
+    fmt::{Display, Error, Pointer},
+    ops::{Deref, DerefMut},
+    pin::Pin,
+};
 
 pub use in_memory::*;
 
@@ -15,7 +19,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{deserialization::RenderConfig, shading::Color, utils::ProgressInfo};
 
-use super::{PixelData, RenderParameters};
+use super::{PixelData, RenderManagerError, RenderParameters};
 
 pub type RenderID = u32;
 pub type AsyncProgressFn<'a> =
@@ -118,11 +122,44 @@ impl RenderCheckpoint {
     }
 }
 
-pub type RenderStorageError = String;
+pub struct RenderStorageError(pub String);
+
+impl From<String> for RenderStorageError {
+    fn from(error: String) -> Self {
+        Self(error)
+    }
+}
+
+impl From<RenderStorageError> for String {
+    fn from(error: RenderStorageError) -> Self {
+        error.0
+    }
+}
+
+impl Display for RenderStorageError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl Deref for RenderStorageError {
+    type Target = str;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for RenderStorageError {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
 
 #[async_trait::async_trait]
 pub trait RenderStorage: Send + Sync + 'static {
     async fn get_render(&self, id: RenderID) -> Result<Option<Render>, RenderStorageError>;
+
+    async fn render_exists(&self, id: RenderID) -> Result<bool, RenderStorageError>;
 
     async fn get_all_renders(&self) -> Result<Vec<Render>, RenderStorageError>;
 
@@ -141,10 +178,11 @@ pub trait RenderStorage: Send + Sync + 'static {
         progress_info: ProgressInfo,
     ) -> Result<(), RenderStorageError>;
 
-    async fn create_render_checkpoint(
+    async fn update_render_checkpoints(
         &self,
-        render_checkpoint: RenderCheckpoint,
-    ) -> Result<(), String>;
+        render_id: RenderID,
+        new_total_checkpoints: u32,
+    ) -> Result<(), RenderStorageError>;
 
     async fn get_render_checkpoint(
         &self,
@@ -152,16 +190,27 @@ pub trait RenderStorage: Send + Sync + 'static {
         checkpoint: u32,
     ) -> Result<Option<RenderCheckpoint>, RenderStorageError>;
 
-    async fn get_next_id(&self) -> Result<RenderID, RenderStorageError>;
+    async fn render_checkpoint_exists(
+        &self,
+        render_id: RenderID,
+        checkpoint: u32,
+    ) -> Result<bool, RenderStorageError>;
+
+    async fn create_render_checkpoint(
+        &self,
+        render_checkpoint: RenderCheckpoint,
+    ) -> Result<(), RenderStorageError>;
 
     /// Delete a render and all its associated checkpoints
     async fn delete_render_and_checkpoints(&self, id: RenderID) -> Result<(), RenderStorageError>;
+
+    async fn get_next_id(&self) -> Result<RenderID, RenderStorageError>;
 
     fn get_update_progress_fn<'a>(&'a self, render_id: RenderID) -> AsyncProgressFn<'a> {
         Box::new(move |progress_info: ProgressInfo| {
             Box::pin(async move {
                 if let Err(e) = self.update_render_progress(render_id, progress_info).await {
-                    println!("Failed to update render state: {e}");
+                    println!("Failed to update render state: {}", e);
                 }
             })
         })
@@ -195,7 +244,7 @@ pub trait RenderStorage: Send + Sync + 'static {
         {
             let render = match self.get_render(id).await? {
                 Some(r) => r,
-                None => return Err(format!("Render {} not found", id)),
+                None => return Err(format!("Render {} not found", id).into()),
             };
 
             // get the last checkpoint from the current running state

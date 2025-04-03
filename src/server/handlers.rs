@@ -14,11 +14,11 @@ use image::ImageOutputFormat;
 
 use crate::{
     deserialization::RenderConfig,
-    tracing::{Render, RenderID, RenderManager, RenderState},
+    tracing::{Render, RenderID, RenderManager, RenderManagerError, RenderState},
     utils::FormattedProgressInfo,
 };
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize)]
 struct FormattedRender {
@@ -99,7 +99,7 @@ pub async fn create_render(
 
     match render_manager.create_render(render_config).await {
         Ok(render) => (StatusCode::CREATED, Json(render)).into_response(),
-        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e).into_response(),
+        Err(e) => e.into(),
     }
 }
 
@@ -109,7 +109,7 @@ pub async fn get_render(State(render_manager): LuxideState, Path(id): Path<Rende
     match render_manager.get_render(id).await {
         Ok(Some(render)) => Json(FormattedRender::from(render)).into_response(),
         Ok(None) => StatusCode::NOT_FOUND.into_response(),
-        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e).into_response(),
+        Err(e) => e.into(),
     }
 }
 
@@ -122,7 +122,7 @@ pub async fn get_all_renders(State(render_manager): LuxideState) -> Response {
                 renders.into_iter().map(FormattedRender::from).collect();
             Json(formatted_renders).into_response()
         }
-        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e).into_response(),
+        Err(e) => e.into(),
     }
 }
 
@@ -132,7 +132,7 @@ pub async fn delete_render(
 ) -> Response {
     match render_manager.delete_render_and_checkpoints(id).await {
         Ok(()) => StatusCode::NO_CONTENT.into_response(),
-        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e).into_response(),
+        Err(e) => e.into(),
     }
 }
 
@@ -142,7 +142,36 @@ pub async fn pause_render(
 ) -> Response {
     match render_manager.pause_render(id).await {
         Ok(_) => StatusCode::NO_CONTENT.into_response(),
-        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e).into_response(),
+        Err(e) => e.into(),
+    }
+}
+
+pub async fn resume_render(
+    State(render_manager): LuxideState,
+    Path(id): Path<RenderID>,
+) -> Response {
+    match render_manager.resume_render(id).await {
+        Ok(_) => StatusCode::NO_CONTENT.into_response(),
+        Err(e) => e.into(),
+    }
+}
+
+#[derive(Clone, Copy, Serialize, Deserialize)]
+pub struct ExtendRenderParameters {
+    new_total_checkpoints: u32,
+}
+
+pub async fn extend_render(
+    State(render_manager): LuxideState,
+    Path(id): Path<RenderID>,
+    Json(extend_render_parameters): Json<ExtendRenderParameters>,
+) -> Response {
+    match render_manager
+        .extend_render(id, extend_render_parameters.new_total_checkpoints)
+        .await
+    {
+        Ok(_) => StatusCode::NO_CONTENT.into_response(),
+        Err(e) => e.into(),
     }
 }
 
@@ -176,6 +205,17 @@ pub async fn get_render_checkpoint_image(
                 .into_response()
         }
         Ok(None) => StatusCode::NOT_FOUND.into_response(),
-        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e).into_response(),
+        Err(e) => e.into(),
+    }
+}
+
+impl From<RenderManagerError> for Response {
+    fn from(error: RenderManagerError) -> Self {
+        match error {
+            RenderManagerError::ClientError(code, err) => (code, err).into_response(),
+            RenderManagerError::ServerError(err) => {
+                (StatusCode::INTERNAL_SERVER_ERROR, err).into_response()
+            }
+        }
     }
 }

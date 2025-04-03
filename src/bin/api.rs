@@ -38,7 +38,7 @@ async fn main() -> Result<(), String> {
     // Create storage backend
     let storage: Arc<dyn RenderStorage> = match config.storage {
         StorageConfig::File { output_dir } => {
-            Arc::new(FileStorage::new(PathBuf::from(output_dir))?)
+            Arc::new(FileStorage::new(PathBuf::from(output_dir)).map_err(|e| e.to_string())?)
         }
         StorageConfig::InMemory => Arc::new(InMemoryStorage::new()),
         StorageConfig::Postgres {

@@ -30,7 +30,7 @@ impl PostgresStorage {
 
 #[async_trait::async_trait]
 impl RenderStorage for PostgresStorage {
-    async fn get_render(&self, id: RenderID) -> Result<Option<Render>, String> {
+    async fn get_render(&self, id: RenderID) -> Result<Option<Render>, RenderStorageError> {
         match sqlx::query!(
             r#"
                 SELECT id, state, config 
@@ -60,7 +60,26 @@ impl RenderStorage for PostgresStorage {
                 }))
             }
             Ok(None) => Ok(None),
-            Err(e) => Err(format!("Failed to get render with id {id}: {e}")),
+            Err(e) => Err(format!("Failed to get render with id {id}: {e}").into()),
+        }
+    }
+
+    async fn render_exists(&self, id: RenderID) -> Result<bool, RenderStorageError> {
+        match sqlx::query!(
+            r#"
+                SELECT 1 as exists
+                FROM renders
+                WHERE id = $1
+                LIMIT 1
+            "#,
+            id as i32
+        )
+        .fetch_optional(&self.pool)
+        .await
+        {
+            Ok(Some(_)) => Ok(true),
+            Ok(None) => Ok(false),
+            Err(e) => Err(format!("Failed to check if render with id {id} exists: {e}").into()),
         }
     }
 
@@ -113,11 +132,11 @@ impl RenderStorage for PostgresStorage {
         {
             Ok(res) => match res.rows_affected() {
                 1 => Ok(render),
-                n => Err(format!(
-                    "Failed to create render. Expecting 1 row affected, got {n}"
-                )),
+                n => Err(
+                    format!("Failed to create render. Expecting 1 row affected, got {n}").into(),
+                ),
             },
-            Err(e) => Err(format!("Failed to create render: {e}")),
+            Err(e) => Err(format!("Failed to create render: {e}").into()),
         }
     }
 
@@ -143,15 +162,16 @@ impl RenderStorage for PostgresStorage {
                 1 => Ok(()),
                 n => Err(format!(
                     "Failed to update render state. Expecting 1 row affected, got {n}"
-                )),
+                )
+                .into()),
             },
-            Err(e) => Err(format!("Failed to update render state: {e}")),
+            Err(e) => Err(format!("Failed to update render state: {e}").into()),
         }
     }
 
     async fn update_render_progress(
         &self,
-        render_id: RenderID,
+        id: RenderID,
         progress_info: ProgressInfo,
     ) -> Result<(), RenderStorageError> {
         // only update if current state is Running or Pausing, preserving the checkpoint_iteration
@@ -167,13 +187,93 @@ impl RenderStorage for PostgresStorage {
                 AND (state ? 'running' OR state ? 'pausing')
             "#,
             serde_json::to_value(&progress_info).map_err(|e| e.to_string())?,
-            render_id as i64
+            id as i32
         )
         .execute(&self.pool)
         .await
         .map_err(|e| e.to_string())?;
 
         Ok(())
+    }
+
+    async fn update_render_checkpoints(
+        &self,
+        id: RenderID,
+        new_total_checkpoints: u32,
+    ) -> Result<(), RenderStorageError> {
+        sqlx::query!(
+            r#"
+                UPDATE renders
+                SET config = jsonb_set(config, '{parameters,checkpoints}', $1::jsonb)
+                WHERE id = $2
+            "#,
+            serde_json::to_value(&new_total_checkpoints).map_err(|e| e.to_string())?,
+            id as i32
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        Ok(())
+    }
+
+    async fn get_render_checkpoint(
+        &self,
+        id: RenderID,
+        iteration: u32,
+    ) -> Result<Option<RenderCheckpoint>, RenderStorageError> {
+        match sqlx::query!(
+            r#"
+                SELECT pixel_data
+                FROM checkpoints
+                WHERE render_id = $1 AND iteration = $2
+            "#,
+            id as i32,
+            iteration as i32,
+        )
+        .fetch_optional(&self.pool)
+        .await
+        {
+            Ok(Some(row)) => {
+                let pixel_data = decode_pixel_data(&row.pixel_data)
+                    .map_err(|e| format!("Failed to decode pixel data: {}", e))?;
+
+                Ok(Some(RenderCheckpoint {
+                    render_id: id,
+                    iteration,
+                    pixel_data,
+                }))
+            }
+            Ok(None) => Ok(None),
+            Err(e) => Err(format!(
+                "Failed to get render checkpoint with id {id} and iteration {iteration}: {e}"
+            )
+            .into()),
+        }
+    }
+
+    async fn render_checkpoint_exists(
+        &self,
+        id: RenderID,
+        iteration: u32,
+    ) -> Result<bool, RenderStorageError> {
+        match sqlx::query!(
+            r#"
+                SELECT 1 as exists
+                FROM checkpoints
+                WHERE render_id = $1 AND iteration = $2
+                LIMIT 1
+            "#,
+            id as i32,
+            iteration as i32,
+        )
+        .fetch_optional(&self.pool)
+        .await
+        {
+            Ok(Some(_)) => Ok(true),
+            Ok(None) => Ok(false),
+            Err(e) => Err(format!("Failed to check if render checkpoint with id {id} and iteration {iteration} exists: {e}").into()),
+        }
     }
 
     async fn create_render_checkpoint(
@@ -199,41 +299,10 @@ impl RenderStorage for PostgresStorage {
                 1 => Ok(()),
                 n => Err(format!(
                     "Failed to create render checkpoint. Expecting 1 row affected, got {n}"
-                )),
+                )
+                .into()),
             },
-            Err(e) => Err(format!("Failed to create render checkpoint: {e}")),
-        }
-    }
-
-    async fn get_render_checkpoint(
-        &self,
-        render_id: RenderID,
-        iteration: u32,
-    ) -> Result<Option<RenderCheckpoint>, RenderStorageError> {
-        match sqlx::query!(
-            r#"
-                SELECT pixel_data
-                FROM checkpoints
-                WHERE render_id = $1 AND iteration = $2
-            "#,
-            render_id as i32,
-            iteration as i32,
-        )
-        .fetch_optional(&self.pool)
-        .await
-        {
-            Ok(Some(row)) => {
-                let pixel_data = decode_pixel_data(&row.pixel_data)
-                    .map_err(|e| format!("Failed to decode pixel data: {}", e))?;
-
-                Ok(Some(RenderCheckpoint {
-                    render_id,
-                    iteration,
-                    pixel_data,
-                }))
-            }
-            Ok(None) => Ok(None),
-            Err(e) => Err(format!("Failed to get render checkpoint: {}", e)),
+            Err(e) => Err(format!("Failed to create render checkpoint: {e}").into()),
         }
     }
 
@@ -244,7 +313,7 @@ impl RenderStorage for PostgresStorage {
             .await
             .map_err(|e| format!("Failed to begin transaction: {}", e))?;
 
-        // Delete checkpoints first (foreign key constraint will prevent orphaned checkpoints)
+        // delete checkpoints first (foreign key constraint will prevent orphaned checkpoints)
         sqlx::query!(
             r#"
                 DELETE FROM checkpoints
@@ -256,7 +325,7 @@ impl RenderStorage for PostgresStorage {
         .await
         .map_err(|e| format!("Failed to delete checkpoints: {}", e))?;
 
-        // Delete the render
+        // delete the render
         sqlx::query!(
             r#"
                 DELETE FROM renders
@@ -268,7 +337,7 @@ impl RenderStorage for PostgresStorage {
         .await
         .map_err(|e| format!("Failed to delete render: {}", e))?;
 
-        // Commit the transaction
+        // commit the transaction
         tx.commit()
             .await
             .map_err(|e| format!("Failed to commit transaction: {}", e))?;

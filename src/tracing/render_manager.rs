@@ -1,5 +1,9 @@
-use std::sync::{Arc, Mutex, mpsc};
+use std::{
+    fmt::Display,
+    sync::{Arc, Mutex, mpsc},
+};
 
+use axum::http::StatusCode;
 use image::RgbaImage;
 
 use crate::{
@@ -23,10 +27,7 @@ pub struct RenderManager {
 const POLLING_INTERVAL_MS: u64 = 1000;
 
 impl RenderManager {
-    pub async fn new(
-        storage: Arc<dyn RenderStorage>,
-        threads: Threads,
-    ) -> Result<Self, RenderStorageError> {
+    pub async fn new(storage: Arc<dyn RenderStorage>, threads: Threads) -> Result<Self, String> {
         // find any renders that were left in Running or Pausing state
         let mut running_or_pausing_renders = storage
             .find_renders_in_state(RenderState::Running {
@@ -140,8 +141,8 @@ impl RenderManager {
         let sync = Arc::clone(&self.sync);
         let thread_pool = Arc::clone(&self.thread_pool);
 
-        rayon::spawn(move || {
-            let tracer = Tracer::new(thread_pool);
+        self.thread_pool.spawn(move || {
+            let tracer = Tracer::new(Arc::clone(&thread_pool));
 
             let iteration = match previous_checkpoint {
                 Some(ref rcp) => rcp.iteration + 1,
@@ -180,9 +181,10 @@ impl RenderManager {
             {
                 let storage = Arc::clone(&storage);
                 let sync = Arc::clone(&sync);
+                let initial_pixel_data = &mut initial_pixel_data;
 
-                rayon::join(
-                    || {
+                thread_pool.join(
+                    move || {
                         let update_fn = storage.get_update_progress_fn(render.id);
 
                         let total = u64::from(width) * u64::from(height);
@@ -198,11 +200,11 @@ impl RenderManager {
                             progress_tracker.mark();
                         }
                     },
-                    || {
+                    move || {
                         println!("Rendering to checkpoint {iteration}");
                         tracer.render_to_checkpoint_iteration(
                             iteration,
-                            &mut initial_pixel_data,
+                            initial_pixel_data,
                             &render_data,
                             sender,
                         );
@@ -292,55 +294,84 @@ impl RenderManager {
         });
     }
 
-    pub async fn get_render(&self, id: RenderID) -> Result<Option<Render>, RenderStorageError> {
-        self.storage.get_render(id).await
+    pub async fn get_render(&self, id: RenderID) -> Result<Option<Render>, RenderManagerError> {
+        if !self.storage.render_exists(id).await? {
+            return Ok(None);
+        }
+
+        self.storage.get_render(id).await.map_err(|e| e.into())
     }
 
-    pub async fn get_all_renders(&self) -> Result<Vec<Render>, RenderStorageError> {
-        self.storage.get_all_renders().await
+    pub async fn get_all_renders(&self) -> Result<Vec<Render>, RenderManagerError> {
+        self.storage.get_all_renders().await.map_err(|e| e.into())
     }
 
     pub async fn create_render(
         &self,
         render_config: RenderConfig,
-    ) -> Result<Render, RenderStorageError> {
+    ) -> Result<Render, RenderManagerError> {
         // compile just for validation purposes
         if let Err(e) = render_config.compile() {
-            return Err(e.to_string());
+            return Err(RenderManagerError::ClientError(StatusCode::BAD_REQUEST, e));
         }
 
         let next_id = self.storage.get_next_id().await?;
         let render = Render::new(next_id, render_config);
-        self.storage.create_render(render).await
+        self.storage
+            .create_render(render)
+            .await
+            .map_err(|e| e.into())
     }
 
     pub async fn get_render_checkpoint(
         &self,
         id: RenderID,
         iteration: u32,
-    ) -> Result<Option<RenderCheckpoint>, RenderStorageError> {
-        self.storage.get_render_checkpoint(id, iteration).await
+    ) -> Result<Option<RenderCheckpoint>, RenderManagerError> {
+        if !self.storage.render_exists(id).await? {
+            return Ok(None);
+        }
+
+        if !self.storage.render_checkpoint_exists(id, iteration).await? {
+            return Ok(None);
+        }
+
+        self.storage
+            .get_render_checkpoint(id, iteration)
+            .await
+            .map_err(|e| e.into())
     }
 
     pub async fn delete_render_and_checkpoints(
         &self,
         id: RenderID,
-    ) -> Result<(), RenderStorageError> {
+    ) -> Result<(), RenderManagerError> {
         // check if render is running
         let is_running = self.running_renders.lock().unwrap().contains(&id);
         if is_running {
-            return Err("Cannot delete a render while it is running".to_string());
+            return Err(RenderManagerError::ClientError(
+                StatusCode::BAD_REQUEST,
+                "Cannot delete a render while it is running".to_string(),
+            ));
         }
 
         // delete the render and its checkpoints
-        self.storage.delete_render_and_checkpoints(id).await
+        self.storage
+            .delete_render_and_checkpoints(id)
+            .await
+            .map_err(|e| e.into())
     }
 
-    pub async fn pause_render(&self, id: RenderID) -> Result<(), RenderStorageError> {
-        // get current state
+    pub async fn pause_render(&self, id: RenderID) -> Result<(), RenderManagerError> {
+        // get render
         let render = match self.get_render(id).await? {
             Some(r) => r,
-            None => return Err(format!("Render {id} not found")),
+            None => {
+                return Err(RenderManagerError::ClientError(
+                    StatusCode::NOT_FOUND,
+                    "Render not found".to_string(),
+                ));
+            }
         };
 
         // can only pause a running render
@@ -361,19 +392,108 @@ impl RenderManager {
                         },
                     )
                     .await
+                    .map_err(|e| e.into())
             }
-            _ => Err(format!(
-                "Cannot pause render {id} in state {:?}",
-                render.state
+            _ => Err(RenderManagerError::ClientError(
+                StatusCode::BAD_REQUEST,
+                format!("Cannot pause render {id} in state {:?}", render.state),
             )),
         }
+    }
+
+    pub async fn resume_render(&self, id: RenderID) -> Result<(), RenderManagerError> {
+        // get render
+        let render = match self.get_render(id).await? {
+            Some(r) => r,
+            None => {
+                return Err(RenderManagerError::ClientError(
+                    StatusCode::NOT_FOUND,
+                    "Render not found".to_string(),
+                ));
+            }
+        };
+
+        // can only resume a pausing or paused render
+        match render.state {
+            RenderState::Paused(checkpoint_iteration) => {
+                // if the render is paused, just transition it to FinishedCheckpointIteration
+                //
+                // if it has more checkpoints to complete, the main loop will pick it up
+                println!("Resuming render {id} at checkpoint {checkpoint_iteration}");
+                self.storage
+                    .update_render_state(
+                        id,
+                        RenderState::FinishedCheckpointIteration(checkpoint_iteration),
+                    )
+                    .await
+                    .map_err(|e| e.into())
+            }
+            RenderState::Pausing {
+                checkpoint_iteration,
+                progress_info,
+            } => {
+                // if the render is pausing, that means the render thread for it is still running,
+                // so we can just seamlessly roll it back to Running and nothing will have changed
+                println!("Resuming render {id}");
+                self.storage
+                    .update_render_state(
+                        id,
+                        RenderState::Running {
+                            checkpoint_iteration,
+                            progress_info,
+                        },
+                    )
+                    .await
+                    .map_err(|e| e.into())
+            }
+            _ => {
+                return Err(RenderManagerError::ClientError(
+                    StatusCode::BAD_REQUEST,
+                    format!("Cannot resume render {id} in state {:?}", render.state),
+                ));
+            }
+        }
+    }
+
+    pub async fn extend_render(
+        &self,
+        id: RenderID,
+        new_total_checkpoints: u32,
+    ) -> Result<(), RenderManagerError> {
+        // get render
+        let render = match self.get_render(id).await? {
+            Some(r) => r,
+            None => {
+                return Err(RenderManagerError::ClientError(
+                    StatusCode::NOT_FOUND,
+                    "Render not found".to_string(),
+                ));
+            }
+        };
+
+        // make sure the extension is actually greater than the current total checkpoints
+        if new_total_checkpoints <= render.config.parameters.checkpoints {
+            return Err(RenderManagerError::ClientError(
+                StatusCode::BAD_REQUEST,
+                format!(
+                    "New total checkpoints ({}) must be greater than current total checkpoints ({})",
+                    new_total_checkpoints, render.config.parameters.checkpoints
+                ),
+            ));
+        }
+
+        // update render
+        self.storage
+            .update_render_checkpoints(id, new_total_checkpoints)
+            .await
+            .map_err(|e| e.into())
     }
 
     pub async fn get_render_checkpoint_as_image(
         &self,
         id: RenderID,
         iteration: u32,
-    ) -> Result<Option<RgbaImage>, RenderStorageError> {
+    ) -> Result<Option<RgbaImage>, RenderManagerError> {
         let render = self.storage.get_render(id).await?;
         let params = match render {
             Some(r) => r.config.parameters,
@@ -382,5 +502,28 @@ impl RenderManager {
 
         let checkpoint = self.storage.get_render_checkpoint(id, iteration).await?;
         Ok(checkpoint.map(|rcp| rcp.as_image(&params)))
+    }
+}
+pub enum RenderManagerError {
+    ClientError(StatusCode, String),
+    ServerError(String),
+}
+
+impl From<RenderStorageError> for RenderManagerError {
+    fn from(error: RenderStorageError) -> Self {
+        RenderManagerError::ServerError(error.0)
+    }
+}
+
+impl Display for RenderManagerError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            RenderManagerError::ClientError(status, message) => {
+                write!(f, "Client Error: {} | {}", status, message)
+            }
+            RenderManagerError::ServerError(message) => {
+                write!(f, "Server Error: 500 | {}", message)
+            }
+        }
     }
 }

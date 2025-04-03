@@ -1,0 +1,21 @@
+meta {
+  name: Extend Render By ID
+  type: http
+  seq: 7
+}
+
+post {
+  url: http://localhost:8080/renders/:id/extend
+  body: json
+  auth: inherit
+}
+
+params:path {
+  id: 12
+}
+
+body:json {
+  {
+    "new_total_checkpoints": 200
+  }
+}

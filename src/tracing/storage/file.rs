@@ -51,6 +51,10 @@ impl RenderStorage for FileStorage {
             .map(|(r, _)| r))
     }
 
+    async fn render_exists(&self, id: RenderID) -> Result<bool, RenderStorageError> {
+        Ok(self.renders.read().await.iter().any(|(r, _)| r.id == id))
+    }
+
     async fn get_all_renders(&self) -> Result<Vec<Render>, RenderStorageError> {
         Ok(self
             .renders
@@ -89,13 +93,13 @@ impl RenderStorage for FileStorage {
                 render.state = state;
                 Ok(())
             }
-            None => Err(format!("Render with id {id} not found")),
+            None => Err(format!("Render with id {id} not found").into()),
         }
     }
 
     async fn update_render_progress(
         &self,
-        render_id: RenderID,
+        id: RenderID,
         progress_info: ProgressInfo,
     ) -> Result<(), RenderStorageError> {
         match self
@@ -103,7 +107,7 @@ impl RenderStorage for FileStorage {
             .write()
             .await
             .iter_mut()
-            .find_map(|(r, _)| if r.id == render_id { Some(r) } else { None })
+            .find_map(|(r, _)| if r.id == id { Some(r) } else { None })
         {
             Some(render) => {
                 match render.state {
@@ -130,31 +134,28 @@ impl RenderStorage for FileStorage {
                     _ => Ok(()), // don't update progress for non-running states
                 }
             }
-            None => Err(format!("Render with id {render_id} not found")),
+            None => Err(format!("Render with id {id} not found").into()),
         }
     }
 
-    async fn create_render_checkpoint(
+    async fn update_render_checkpoints(
         &self,
-        checkpoint: RenderCheckpoint,
+        id: RenderID,
+        new_total_checkpoints: u32,
     ) -> Result<(), RenderStorageError> {
-        let renders = self.renders.read().await;
-        let (render, dir) = match renders.iter().find(|(r, _)| r.id == checkpoint.render_id) {
-            Some((r, dir)) => (r, dir),
-            None => return Err(format!("Render {} not found", checkpoint.render_id)),
-        };
-
-        let checkpoint_dir = dir.join("checkpoints");
-        if !checkpoint_dir.exists() {
-            fs::create_dir_all(&checkpoint_dir).map_err(|e| e.to_string())?;
+        match self
+            .renders
+            .write()
+            .await
+            .iter_mut()
+            .find_map(|(r, _)| if r.id == id { Some(r) } else { None })
+        {
+            Some(render) => {
+                render.config.parameters.checkpoints = new_total_checkpoints;
+                Ok(())
+            }
+            None => Err(format!("Render with id {id} not found").into()),
         }
-
-        // save checkpoint data as a png image
-        let image_file = checkpoint_dir.join(format!("{}.png", checkpoint.iteration));
-        let image = checkpoint.as_image(&render.config.parameters);
-        image.save(image_file).map_err(|e| e.to_string())?;
-
-        Ok(())
     }
 
     async fn get_render_checkpoint(
@@ -165,7 +166,7 @@ impl RenderStorage for FileStorage {
         let renders = self.renders.read().await;
         let (render, dir) = match renders.iter().find(|(r, _)| r.id == id) {
             Some((r, dir)) => (r, dir),
-            None => return Err(format!("Render {} not found", id)),
+            None => return Err(format!("Render {} not found", id).into()),
         };
 
         let checkpoint_dir = dir.join("checkpoints");
@@ -187,11 +188,43 @@ impl RenderStorage for FileStorage {
         )))
     }
 
-    async fn get_next_id(&self) -> Result<RenderID, RenderStorageError> {
+    async fn render_checkpoint_exists(
+        &self,
+        id: RenderID,
+        iteration: u32,
+    ) -> Result<bool, RenderStorageError> {
         let renders = self.renders.read().await;
-        let max_id = renders.iter().map(|(r, _)| r.id).max().unwrap_or(0);
+        let dir = match renders.iter().find(|(r, _)| r.id == id) {
+            Some((_, dir)) => dir,
+            None => return Err(format!("Render {} not found", id).into()),
+        };
 
-        Ok(max_id + 1)
+        let checkpoint_dir = dir.join("checkpoints");
+        let checkpoint_image_file = checkpoint_dir.join(format!("{}.png", iteration));
+        Ok(checkpoint_image_file.exists())
+    }
+
+    async fn create_render_checkpoint(
+        &self,
+        checkpoint: RenderCheckpoint,
+    ) -> Result<(), RenderStorageError> {
+        let renders = self.renders.read().await;
+        let (render, dir) = match renders.iter().find(|(r, _)| r.id == checkpoint.render_id) {
+            Some((r, dir)) => (r, dir),
+            None => return Err(format!("Render {} not found", checkpoint.render_id).into()),
+        };
+
+        let checkpoint_dir = dir.join("checkpoints");
+        if !checkpoint_dir.exists() {
+            fs::create_dir_all(&checkpoint_dir).map_err(|e| e.to_string())?;
+        }
+
+        // save checkpoint data as a png image
+        let image_file = checkpoint_dir.join(format!("{}.png", checkpoint.iteration));
+        let image = checkpoint.as_image(&render.config.parameters);
+        image.save(image_file).map_err(|e| e.to_string())?;
+
+        Ok(())
     }
 
     async fn delete_render_and_checkpoints(&self, id: RenderID) -> Result<(), RenderStorageError> {
@@ -203,7 +236,7 @@ impl RenderStorage for FileStorage {
                 .find_map(|(r, dir)| if r.id == id { Some(dir) } else { None })
             {
                 Some(dir) => dir.clone(),
-                None => return Err(format!("Render {} not found", id)),
+                None => return Err(format!("Render {} not found", id).into()),
             }
         };
 
@@ -216,6 +249,13 @@ impl RenderStorage for FileStorage {
         }
 
         Ok(())
+    }
+
+    async fn get_next_id(&self) -> Result<RenderID, RenderStorageError> {
+        let renders = self.renders.read().await;
+        let max_id = renders.iter().map(|(r, _)| r.id).max().unwrap_or(0);
+
+        Ok(max_id + 1)
     }
 
     fn get_update_progress_fn<'a>(&'a self, render_id: RenderID) -> AsyncProgressFn<'a> {

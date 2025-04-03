@@ -24,6 +24,8 @@ pub fn build_router() -> Router<Arc<RenderManager>> {
         )
         .route("/renders/{id}", delete(handlers::delete_render))
         .route("/renders/{id}/pause", post(handlers::pause_render))
+        .route("/renders/{id}/resume", post(handlers::resume_render))
+        .route("/renders/{id}/extend", post(handlers::extend_render))
 }
 
 pub async fn serve(router: Router, address: &str, port: u16) -> Result<(), String> {
