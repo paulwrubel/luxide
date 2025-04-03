@@ -76,30 +76,23 @@ impl Tracer {
         let colors = self.thread_pool.install(|| {
             let tiles = tiles.par_iter();
 
-            // let completed_tiles = Arc::new(AtomicUsize::new(0));
-
             let colors: PixelData = tiles
                 .flat_map(|tile| {
                     let tile_colors: PixelData = tile
                         .map(|(x, y)| {
-                            // println!("getting ray...");
                             let color = (0..parameters.samples_per_checkpoint).fold(
                                 Color::BLACK,
                                 |acc, _| {
-                                    // println!("[internal] getting ray...");
                                     let ray = cam.get_ray(x, y);
-                                    // println!("[internal] got ray!");
                                     let res = acc
                                         + cam.ray_color(
                                             ray,
                                             world.as_ref(),
                                             parameters.max_bounces,
                                         );
-                                    // println!("[internal] got the final calculation!");
                                     res
                                 },
                             );
-                            // println!("[internal] got the ray!");
                             // done with pixel!
 
                             // send progress
@@ -124,10 +117,7 @@ impl Tracer {
                         })
                         .collect();
 
-                    // completed_tiles.fetch_add(1, Ordering::SeqCst);
-
                     // done with tile!
-                    // println!("Done with tile: {}", completed_tiles.load(Ordering::SeqCst));
 
                     tile_colors
                 })
