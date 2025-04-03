@@ -14,8 +14,8 @@ body:json {
   {
     "parameters": {
       "image_dimensions": [
-        1200,
-        1200
+        800,
+        800
       ],
       "tile_dimensions": [
         1,
@@ -28,13 +28,14 @@ body:json {
       "use_scaling_truncation": true
     },
     "active_scene": {
-      "name": "cornell_box_spheres_hd",
+      "name": "cornell_box_spheres_hd_fast",
       "geometrics": [
         "left_wall",
         "right_wall",
         "floor",
         "ceiling",
         "ceiling_light",
+        "ceiling_light_wide",
         "back_wall",
         "front_wall",
         "far_left_sphere",
@@ -205,22 +206,22 @@ body:json {
         ],
         "material": "lambertian_white_light"
       },
-      "ceiling_light_dim": {
+      "ceiling_light_wide": {
         "type": "parallelogram",
         "lower_left": [
-          0.35,
+          0.1,
           0.999,
-          -0.65
+          -0.9
         ],
         "u": [
-          0.3,
+          0.8,
           0,
           0
         ],
         "v": [
           0,
           0,
-          0.3
+          0.8
         ],
         "material": "lambertian_white_light_dim"
       },
@@ -322,9 +323,9 @@ body:json {
       "solid_white_light_dim": {
         "type": "color",
         "color": [
-          3,
-          3,
-          3
+          1,
+          1,
+          1
         ]
       },
       "solid_cb_red_light_dim": {
