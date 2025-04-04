@@ -30,9 +30,7 @@ impl FileStorage {
         let formatted_timestamp = utils::get_formatted_timestamp_for(now);
         let sub_folder = format!(
             "{}_{}_{}",
-            render.id,
-            render.config.name(),
-            formatted_timestamp
+            render.id, render.config.name, formatted_timestamp
         );
         Ok(self.output_dir.join(sub_folder))
     }

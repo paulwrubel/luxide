@@ -43,11 +43,13 @@ impl RenderStorage for PostgresStorage {
         .await
         {
             Ok(Some(row)) => {
-                let state = serde_json::from_value(row.state)
-                    .map_err(|e| format!("Failed to deserialize render state: {}", e))?;
+                let state = serde_json::from_value(row.state).map_err(|e| {
+                    format!("Failed to deserialize render state for id {}: {}", id, e)
+                })?;
 
-                let config = serde_json::from_value(row.config)
-                    .map_err(|e| format!("Failed to deserialize render config: {}", e))?;
+                let config = serde_json::from_value(row.config).map_err(|e| {
+                    format!("Failed to deserialize render config for id {}: {}", id, e)
+                })?;
 
                 let db_id: RenderID = row
                     .id
@@ -97,10 +99,18 @@ impl RenderStorage for PostgresStorage {
 
         let mut renders = Vec::with_capacity(rows.len());
         for row in rows {
-            let state = serde_json::from_value(row.state)
-                .map_err(|e| format!("Failed to deserialize render state: {}", e))?;
-            let config = serde_json::from_value(row.config)
-                .map_err(|e| format!("Failed to deserialize render config: {}", e))?;
+            let state = serde_json::from_value(row.state).map_err(|e| {
+                format!(
+                    "Failed to deserialize render state for id {}: {}",
+                    row.id, e
+                )
+            })?;
+            let config = serde_json::from_value(row.config).map_err(|e| {
+                format!(
+                    "Failed to deserialize render config for id {}: {}",
+                    row.id, e
+                )
+            })?;
 
             renders.push(Render {
                 id: row
@@ -122,10 +132,14 @@ impl RenderStorage for PostgresStorage {
                 VALUES ($1, $2, $3)
             "#,
             render.id as i32,
-            serde_json::to_value(&render.state)
-                .map_err(|e| format!("Failed to serialize render state: {}", e))?,
-            serde_json::to_value(&render.config)
-                .map_err(|e| format!("Failed to serialize render config: {}", e))?,
+            serde_json::to_value(&render.state).map_err(|e| format!(
+                "Failed to serialize render state for id {}: {}",
+                render.id, e
+            ))?,
+            serde_json::to_value(&render.config).map_err(|e| format!(
+                "Failed to serialize render config for id {}: {}",
+                render.id, e
+            ))?,
         )
         .execute(&self.pool)
         .await
@@ -136,7 +150,7 @@ impl RenderStorage for PostgresStorage {
                     format!("Failed to create render. Expecting 1 row affected, got {n}").into(),
                 ),
             },
-            Err(e) => Err(format!("Failed to create render: {e}").into()),
+            Err(e) => Err(format!("Failed to create render for id {}: {}", render.id, e).into()),
         }
     }
 
@@ -152,7 +166,7 @@ impl RenderStorage for PostgresStorage {
                 WHERE id = $2
             "#,
             serde_json::to_value(&new_state)
-                .map_err(|e| format!("Failed to serialize render state: {}", e))?,
+                .map_err(|e| format!("Failed to serialize render state for id {}: {}", id, e))?,
             id as i32,
         )
         .execute(&self.pool)
@@ -165,7 +179,7 @@ impl RenderStorage for PostgresStorage {
                 )
                 .into()),
             },
-            Err(e) => Err(format!("Failed to update render state: {e}").into()),
+            Err(e) => Err(format!("Failed to update render state for id {}: {}", id, e).into()),
         }
     }
 
@@ -186,12 +200,12 @@ impl RenderStorage for PostgresStorage {
                 WHERE id = $2
                 AND (state ? 'running' OR state ? 'pausing')
             "#,
-            serde_json::to_value(&progress_info).map_err(|e| e.to_string())?,
+            serde_json::to_value(&progress_info).map_err(|e| format!("Failed to serialize render progress for id {}: {}", id, e))?,
             id as i32
         )
         .execute(&self.pool)
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| format!("Failed to update render progress for id {}: {}", id, e))?;
 
         Ok(())
     }
@@ -207,12 +221,15 @@ impl RenderStorage for PostgresStorage {
                 SET config = jsonb_set(config, '{parameters,checkpoints}', $1::jsonb)
                 WHERE id = $2
             "#,
-            serde_json::to_value(&new_total_checkpoints).map_err(|e| e.to_string())?,
+            serde_json::to_value(&new_total_checkpoints).map_err(|e| format!(
+                "Failed to serialize render checkpoints for id {}: {}",
+                id, e
+            ))?,
             id as i32
         )
         .execute(&self.pool)
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| format!("Failed to update render checkpoints for id {}: {}", id, e))?;
 
         Ok(())
     }
@@ -235,8 +252,12 @@ impl RenderStorage for PostgresStorage {
         .await
         {
             Ok(Some(row)) => {
-                let pixel_data = decode_pixel_data(&row.pixel_data)
-                    .map_err(|e| format!("Failed to decode pixel data: {}", e))?;
+                let pixel_data = decode_pixel_data(&row.pixel_data).map_err(|e| {
+                    format!(
+                        "Failed to decode pixel data for id {} and iteration {}: {}",
+                        id, iteration, e
+                    )
+                })?;
 
                 Ok(Some(RenderCheckpoint {
                     render_id: id,
@@ -280,8 +301,12 @@ impl RenderStorage for PostgresStorage {
         &self,
         render_checkpoint: RenderCheckpoint,
     ) -> Result<(), RenderStorageError> {
-        let pixel_data = encode_pixel_data(&render_checkpoint.pixel_data)
-            .map_err(|e| format!("Failed to encode pixel data: {}", e))?;
+        let pixel_data = encode_pixel_data(&render_checkpoint.pixel_data).map_err(|e| {
+            format!(
+                "Failed to encode pixel data for id {} and iteration {}: {}",
+                render_checkpoint.render_id, render_checkpoint.iteration, e
+            )
+        })?;
 
         match sqlx::query!(
             r#"
@@ -298,11 +323,12 @@ impl RenderStorage for PostgresStorage {
             Ok(res) => match res.rows_affected() {
                 1 => Ok(()),
                 n => Err(format!(
-                    "Failed to create render checkpoint. Expecting 1 row affected, got {n}"
+                    "Failed to create render checkpoint for id {} and iteration {}: Expecting 1 row affected, got {}", 
+                    render_checkpoint.render_id, render_checkpoint.iteration, n
                 )
                 .into()),
             },
-            Err(e) => Err(format!("Failed to create render checkpoint: {e}").into()),
+            Err(e) => Err(format!("Failed to create render checkpoint for id {} and iteration {}: {}", render_checkpoint.render_id, render_checkpoint.iteration, e).into()),
         }
     }
 
@@ -323,7 +349,7 @@ impl RenderStorage for PostgresStorage {
         )
         .execute(&mut *tx)
         .await
-        .map_err(|e| format!("Failed to delete checkpoints: {}", e))?;
+        .map_err(|e| format!("Failed to delete checkpoints for render id {}: {}", id, e))?;
 
         // delete the render
         sqlx::query!(
@@ -335,7 +361,7 @@ impl RenderStorage for PostgresStorage {
         )
         .execute(&mut *tx)
         .await
-        .map_err(|e| format!("Failed to delete render: {}", e))?;
+        .map_err(|e| format!("Failed to delete render for id {}: {}", id, e))?;
 
         // commit the transaction
         tx.commit()

@@ -10,8 +10,7 @@ use crate::shading::{
 use super::{Build, Builts};
 
 #[derive(Clone, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[serde(untagged)]
+#[serde(rename_all = "snake_case", untagged)]
 pub enum TextureRefOrInline {
     Ref(String),
     Inline(Box<TextureData>),
@@ -30,9 +29,7 @@ impl Build<Arc<dyn Texture>> for TextureRefOrInline {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[serde(tag = "type")]
-#[serde(deny_unknown_fields)]
+#[serde(rename_all = "snake_case", tag = "type", deny_unknown_fields)]
 pub enum TextureData {
     Checker {
         scale: f64,

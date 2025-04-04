@@ -3,11 +3,7 @@ BEGIN;
 CREATE VIEW render_states AS
 SELECT 
     r.id,
-    CASE WHEN jsonb_typeof(r.config->'active_scene') = 'object' THEN
-        r.config->'active_scene'->>'name'
-    ELSE
-        (r.config->'active_scene')::text
-    END as scene_name,
+    r.config->'name' as name,
     r.config->'parameters'->'image_dimensions' as image_dimensions,
     (r.config->'parameters'->>'samples_per_checkpoint')::integer as samples_per_checkpoint,
     (r.config->'parameters'->>'checkpoints')::integer as total_checkpoints,

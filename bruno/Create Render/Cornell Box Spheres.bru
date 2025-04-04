@@ -1,5 +1,5 @@
 meta {
-  name: Cornell Spheres
+  name: Cornell Box Spheres
   type: http
   seq: 2
 }
@@ -12,23 +12,23 @@ post {
 
 body:json {
   {
+    "name": "cornell_box_spheres_sd",
     "parameters": {
       "image_dimensions": [
-        800,
-        800
+        600,
+        600
       ],
       "tile_dimensions": [
         1,
         1
       ],
       "gamma_correction": 2,
-      "samples_per_checkpoint": 1,
-      "checkpoints": 500,
+      "samples_per_checkpoint": 10,
+      "checkpoints": 100,
       "max_bounces": 50,
       "use_scaling_truncation": true
     },
     "active_scene": {
-      "name": "cornell_box_spheres",
       "geometrics": [
         "__cornell_box_room",
         "far_left_sphere",

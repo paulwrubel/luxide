@@ -16,8 +16,7 @@ use crate::{
 use super::{Build, Builts, materials::MaterialRefOrInline};
 
 #[derive(Clone, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[serde(untagged)]
+#[serde(rename_all = "snake_case", untagged)]
 pub enum GeometricRefOrInline {
     Ref(String),
     Inline(Box<GeometricData>),
@@ -36,8 +35,7 @@ impl Build<Arc<dyn Geometric>> for GeometricRefOrInline {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-#[serde(tag = "type")]
-#[serde(deny_unknown_fields)]
+#[serde(tag = "type", deny_unknown_fields)]
 pub enum GeometricData {
     #[serde(rename = "box")]
     CompoundAxisAlignedPBox {

@@ -5,8 +5,7 @@ use crate::{camera::Camera, geometry::Point};
 use super::{Build, Builts};
 
 #[derive(Clone, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[serde(untagged)]
+#[serde(rename_all = "snake_case", untagged)]
 pub enum CameraRefOrInline {
     Ref(String),
     Inline(Box<CameraData>),
@@ -62,8 +61,7 @@ impl Build<Camera> for CameraData {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[serde(untagged)]
+#[serde(rename_all = "snake_case", untagged)]
 pub enum FocusDistance {
     Exact(f64),
     Type(FocusDistanceType),

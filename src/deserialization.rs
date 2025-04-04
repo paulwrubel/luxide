@@ -55,7 +55,9 @@ impl Builts {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct RenderConfig {
+    pub name: String,
     pub parameters: RenderParameters,
     pub active_scene: SceneRefOrInline,
     #[serde(default)]
@@ -68,15 +70,6 @@ pub struct RenderConfig {
     pub materials: IndexMap<String, MaterialData>,
     #[serde(default)]
     pub geometrics: IndexMap<String, GeometricData>,
-}
-
-impl RenderConfig {
-    pub fn name(&self) -> &str {
-        match &self.active_scene {
-            SceneRefOrInline::Ref(name) => name,
-            SceneRefOrInline::Inline(s) => &s.name,
-        }
-    }
 }
 
 impl RenderConfig {
@@ -95,6 +88,7 @@ impl RenderConfig {
         scenes.append(&mut self.scenes.clone());
 
         Self {
+            name: self.name.clone(),
             parameters: self.parameters,
             active_scene: self.active_scene.clone(),
             scenes,
@@ -550,7 +544,6 @@ fn get_builtin_cameras() -> IndexMap<String, CameraData> {
 fn get_builtin_scenes() -> IndexMap<String, SceneData> {
     indexmap! {
         prefix_builtin_key("cornell_box") => SceneData {
-            name: prefix_builtin_key("cornell_box"),
             geometrics: vec![
                 "cornell_box_room",
                 "cornell_box_far_left_box",

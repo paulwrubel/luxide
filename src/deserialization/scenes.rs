@@ -10,8 +10,7 @@ use crate::{
 use super::{Build, Builts, cameras::CameraRefOrInline, geometrics::GeometricRefOrInline};
 
 #[derive(Clone, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[serde(untagged)]
+#[serde(rename_all = "snake_case", untagged)]
 pub enum SceneRefOrInline {
     Ref(String),
     Inline(SceneData),
@@ -38,7 +37,6 @@ impl Build<Scene> for SceneRefOrInline {
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SceneData {
-    pub name: String,
     pub geometrics: Vec<GeometricRefOrInline>,
     pub use_bvh: bool,
     pub camera: CameraRefOrInline,
@@ -54,7 +52,6 @@ impl Build<Scene> for SceneData {
         }
         let camera = self.camera.build(builts)?;
         let scene = Scene {
-            name: self.name.clone(),
             world: if self.use_bvh {
                 Arc::new(BVH::from_list(world))
             } else {

@@ -314,7 +314,7 @@ fn final_scene() -> Scene {
     );
 
     Scene {
-        name: "final_scene".to_string(),
+        // name: "final_scene".to_string(),
         camera,
         world,
         background_color: Color::BLACK,
@@ -464,7 +464,7 @@ fn cornell_box() -> Scene {
     );
 
     Scene {
-        name: "cornell_box".to_string(),
+        // name: "cornell_box".to_string(),
         camera,
         world: Arc::new(world),
         background_color: Color::BLACK,
@@ -547,7 +547,7 @@ fn simple_light() -> Scene {
     );
 
     Scene {
-        name: "simple_light".to_string(),
+        // name: "simple_light".to_string(),
         camera,
         world: Arc::new(world),
         background_color: Color::BLACK,
@@ -644,7 +644,7 @@ fn quads() -> Scene {
     );
 
     Scene {
-        name: "quads".to_string(),
+        // name: "quads".to_string(),
         camera,
         world: Arc::new(world),
         background_color: Color::new(0.7, 0.8, 1.0),
@@ -710,7 +710,7 @@ fn two_perlin_spheres() -> Scene {
     );
 
     Scene {
-        name: "two_perlin_spheres".to_string(),
+        // name: "two_perlin_spheres".to_string(),
         camera,
         world: Arc::new(world),
         background_color: Color::new(0.7, 0.8, 1.0),
@@ -788,7 +788,7 @@ fn earth() -> Scene {
     );
 
     Scene {
-        name: "earth".to_string(),
+        // name: "earth".to_string(),
         camera,
         world: Arc::new(world),
         background_color: Color::new(0.7, 0.8, 1.0),
@@ -841,7 +841,7 @@ fn two_spheres() -> Scene {
     );
 
     Scene {
-        name: "two_spheres".to_string(),
+        // name: "two_spheres".to_string(),
         world: Arc::new(world),
         camera,
         background_color: Color::new(0.7, 0.8, 1.0),
@@ -978,7 +978,7 @@ fn random_spheres() -> Scene {
     );
 
     Scene {
-        name: "random_spheres".to_string(),
+        // name: "random_spheres".to_string(),
         world,
         camera,
         background_color: Color::new(0.7, 0.8, 1.0),
