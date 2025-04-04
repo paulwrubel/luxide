@@ -136,7 +136,7 @@ impl RenderStorage for FileStorage {
         }
     }
 
-    async fn update_render_checkpoints(
+    async fn update_render_total_checkpoints(
         &self,
         id: RenderID,
         new_total_checkpoints: u32,
@@ -149,7 +149,7 @@ impl RenderStorage for FileStorage {
             .find_map(|(r, _)| if r.id == id { Some(r) } else { None })
         {
             Some(render) => {
-                render.config.parameters.checkpoints = new_total_checkpoints;
+                render.config.parameters.total_checkpoints = new_total_checkpoints;
                 Ok(())
             }
             None => Err(format!("Render with id {id} not found").into()),

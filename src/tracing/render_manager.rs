@@ -100,7 +100,7 @@ impl RenderManager {
 
                 // move Created renders to Running
                 let created_renders = renders.iter().filter(|r| {
-                    r.state == RenderState::Created && r.config.parameters.checkpoints > 0
+                    r.state == RenderState::Created && r.config.parameters.total_checkpoints > 0
                 });
                 for render in created_renders.cloned() {
                     self.spawn_tracer_thread_to_next_checkpoint(render, None)
@@ -110,7 +110,7 @@ impl RenderManager {
                 // move FinishedCheckpoint renders to next checkpoint if applicable
                 let checkpointed_renders = renders.iter().filter(|r| match r.state {
                     RenderState::FinishedCheckpointIteration(checkpoint) => {
-                        checkpoint < r.config.parameters.checkpoints
+                        checkpoint < r.config.parameters.total_checkpoints
                     }
                     _ => false,
                 });
@@ -481,7 +481,7 @@ impl RenderManager {
         }
     }
 
-    pub async fn extend_render(
+    pub async fn update_render_total_checkpoints(
         &self,
         id: RenderID,
         new_total_checkpoints: u32,
@@ -497,20 +497,44 @@ impl RenderManager {
             }
         };
 
-        // make sure the extension is actually greater than the current total checkpoints
-        if new_total_checkpoints <= render.config.parameters.checkpoints {
+        let current_iteration = match render.state {
+            // created renders might be picked up immediately to work on the first iteration,
+            // so, just to be safe, we'll say we're currently working on iteration 1
+            RenderState::Created => 1,
+            RenderState::Running {
+                checkpoint_iteration,
+                ..
+            } => checkpoint_iteration,
+            RenderState::FinishedCheckpointIteration(checkpoint_iteration) => {
+                if checkpoint_iteration != render.config.parameters.total_checkpoints {
+                    // similar to the created state, this may get picked up, so we should add 1
+                    checkpoint_iteration + 1
+                } else {
+                    // otherwise, might as well allow it, since it's not gonna get picked up.
+                    checkpoint_iteration
+                }
+            }
+            RenderState::Pausing {
+                checkpoint_iteration,
+                ..
+            } => checkpoint_iteration,
+            RenderState::Paused(checkpoint_iteration) => checkpoint_iteration,
+        };
+
+        // make sure the new total is greater or equal to the current iteration of the render
+        if new_total_checkpoints < current_iteration {
             return Err(RenderManagerError::ClientError(
                 StatusCode::BAD_REQUEST,
                 format!(
-                    "New total checkpoints ({}) must be greater than current total checkpoints ({})",
-                    new_total_checkpoints, render.config.parameters.checkpoints
+                    "New total_checkpoints ({}) must be greater than or equal to the current checkpoint iteration ({})",
+                    new_total_checkpoints, current_iteration
                 ),
             ));
         }
 
         // update render
         self.storage
-            .update_render_checkpoints(id, new_total_checkpoints)
+            .update_render_total_checkpoints(id, new_total_checkpoints)
             .await
             .map_err(|e| e.into())
     }

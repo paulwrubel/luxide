@@ -96,7 +96,7 @@ async fn create_render_and_poll_completion(
         match current_render {
             Some(r) => match r.state {
                 RenderState::FinishedCheckpointIteration(n)
-                    if n == r.config.parameters.checkpoints =>
+                    if n == r.config.parameters.total_checkpoints =>
                 {
                     break;
                 }

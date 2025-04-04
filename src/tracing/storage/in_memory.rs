@@ -107,7 +107,7 @@ impl RenderStorage for InMemoryStorage {
         }
     }
 
-    async fn update_render_checkpoints(
+    async fn update_render_total_checkpoints(
         &self,
         id: RenderID,
         new_total_checkpoints: u32,
@@ -119,7 +119,7 @@ impl RenderStorage for InMemoryStorage {
         };
 
         let mut render = render.write().await;
-        render.config.parameters.checkpoints = new_total_checkpoints;
+        render.config.parameters.total_checkpoints = new_total_checkpoints;
         Ok(())
     }
 

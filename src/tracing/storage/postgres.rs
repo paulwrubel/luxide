@@ -210,7 +210,7 @@ impl RenderStorage for PostgresStorage {
         Ok(())
     }
 
-    async fn update_render_checkpoints(
+    async fn update_render_total_checkpoints(
         &self,
         id: RenderID,
         new_total_checkpoints: u32,
@@ -218,18 +218,23 @@ impl RenderStorage for PostgresStorage {
         sqlx::query!(
             r#"
                 UPDATE renders
-                SET config = jsonb_set(config, '{parameters,checkpoints}', $1::jsonb)
+                SET config = jsonb_set(config, '{parameters,total_checkpoints}', $1::jsonb)
                 WHERE id = $2
             "#,
             serde_json::to_value(&new_total_checkpoints).map_err(|e| format!(
-                "Failed to serialize render checkpoints for id {}: {}",
+                "Failed to serialize render total_checkpoints for id {}: {}",
                 id, e
             ))?,
             id as i32
         )
         .execute(&self.pool)
         .await
-        .map_err(|e| format!("Failed to update render checkpoints for id {}: {}", id, e))?;
+        .map_err(|e| {
+            format!(
+                "Failed to update render total_checkpoints for id {}: {}",
+                id, e
+            )
+        })?;
 
         Ok(())
     }

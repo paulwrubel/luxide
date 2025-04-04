@@ -175,7 +175,7 @@ pub trait RenderStorage: Send + Sync + 'static {
         progress_info: ProgressInfo,
     ) -> Result<(), RenderStorageError>;
 
-    async fn update_render_checkpoints(
+    async fn update_render_total_checkpoints(
         &self,
         render_id: RenderID,
         new_total_checkpoints: u32,

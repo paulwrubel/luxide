@@ -6,7 +6,7 @@ SELECT
     r.config->'name' as name,
     r.config->'parameters'->'image_dimensions' as image_dimensions,
     (r.config->'parameters'->>'samples_per_checkpoint')::integer as samples_per_checkpoint,
-    (r.config->'parameters'->>'checkpoints')::integer as total_checkpoints,
+    (r.config->'parameters'->>'total_checkpoints')::integer as total_checkpoints,
     CASE WHEN jsonb_typeof(r.state) = 'object' THEN
         (SELECT k FROM jsonb_object_keys(r.state) k LIMIT 1)
     ELSE

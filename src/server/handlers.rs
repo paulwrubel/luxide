@@ -156,13 +156,13 @@ pub struct ExtendRenderParameters {
     new_total_checkpoints: u32,
 }
 
-pub async fn extend_render(
+pub async fn update_render_total_checkpoints(
     State(render_manager): LuxideState,
     Path(id): Path<RenderID>,
     Json(extend_render_parameters): Json<ExtendRenderParameters>,
 ) -> Response {
     match render_manager
-        .extend_render(id, extend_render_parameters.new_total_checkpoints)
+        .update_render_total_checkpoints(id, extend_render_parameters.new_total_checkpoints)
         .await
     {
         Ok(_) => StatusCode::NO_CONTENT.into_response(),
