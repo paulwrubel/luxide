@@ -1,3 +1,6 @@
+mod formatted_render;
+pub use formatted_render::*;
+
 mod handlers;
 pub use handlers::*;
 
