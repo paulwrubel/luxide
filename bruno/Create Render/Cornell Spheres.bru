@@ -28,202 +28,21 @@ body:json {
       "use_scaling_truncation": true
     },
     "active_scene": {
-      "name": "cornell_box_spheres_mirror_hd_fast",
+      "name": "cornell_box_spheres",
       "geometrics": [
-        "left_wall",
-        "right_wall",
-        "floor",
-        "ceiling",
-        "ceiling_light_wide",
-        "back_wall",
-        "front_wall",
+        "__cornell_box_room",
         "far_left_sphere",
         "near_right_sphere"
       ],
       "use_bvh": true,
-      "camera": "basic",
+      "camera": "__cornell_box",
       "background_color": [
         0,
         0,
         0
       ]
     },
-    "cameras": {
-      "basic": {
-        "vertical_field_of_view_degrees": 40,
-        "eye_location": [
-          0.5,
-          0.5,
-          1.44144
-        ],
-        "target_location": [
-          0.5,
-          0.5,
-          0
-        ],
-        "view_up": [
-          0,
-          1,
-          0
-        ],
-        "defocus_angle_degrees": 0,
-        "focus_distance": "eye_to_target"
-      }
-    },
     "geometrics": {
-      "left_wall": {
-        "type": "parallelogram",
-        "lower_left": [
-          0,
-          0,
-          0
-        ],
-        "u": [
-          0,
-          0,
-          -1
-        ],
-        "v": [
-          0,
-          1,
-          0
-        ],
-        "material": "lambertian_cb_green"
-      },
-      "right_wall": {
-        "type": "parallelogram",
-        "lower_left": [
-          1,
-          0,
-          -1
-        ],
-        "u": [
-          0,
-          0,
-          1
-        ],
-        "v": [
-          0,
-          1,
-          0
-        ],
-        "material": "lambertian_cb_red"
-      },
-      "floor": {
-        "type": "parallelogram",
-        "lower_left": [
-          0,
-          0,
-          0
-        ],
-        "u": [
-          1,
-          0,
-          0
-        ],
-        "v": [
-          0,
-          0,
-          -1
-        ],
-        "material": "lambertian_cb_white"
-      },
-      "ceiling": {
-        "type": "parallelogram",
-        "lower_left": [
-          0,
-          1,
-          -1
-        ],
-        "u": [
-          1,
-          0,
-          0
-        ],
-        "v": [
-          0,
-          0,
-          1
-        ],
-        "material": "lambertian_cb_white"
-      },
-      "back_wall": {
-        "type": "parallelogram",
-        "lower_left": [
-          0,
-          0,
-          -1
-        ],
-        "u": [
-          1,
-          0,
-          0
-        ],
-        "v": [
-          0,
-          1,
-          0
-        ],
-        "material": "lambertian_cb_white"
-      },
-      "front_wall": {
-        "type": "parallelogram",
-        "lower_left": [
-          1,
-          0,
-          0
-        ],
-        "u": [
-          -1,
-          0,
-          0
-        ],
-        "v": [
-          0,
-          1,
-          0
-        ],
-        "is_culled": true,
-        "material": "lambertian_cb_white"
-      },
-      "ceiling_light": {
-        "type": "parallelogram",
-        "lower_left": [
-          0.35,
-          0.999,
-          -0.65
-        ],
-        "u": [
-          0.3,
-          0,
-          0
-        ],
-        "v": [
-          0,
-          0,
-          0.3
-        ],
-        "material": "lambertian_white_light"
-      },
-      "ceiling_light_wide": {
-        "type": "parallelogram",
-        "lower_left": [
-          0.1,
-          0.999,
-          -0.9
-        ],
-        "u": [
-          0.8,
-          0,
-          0
-        ],
-        "v": [
-          0,
-          0,
-          0.8
-        ],
-        "material": "lambertian_white_light_dim"
-      },
       "far_left_sphere": {
         "type": "sphere",
         "center": [
@@ -232,7 +51,7 @@ body:json {
           -0.7
         ],
         "radius": 0.2,
-        "material": "specular_mirror"
+        "material": "__specular_mirror"
       },
       "near_right_sphere": {
         "type": "sphere",
@@ -242,130 +61,7 @@ body:json {
           -0.3
         ],
         "radius": 0.2,
-        "material": "dielectric_glass"
-      }
-    },
-    "materials": {
-      "lambertian_white_light": {
-        "type": "lambertian",
-        "reflectance_texture": "solid_black",
-        "emittance_texture": "solid_white_light"
-      },
-      "lambertian_white_light_dim": {
-        "type": "lambertian",
-        "reflectance_texture": "solid_black",
-        "emittance_texture": "solid_white_light_dim"
-      },
-      "lambertian_cb_red_light_dim": {
-        "type": "lambertian",
-        "reflectance_texture": "solid_cb_red",
-        "emittance_texture": "solid_cb_red_light_dim"
-      },
-      "lambertian_cb_green_light_dim": {
-        "type": "lambertian",
-        "reflectance_texture": "solid_cb_green",
-        "emittance_texture": "solid_cb_green_light_dim"
-      },
-      "lambertian_cb_white": {
-        "type": "lambertian",
-        "reflectance_texture": "solid_cb_white",
-        "emittance_texture": "solid_black"
-      },
-      "lambertian_cb_red": {
-        "type": "lambertian",
-        "reflectance_texture": "solid_cb_red",
-        "emittance_texture": "solid_black"
-      },
-      "lambertian_cb_green": {
-        "type": "lambertian",
-        "reflectance_texture": "solid_cb_green",
-        "emittance_texture": "solid_black"
-      },
-      "dielectric_glass": {
-        "type": "dielectric",
-        "reflectance_texture": "solid_white",
-        "emittance_texture": "solid_black",
-        "index_of_refraction": 1.5
-      },
-      "specular_mirror": {
-        "type": "specular",
-        "reflectance_texture": "solid_white",
-        "emittance_texture": "solid_black",
-        "roughness": 0
-      }
-    },
-    "textures": {
-      "solid_white": {
-        "type": "color",
-        "color": [
-          1,
-          1,
-          1
-        ]
-      },
-      "solid_black": {
-        "type": "color",
-        "color": [
-          0,
-          0,
-          0
-        ]
-      },
-      "solid_white_light": {
-        "type": "color",
-        "color": [
-          7,
-          7,
-          7
-        ]
-      },
-      "solid_white_light_dim": {
-        "type": "color",
-        "color": [
-          1,
-          1,
-          1
-        ]
-      },
-      "solid_cb_red_light_dim": {
-        "type": "color",
-        "color": [
-          0.325,
-          0.025,
-          0.025
-        ]
-      },
-      "solid_cb_green_light_dim": {
-        "type": "color",
-        "color": [
-          0.06,
-          0.225,
-          0.075
-        ]
-      },
-      "solid_cb_white": {
-        "type": "color",
-        "color": [
-          0.73,
-          0.73,
-          0.73
-        ]
-      },
-      "solid_cb_red": {
-        "type": "color",
-        "color": [
-          0.65,
-          0.05,
-          0.05
-        ]
-      },
-      "solid_cb_green": {
-        "type": "color",
-        "color": [
-          0.12,
-          0.45,
-          0.15
-        ]
+        "material": "__dielectric_glass"
       }
     }
   }

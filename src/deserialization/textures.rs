@@ -3,8 +3,8 @@ use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 
 use crate::shading::{
-    textures::{Checker, Image8Bit, SolidColor},
     Texture,
+    textures::{Checker, Image8Bit, SolidColor},
 };
 
 use super::{Build, Builts};

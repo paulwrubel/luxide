@@ -23,10 +23,12 @@ impl Build<Scene> for SceneRefOrInline {
             Self::Ref(name) => Ok(builts
                 .scenes
                 .get(name)
-                .ok_or(format!(
-                    "Scene {} not found. Is it specified in the scenes list?",
-                    name
-                ))?
+                .ok_or_else(|| {
+                    format!(
+                        "Scene {} not found. Is it specified in the scenes list?",
+                        name
+                    )
+                })?
                 .clone()),
             Self::Inline(data) => data.build(builts),
         }
@@ -37,10 +39,10 @@ impl Build<Scene> for SceneRefOrInline {
 #[serde(deny_unknown_fields)]
 pub struct SceneData {
     pub name: String,
-    geometrics: Vec<GeometricRefOrInline>,
-    use_bvh: bool,
-    camera: CameraRefOrInline,
-    background_color: [f64; 3],
+    pub geometrics: Vec<GeometricRefOrInline>,
+    pub use_bvh: bool,
+    pub camera: CameraRefOrInline,
+    pub background_color: [f64; 3],
 }
 
 impl Build<Scene> for SceneData {

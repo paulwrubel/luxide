@@ -334,7 +334,9 @@ impl RenderManager {
         &self,
         render_config: RenderConfig,
     ) -> Result<Render, RenderManagerError> {
-        // compile just for validation purposes
+        let render_config = render_config.merge_with_builtins();
+
+        // compile for validation purposes
         if let Err(e) = render_config.compile() {
             return Err(RenderManagerError::ClientError(StatusCode::BAD_REQUEST, e));
         }

@@ -1,15 +1,18 @@
 use std::sync::Arc;
 
+use cameras::{CameraRefOrInline, FocusDistance, FocusDistanceType};
 use geometrics::GeometricRefOrInline;
-use indexmap::IndexMap;
+use indexmap::{IndexMap, indexmap};
+use materials::MaterialRefOrInline;
 use serde::{Deserialize, Serialize};
 use textures::TextureRefOrInline;
 
 use crate::{
     camera::Camera,
     geometry::Geometric,
-    shading::{Texture, materials::Material},
+    shading::{Color, Texture, materials::Material},
     tracing::{RenderParameters, Scene},
+    utils::Angle,
 };
 
 mod scenes;
@@ -77,6 +80,31 @@ impl RenderConfig {
 }
 
 impl RenderConfig {
+    pub fn merge_with_builtins(&self) -> Self {
+        // builtin resources can be "overwritten" by user-defined resources
+        // so we have to make sure that we add them last
+        let mut textures = get_builtin_textures();
+        textures.append(&mut self.textures.clone());
+        let mut materials = get_builtin_materials();
+        materials.append(&mut self.materials.clone());
+        let mut geometrics = get_builtin_geometrics();
+        geometrics.append(&mut self.geometrics.clone());
+        let mut cameras = get_builtin_cameras();
+        cameras.append(&mut self.cameras.clone());
+        let mut scenes = get_builtin_scenes();
+        scenes.append(&mut self.scenes.clone());
+
+        Self {
+            parameters: self.parameters,
+            active_scene: self.active_scene.clone(),
+            scenes,
+            cameras,
+            textures,
+            materials,
+            geometrics,
+        }
+    }
+
     pub fn compile(&self) -> Result<RenderData, String> {
         let mut builts = Builts::new();
 
@@ -301,4 +329,236 @@ fn build_scenes(
             .insert((*name).clone(), scene_data.build(builts)?);
     }
     Ok(())
+}
+
+const BUILT_IN_RESOURCE_PREFIX: &str = "__";
+
+fn prefix_builtin_key(key: &str) -> String {
+    format!("{}{}", BUILT_IN_RESOURCE_PREFIX, key)
+}
+
+fn get_builtin_textures() -> IndexMap<String, TextureData> {
+    indexmap! {
+        prefix_builtin_key("white") => TextureData::SolidColor {
+            color: Color::WHITE.into()
+         },
+        prefix_builtin_key("black") => TextureData::SolidColor {
+            color: Color::BLACK.into()
+        },
+        prefix_builtin_key("red") => TextureData::SolidColor {
+             color: Color::RED.into()
+            },
+        prefix_builtin_key("green") => TextureData::SolidColor {
+            color: Color::GREEN.into()
+         },
+        prefix_builtin_key("blue") => TextureData::SolidColor {
+            color: Color::BLUE.into()
+        },
+        // cornell box colors
+        prefix_builtin_key("cornell_box_white") => TextureData::SolidColor {
+            color: [0.73, 0.73, 0.73],
+        },
+        prefix_builtin_key("cornell_box_white_light") => TextureData::SolidColor {
+            color: [7.0, 7.0, 7.0],
+        },
+        prefix_builtin_key("cornell_box_red") => TextureData::SolidColor {
+            color: [0.65, 0.05, 0.05],
+        },
+        prefix_builtin_key("cornell_box_green") => TextureData::SolidColor {
+            color: [0.12, 0.45, 0.15],
+        },
+    }
+}
+
+fn get_builtin_materials() -> IndexMap<String, MaterialData> {
+    let texture_fn = |color_name: &str| TextureRefOrInline::Ref(prefix_builtin_key(color_name));
+
+    indexmap! {
+        // lambertian
+        prefix_builtin_key("lambertian_white") => MaterialData::Lambertian {
+            reflectance_texture: texture_fn("white"),
+            emittance_texture: texture_fn("black"),
+        },
+        prefix_builtin_key("lambertian_black") => MaterialData::Lambertian {
+            reflectance_texture: texture_fn("black"),
+            emittance_texture: texture_fn("black"),
+        },
+        prefix_builtin_key("lambertian_red") => MaterialData::Lambertian {
+            reflectance_texture: texture_fn("red"),
+            emittance_texture: texture_fn("black"),
+        },
+        prefix_builtin_key("lambertian_green") => MaterialData::Lambertian {
+            reflectance_texture: texture_fn("green"),
+            emittance_texture: texture_fn("black"),
+        },
+        prefix_builtin_key("lambertian_blue") => MaterialData::Lambertian {
+            reflectance_texture: texture_fn("blue"),
+            emittance_texture: texture_fn("black"),
+        },
+
+        // specular
+        prefix_builtin_key("specular_mirror") => MaterialData::Specular {
+            reflectance_texture: texture_fn("white"),
+            emittance_texture: texture_fn("black"),
+            roughness: 0.0,
+        },
+        prefix_builtin_key("specular_mirror_rough") => MaterialData::Specular {
+            reflectance_texture: texture_fn("white"),
+            emittance_texture: texture_fn("black"),
+            roughness: 0.1,
+        },
+
+        // dielectric
+        prefix_builtin_key("dielectric_glass") => MaterialData::Dielectric {
+            reflectance_texture: texture_fn("white"),
+            emittance_texture: texture_fn("black"),
+            index_of_refraction: 1.52,
+        },
+        prefix_builtin_key("dielectric_water") => MaterialData::Dielectric {
+            reflectance_texture: texture_fn("white"),
+            emittance_texture: texture_fn("black"),
+            index_of_refraction: 1.333,
+        },
+        prefix_builtin_key("dielectric_diamond") => MaterialData::Dielectric {
+            reflectance_texture: texture_fn("white"),
+            emittance_texture: texture_fn("black"),
+            index_of_refraction: 2.417,
+        },
+
+        // cornell box materials
+        prefix_builtin_key("lambertian_cornell_box_white") => MaterialData::Lambertian {
+            reflectance_texture: texture_fn("cornell_box_white"),
+            emittance_texture: texture_fn("black"),
+        },
+        prefix_builtin_key("lambertian_cornell_box_white_light") => MaterialData::Lambertian {
+            reflectance_texture: texture_fn("black"),
+            emittance_texture: texture_fn("cornell_box_white_light"),
+        },
+        prefix_builtin_key("lambertian_cornell_box_red") => MaterialData::Lambertian {
+            reflectance_texture: texture_fn("cornell_box_red"),
+            emittance_texture: texture_fn("black"),
+        },
+        prefix_builtin_key("lambertian_cornell_box_green") => MaterialData::Lambertian {
+            reflectance_texture: texture_fn("cornell_box_green"),
+            emittance_texture: texture_fn("black"),
+        },
+    }
+}
+
+fn get_builtin_geometrics() -> IndexMap<String, GeometricData> {
+    let material_fn =
+        |material_name: &str| MaterialRefOrInline::Ref(prefix_builtin_key(material_name));
+
+    indexmap! {
+        prefix_builtin_key("cornell_box_left_wall") => GeometricData::PrimitiveParallelogram {
+            lower_left: [0.0, 0.0, 0.0],
+            u: [0.0, 0.0, -1.0],
+            v: [0.0, 1.0, 0.0],
+            is_culled: None,
+            material: material_fn("lambertian_cornell_box_green"),
+        },
+        prefix_builtin_key("cornell_box_right_wall") => GeometricData::PrimitiveParallelogram {
+            lower_left: [1.0, 0.0, -1.0],
+            u: [0.0, 0.0, 1.0],
+            v: [0.0, 1.0, 0.0],
+            is_culled: None,
+            material: material_fn("lambertian_cornell_box_red"),
+        },
+        prefix_builtin_key("cornell_box_floor") => GeometricData::PrimitiveParallelogram {
+            lower_left: [0.0, 0.0, 0.0],
+            u: [1.0, 0.0, 0.0],
+            v: [0.0, 0.0, -1.0],
+            is_culled: None,
+            material: material_fn("lambertian_cornell_box_white"),
+        },
+        prefix_builtin_key("cornell_box_ceiling") => GeometricData::PrimitiveParallelogram {
+            lower_left: [0.0, 1.0, -1.0],
+            u: [1.0, 0.0, 0.0],
+            v: [0.0, 0.0, 1.0],
+            is_culled: None,
+            material: material_fn("lambertian_cornell_box_white"),
+        },
+        prefix_builtin_key("cornell_box_far_wall") => GeometricData::PrimitiveParallelogram {
+            lower_left: [0.0, 0.0, -1.0],
+            u: [1.0, 0.0, 0.0],
+            v: [0.0, 1.0, 0.0],
+            is_culled: None,
+            material: material_fn("lambertian_cornell_box_white"),
+        },
+        prefix_builtin_key("cornell_box_near_wall") => GeometricData::PrimitiveParallelogram {
+            lower_left: [1.0, 0.0, 0.0],
+            u: [-1.0, 0.0, 0.0],
+            v: [0.0, 1.0, 0.0],
+            is_culled: Some(true),
+            material: material_fn("lambertian_cornell_box_white"),
+        },
+        prefix_builtin_key("cornell_box_ceiling_light") => GeometricData::PrimitiveParallelogram {
+            lower_left: [0.35, 0.999, -0.65],
+            u: [0.3, 0.0, 0.0],
+            v: [0.0, 0.0, 0.3],
+            is_culled: None,
+            material: material_fn("lambertian_cornell_box_white_light"),
+        },
+        prefix_builtin_key("cornell_box_room") => GeometricData::CompoundList {
+            use_bvh: Some(true),
+            geometrics: vec![
+                "cornell_box_left_wall",
+                "cornell_box_right_wall",
+                "cornell_box_floor",
+                "cornell_box_ceiling",
+                "cornell_box_ceiling_light",
+                "cornell_box_far_wall",
+                "cornell_box_near_wall",
+            ].iter().map(|g| GeometricRefOrInline::Ref(prefix_builtin_key(g))).collect(),
+        },
+        prefix_builtin_key("cornell_box_far_left_box") => GeometricData::InstanceRotateYAxis {
+            geometric: GeometricRefOrInline::Inline(Box::new(GeometricData::CompoundAxisAlignedPBox {
+                a: [0.2, 0.0, -0.5],
+                b: [0.5, 0.6, -0.8],
+                is_culled:None,
+                material: material_fn("lambertian_cornell_box_white"),
+             })),
+            angle: Angle::Degrees(15.0),
+            around: Some([0.35, 0.0, -0.65]),
+        },
+        prefix_builtin_key("cornell_box_near_right_box") => GeometricData::InstanceRotateYAxis {
+            geometric: GeometricRefOrInline::Inline(Box::new(GeometricData::CompoundAxisAlignedPBox {
+                a: [0.5, 0.0, -0.2],
+                b: [0.8, 0.3, -0.5],
+                is_culled:None,
+                material: material_fn("lambertian_cornell_box_white"),
+            })),
+            angle: Angle::Degrees(-18.0),
+            around: Some([0.65, 0.0, -0.35]),
+        },
+    }
+}
+
+fn get_builtin_cameras() -> IndexMap<String, CameraData> {
+    indexmap! {
+        prefix_builtin_key("cornell_box") => CameraData {
+            vertical_field_of_view_degrees:40.0,
+            eye_location: [0.5, 0.5, 1.44144],
+            target_location: [0.5,0.5,0.0],
+            view_up: [0.0,1.0,0.0],
+            defocus_angle_degrees: 0.0,
+            focus_distance: FocusDistance::Type(FocusDistanceType::EyeToTarget),
+        }
+    }
+}
+
+fn get_builtin_scenes() -> IndexMap<String, SceneData> {
+    indexmap! {
+        prefix_builtin_key("cornell_box") => SceneData {
+            name: prefix_builtin_key("cornell_box"),
+            geometrics: vec![
+                "cornell_box_room",
+                "cornell_box_far_left_box",
+                "cornell_box_near_right_box",
+            ].iter().map(|g| GeometricRefOrInline::Ref(prefix_builtin_key(g))).collect(),
+            use_bvh: true,
+            camera: CameraRefOrInline::Ref(prefix_builtin_key("cornell_box")),
+            background_color: [0.0, 0.0, 0.0],
+        }
+    }
 }

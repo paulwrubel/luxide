@@ -10,6 +10,9 @@ pub struct Color(Vector);
 impl Color {
     pub const BLACK: Color = Self(Vector::ZERO);
     pub const WHITE: Color = Self(Vector::ONE);
+    pub const RED: Color = Self(Vector::UNIT_X);
+    pub const GREEN: Color = Self(Vector::UNIT_Y);
+    pub const BLUE: Color = Self(Vector::UNIT_Z);
 
     pub fn new(r: f64, g: f64, b: f64) -> Self {
         Self(Vector::new(r, g, b))
@@ -69,6 +72,12 @@ impl Color {
 impl From<[f64; 3]> for Color {
     fn from(v: [f64; 3]) -> Self {
         Self::new(v[0], v[1], v[2])
+    }
+}
+
+impl From<Color> for [f64; 3] {
+    fn from(value: Color) -> Self {
+        [value.0.x, value.0.y, value.0.z]
     }
 }
 

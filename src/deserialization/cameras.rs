@@ -31,12 +31,12 @@ impl Build<Camera> for CameraRefOrInline {
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CameraData {
-    vertical_field_of_view_degrees: f64,
-    eye_location: [f64; 3],
-    target_location: [f64; 3],
-    view_up: [f64; 3],
-    defocus_angle_degrees: f64,
-    focus_distance: FocusDistance,
+    pub vertical_field_of_view_degrees: f64,
+    pub eye_location: [f64; 3],
+    pub target_location: [f64; 3],
+    pub view_up: [f64; 3],
+    pub defocus_angle_degrees: f64,
+    pub focus_distance: FocusDistance,
 }
 
 impl Build<Camera> for CameraData {
@@ -64,13 +64,13 @@ impl Build<Camera> for CameraData {
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(untagged)]
-enum FocusDistance {
+pub enum FocusDistance {
     Exact(f64),
     Type(FocusDistanceType),
 }
 
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-enum FocusDistanceType {
+pub enum FocusDistanceType {
     EyeToTarget,
 }

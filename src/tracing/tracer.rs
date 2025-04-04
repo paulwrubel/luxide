@@ -1,12 +1,4 @@
-use std::{
-    collections::HashMap,
-    num::NonZero,
-    sync::{
-        Arc,
-        atomic::{AtomicUsize, Ordering},
-    },
-    thread,
-};
+use std::{collections::HashMap, num::NonZero, sync::Arc, thread};
 
 use rand::seq::SliceRandom;
 use rayon::prelude::*;
@@ -101,7 +93,6 @@ impl Tracer {
                             {
                                 println!("Failed to send progress! {:?}", e);
                             }
-                            // println!("sent progress!");
 
                             // average samples together
                             let scaled_color = color / parameters.samples_per_checkpoint as f64;

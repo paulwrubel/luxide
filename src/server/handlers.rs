@@ -92,11 +92,6 @@ pub async fn create_render(
 ) -> Response {
     println!("Handing request for create_render...");
 
-    if let Err(e) = render_config.compile() {
-        println!("Failed to compile render data: {e}");
-        return (StatusCode::BAD_REQUEST, e.to_string()).into_response();
-    };
-
     match render_manager.create_render(render_config).await {
         Ok(render) => (StatusCode::CREATED, Json(render)).into_response(),
         Err(e) => e.into(),
