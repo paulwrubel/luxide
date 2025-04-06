@@ -11,4 +11,5 @@
   - the idea is that you "request" a deletion and it happens in the background, and you can check in on it later.
 - [ ] support for uploading images to reference in scenes
 - [ ] add a user auth scheme (basic username/password)
+  - [ ] add quota limits per-user for storage? maybe based on total bytes stores? or renders? or checkpoints? idk, think about it some more
 - [ ] switch to PDF model (Ray Tracing: The Rest of your Life)
