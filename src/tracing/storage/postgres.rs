@@ -1,9 +1,6 @@
 use sqlx::{Pool, Postgres};
 
-use crate::{
-    shading::Color,
-    utils::{ProgressInfo, decode_pixel_data, encode_pixel_data},
-};
+use crate::utils::{ProgressInfo, decode_pixel_data, encode_pixel_data};
 
 use super::{
     Render, RenderCheckpoint, RenderCheckpointMeta, RenderID, RenderState, RenderStorage,

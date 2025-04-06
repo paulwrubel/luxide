@@ -368,14 +368,15 @@ impl RenderManager {
             | RenderState::Paused(iteration) => (iteration, total_iterations - iteration, None),
         };
 
-        let (running_elapsed, running_estimated_remaining) = match progress_info {
+        let (running_elapsed, running_estimated_remaining, active_progress) = match progress_info {
             Some(p) => (
                 chrono::Duration::from_std(p.elapsed)
                     .expect("unable to coerce standard duration into chrono duration"),
                 chrono::Duration::from_std(p.estimated_remaining)
                     .expect("unable to coerce standard duration into chrono duration"),
+                p.progress,
             ),
-            None => (chrono::Duration::zero(), chrono::Duration::zero()),
+            None => (chrono::Duration::zero(), chrono::Duration::zero(), 0.0),
         };
 
         // calculate the elapsed duration from previous checkpoint and the current running checkpoint
@@ -391,7 +392,11 @@ impl RenderManager {
 
         // calculate the estimated remaining time from the average runtime of previous checkpoints
         // and the estimated remaining time of the current running checkpoint
-        let average_completed_elapsed = completed_elapsed / completed_iterations as i32;
+        let average_completed_elapsed = if completed_iterations > 0 {
+            completed_elapsed / completed_iterations as i32
+        } else {
+            running_estimated_remaining + running_estimated_remaining
+        };
         let unstarted_estimated_remaining =
             average_completed_elapsed * (unstarted_iterations) as i32;
         let estimated_remaining = running_estimated_remaining + unstarted_estimated_remaining;
@@ -399,37 +404,44 @@ impl RenderManager {
         // calculate the total!
         let estimated_total = estimated_remaining + elapsed;
 
+        let image_dimensions = render.config.parameters.image_dimensions;
+        let samples_per_checkpoint = render.config.parameters.samples_per_checkpoint;
+        let pixel_samples_per_checkpoint =
+            samples_per_checkpoint as u64 * image_dimensions.0 as u64 * image_dimensions.1 as u64;
+        let total_samples_taken: u64 = (pixel_samples_per_checkpoint as f64
+            * (completed_iterations as f64 + active_progress))
+            as u64;
+
+        let to_std = |cd: &chrono::Duration, name: &str| {
+            cd.to_std().map_err(|e| {
+                format!(
+                    "Cannot convert {} duration to standard duration: {}",
+                    name, e
+                )
+            })
+        };
+
         Ok(Some(RenderStats {
+            image_dimensions,
+            samples_per_checkpoint,
             completed_iterations,
             total_iterations,
-            elapsed: elapsed
-                .to_std()
-                .map_err(|e| RenderManagerError::from(e.to_string()))?,
-            estimated_remaining: estimated_remaining
-                .to_std()
-                .map_err(|e| RenderManagerError::from(e.to_string()))?,
-            estimated_total: estimated_total
-                .to_std()
-                .map_err(|e| RenderManagerError::from(e.to_string()))?,
+            pixel_samples_per_checkpoint,
+            total_samples_taken,
+            elapsed: to_std(&elapsed, "elapsed")?,
+            estimated_remaining: to_std(&estimated_remaining, "estimated remaining")?,
+            estimated_total: to_std(&estimated_total, "estimated total")?,
             checkpoint_stats: RenderCheckpointStats {
-                average_elapsed: average_completed_elapsed
-                    .to_std()
-                    .map_err(|e| RenderManagerError::from(e.to_string()))?,
+                average_elapsed: to_std(&average_completed_elapsed, "average elapsed")?,
                 max_elapsed: completed_elapsed_by_checkpoint
                     .iter()
                     .max()
-                    .map(|d| {
-                        d.to_std()
-                            .map_err(|e| RenderManagerError::from(e.to_string()))
-                    })
+                    .map(|d| to_std(&d, "max elapsed"))
                     .unwrap_or(Ok(Duration::from_secs(0)))?,
                 min_elapsed: completed_elapsed_by_checkpoint
                     .iter()
                     .min()
-                    .map(|d| {
-                        d.to_std()
-                            .map_err(|e| RenderManagerError::from(e.to_string()))
-                    })
+                    .map(|d| to_std(&d, "min elapsed"))
                     .unwrap_or(Ok(Duration::from_secs(0)))?,
             },
         }))
@@ -671,8 +683,12 @@ impl RenderManager {
 
 #[derive(Clone, Copy, Serialize)]
 pub struct RenderStats {
-    pub completed_iterations: u32,
+    pub image_dimensions: (u32, u32),
+    pub samples_per_checkpoint: u32,
     pub total_iterations: u32,
+    pub completed_iterations: u32,
+    pub pixel_samples_per_checkpoint: u64,
+    pub total_samples_taken: u64,
     pub elapsed: Duration,
     pub estimated_remaining: Duration,
     pub estimated_total: Duration,
