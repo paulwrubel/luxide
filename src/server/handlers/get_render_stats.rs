@@ -66,6 +66,8 @@ pub async fn get_render_stats(
     State(render_manager): LuxideState,
     Path(id): Path<RenderID>,
 ) -> Response {
+    println!("Handing request for get_render_stats (id: {})...", id);
+
     match render_manager.get_render_stats(id).await {
         Ok(Some(stats)) => {
             (StatusCode::OK, Json(FormattedRenderStats::from(stats))).into_response()

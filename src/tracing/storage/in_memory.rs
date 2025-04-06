@@ -145,6 +145,20 @@ impl RenderStorage for InMemoryStorage {
             .cloned())
     }
 
+    async fn get_most_recent_render_checkpoint_iteration(
+        &self,
+        id: RenderID,
+    ) -> Result<Option<u32>, RenderStorageError> {
+        Ok(self
+            .checkpoints
+            .read()
+            .await
+            .iter()
+            .filter(|c| c.render_id == id)
+            .map(|c| c.iteration)
+            .max())
+    }
+
     async fn get_render_checkpoints_without_data(
         &self,
         id: RenderID,

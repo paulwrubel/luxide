@@ -466,6 +466,20 @@ impl RenderManager {
             .map_err(|e| e.into())
     }
 
+    pub async fn get_most_recent_render_checkpoint_iteration(
+        &self,
+        id: RenderID,
+    ) -> Result<Option<u32>, RenderManagerError> {
+        if !self.storage.render_exists(id).await? {
+            return Ok(None);
+        }
+
+        self.storage
+            .get_most_recent_render_checkpoint_iteration(id)
+            .await
+            .map_err(|e| e.into())
+    }
+
     pub async fn get_render_checkpoint(
         &self,
         id: RenderID,

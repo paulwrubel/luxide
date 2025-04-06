@@ -31,6 +31,10 @@ fn build_renders_router() -> Router<Arc<RenderManager>> {
         .route("/", get(handlers::get_all_renders))
         .route("/", post(handlers::create_render))
         .route(
+            "/{id}/checkpoint/last",
+            get(handlers::get_last_render_checkpoint_image),
+        )
+        .route(
             "/{id}/checkpoint/{checkpoint_iteration}",
             get(handlers::get_render_checkpoint_image),
         )

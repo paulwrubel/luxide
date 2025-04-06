@@ -20,6 +20,11 @@ pub async fn update_render_total_checkpoints(
     Path(id): Path<RenderID>,
     Json(update_render_total_checkpoints): Json<UpdateRenderTotalCheckpoints>,
 ) -> Response {
+    println!(
+        "Handing request for update_render_total_checkpoints (id: {})...",
+        id
+    );
+
     match render_manager
         .update_render_total_checkpoints(id, update_render_total_checkpoints.new_total_checkpoints)
         .await

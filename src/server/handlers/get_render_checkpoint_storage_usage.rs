@@ -17,6 +17,8 @@ pub struct StorageUsageResponse {
 pub async fn get_global_render_checkpoint_storage_usage(
     State(render_manager): LuxideState,
 ) -> Response {
+    println!("Handing request for get_global_render_checkpoint_storage_usage...");
+
     match render_manager
         .get_render_checkpoint_storage_usage_bytes()
         .await

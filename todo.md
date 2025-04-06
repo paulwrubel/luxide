@@ -5,7 +5,7 @@
 - [x] add start/end time to checkpoints (or alternatively, a total duration)
   - [x] add stats endpoint for render
 - [x] add vertex normals for triangles
-- [ ] add support for manually specifying triangle normals outside of a model file
+- [x] add support for manually specifying triangle normals outside of a model file
 - [ ] ability to do a "rolling delete" of checkpoints, e.g. "only save the most recent X checkpoints"
 - [ ] maybe add a "deletion job" system, since deleting things takes FOREVER.
   - the idea is that you "request" a deletion and it happens in the background, and you can check in on it later.

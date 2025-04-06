@@ -294,6 +294,29 @@ impl RenderStorage for PostgresStorage {
         }
     }
 
+    async fn get_most_recent_render_checkpoint_iteration(
+        &self,
+        id: RenderID,
+    ) -> Result<Option<u32>, RenderStorageError> {
+        match sqlx::query!(
+            r#"
+                SELECT max(iteration)
+                FROM checkpoints
+                WHERE render_id = $1
+            "#,
+            id as i32,
+        )
+        .fetch_one(&self.pool)
+        .await
+        {
+            Ok(row) => Ok(row.max.map(|max| max as u32)),
+            Err(e) => Err(format!(
+                "Failed to get most recent render checkpoint iteration for id {id}: {e}"
+            )
+            .into()),
+        }
+    }
+
     async fn get_render_checkpoints_without_data(
         &self,
         id: RenderID,

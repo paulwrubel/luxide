@@ -188,6 +188,33 @@ fn build_materials(
     Ok(())
 }
 
+fn get_geometric_dependencies(geometric: &GeometricData) -> Vec<String> {
+    let mut deps = Vec::new();
+    match geometric {
+        GeometricData::CompoundList { geometrics, .. } => {
+            for g in geometrics {
+                match g {
+                    GeometricRefOrInline::Ref(ref_name) => deps.push(ref_name.clone()),
+                    GeometricRefOrInline::Inline(data) => {
+                        deps.append(&mut get_geometric_dependencies(data))
+                    }
+                }
+            }
+        }
+        GeometricData::InstanceRotateXAxis { geometric, .. }
+        | GeometricData::InstanceRotateYAxis { geometric, .. }
+        | GeometricData::InstanceRotateZAxis { geometric, .. }
+        | GeometricData::InstanceTranslate { geometric, .. } => match geometric {
+            GeometricRefOrInline::Ref(ref_name) => deps.push(ref_name.clone()),
+            GeometricRefOrInline::Inline(data) => {
+                deps.append(&mut get_geometric_dependencies(data))
+            }
+        },
+        _ => {}
+    }
+    deps
+}
+
 fn build_geometrics(
     geometric_data: &IndexMap<String, GeometricData>,
     builts: &mut Builts,
@@ -195,28 +222,7 @@ fn build_geometrics(
     let mut building = std::collections::HashSet::new();
 
     // Function to get dependencies from a geometric
-    let get_dependencies = |geometric: &GeometricData| {
-        let mut deps = Vec::new();
-        match geometric {
-            GeometricData::CompoundList { geometrics, .. } => {
-                for g in geometrics {
-                    if let GeometricRefOrInline::Ref(ref_name) = g {
-                        deps.push(ref_name.clone());
-                    }
-                }
-            }
-            GeometricData::InstanceRotateXAxis { geometric, .. }
-            | GeometricData::InstanceRotateYAxis { geometric, .. }
-            | GeometricData::InstanceRotateZAxis { geometric, .. }
-            | GeometricData::InstanceTranslate { geometric, .. } => {
-                if let GeometricRefOrInline::Ref(ref_name) = geometric {
-                    deps.push(ref_name.clone());
-                }
-            }
-            _ => {}
-        }
-        deps
-    };
+    // let get_dependencies = |geometric: &GeometricData| {};
 
     // Function to build and insert a geometric
     let build_and_insert = |name: &str, geometric: &GeometricData, builts: &mut Builts| {
@@ -234,7 +240,7 @@ fn build_geometrics(
             geometric_data,
             builts,
             &mut building,
-            get_dependencies,
+            get_geometric_dependencies,
             build_and_insert,
             "geometric",
             0,

@@ -231,6 +231,11 @@ pub trait RenderStorage: Send + Sync + 'static {
         checkpoint: u32,
     ) -> Result<Option<RenderCheckpoint>, RenderStorageError>;
 
+    async fn get_most_recent_render_checkpoint_iteration(
+        &self,
+        render_id: RenderID,
+    ) -> Result<Option<u32>, RenderStorageError>;
+
     async fn get_render_checkpoints_without_data(
         &self,
         render_id: RenderID,

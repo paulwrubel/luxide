@@ -1,0 +1,254 @@
+meta {
+  name: Cornell Box Warped Mirror Cube
+  type: http
+  seq: 6
+}
+
+post {
+  url: http://localhost:8080/renders
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "cornell_box_warped_mirror_cube",
+    "parameters": {
+      "image_dimensions": [
+        500,
+        500
+      ],
+      "tile_dimensions": [
+        1,
+        1
+      ],
+      "gamma_correction": 2,
+      "samples_per_checkpoint": 10,
+      "total_checkpoints": 10,
+      "max_bounces": 50,
+      "use_scaling_truncation": true
+    },
+    "active_scene": {
+      "geometrics": [
+        "__cornell_box_room",
+        "near_wall_mike",
+        "rotated_warped_mirror_cube"
+      ],
+      "use_bvh": true,
+      "camera": "__cornell_box",
+      "background_color": [
+        0,
+        0,
+        0
+      ]
+    },
+    "geometrics": {
+      "rotated_warped_mirror_cube": {
+        "type": "rotate_x",
+        "degrees": 45,
+        "around": [
+          0.5,
+          0.5,
+          -0.5
+        ],
+        "geometric": {
+          "type": "rotate_y",
+          "degrees": 45,
+          "around": [
+            0.5,
+            0.5,
+            -0.5
+          ],
+          "geometric": "warped_mirror_cube"
+        }
+      },
+      "warped_mirror_cube": {
+        "type": "list",
+        "geometrics": [
+          "warped_top_square",
+          "warped_bottom_square",
+          "warped_left_square",
+          "warped_right_square",
+          "warped_far_square",
+          "warped_near_square"
+        ]
+      },
+      "warped_top_square": {
+        "type": "rotate_x",
+        "degrees": -90,
+        "around": [
+          0.5,
+          0.5,
+          -0.5
+        ],
+        "geometric": "warped_near_square"
+      },
+      "warped_bottom_square": {
+        "type": "rotate_x",
+        "degrees": 90,
+        "around": [
+          0.5,
+          0.5,
+          -0.5
+        ],
+        "geometric": "warped_near_square"
+      },
+      "warped_left_square": {
+        "type": "rotate_y",
+        "degrees": -90,
+        "around": [
+          0.5,
+          0.5,
+          -0.5
+        ],
+        "geometric": "warped_near_square"
+      },
+      "warped_right_square": {
+        "type": "rotate_y",
+        "degrees": 90,
+        "around": [
+          0.5,
+          0.5,
+          -0.5
+        ],
+        "geometric": "warped_near_square"
+      },
+      "warped_far_square": {
+        "type": "rotate_y",
+        "degrees": 180,
+        "around": [
+          0.5,
+          0.5,
+          -0.5
+        ],
+        "geometric": "warped_near_square"
+      },
+      "warped_near_square": {
+        "type": "list",
+        "geometrics": [
+          {
+            "type": "triangle",
+            "a": [
+              0.25,
+              0.25,
+              -0.25
+            ],
+            "a_normal": [
+              -1,
+              -1,
+              1
+            ],
+            "b": [
+              0.75,
+              0.25,
+              -0.25
+            ],
+            "b_normal": [
+              1,
+              -1,
+              1
+            ],
+            "c": [
+              0.25,
+              0.75,
+              -0.25
+            ],
+            "c_normal": [
+              -1,
+              1,
+              1
+            ],
+            "is_culled": true,
+            "material": "__specular_mirror"
+          },
+          {
+            "type": "triangle",
+            "a": [
+              0.75,
+              0.25,
+              -0.25
+            ],
+            "a_normal": [
+              1,
+              -1,
+              1
+            ],
+            "b": [
+              0.75,
+              0.75,
+              -0.25
+            ],
+            "b_normal": [
+              1,
+              1,
+              1
+            ],
+            "c": [
+              0.25,
+              0.75,
+              -0.25
+            ],
+            "c_normal": [
+              -1,
+              1,
+              1
+            ],
+            "is_culled": true,
+            "material": "__specular_mirror"
+          }
+        ]
+      },
+      "near_wall_mike": {
+        "type": "parallelogram",
+        "lower_left": [
+          1,
+          0,
+          -0.001
+        ],
+        "u": [
+          -1,
+          0,
+          0
+        ],
+        "v": [
+          0,
+          1,
+          0
+        ],
+        "is_culled": true,
+        "material": "mike_face"
+      },
+      "right_wall_mike": {
+        "type": "parallelogram",
+        "lower_left": [
+          0.9999,
+          0,
+          -1
+        ],
+        "u": [
+          0,
+          0,
+          1
+        ],
+        "v": [
+          0,
+          1,
+          0
+        ],
+        "is_culled": true,
+        "material": "mike_face"
+      }
+    },
+    "materials": {
+      "mike_face": {
+        "type": "lambertian",
+        "reflectance_texture": {
+          "type": "image",
+          "filename": "texture_images/mike_face.png",
+          "gamma": 2
+        },
+        "emittance_texture": "__black"
+      }
+    }
+  }
+}

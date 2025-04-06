@@ -1,4 +1,4 @@
-use std::io::Cursor;
+use std::{io::Cursor, sync::Arc};
 
 use axum::{
     extract::{Path, State},
@@ -11,16 +11,48 @@ use axum_extra::{
 };
 use image::ImageOutputFormat;
 
-use crate::tracing::RenderID;
+use crate::tracing::{RenderID, RenderManager};
 
 use super::LuxideState;
+
+pub async fn get_last_render_checkpoint_image(
+    State(render_manager): LuxideState,
+    Path(id): Path<RenderID>,
+) -> Response {
+    println!(
+        "Handing request for get_last_render_checkpoint_image (id: {})...",
+        id
+    );
+
+    match render_manager
+        .get_most_recent_render_checkpoint_iteration(id)
+        .await
+    {
+        Ok(Some(iteration)) => {
+            get_render_checkpoint_image_response(render_manager, id, iteration).await
+        }
+        Ok(None) => StatusCode::NOT_FOUND.into_response(),
+        Err(e) => e.into(),
+    }
+}
 
 pub async fn get_render_checkpoint_image(
     State(render_manager): LuxideState,
     Path((id, checkpoint_iteration)): Path<(RenderID, u32)>,
 ) -> Response {
-    println!("Handing request for get_render_checkpoint...");
+    println!(
+        "Handing request for get_render_checkpoint (id: {}, iteration: {})...",
+        id, checkpoint_iteration
+    );
 
+    get_render_checkpoint_image_response(render_manager, id, checkpoint_iteration).await
+}
+
+async fn get_render_checkpoint_image_response(
+    render_manager: Arc<RenderManager>,
+    id: RenderID,
+    checkpoint_iteration: u32,
+) -> Response {
     match render_manager
         .get_render_checkpoint_as_image(id, checkpoint_iteration)
         .await

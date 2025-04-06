@@ -103,6 +103,9 @@ pub enum GeometricData {
         a: [f64; 3],
         b: [f64; 3],
         c: [f64; 3],
+        a_normal: Option<[f64; 3]>,
+        b_normal: Option<[f64; 3]>,
+        c_normal: Option<[f64; 3]>,
         is_culled: Option<bool>,
         material: MaterialRefOrInline,
     },
@@ -252,15 +255,21 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
                 a,
                 b,
                 c,
+                a_normal,
+                b_normal,
+                c_normal,
                 is_culled,
                 material,
             } => {
                 let material = material.build(builts)?;
 
-                Ok(Arc::new(Triangle::new(
+                Ok(Arc::new(Triangle::new_with_optional_normals(
                     (*a).into(),
                     (*b).into(),
                     (*c).into(),
+                    a_normal.as_ref().map(|a| (*a).into()),
+                    b_normal.as_ref().map(|b| (*b).into()),
+                    c_normal.as_ref().map(|c| (*c).into()),
                     (*is_culled).unwrap_or(false),
                     material,
                 )))

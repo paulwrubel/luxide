@@ -230,6 +230,35 @@ impl RenderStorage for FileStorage {
         )))
     }
 
+    async fn get_most_recent_render_checkpoint_iteration(
+        &self,
+        id: RenderID,
+    ) -> Result<Option<u32>, RenderStorageError> {
+        let renders = self.renders.read().await;
+        let dir = match renders.iter().find(|(r, _)| r.id == id) {
+            Some((_, dir)) => dir,
+            None => return Err(format!("Render {} not found", id).into()),
+        };
+
+        let checkpoint_dir = dir.join("checkpoints");
+        let checkpoint_files = fs::read_dir(checkpoint_dir).map_err(|e| e.to_string())?;
+
+        let mut latest_iteration = None;
+        for entry in checkpoint_files {
+            let path = entry.map_err(|e| e.to_string())?.path();
+            if path.is_file() && path.extension().map(|ext| ext == "png").unwrap_or(false) {
+                let iteration = path
+                    .file_name()
+                    .and_then(|name| name.to_str().and_then(|s| s.parse::<u32>().ok()));
+                if let Some(iteration) = iteration {
+                    latest_iteration = Some(latest_iteration.unwrap_or(0).max(iteration));
+                }
+            }
+        }
+
+        Ok(latest_iteration)
+    }
+
     async fn get_render_checkpoints_without_data(
         &self,
         id: RenderID,

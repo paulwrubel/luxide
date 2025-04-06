@@ -1,0 +1,15 @@
+meta {
+  name: Get Last Render Image By ID
+  type: http
+  seq: 9
+}
+
+get {
+  url: http://localhost:8080/renders/:id/checkpoint/last
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: 11
+}
