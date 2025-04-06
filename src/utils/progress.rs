@@ -7,10 +7,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct ProgressInfo {
-    progress: f64,
-    elapsed: Duration,
-    estimated_remaining: Duration,
-    estimated_total: Duration,
+    pub progress: f64,
+    pub elapsed: Duration,
+    pub estimated_remaining: Duration,
+    pub estimated_total: Duration,
 }
 
 impl ProgressInfo {

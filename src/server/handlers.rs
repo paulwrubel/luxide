@@ -10,6 +10,12 @@ pub use get_all_renders::*;
 mod get_render_checkpoint_image;
 pub use get_render_checkpoint_image::*;
 
+mod get_render_checkpoint_storage_usage;
+pub use get_render_checkpoint_storage_usage::*;
+
+mod get_render_stats;
+pub use get_render_stats::*;
+
 mod get_render;
 pub use get_render::*;
 

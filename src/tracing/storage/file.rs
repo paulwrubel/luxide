@@ -1,6 +1,6 @@
-use std::{fs, path::PathBuf, sync::Arc};
+use std::{fs, os::unix::fs::MetadataExt, path::PathBuf, sync::Arc};
 
-use time::OffsetDateTime;
+use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
 
 use crate::{
@@ -8,12 +8,27 @@ use crate::{
     utils,
 };
 
-use super::{ProgressInfo, RenderStorage, RenderStorageError};
+use super::{ProgressInfo, RenderCheckpointMeta, RenderStorage, RenderStorageError};
 
 #[derive(Clone)]
 pub struct FileStorage {
     output_dir: PathBuf,
     renders: Arc<RwLock<Vec<(Render, PathBuf)>>>,
+}
+
+#[derive(Clone, Copy, Serialize, Deserialize)]
+pub struct RenderCheckpointFileMeta {
+    started_at: chrono::DateTime<chrono::Utc>,
+    ended_at: chrono::DateTime<chrono::Utc>,
+}
+
+impl From<RenderCheckpoint> for RenderCheckpointFileMeta {
+    fn from(checkpoint: RenderCheckpoint) -> Self {
+        Self {
+            started_at: checkpoint.started_at,
+            ended_at: checkpoint.ended_at,
+        }
+    }
 }
 
 impl FileStorage {
@@ -26,7 +41,7 @@ impl FileStorage {
     }
 
     async fn get_render_dir(&self, render: &Render) -> Result<PathBuf, RenderStorageError> {
-        let now = OffsetDateTime::now_utc();
+        let now = chrono::Utc::now();
         let formatted_timestamp = utils::get_formatted_timestamp_for(now);
         let sub_folder = format!(
             "{}_{}_{}",
@@ -89,6 +104,7 @@ impl RenderStorage for FileStorage {
         {
             Some(render) => {
                 render.state = state;
+                render.mark_updated();
                 Ok(())
             }
             None => Err(format!("Render with id {id} not found").into()),
@@ -117,6 +133,7 @@ impl RenderStorage for FileStorage {
                             checkpoint_iteration,
                             progress_info,
                         };
+                        render.mark_updated();
                         Ok(())
                     }
                     RenderState::Pausing {
@@ -127,6 +144,7 @@ impl RenderStorage for FileStorage {
                             checkpoint_iteration,
                             progress_info,
                         };
+                        render.mark_updated();
                         Ok(())
                     }
                     _ => Ok(()), // don't update progress for non-running states
@@ -150,6 +168,7 @@ impl RenderStorage for FileStorage {
         {
             Some(render) => {
                 render.config.parameters.total_checkpoints = new_total_checkpoints;
+                render.mark_updated();
                 Ok(())
             }
             None => Err(format!("Render with id {id} not found").into()),
@@ -169,21 +188,128 @@ impl RenderStorage for FileStorage {
 
         let checkpoint_dir = dir.join("checkpoints");
         let checkpoint_image_file = checkpoint_dir.join(format!("{}.png", iteration));
-        if !checkpoint_image_file.exists() {
-            return Ok(None);
-        }
+        let checkpoint_meta_file = checkpoint_dir.join(format!("{}.json", iteration));
+        match (
+            checkpoint_meta_file.exists(),
+            checkpoint_image_file.exists(),
+        ) {
+            (false, true) => {
+                return Err(format!(
+                    "Checkpoint iteration {} image exists but metadata file is missing for render {}",
+                    iteration, id
+                ).into());
+            }
+            (true, false) => {
+                return Err(format!(
+                    "Checkpoint iteration {} metadata exists but image is missing for render {}",
+                    iteration, id
+                )
+                .into());
+            }
+            (false, false) => return Ok(None),
+            _ => {}
+        };
 
-        // load checkpoint image if it exists
+        // load checkpoint image
         let image = image::open(checkpoint_image_file)
             .map_err(|e| e.to_string())?
             .to_rgba8();
+
+        // load checkpoint metadata
+        let meta = fs::read_to_string(checkpoint_meta_file).map_err(|e| e.to_string())?;
+        let meta: RenderCheckpointFileMeta =
+            serde_json::from_str(&meta).map_err(|e| e.to_string())?;
 
         Ok(Some(RenderCheckpoint::from_image(
             id,
             iteration,
             image,
             &render.config.parameters,
+            meta.started_at,
+            meta.ended_at,
         )))
+    }
+
+    async fn get_render_checkpoints_without_data(
+        &self,
+        id: RenderID,
+    ) -> Result<Vec<RenderCheckpointMeta>, RenderStorageError> {
+        let renders = self.renders.read().await;
+        let dir = match renders.iter().find(|(r, _)| r.id == id) {
+            Some((_, dir)) => dir,
+            None => return Err(format!("Render {} not found", id).into()),
+        };
+
+        let checkpoint_dir = dir.join("checkpoints");
+        let checkpoint_files = fs::read_dir(checkpoint_dir).map_err(|e| e.to_string())?;
+
+        let checkpoint_metas = checkpoint_files.filter_map(|f| {
+            let entry = match f {
+                Ok(entry) => entry,
+                Err(e) => return Some(Err(format!("Failed to read checkpoint file: {}", e))),
+            };
+
+            // check file extension
+            let path = entry.path();
+            match path.extension() {
+                None => return None,
+                Some(ext) => {
+                    if ext != "json" {
+                        return None;
+                    }
+                }
+            };
+
+            // get file name
+            let iteration = match path.file_stem() {
+                Some(file_stem) => match file_stem.to_str().map(|s| s.parse::<u32>()) {
+                    Some(parse_res) => parse_res.map_err(|e| {
+                        format!(
+                            "Failed to parse filename ({}) as u32: {}",
+                            path.file_name()
+                                .map(|oss| oss.to_str().unwrap_or("???"))
+                                .unwrap_or("???"),
+                            e.to_string()
+                        )
+                    }),
+                    None => Err(format!(
+                        "Failed to parse filename ({}) as valid unicode",
+                        path.file_name()
+                            .map(|oss| oss.to_str().unwrap_or("???"))
+                            .unwrap_or("???")
+                    )),
+                },
+                None => Err(format!("Failed to parse filename: no stem!")),
+            };
+            let iteration = match iteration {
+                Ok(i) => i,
+                Err(e) => return Some(Err(e)),
+            };
+
+            // read meta file
+            let meta_file_string = match fs::read_to_string(path) {
+                Ok(s) => s,
+                Err(e) => return Some(Err(e.to_string())),
+            };
+
+            // parse meta file
+            let meta_file: RenderCheckpointFileMeta = match serde_json::from_str(&meta_file_string)
+            {
+                Ok(m) => m,
+                Err(e) => return Some(Err(e.to_string())),
+            };
+
+            Some(Ok(RenderCheckpointMeta {
+                render_id: id,
+                iteration,
+                started_at: meta_file.started_at,
+                ended_at: meta_file.ended_at,
+            }))
+        });
+
+        checkpoint_metas
+            .collect::<Result<Vec<_>, String>>()
+            .map_err(|e| RenderStorageError::from(e))
     }
 
     async fn render_checkpoint_exists(
@@ -220,7 +346,17 @@ impl RenderStorage for FileStorage {
         // save checkpoint data as a png image
         let image_file = checkpoint_dir.join(format!("{}.png", checkpoint.iteration));
         let image = checkpoint.as_image(&render.config.parameters);
-        image.save(image_file).map_err(|e| e.to_string())?;
+        image
+            .save_with_format(image_file, image::ImageFormat::Png)
+            .map_err(|e| e.to_string())?;
+
+        let meta_file = checkpoint_dir.join(format!("{}.json", checkpoint.iteration));
+        fs::write(
+            meta_file,
+            serde_json::to_string(&RenderCheckpointFileMeta::from(checkpoint))
+                .map_err(|e| e.to_string())?,
+        )
+        .map_err(|e| e.to_string())?;
 
         Ok(())
     }
@@ -270,5 +406,42 @@ impl RenderStorage for FileStorage {
         //     " ".repeat(10)
         // );
         // stdout().flush().unwrap();
+    }
+
+    async fn get_render_checkpoint_storage_usage_bytes(&self) -> Result<u64, RenderStorageError> {
+        let renders = self.renders.read().await;
+
+        let render_sizes = renders.iter().map(|(r, dir)| {
+            let checkpoint_dir = dir.join("checkpoints");
+            if checkpoint_dir.exists() {
+                let entries = fs::read_dir(checkpoint_dir).map_err(|e| {
+                    format!(
+                        "Cannot read checkpoint directory for render {}: {}",
+                        r.id, e
+                    )
+                })?;
+
+                let checkpoint_sizes = entries
+                    .map(|e| -> Result<u64, String> {
+                        let entry = e.map_err(|e| {
+                            format!("Cannot get directory entry for render {}: {}", r.id, e)
+                        })?;
+
+                        let file_size_bytes = entry
+                            .metadata()
+                            .map_err(|e| format!("Cannot get metadata for render {}: {}", r.id, e))?
+                            .size();
+
+                        Ok(file_size_bytes)
+                    })
+                    .sum::<Result<u64, String>>()?;
+
+                Ok::<u64, String>(checkpoint_sizes)
+            } else {
+                Err(format!("Checkpoint directory does not exist for render {}", r.id).into())
+            }
+        });
+
+        Ok(render_sizes.sum::<Result<u64, String>>()?)
     }
 }

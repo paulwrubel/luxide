@@ -90,6 +90,8 @@ impl From<(RenderFormat, Render)> for FormattedRender {
 pub struct FormattedRenderFull {
     id: RenderID,
     state: FormattedRenderState,
+    created_at: chrono::DateTime<chrono::Utc>,
+    updated_at: chrono::DateTime<chrono::Utc>,
     config: RenderConfig,
 }
 
@@ -97,8 +99,10 @@ impl From<Render> for FormattedRenderFull {
     fn from(render: Render) -> Self {
         Self {
             id: render.id,
-            config: render.config,
             state: render.state.into(),
+            created_at: render.created_at,
+            updated_at: render.updated_at,
+            config: render.config,
         }
     }
 }
@@ -107,6 +111,8 @@ impl From<Render> for FormattedRenderFull {
 pub struct FormattedRenderLight {
     id: RenderID,
     name: String,
+    created_at: chrono::DateTime<chrono::Utc>,
+    updated_at: chrono::DateTime<chrono::Utc>,
     state: FormattedRenderState,
     parameters: RenderParameters,
 }
@@ -116,6 +122,8 @@ impl From<Render> for FormattedRenderLight {
         Self {
             id: render.id,
             state: render.state.into(),
+            created_at: render.created_at,
+            updated_at: render.updated_at,
             name: render.config.name,
             parameters: render.config.parameters,
         }
@@ -126,6 +134,8 @@ impl From<Render> for FormattedRenderLight {
 pub struct FormattedRenderMinimal {
     id: RenderID,
     name: String,
+    created_at: chrono::DateTime<chrono::Utc>,
+    updated_at: chrono::DateTime<chrono::Utc>,
     state: FormattedRenderState,
 }
 
@@ -134,6 +144,8 @@ impl From<Render> for FormattedRenderMinimal {
         Self {
             id: render.id,
             name: render.config.name,
+            created_at: render.created_at,
+            updated_at: render.updated_at,
             state: render.state.into(),
         }
     }

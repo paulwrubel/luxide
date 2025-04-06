@@ -58,6 +58,8 @@ impl PartialEq for RenderState {
 pub struct Render {
     pub id: RenderID,
     pub state: RenderState,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
     pub config: RenderConfig,
 }
 
@@ -66,8 +68,14 @@ impl Render {
         Self {
             id,
             state: RenderState::Created,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
             config,
         }
+    }
+
+    pub fn mark_updated(&mut self) {
+        self.updated_at = chrono::Utc::now();
     }
 }
 
@@ -76,6 +84,8 @@ pub struct RenderCheckpoint {
     pub render_id: RenderID,
     pub iteration: u32,
     pub pixel_data: PixelData,
+    pub started_at: chrono::DateTime<chrono::Utc>,
+    pub ended_at: chrono::DateTime<chrono::Utc>,
 }
 
 impl RenderCheckpoint {
@@ -103,6 +113,8 @@ impl RenderCheckpoint {
         iteration: u32,
         image: RgbaImage,
         params: &RenderParameters,
+        started_at: chrono::DateTime<chrono::Utc>,
+        ended_at: chrono::DateTime<chrono::Utc>,
     ) -> Self {
         let mut pixel_data = PixelData::new();
         for (x, y, pixel) in image.enumerate_pixels() {
@@ -115,6 +127,38 @@ impl RenderCheckpoint {
             render_id,
             iteration,
             pixel_data,
+            started_at,
+            ended_at,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct RenderCheckpointMeta {
+    pub render_id: RenderID,
+    pub iteration: u32,
+    pub started_at: chrono::DateTime<chrono::Utc>,
+    pub ended_at: chrono::DateTime<chrono::Utc>,
+}
+
+impl From<RenderCheckpoint> for RenderCheckpointMeta {
+    fn from(value: RenderCheckpoint) -> Self {
+        Self {
+            render_id: value.render_id,
+            iteration: value.iteration,
+            started_at: value.started_at,
+            ended_at: value.ended_at,
+        }
+    }
+}
+
+impl From<&RenderCheckpoint> for RenderCheckpointMeta {
+    fn from(value: &RenderCheckpoint) -> Self {
+        Self {
+            render_id: value.render_id,
+            iteration: value.iteration,
+            started_at: value.started_at,
+            ended_at: value.ended_at,
         }
     }
 }
@@ -186,6 +230,11 @@ pub trait RenderStorage: Send + Sync + 'static {
         render_id: RenderID,
         checkpoint: u32,
     ) -> Result<Option<RenderCheckpoint>, RenderStorageError>;
+
+    async fn get_render_checkpoints_without_data(
+        &self,
+        render_id: RenderID,
+    ) -> Result<Vec<RenderCheckpointMeta>, RenderStorageError>;
 
     async fn render_checkpoint_exists(
         &self,
@@ -269,4 +318,6 @@ pub trait RenderStorage: Send + Sync + 'static {
             Ok(())
         }
     }
+
+    async fn get_render_checkpoint_storage_usage_bytes(&self) -> Result<u64, RenderStorageError>;
 }

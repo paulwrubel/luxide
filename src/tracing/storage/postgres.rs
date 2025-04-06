@@ -1,8 +1,14 @@
 use sqlx::{Pool, Postgres};
 
-use crate::utils::{ProgressInfo, decode_pixel_data, encode_pixel_data};
+use crate::{
+    shading::Color,
+    utils::{ProgressInfo, decode_pixel_data, encode_pixel_data},
+};
 
-use super::{Render, RenderCheckpoint, RenderID, RenderState, RenderStorage, RenderStorageError};
+use super::{
+    Render, RenderCheckpoint, RenderCheckpointMeta, RenderID, RenderState, RenderStorage,
+    RenderStorageError,
+};
 
 #[derive(Clone)]
 pub struct PostgresStorage {
@@ -33,7 +39,7 @@ impl RenderStorage for PostgresStorage {
     async fn get_render(&self, id: RenderID) -> Result<Option<Render>, RenderStorageError> {
         match sqlx::query!(
             r#"
-                SELECT id, state, config 
+                SELECT id, state, created_at, updated_at, config 
                 FROM renders
                 WHERE id = $1
             "#,
@@ -58,6 +64,8 @@ impl RenderStorage for PostgresStorage {
                 Ok(Some(Render {
                     id: db_id,
                     state,
+                    created_at: row.created_at,
+                    updated_at: row.updated_at,
                     config,
                 }))
             }
@@ -88,7 +96,7 @@ impl RenderStorage for PostgresStorage {
     async fn get_all_renders(&self) -> Result<Vec<Render>, RenderStorageError> {
         let rows = sqlx::query!(
             r#"
-                SELECT id, state, config
+                SELECT id, state, created_at, updated_at, config
                 FROM renders
                 ORDER BY id ASC
             "#
@@ -118,6 +126,8 @@ impl RenderStorage for PostgresStorage {
                     .try_into()
                     .map_err(|_| "Invalid render ID (negative or too large)".to_string())?,
                 state,
+                created_at: row.created_at,
+                updated_at: row.updated_at,
                 config,
             });
         }
@@ -128,14 +138,16 @@ impl RenderStorage for PostgresStorage {
     async fn create_render(&self, render: Render) -> Result<Render, RenderStorageError> {
         match sqlx::query!(
             r#"
-                INSERT INTO renders (id, state, config)
-                VALUES ($1, $2, $3)
+                INSERT INTO renders (id, state, created_at, updated_at, config)
+                VALUES ($1, $2, $3, $4, $5)
             "#,
             render.id as i32,
             serde_json::to_value(&render.state).map_err(|e| format!(
                 "Failed to serialize render state for id {}: {}",
                 render.id, e
             ))?,
+            render.created_at,
+            render.updated_at,
             serde_json::to_value(&render.config).map_err(|e| format!(
                 "Failed to serialize render config for id {}: {}",
                 render.id, e
@@ -162,12 +174,13 @@ impl RenderStorage for PostgresStorage {
         match sqlx::query!(
             r#"
                 UPDATE renders
-                SET state = $1
-                WHERE id = $2
+                SET state = $2, updated_at = $3
+                WHERE id = $1
             "#,
+            id as i32,
             serde_json::to_value(&new_state)
                 .map_err(|e| format!("Failed to serialize render state for id {}: {}", id, e))?,
-            id as i32,
+            chrono::Utc::now(),
         )
         .execute(&self.pool)
         .await
@@ -193,15 +206,17 @@ impl RenderStorage for PostgresStorage {
             r#"
                 UPDATE renders
                 SET state = CASE
-                    WHEN state ? 'running' THEN jsonb_set(state, '{running,progress_info}', $1::jsonb)
-                    WHEN state ? 'pausing' THEN jsonb_set(state, '{pausing,progress_info}', $1::jsonb)
+                    WHEN state ? 'running' THEN jsonb_set(state, '{running,progress_info}', $2::jsonb)
+                    WHEN state ? 'pausing' THEN jsonb_set(state, '{pausing,progress_info}', $2::jsonb)
                     ELSE state
-                END
-                WHERE id = $2
+                END,
+                updated_at = $3
+                WHERE id = $1
                 AND (state ? 'running' OR state ? 'pausing')
             "#,
+            id as i32,
             serde_json::to_value(&progress_info).map_err(|e| format!("Failed to serialize render progress for id {}: {}", id, e))?,
-            id as i32
+            chrono::Utc::now(),
         )
         .execute(&self.pool)
         .await
@@ -218,14 +233,16 @@ impl RenderStorage for PostgresStorage {
         sqlx::query!(
             r#"
                 UPDATE renders
-                SET config = jsonb_set(config, '{parameters,total_checkpoints}', $1::jsonb)
-                WHERE id = $2
+                SET config = jsonb_set(config, '{parameters,total_checkpoints}', $2::jsonb),
+                updated_at = $3
+                WHERE id = $1
             "#,
+            id as i32,
             serde_json::to_value(&new_total_checkpoints).map_err(|e| format!(
                 "Failed to serialize render total_checkpoints for id {}: {}",
                 id, e
             ))?,
-            id as i32
+            chrono::Utc::now(),
         )
         .execute(&self.pool)
         .await
@@ -246,7 +263,7 @@ impl RenderStorage for PostgresStorage {
     ) -> Result<Option<RenderCheckpoint>, RenderStorageError> {
         match sqlx::query!(
             r#"
-                SELECT pixel_data
+                SELECT pixel_data, started_at, ended_at
                 FROM checkpoints
                 WHERE render_id = $1 AND iteration = $2
             "#,
@@ -268,11 +285,44 @@ impl RenderStorage for PostgresStorage {
                     render_id: id,
                     iteration,
                     pixel_data,
+                    started_at: row.started_at,
+                    ended_at: row.ended_at,
                 }))
             }
             Ok(None) => Ok(None),
             Err(e) => Err(format!(
                 "Failed to get render checkpoint with id {id} and iteration {iteration}: {e}"
+            )
+            .into()),
+        }
+    }
+
+    async fn get_render_checkpoints_without_data(
+        &self,
+        id: RenderID,
+    ) -> Result<Vec<RenderCheckpointMeta>, RenderStorageError> {
+        match sqlx::query!(
+            r#"
+                SELECT render_id, iteration, started_at, ended_at
+                FROM checkpoints
+                WHERE render_id = $1
+            "#,
+            id as i32,
+        )
+        .fetch_all(&self.pool)
+        .await
+        {
+            Ok(rows) => Ok(rows
+                .iter()
+                .map(|row| RenderCheckpointMeta {
+                    render_id: id,
+                    iteration: row.iteration as u32,
+                    started_at: row.started_at,
+                    ended_at: row.ended_at,
+                })
+                .collect()),
+            Err(e) => Err(format!(
+                "Failed to get render checkpoints without data for id {id}: {e}"
             )
             .into()),
         }
@@ -315,12 +365,14 @@ impl RenderStorage for PostgresStorage {
 
         match sqlx::query!(
             r#"
-                INSERT INTO checkpoints (render_id, iteration, pixel_data)
-                VALUES ($1, $2, $3)
+                INSERT INTO checkpoints (render_id, iteration, pixel_data, started_at, ended_at)
+                VALUES ($1, $2, $3, $4, $5)
             "#,
             render_checkpoint.render_id as i32,
             render_checkpoint.iteration as i32,
             &pixel_data,
+            render_checkpoint.started_at,
+            render_checkpoint.ended_at,
         )
         .execute(&self.pool)
         .await
@@ -391,5 +443,19 @@ impl RenderStorage for PostgresStorage {
         Ok(next_id
             .try_into()
             .map_err(|_| "Next render ID is too large".to_string())?)
+    }
+
+    async fn get_render_checkpoint_storage_usage_bytes(&self) -> Result<u64, RenderStorageError> {
+        let rows = sqlx::query!(
+            r#"
+                SELECT sum(length(pixel_data))
+                FROM checkpoints
+            "#
+        )
+        .fetch_one(&self.pool)
+        .await
+        .map_err(|e| format!("Failed to get render checkpoint storage usage: {}", e))?;
+
+        Ok(rows.sum.unwrap_or(0) as u64)
     }
 }

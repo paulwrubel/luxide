@@ -1,10 +1,12 @@
 use std::{
     fmt::Display,
     sync::{Arc, Mutex},
+    time::Duration,
 };
 
 use axum::http::StatusCode;
 use image::RgbaImage;
+use serde::Serialize;
 use tokio::sync::mpsc;
 
 use crate::{
@@ -198,6 +200,7 @@ impl RenderManager {
             let (sender, mut receiver) = mpsc::channel(100);
 
             let (width, height) = render.config.parameters.image_dimensions;
+            let started_at = chrono::Utc::now();
             let new_pixel_data = {
                 let storage = Arc::clone(&storage);
 
@@ -233,12 +236,16 @@ impl RenderManager {
                 new_pixel_data
             };
 
+            let ended_at = chrono::Utc::now();
+
             println!("Saving pixel_data...");
             match storage
                 .create_render_checkpoint(RenderCheckpoint {
                     render_id: render.id,
                     iteration,
                     pixel_data: new_pixel_data,
+                    started_at,
+                    ended_at,
                 })
                 .await
             {
@@ -328,6 +335,104 @@ impl RenderManager {
 
     pub async fn get_all_renders(&self) -> Result<Vec<Render>, RenderManagerError> {
         self.storage.get_all_renders().await.map_err(|e| e.into())
+    }
+
+    pub async fn get_render_stats(
+        &self,
+        id: RenderID,
+    ) -> Result<Option<RenderStats>, RenderManagerError> {
+        if !self.storage.render_exists(id).await? {
+            return Ok(None);
+        }
+
+        let render = self.storage.get_render(id).await?.unwrap();
+        let checkpoints_meta = self.storage.get_render_checkpoints_without_data(id).await?;
+
+        // get iteration numbers
+        let total_iterations = render.config.parameters.total_checkpoints;
+        let (completed_iterations, unstarted_iterations, progress_info) = match render.state {
+            RenderState::Created => (0, total_iterations, None),
+            RenderState::Running {
+                checkpoint_iteration,
+                progress_info,
+            }
+            | RenderState::Pausing {
+                checkpoint_iteration,
+                progress_info,
+            } => (
+                checkpoint_iteration - 1,
+                total_iterations - checkpoint_iteration,
+                Some(progress_info),
+            ),
+            RenderState::FinishedCheckpointIteration(iteration)
+            | RenderState::Paused(iteration) => (iteration, total_iterations - iteration, None),
+        };
+
+        let (running_elapsed, running_estimated_remaining) = match progress_info {
+            Some(p) => (
+                chrono::Duration::from_std(p.elapsed)
+                    .expect("unable to coerce standard duration into chrono duration"),
+                chrono::Duration::from_std(p.estimated_remaining)
+                    .expect("unable to coerce standard duration into chrono duration"),
+            ),
+            None => (chrono::Duration::zero(), chrono::Duration::zero()),
+        };
+
+        // calculate the elapsed duration from previous checkpoint and the current running checkpoint
+        let completed_elapsed_by_checkpoint = checkpoints_meta
+            .iter()
+            .filter(|c| c.iteration <= completed_iterations)
+            .map(|c| c.ended_at - c.started_at)
+            .collect::<Vec<chrono::Duration>>();
+        let completed_elapsed = completed_elapsed_by_checkpoint
+            .iter()
+            .sum::<chrono::Duration>();
+        let elapsed = completed_elapsed + running_elapsed;
+
+        // calculate the estimated remaining time from the average runtime of previous checkpoints
+        // and the estimated remaining time of the current running checkpoint
+        let average_completed_elapsed = completed_elapsed / completed_iterations as i32;
+        let unstarted_estimated_remaining =
+            average_completed_elapsed * (unstarted_iterations) as i32;
+        let estimated_remaining = running_estimated_remaining + unstarted_estimated_remaining;
+
+        // calculate the total!
+        let estimated_total = estimated_remaining + elapsed;
+
+        Ok(Some(RenderStats {
+            completed_iterations,
+            total_iterations,
+            elapsed: elapsed
+                .to_std()
+                .map_err(|e| RenderManagerError::from(e.to_string()))?,
+            estimated_remaining: estimated_remaining
+                .to_std()
+                .map_err(|e| RenderManagerError::from(e.to_string()))?,
+            estimated_total: estimated_total
+                .to_std()
+                .map_err(|e| RenderManagerError::from(e.to_string()))?,
+            checkpoint_stats: RenderCheckpointStats {
+                average_elapsed: average_completed_elapsed
+                    .to_std()
+                    .map_err(|e| RenderManagerError::from(e.to_string()))?,
+                max_elapsed: completed_elapsed_by_checkpoint
+                    .iter()
+                    .max()
+                    .map(|d| {
+                        d.to_std()
+                            .map_err(|e| RenderManagerError::from(e.to_string()))
+                    })
+                    .unwrap_or(Ok(Duration::from_secs(0)))?,
+                min_elapsed: completed_elapsed_by_checkpoint
+                    .iter()
+                    .min()
+                    .map(|d| {
+                        d.to_std()
+                            .map_err(|e| RenderManagerError::from(e.to_string()))
+                    })
+                    .unwrap_or(Ok(Duration::from_secs(0)))?,
+            },
+        }))
     }
 
     pub async fn create_render(
@@ -553,7 +658,34 @@ impl RenderManager {
         let checkpoint = self.storage.get_render_checkpoint(id, iteration).await?;
         Ok(checkpoint.map(|rcp| rcp.as_image(&params)))
     }
+
+    pub async fn get_render_checkpoint_storage_usage_bytes(
+        &self,
+    ) -> Result<u64, RenderManagerError> {
+        self.storage
+            .get_render_checkpoint_storage_usage_bytes()
+            .await
+            .map_err(|e| e.into())
+    }
 }
+
+#[derive(Clone, Copy, Serialize)]
+pub struct RenderStats {
+    pub completed_iterations: u32,
+    pub total_iterations: u32,
+    pub elapsed: Duration,
+    pub estimated_remaining: Duration,
+    pub estimated_total: Duration,
+    pub checkpoint_stats: RenderCheckpointStats,
+}
+
+#[derive(Clone, Copy, Serialize)]
+pub struct RenderCheckpointStats {
+    pub average_elapsed: Duration,
+    pub min_elapsed: Duration,
+    pub max_elapsed: Duration,
+}
+
 pub enum RenderManagerError {
     ClientError(StatusCode, String),
     ServerError(String),
@@ -561,7 +693,13 @@ pub enum RenderManagerError {
 
 impl From<RenderStorageError> for RenderManagerError {
     fn from(error: RenderStorageError) -> Self {
-        RenderManagerError::ServerError(error.0)
+        RenderManagerError::from(error.0)
+    }
+}
+
+impl From<String> for RenderManagerError {
+    fn from(value: String) -> Self {
+        RenderManagerError::ServerError(value)
     }
 }
 

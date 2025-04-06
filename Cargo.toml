@@ -21,7 +21,6 @@ inherits = "dev"
 opt-level = 1
 
 [dependencies]
-time = { version = "0.3.30", features = ["formatting", "local-offset", "macros", "parsing"] }
 auto_ops = "0.3.0"
 image = "0.24.7"
 noise = "0.8.2"
@@ -41,8 +40,9 @@ axum-extra = { version = "0.10.0", features = ["typed-header"] }
 futures = "0.3.31"
 tokio-stream = "0.1.17"
 async-trait = "0.1.88"
-sqlx = { version = "0.8.3", features = ["postgres", "runtime-tokio", "time"] }
+sqlx = { version = "0.8.3", features = ["postgres", "runtime-tokio", "chrono"] }
 bincode = { version = "2.0.1", features = ["derive"] }
+chrono = { version = "0.4.40", features = ["serde"] }
 
 [[bench]]
 name = "aabb"

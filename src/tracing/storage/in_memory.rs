@@ -3,9 +3,12 @@ use std::{collections::HashMap, sync::Arc};
 use futures::StreamExt;
 use tokio::sync::RwLock;
 
-use crate::utils::ProgressInfo;
+use crate::{shading::Color, utils::ProgressInfo};
 
-use super::{Render, RenderCheckpoint, RenderID, RenderState, RenderStorage, RenderStorageError};
+use super::{
+    Render, RenderCheckpoint, RenderCheckpointMeta, RenderID, RenderState, RenderStorage,
+    RenderStorageError,
+};
 
 #[derive(Clone)]
 pub struct InMemoryStorage {
@@ -63,7 +66,9 @@ impl RenderStorage for InMemoryStorage {
 
         match self.renders.write().await.get_mut(&id) {
             Some(render) => {
-                render.write().await.state = new_state;
+                let mut render = render.write().await;
+                render.state = new_state;
+                render.mark_updated();
                 Ok(())
             }
             None => Err(format!("Render with id {id} not found").into()),
@@ -91,6 +96,7 @@ impl RenderStorage for InMemoryStorage {
                     checkpoint_iteration,
                     progress_info,
                 };
+                render.mark_updated();
                 Ok(())
             }
             RenderState::Pausing {
@@ -101,6 +107,7 @@ impl RenderStorage for InMemoryStorage {
                     checkpoint_iteration,
                     progress_info,
                 };
+                render.mark_updated();
                 Ok(())
             }
             _ => Ok(()), // don't update progress for non-running states
@@ -120,6 +127,7 @@ impl RenderStorage for InMemoryStorage {
 
         let mut render = render.write().await;
         render.config.parameters.total_checkpoints = new_total_checkpoints;
+        render.mark_updated();
         Ok(())
     }
 
@@ -135,6 +143,20 @@ impl RenderStorage for InMemoryStorage {
             .iter()
             .find(|c| c.render_id == id && c.iteration == iteration)
             .cloned())
+    }
+
+    async fn get_render_checkpoints_without_data(
+        &self,
+        id: RenderID,
+    ) -> Result<Vec<RenderCheckpointMeta>, RenderStorageError> {
+        Ok(self
+            .checkpoints
+            .read()
+            .await
+            .iter()
+            .filter(|c| c.render_id == id)
+            .map(|c| RenderCheckpointMeta::from(c))
+            .collect())
     }
 
     async fn render_checkpoint_exists(
@@ -181,5 +203,22 @@ impl RenderStorage for InMemoryStorage {
             Some(id) => id + 1,
             None => 1,
         })
+    }
+
+    async fn get_render_checkpoint_storage_usage_bytes(&self) -> Result<u64, RenderStorageError> {
+        let checkpoints = self.checkpoints.read().await;
+
+        let key_size = std::mem::size_of::<(u32, u32)>();
+        let val_size = std::mem::size_of::<Color>();
+
+        let entry_size_bytes = (key_size + val_size) as u64;
+
+        Ok(checkpoints
+            .iter()
+            .map(|c| {
+                // get the bytes used to store the hashmap
+                c.pixel_data.len() as u64 * entry_size_bytes
+            })
+            .sum())
     }
 }

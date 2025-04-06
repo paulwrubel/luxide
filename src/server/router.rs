@@ -13,20 +13,32 @@ use crate::tracing::RenderManager;
 use super::handlers;
 
 pub fn build_router() -> Router<Arc<RenderManager>> {
+    // /render routes
+    build_base_router().nest("/renders", build_renders_router())
+}
+
+fn build_base_router() -> Router<Arc<RenderManager>> {
+    Router::new().route("/", get(handlers::index)).route(
+        "/usage",
+        get(handlers::get_global_render_checkpoint_storage_usage),
+    )
+}
+
+fn build_renders_router() -> Router<Arc<RenderManager>> {
     Router::new()
-        .route("/", get(handlers::index))
-        .route("/renders/{id}", get(handlers::get_render))
-        .route("/renders", get(handlers::get_all_renders))
-        .route("/renders", post(handlers::create_render))
+        .route("/{id}", get(handlers::get_render))
+        .route("/{id}/stats", get(handlers::get_render_stats))
+        .route("/", get(handlers::get_all_renders))
+        .route("/", post(handlers::create_render))
         .route(
-            "/renders/{id}/checkpoint/{checkpoint_iteration}",
+            "/{id}/checkpoint/{checkpoint_iteration}",
             get(handlers::get_render_checkpoint_image),
         )
-        .route("/renders/{id}", delete(handlers::delete_render))
-        .route("/renders/{id}/pause", post(handlers::pause_render))
-        .route("/renders/{id}/resume", post(handlers::resume_render))
+        .route("/{id}", delete(handlers::delete_render))
+        .route("/{id}/pause", post(handlers::pause_render))
+        .route("/{id}/resume", post(handlers::resume_render))
         .route(
-            "/renders/{id}/parameters/total_checkpoints",
+            "/{id}/parameters/total_checkpoints",
             put(handlers::update_render_total_checkpoints),
         )
 }
