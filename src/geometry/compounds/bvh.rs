@@ -1,7 +1,7 @@
 use std::{cmp::Ordering, sync::Arc};
 
 use crate::{
-    geometry::{Geometric, Ray, RayHit, AABB},
+    geometry::{AABB, Geometric, Ray, RayHit},
     utils::Interval,
 };
 

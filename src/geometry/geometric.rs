@@ -1,6 +1,6 @@
 use crate::utils::Interval;
 
-use super::{Ray, RayHit, AABB};
+use super::{AABB, Ray, RayHit};
 
 pub trait Geometric: Sync + Send {
     fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit>;

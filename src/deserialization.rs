@@ -263,7 +263,7 @@ fn build_resource_recursive<T>(
         ));
     }
 
-    // If we've already built this resource, we're done
+    // Check for cycles
     if building.contains(name) {
         return Err(format!(
             "Cycle detected in {} dependencies involving {}",
