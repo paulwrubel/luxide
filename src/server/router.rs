@@ -14,7 +14,9 @@ use super::handlers;
 
 pub fn build_router() -> Router<Arc<RenderManager>> {
     // /render routes
-    build_base_router().nest("/renders", build_renders_router())
+    build_base_router()
+        .nest("/renders", build_renders_router())
+        .nest("/auth", build_auth_router())
 }
 
 fn build_base_router() -> Router<Arc<RenderManager>> {
@@ -45,6 +47,10 @@ fn build_renders_router() -> Router<Arc<RenderManager>> {
             "/{id}/parameters/total_checkpoints",
             put(handlers::update_render_total_checkpoints),
         )
+}
+
+fn build_auth_router() -> Router<Arc<RenderManager>> {
+    Router::new().route("/login", get(handlers::auth_login))
 }
 
 pub async fn serve(router: Router, address: &str, port: u16) -> Result<(), String> {

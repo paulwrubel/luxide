@@ -5,5 +5,5 @@
 # Output directory for images
 /output
 
-# Environment variables
-/.env
+# Secrets
+/*.secret.json
