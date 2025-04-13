@@ -4,3 +4,6 @@
 
 # Output directory for images
 /output
+
+# Environment variables
+/.env

@@ -1,0 +1,9 @@
+BEGIN;
+
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY,
+    github_id TEXT NOT NULL UNIQUE,
+    username TEXT NOT NULL UNIQUE,
+);
+
+END;
