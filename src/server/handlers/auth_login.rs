@@ -17,12 +17,6 @@ pub async fn auth_login(State(state): State<LuxideState>, cookie_jar: SignedCook
 
     let (url, auth_state) = state.auth_manager.get_auth_url_and_state();
 
-    println!(
-        "Generated SessionID: {}! Generated state: {}!",
-        session_id.to_string(),
-        auth_state.secret()
-    );
-
     state
         .auth_manager
         .set_state_for_session_id(session_id, auth_state);

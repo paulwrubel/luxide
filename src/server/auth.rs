@@ -1,6 +1,7 @@
 use crate::config::{APIConfig, AuthSecrets};
 use dashmap::DashMap;
 use oauth2::{CsrfToken, EndpointNotSet, EndpointSet, TokenResponse};
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 pub type SessionID = Uuid;
@@ -68,7 +69,7 @@ impl AuthManager {
             .map_err(|e| e.to_string())
     }
 
-    pub async fn get_github_user_info(&self, token: BearerToken) -> Result<String, String> {
+    pub async fn get_github_user_info(&self, token: BearerToken) -> Result<GitHubUserInfo, String> {
         let response = self
             .http_client
             .get("https://api.github.com/user")
@@ -80,7 +81,8 @@ impl AuthManager {
             .await
             .map_err(|e| e.to_string())?;
 
-        response.text().await.map_err(|e| e.to_string())
+        serde_json::from_str(&response.text().await.map_err(|e| e.to_string())?)
+            .map_err(|e| e.to_string())
     }
 
     pub fn set_state_for_session_id(&self, session_id: SessionID, state: CsrfToken) {
@@ -96,4 +98,11 @@ impl AuthManager {
     pub fn remove_state_for_session_id(&self, session_id: SessionID) {
         self.auth_state_by_session.remove(&session_id);
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GitHubUserInfo {
+    pub id: u64,
+    pub login: String,
+    pub avatar_url: String,
 }

@@ -7,8 +7,10 @@
 - [x] add vertex normals for triangles
 - [x] add support for manually specifying triangle normals outside of a model file
 - [ ] add a user auth scheme
-  - [ ] GitHub OAuth
-  - [ ] Self-generated auth tokens (JWTs)
+  - [x] GitHub OAuth
+  - [ ] Persist user info to database
+    - [ ] If githubID exists, update if needed, else create user with next ID
+  - [ ] Self-generated auth tokens (JWTs), with userID included as `sub`
   - [ ] add quota limits per-user for storage? maybe based on total bytes stores? or renders? or checkpoints? idk, think about it some more
 - [ ] ability to do a "rolling delete" of checkpoints, e.g. "only save the most recent X checkpoints"
 - [ ] maybe add a "deletion job" system, since deleting things takes FOREVER.

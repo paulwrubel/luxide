@@ -25,18 +25,16 @@ pub async fn auth_github_callback(
     println!("Handing request for auth_github_callback...");
 
     // get info from request
+    let request_auth_state = query_parameters.state;
+    let code = query_parameters.code;
 
     let session_id = match cookie_jar.get("session_id") {
         Some(cookie) => cookie.value().to_string(),
         None => {
             eprintln!("Missing session_id cookie");
-            println!("Cookie jar: {:#?}", cookie_jar);
             return (StatusCode::BAD_REQUEST, "Missing session_id cookie").into_response();
         }
     };
-
-    let request_auth_state = query_parameters.state;
-    let code = query_parameters.code;
 
     let parsed_session_id = match Uuid::parse_str(&session_id) {
         Ok(uuid) => uuid,
@@ -47,7 +45,6 @@ pub async fn auth_github_callback(
     };
 
     // verify auth state - given state should match the stored state
-
     let stored_auth_state = state
         .auth_manager
         .get_state_for_session_id(parsed_session_id);
@@ -60,12 +57,12 @@ pub async fn auth_github_callback(
             .into_response();
     }
 
+    // remove state from memory since we've just validated it
     state
         .auth_manager
         .remove_state_for_session_id(parsed_session_id);
 
     // exchange code for access token
-
     let token = match state.auth_manager.exchange_code(code).await {
         Ok(token) => token,
         Err(e) => {
@@ -78,12 +75,7 @@ pub async fn auth_github_callback(
         }
     };
 
-    println!("scopes: {:#?}", token.scopes());
-    println!("token [ACCESS_TOKEN]: {:#?}", token.access_token());
-    println!("THE TOKEN: {:#?}", token);
-
     // get user info from GitHub
-
     let user_info = match state.auth_manager.get_github_user_info(token).await {
         Ok(user_info) => user_info,
         Err(e) => {
@@ -92,7 +84,7 @@ pub async fn auth_github_callback(
         }
     };
 
-    println!("user info: {:#?}", user_info);
+    // TODO: persist user info to database
 
     (StatusCode::OK).into_response()
 }
