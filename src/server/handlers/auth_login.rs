@@ -1,24 +1,31 @@
 use axum::{
     extract::State,
-    http::{StatusCode, header},
-    response::{IntoResponse, Response},
+    response::{IntoResponse, Redirect, Response},
 };
+use axum_extra::extract::{SignedCookieJar, cookie::Cookie};
 
-use super::LuxideState;
+use crate::server::LuxideState;
 
-pub async fn auth_login(State(_render_manager): LuxideState) -> Response {
+pub async fn auth_login(State(state): State<LuxideState>, cookie_jar: SignedCookieJar) -> Response {
     println!("Handing request for auth_login...");
 
-    let client_id = std::env::var("GITHUB_CLIENT_ID").expect("GITHUB_CLIENT_ID not set");
+    let session_id = uuid::Uuid::new_v4();
+    let session_id_cookie = Cookie::build(("session_id", session_id.to_string()))
+        .path("/")
+        .secure(true)
+        .http_only(true);
 
-    let redirect_url = format!(
-        "https://github.com/login/oauth/authorize?client_id={}",
-        client_id
+    let (url, auth_state) = state.auth_manager.get_auth_url_and_state();
+
+    println!(
+        "Generated SessionID: {}! Generated state: {}!",
+        session_id.to_string(),
+        auth_state.secret()
     );
 
-    (
-        StatusCode::TEMPORARY_REDIRECT,
-        [(header::LOCATION, redirect_url)],
-    )
-        .into_response()
+    state
+        .auth_manager
+        .set_state_for_session_id(session_id, auth_state);
+
+    (cookie_jar.add(session_id_cookie), Redirect::temporary(&url)).into_response()
 }

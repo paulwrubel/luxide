@@ -7,15 +7,15 @@ use axum::{
 
 use crate::deserialization::RenderConfig;
 
-use super::LuxideState;
+use crate::server::LuxideState;
 
 pub async fn create_render(
-    State(render_manager): LuxideState,
+    State(state): State<LuxideState>,
     Json(render_config): Json<RenderConfig>,
 ) -> Response {
     println!("Handing request for create_render...");
 
-    match render_manager.create_render(render_config).await {
+    match state.render_manager.create_render(render_config).await {
         Ok(render) => (StatusCode::CREATED, Json(render)).into_response(),
         Err(e) => e.into(),
     }

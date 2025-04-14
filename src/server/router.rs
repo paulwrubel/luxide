@@ -1,32 +1,27 @@
-use std::{
-    net::{Ipv4Addr, SocketAddr},
-    sync::Arc,
-};
+use std::net::{Ipv4Addr, SocketAddr};
 
 use axum::{
     Router,
     routing::{delete, get, post, put},
 };
 
-use crate::tracing::RenderManager;
+use super::{LuxideState, handlers};
 
-use super::handlers;
-
-pub fn build_router() -> Router<Arc<RenderManager>> {
+pub fn build_router() -> Router<LuxideState> {
     // /render routes
     build_base_router()
         .nest("/renders", build_renders_router())
         .nest("/auth", build_auth_router())
 }
 
-fn build_base_router() -> Router<Arc<RenderManager>> {
+fn build_base_router() -> Router<LuxideState> {
     Router::new().route("/", get(handlers::index)).route(
         "/usage",
         get(handlers::get_global_render_checkpoint_storage_usage),
     )
 }
 
-fn build_renders_router() -> Router<Arc<RenderManager>> {
+fn build_renders_router() -> Router<LuxideState> {
     Router::new()
         .route("/{id}", get(handlers::get_render))
         .route("/{id}/stats", get(handlers::get_render_stats))
@@ -49,8 +44,10 @@ fn build_renders_router() -> Router<Arc<RenderManager>> {
         )
 }
 
-fn build_auth_router() -> Router<Arc<RenderManager>> {
-    Router::new().route("/login", get(handlers::auth_login))
+fn build_auth_router() -> Router<LuxideState> {
+    Router::new()
+        .route("/login", get(handlers::auth_login))
+        .route("/github/callback", get(handlers::auth_github_callback))
 }
 
 pub async fn serve(router: Router, address: &str, port: u16) -> Result<(), String> {

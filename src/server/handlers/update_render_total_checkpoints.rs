@@ -5,10 +5,8 @@ use axum::{
     response::{IntoResponse, Response},
 };
 
-use crate::tracing::RenderID;
+use crate::{server::LuxideState, tracing::RenderID};
 use serde::{Deserialize, Serialize};
-
-use super::LuxideState;
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct UpdateRenderTotalCheckpoints {
@@ -16,7 +14,7 @@ pub struct UpdateRenderTotalCheckpoints {
 }
 
 pub async fn update_render_total_checkpoints(
-    State(render_manager): LuxideState,
+    State(state): State<LuxideState>,
     Path(id): Path<RenderID>,
     Json(update_render_total_checkpoints): Json<UpdateRenderTotalCheckpoints>,
 ) -> Response {
@@ -25,7 +23,8 @@ pub async fn update_render_total_checkpoints(
         id
     );
 
-    match render_manager
+    match state
+        .render_manager
         .update_render_total_checkpoints(id, update_render_total_checkpoints.new_total_checkpoints)
         .await
     {

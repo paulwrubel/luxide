@@ -5,7 +5,7 @@ use axum::{
     response::{IntoResponse, Response},
 };
 
-use super::LuxideState;
+use crate::server::LuxideState;
 
 use serde::Serialize;
 
@@ -15,11 +15,12 @@ pub struct StorageUsageResponse {
 }
 
 pub async fn get_global_render_checkpoint_storage_usage(
-    State(render_manager): LuxideState,
+    State(state): State<LuxideState>,
 ) -> Response {
     println!("Handing request for get_global_render_checkpoint_storage_usage...");
 
-    match render_manager
+    match state
+        .render_manager
         .get_render_checkpoint_storage_usage_bytes()
         .await
     {

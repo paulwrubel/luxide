@@ -1,3 +1,6 @@
+mod auth_callback;
+pub use auth_callback::*;
+
 mod auth_login;
 pub use auth_login::*;
 
@@ -31,20 +34,15 @@ pub use resume_render::*;
 mod update_render_total_checkpoints;
 pub use update_render_total_checkpoints::*;
 
-use std::sync::Arc;
-
 use axum::{
     Json,
-    extract::State,
     http::StatusCode,
     response::{IntoResponse, Response},
 };
 
-use crate::tracing::{RenderManager, RenderManagerError};
+use crate::tracing::RenderManagerError;
 
 use serde::Serialize;
-
-pub type LuxideState = State<Arc<RenderManager>>;
 
 pub async fn index() -> String {
     println!("Handing request for index...");

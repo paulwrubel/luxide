@@ -10,16 +10,16 @@ use crate::{
     tracing::RenderID,
 };
 
-use super::LuxideState;
+use crate::server::LuxideState;
 
 pub async fn get_render(
-    State(render_manager): LuxideState,
+    State(state): State<LuxideState>,
     Path(id): Path<RenderID>,
     Query(query_parameters): Query<RenderFormatQueryParameters>,
 ) -> Response {
     println!("Handing request for get_render (id: {})...", id);
 
-    match render_manager.get_render(id).await {
+    match state.render_manager.get_render(id).await {
         Ok(Some(render)) => Json(FormattedRender::from((
             query_parameters.format.unwrap_or_default(),
             render,

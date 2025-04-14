@@ -6,15 +6,15 @@ use axum::{
 
 use crate::server::{FormattedRender, RenderFormatQueryParameters};
 
-use super::LuxideState;
+use crate::server::LuxideState;
 
 pub async fn get_all_renders(
-    State(render_manager): LuxideState,
+    State(state): State<LuxideState>,
     Query(query_parameters): Query<RenderFormatQueryParameters>,
 ) -> Response {
     println!("Handing request for get_all_renders...");
 
-    match render_manager.get_all_renders().await {
+    match state.render_manager.get_all_renders().await {
         Ok(renders) => Json(
             renders
                 .into_iter()
