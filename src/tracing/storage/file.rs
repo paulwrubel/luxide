@@ -8,7 +8,7 @@ use crate::{
     utils,
 };
 
-use super::{ProgressInfo, RenderCheckpointMeta, RenderStorage, RenderStorageError};
+use super::{ProgressInfo, RenderCheckpointMeta, RenderStorage, StorageError};
 
 #[derive(Clone)]
 pub struct FileStorage {
@@ -32,7 +32,7 @@ impl From<RenderCheckpoint> for RenderCheckpointFileMeta {
 }
 
 impl FileStorage {
-    pub fn new(output_dir: PathBuf) -> Result<Self, RenderStorageError> {
+    pub fn new(output_dir: PathBuf) -> Result<Self, StorageError> {
         fs::create_dir_all(&output_dir).map_err(|e| e.to_string())?;
         Ok(Self {
             output_dir,
@@ -40,7 +40,7 @@ impl FileStorage {
         })
     }
 
-    async fn get_render_dir(&self, render: &Render) -> Result<PathBuf, RenderStorageError> {
+    async fn get_render_dir(&self, render: &Render) -> Result<PathBuf, StorageError> {
         let now = chrono::Utc::now();
         let formatted_timestamp = utils::get_formatted_timestamp_for(now);
         let sub_folder = format!(
@@ -53,7 +53,7 @@ impl FileStorage {
 
 #[async_trait::async_trait]
 impl RenderStorage for FileStorage {
-    async fn get_render(&self, id: RenderID) -> Result<Option<Render>, RenderStorageError> {
+    async fn get_render(&self, id: RenderID) -> Result<Option<Render>, StorageError> {
         Ok(self
             .renders
             .read()
@@ -64,11 +64,11 @@ impl RenderStorage for FileStorage {
             .map(|(r, _)| r))
     }
 
-    async fn render_exists(&self, id: RenderID) -> Result<bool, RenderStorageError> {
+    async fn render_exists(&self, id: RenderID) -> Result<bool, StorageError> {
         Ok(self.renders.read().await.iter().any(|(r, _)| r.id == id))
     }
 
-    async fn get_all_renders(&self) -> Result<Vec<Render>, RenderStorageError> {
+    async fn get_all_renders(&self) -> Result<Vec<Render>, StorageError> {
         Ok(self
             .renders
             .read()
@@ -78,7 +78,7 @@ impl RenderStorage for FileStorage {
             .collect())
     }
 
-    async fn create_render(&self, render: Render) -> Result<Render, RenderStorageError> {
+    async fn create_render(&self, render: Render) -> Result<Render, StorageError> {
         let render_dir = self.get_render_dir(&render).await?;
         fs::create_dir_all(&render_dir).map_err(|e| e.to_string())?;
 
@@ -94,7 +94,7 @@ impl RenderStorage for FileStorage {
         &self,
         id: RenderID,
         state: RenderState,
-    ) -> Result<(), RenderStorageError> {
+    ) -> Result<(), StorageError> {
         match self
             .renders
             .write()
@@ -115,7 +115,7 @@ impl RenderStorage for FileStorage {
         &self,
         id: RenderID,
         progress_info: ProgressInfo,
-    ) -> Result<(), RenderStorageError> {
+    ) -> Result<(), StorageError> {
         match self
             .renders
             .write()
@@ -158,7 +158,7 @@ impl RenderStorage for FileStorage {
         &self,
         id: RenderID,
         new_total_checkpoints: u32,
-    ) -> Result<(), RenderStorageError> {
+    ) -> Result<(), StorageError> {
         match self
             .renders
             .write()
@@ -179,7 +179,7 @@ impl RenderStorage for FileStorage {
         &self,
         id: RenderID,
         iteration: u32,
-    ) -> Result<Option<RenderCheckpoint>, RenderStorageError> {
+    ) -> Result<Option<RenderCheckpoint>, StorageError> {
         let renders = self.renders.read().await;
         let (render, dir) = match renders.iter().find(|(r, _)| r.id == id) {
             Some((r, dir)) => (r, dir),
@@ -233,7 +233,7 @@ impl RenderStorage for FileStorage {
     async fn get_most_recent_render_checkpoint_iteration(
         &self,
         id: RenderID,
-    ) -> Result<Option<u32>, RenderStorageError> {
+    ) -> Result<Option<u32>, StorageError> {
         let renders = self.renders.read().await;
         let dir = match renders.iter().find(|(r, _)| r.id == id) {
             Some((_, dir)) => dir,
@@ -262,7 +262,7 @@ impl RenderStorage for FileStorage {
     async fn get_render_checkpoints_without_data(
         &self,
         id: RenderID,
-    ) -> Result<Vec<RenderCheckpointMeta>, RenderStorageError> {
+    ) -> Result<Vec<RenderCheckpointMeta>, StorageError> {
         let renders = self.renders.read().await;
         let dir = match renders.iter().find(|(r, _)| r.id == id) {
             Some((_, dir)) => dir,
@@ -338,14 +338,14 @@ impl RenderStorage for FileStorage {
 
         checkpoint_metas
             .collect::<Result<Vec<_>, String>>()
-            .map_err(|e| RenderStorageError::from(e))
+            .map_err(|e| StorageError::from(e))
     }
 
     async fn render_checkpoint_exists(
         &self,
         id: RenderID,
         iteration: u32,
-    ) -> Result<bool, RenderStorageError> {
+    ) -> Result<bool, StorageError> {
         let renders = self.renders.read().await;
         let dir = match renders.iter().find(|(r, _)| r.id == id) {
             Some((_, dir)) => dir,
@@ -360,7 +360,7 @@ impl RenderStorage for FileStorage {
     async fn create_render_checkpoint(
         &self,
         checkpoint: RenderCheckpoint,
-    ) -> Result<(), RenderStorageError> {
+    ) -> Result<(), StorageError> {
         let renders = self.renders.read().await;
         let (render, dir) = match renders.iter().find(|(r, _)| r.id == checkpoint.render_id) {
             Some((r, dir)) => (r, dir),
@@ -390,7 +390,7 @@ impl RenderStorage for FileStorage {
         Ok(())
     }
 
-    async fn delete_render_and_checkpoints(&self, id: RenderID) -> Result<(), RenderStorageError> {
+    async fn delete_render_and_checkpoints(&self, id: RenderID) -> Result<(), StorageError> {
         // get render directory
         let dir = {
             let renders = self.renders.read().await;
@@ -414,7 +414,7 @@ impl RenderStorage for FileStorage {
         Ok(())
     }
 
-    async fn get_next_id(&self) -> Result<RenderID, RenderStorageError> {
+    async fn get_next_id(&self) -> Result<RenderID, StorageError> {
         let renders = self.renders.read().await;
         let max_id = renders.iter().map(|(r, _)| r.id).max().unwrap_or(0);
 
@@ -437,7 +437,7 @@ impl RenderStorage for FileStorage {
         // stdout().flush().unwrap();
     }
 
-    async fn get_render_checkpoint_storage_usage_bytes(&self) -> Result<u64, RenderStorageError> {
+    async fn get_render_checkpoint_storage_usage_bytes(&self) -> Result<u64, StorageError> {
         let renders = self.renders.read().await;
 
         let render_sizes = renders.iter().map(|(r, dir)| {

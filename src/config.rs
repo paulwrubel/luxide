@@ -6,12 +6,13 @@ pub struct APIConfig {
     pub address: String,
     pub port: u16,
 
-    pub storage: StorageConfig,
+    pub render_storage: RenderStorageConfig,
+    pub user_storage: UserStorageConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "type")]
-pub enum StorageConfig {
+pub enum RenderStorageConfig {
     File {
         output_dir: String,
     },
@@ -24,10 +25,21 @@ pub enum StorageConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case", tag = "type")]
+pub enum UserStorageConfig {
+    Postgres {
+        host: String,
+        username: String,
+        db: String,
+    },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub struct APISecrets {
     pub auth: AuthSecrets,
-    pub storage: Option<StorageSecrets>,
+    pub render_storage: Option<RenderStorageSecrets>,
+    pub user_storage: Option<UserStorageSecrets>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -45,7 +57,13 @@ pub struct GitHubSecrets {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "type")]
-pub enum StorageSecrets {
+pub enum RenderStorageSecrets {
+    Postgres { password: String },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case", tag = "type")]
+pub enum UserStorageSecrets {
     Postgres { password: String },
 }
 

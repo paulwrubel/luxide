@@ -3,8 +3,8 @@ use sqlx::{Pool, Postgres};
 use crate::utils::{ProgressInfo, decode_pixel_data, encode_pixel_data};
 
 use super::{
-    Render, RenderCheckpoint, RenderCheckpointMeta, RenderID, RenderState, RenderStorage,
-    RenderStorageError,
+    GithubID, Render, RenderCheckpoint, RenderCheckpointMeta, RenderID, RenderState, RenderStorage,
+    StorageError, User, UserID, UserStorage,
 };
 
 #[derive(Clone)]
@@ -33,7 +33,7 @@ impl PostgresStorage {
 
 #[async_trait::async_trait]
 impl RenderStorage for PostgresStorage {
-    async fn get_render(&self, id: RenderID) -> Result<Option<Render>, RenderStorageError> {
+    async fn get_render(&self, id: RenderID) -> Result<Option<Render>, StorageError> {
         match sqlx::query!(
             r#"
                 SELECT id, state, created_at, updated_at, config 
@@ -71,7 +71,7 @@ impl RenderStorage for PostgresStorage {
         }
     }
 
-    async fn render_exists(&self, id: RenderID) -> Result<bool, RenderStorageError> {
+    async fn render_exists(&self, id: RenderID) -> Result<bool, StorageError> {
         match sqlx::query!(
             r#"
                 SELECT 1 as exists
@@ -90,7 +90,7 @@ impl RenderStorage for PostgresStorage {
         }
     }
 
-    async fn get_all_renders(&self) -> Result<Vec<Render>, RenderStorageError> {
+    async fn get_all_renders(&self) -> Result<Vec<Render>, StorageError> {
         let rows = sqlx::query!(
             r#"
                 SELECT id, state, created_at, updated_at, config
@@ -132,7 +132,7 @@ impl RenderStorage for PostgresStorage {
         Ok(renders)
     }
 
-    async fn create_render(&self, render: Render) -> Result<Render, RenderStorageError> {
+    async fn create_render(&self, render: Render) -> Result<Render, StorageError> {
         match sqlx::query!(
             r#"
                 INSERT INTO renders (id, state, created_at, updated_at, config)
@@ -167,7 +167,7 @@ impl RenderStorage for PostgresStorage {
         &self,
         id: RenderID,
         new_state: RenderState,
-    ) -> Result<(), RenderStorageError> {
+    ) -> Result<(), StorageError> {
         match sqlx::query!(
             r#"
                 UPDATE renders
@@ -197,7 +197,7 @@ impl RenderStorage for PostgresStorage {
         &self,
         id: RenderID,
         progress_info: ProgressInfo,
-    ) -> Result<(), RenderStorageError> {
+    ) -> Result<(), StorageError> {
         // only update if current state is Running or Pausing, preserving the checkpoint_iteration
         sqlx::query!(
             r#"
@@ -226,7 +226,7 @@ impl RenderStorage for PostgresStorage {
         &self,
         id: RenderID,
         new_total_checkpoints: u32,
-    ) -> Result<(), RenderStorageError> {
+    ) -> Result<(), StorageError> {
         sqlx::query!(
             r#"
                 UPDATE renders
@@ -257,7 +257,7 @@ impl RenderStorage for PostgresStorage {
         &self,
         id: RenderID,
         iteration: u32,
-    ) -> Result<Option<RenderCheckpoint>, RenderStorageError> {
+    ) -> Result<Option<RenderCheckpoint>, StorageError> {
         match sqlx::query!(
             r#"
                 SELECT pixel_data, started_at, ended_at
@@ -297,7 +297,7 @@ impl RenderStorage for PostgresStorage {
     async fn get_most_recent_render_checkpoint_iteration(
         &self,
         id: RenderID,
-    ) -> Result<Option<u32>, RenderStorageError> {
+    ) -> Result<Option<u32>, StorageError> {
         match sqlx::query!(
             r#"
                 SELECT max(iteration)
@@ -320,7 +320,7 @@ impl RenderStorage for PostgresStorage {
     async fn get_render_checkpoints_without_data(
         &self,
         id: RenderID,
-    ) -> Result<Vec<RenderCheckpointMeta>, RenderStorageError> {
+    ) -> Result<Vec<RenderCheckpointMeta>, StorageError> {
         match sqlx::query!(
             r#"
                 SELECT render_id, iteration, started_at, ended_at
@@ -352,7 +352,7 @@ impl RenderStorage for PostgresStorage {
         &self,
         id: RenderID,
         iteration: u32,
-    ) -> Result<bool, RenderStorageError> {
+    ) -> Result<bool, StorageError> {
         match sqlx::query!(
             r#"
                 SELECT 1 as exists
@@ -375,7 +375,7 @@ impl RenderStorage for PostgresStorage {
     async fn create_render_checkpoint(
         &self,
         render_checkpoint: RenderCheckpoint,
-    ) -> Result<(), RenderStorageError> {
+    ) -> Result<(), StorageError> {
         let pixel_data = encode_pixel_data(&render_checkpoint.pixel_data).map_err(|e| {
             format!(
                 "Failed to encode pixel data for id {} and iteration {}: {}",
@@ -409,7 +409,7 @@ impl RenderStorage for PostgresStorage {
         }
     }
 
-    async fn delete_render_and_checkpoints(&self, id: RenderID) -> Result<(), RenderStorageError> {
+    async fn delete_render_and_checkpoints(&self, id: RenderID) -> Result<(), StorageError> {
         let mut tx = self
             .pool
             .begin()
@@ -448,7 +448,7 @@ impl RenderStorage for PostgresStorage {
         Ok(())
     }
 
-    async fn get_next_id(&self) -> Result<RenderID, RenderStorageError> {
+    async fn get_next_id(&self) -> Result<RenderID, StorageError> {
         let row = sqlx::query!(
             r#"
                 SELECT COALESCE(MAX(id), 0) as max_id
@@ -465,7 +465,7 @@ impl RenderStorage for PostgresStorage {
             .map_err(|_| "Next render ID is too large".to_string())?)
     }
 
-    async fn get_render_checkpoint_storage_usage_bytes(&self) -> Result<u64, RenderStorageError> {
+    async fn get_render_checkpoint_storage_usage_bytes(&self) -> Result<u64, StorageError> {
         let rows = sqlx::query!(
             r#"
                 SELECT sum(length(pixel_data))
@@ -477,5 +477,196 @@ impl RenderStorage for PostgresStorage {
         .map_err(|e| format!("Failed to get render checkpoint storage usage: {}", e))?;
 
         Ok(rows.sum.unwrap_or(0) as u64)
+    }
+}
+
+#[async_trait::async_trait]
+impl UserStorage for PostgresStorage {
+    async fn get_user(&self, id: UserID) -> Result<Option<User>, StorageError> {
+        match sqlx::query!(
+            r#"
+                SELECT id, github_id, username, avatar_url, created_at, updated_at
+                FROM users
+                WHERE id = $1
+            "#,
+            id as i32,
+        )
+        .fetch_optional(&self.pool)
+        .await
+        {
+            Ok(Some(row)) => Ok(Some(User {
+                id: row.id as UserID,
+                github_id: row.github_id as GithubID,
+                username: row.username,
+                avatar_url: row.avatar_url,
+                created_at: row.created_at,
+                updated_at: row.updated_at,
+            })),
+            Ok(None) => Ok(None),
+            Err(e) => Err(format!("Failed to get user with id {}: {}", id, e).into()),
+        }
+    }
+
+    async fn get_user_by_github_id(
+        &self,
+        github_id: GithubID,
+    ) -> Result<Option<User>, StorageError> {
+        match sqlx::query!(
+            r#"
+                SELECT id, github_id, username, avatar_url, created_at, updated_at
+                FROM users
+                WHERE github_id = $1
+            "#,
+            github_id as i32,
+        )
+        .fetch_optional(&self.pool)
+        .await
+        {
+            Ok(Some(row)) => Ok(Some(User {
+                id: row.id as UserID,
+                github_id: row.github_id as GithubID,
+                username: row.username,
+                avatar_url: row.avatar_url,
+                created_at: row.created_at,
+                updated_at: row.updated_at,
+            })),
+            Ok(None) => Ok(None),
+            Err(e) => Err(format!("Failed to get user with github id {}: {}", github_id, e).into()),
+        }
+    }
+
+    async fn user_exists(&self, id: UserID) -> Result<bool, StorageError> {
+        match sqlx::query!(
+            r#"
+                SELECT 1 as exists
+                FROM users
+                WHERE id = $1
+                LIMIT 1
+            "#,
+            id as i32,
+        )
+        .fetch_optional(&self.pool)
+        .await
+        {
+            Ok(Some(_)) => Ok(true),
+            Ok(None) => Ok(false),
+            Err(e) => Err(format!("Failed to check if user with id {} exists: {}", id, e).into()),
+        }
+    }
+
+    async fn user_exists_by_github_id(&self, github_id: GithubID) -> Result<bool, StorageError> {
+        match sqlx::query!(
+            r#"
+                SELECT 1 as exists
+                FROM users
+                WHERE github_id = $1
+                LIMIT 1
+            "#,
+            github_id as i32,
+        )
+        .fetch_optional(&self.pool)
+        .await
+        {
+            Ok(Some(_)) => Ok(true),
+            Ok(None) => Ok(false),
+            Err(e) => Err(format!(
+                "Failed to check if user with github id {} exists: {}",
+                github_id, e
+            )
+            .into()),
+        }
+    }
+
+    async fn create_user(&self, user: User) -> Result<User, StorageError> {
+        match sqlx::query!(
+            r#"
+                INSERT INTO users (id, github_id, username, avatar_url, created_at, updated_at)
+                VALUES ($1, $2, $3, $4, $5, $6)
+            "#,
+            user.id as i32,
+            user.github_id as i32,
+            user.username,
+            user.avatar_url,
+            chrono::Utc::now(),
+            chrono::Utc::now(),
+        )
+        .execute(&self.pool)
+        .await
+        {
+            Ok(res) => match res.rows_affected() {
+                1 => Ok(user),
+                n => Err(
+                    format!("Failed to create user: Expecting 1 row affected, got {}", n).into(),
+                ),
+            },
+            Err(e) => Err(format!("Failed to create user: {}", e).into()),
+        }
+    }
+
+    async fn update_user(&self, user: User) -> Result<User, StorageError> {
+        match sqlx::query!(
+            r#"
+                UPDATE users
+                SET github_id = $2, username = $3, avatar_url = $4, updated_at = $5
+                WHERE id = $1
+            "#,
+            user.id as i32,
+            user.github_id as i32,
+            user.username,
+            user.avatar_url,
+            chrono::Utc::now(),
+        )
+        .execute(&self.pool)
+        .await
+        {
+            Ok(res) => match res.rows_affected() {
+                1 => Ok(user),
+                n => Err(
+                    format!("Failed to update user: Expecting 1 row affected, got {}", n).into(),
+                ),
+            },
+            Err(e) => Err(format!("Failed to update user: {}", e).into()),
+        }
+    }
+
+    async fn delete_user(&self, id: UserID) -> Result<(), StorageError> {
+        match sqlx::query!(
+            r#"
+                DELETE FROM users
+                WHERE id = $1
+            "#,
+            id as i32,
+        )
+        .execute(&self.pool)
+        .await
+        {
+            Ok(res) => match res.rows_affected() {
+                1 => Ok(()),
+                n => Err(
+                    format!("Failed to delete user: Expecting 1 row affected, got {}", n).into(),
+                ),
+            },
+            Err(e) => Err(format!("Failed to delete user: {}", e).into()),
+        }
+    }
+
+    async fn get_next_user_id(&self) -> Result<UserID, StorageError> {
+        match sqlx::query!(
+            r#"
+                SELECT COALESCE(MAX(id), 0) as max_id
+                FROM users
+            "#,
+        )
+        .fetch_one(&self.pool)
+        .await
+        {
+            Ok(row) => {
+                let next_id = row.max_id.unwrap_or(0) + 1;
+                Ok(next_id
+                    .try_into()
+                    .map_err(|_| "Next user ID cannot be represented as a UserID".to_string())?)
+            }
+            Err(e) => Err(format!("Failed to get next user ID: {}", e).into()),
+        }
     }
 }

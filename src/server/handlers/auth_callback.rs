@@ -4,11 +4,13 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use axum_extra::extract::SignedCookieJar;
-use oauth2::TokenResponse;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::server::LuxideState;
+use crate::{
+    server::{GitHubUserInfo, LuxideState},
+    tracing::{GithubID, User},
+};
 
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -84,7 +86,77 @@ pub async fn auth_github_callback(
         }
     };
 
-    // TODO: persist user info to database
+    let user = match get_user_by_github_id(&state, &user_info, user_info.id).await {
+        Ok(user) => user,
+        Err(e) => {
+            eprintln!("Failed to get user by github id: {}", e);
+            return (StatusCode::BAD_REQUEST, e).into_response();
+        }
+    };
+
+    // TODO: sign and return a JWT token for the user
+
+    println!("User: {:#?}", user);
 
     (StatusCode::OK).into_response()
+}
+
+async fn get_user_by_github_id(
+    state: &LuxideState,
+    user_info: &GitHubUserInfo,
+    github_id: GithubID,
+) -> Result<User, String> {
+    match state.auth_manager.user_exists_by_github_id(github_id).await {
+        Ok(true) => match state.auth_manager.get_user_by_github_id(github_id).await {
+            Ok(Some(user)) => Ok(user),
+            Ok(None) => {
+                eprintln!(
+                    "Failed to get user with github id {}: User exists but not found in database",
+                    github_id
+                );
+                return Err("Failed to get user with github id".to_string());
+            }
+            Err(e) => {
+                eprintln!(
+                    "Failed to get user with github id {}: Error retrieving user from database: {}",
+                    github_id, e
+                );
+                return Err("Failed to get user with github id".to_string());
+            }
+        },
+        Ok(false) => {
+            match state
+                .auth_manager
+                .create_user(User {
+                    id: state
+                        .auth_manager
+                        .get_next_user_id()
+                        .await
+                        .expect("Failed to get next user ID"),
+                    github_id: user_info.id,
+                    username: user_info.login.clone(),
+                    avatar_url: user_info.avatar_url.clone(),
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
+                })
+                .await
+            {
+                Ok(user) => Ok(user),
+                Err(e) => {
+                    eprintln!(
+                        "Failed to create user with github id {}: Error creating user in database: {}",
+                        github_id, e
+                    );
+                    return Err("Failed to create user with github id".to_string());
+                }
+            }
+        }
+        Err(e) => {
+            eprintln!(
+                "Failed to check if user with github id {} exists: Error checking user in database: {}",
+                github_id, e
+            );
+            return Err("Failed to check if user with github id exists".to_string());
+        }
+    }
 }

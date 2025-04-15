@@ -15,7 +15,7 @@ use crate::{
     utils::{ProgressInfo, ProgressTracker},
 };
 
-use super::{Render, RenderCheckpoint, RenderID, RenderStorage, RenderStorageError};
+use super::{Render, RenderCheckpoint, RenderID, RenderStorage, StorageError};
 
 use std::collections::HashSet;
 
@@ -721,8 +721,8 @@ pub enum RenderManagerError {
     ServerError(String),
 }
 
-impl From<RenderStorageError> for RenderManagerError {
-    fn from(error: RenderStorageError) -> Self {
+impl From<StorageError> for RenderManagerError {
+    fn from(error: StorageError) -> Self {
         RenderManagerError::from(error.0)
     }
 }

@@ -7,7 +7,7 @@ use crate::{shading::Color, utils::ProgressInfo};
 
 use super::{
     Render, RenderCheckpoint, RenderCheckpointMeta, RenderID, RenderState, RenderStorage,
-    RenderStorageError,
+    StorageError,
 };
 
 #[derive(Clone)]
@@ -27,25 +27,25 @@ impl InMemoryStorage {
 
 #[async_trait::async_trait]
 impl RenderStorage for InMemoryStorage {
-    async fn get_render(&self, id: RenderID) -> Result<Option<Render>, RenderStorageError> {
+    async fn get_render(&self, id: RenderID) -> Result<Option<Render>, StorageError> {
         Ok(match self.renders.read().await.get(&id) {
             Some(r) => Some(r.read().await.clone()),
             None => None,
         })
     }
 
-    async fn render_exists(&self, id: RenderID) -> Result<bool, RenderStorageError> {
+    async fn render_exists(&self, id: RenderID) -> Result<bool, StorageError> {
         Ok(self.renders.read().await.contains_key(&id))
     }
 
-    async fn get_all_renders(&self) -> Result<Vec<Render>, RenderStorageError> {
+    async fn get_all_renders(&self) -> Result<Vec<Render>, StorageError> {
         Ok(tokio_stream::iter(self.renders.read().await.values())
             .then(async |r| r.read().await.clone())
             .collect::<Vec<Render>>()
             .await)
     }
 
-    async fn create_render(&self, render: Render) -> Result<Render, RenderStorageError> {
+    async fn create_render(&self, render: Render) -> Result<Render, StorageError> {
         println!("Creating render with id: {}", render.id);
         {
             self.renders
@@ -61,7 +61,7 @@ impl RenderStorage for InMemoryStorage {
         &self,
         id: RenderID,
         new_state: RenderState,
-    ) -> Result<(), RenderStorageError> {
+    ) -> Result<(), StorageError> {
         // println!("Updating render state for id: {id} to {new_state:?}");
 
         match self.renders.write().await.get_mut(&id) {
@@ -79,7 +79,7 @@ impl RenderStorage for InMemoryStorage {
         &self,
         id: RenderID,
         progress_info: ProgressInfo,
-    ) -> Result<(), RenderStorageError> {
+    ) -> Result<(), StorageError> {
         let renders = self.renders.read().await;
         let render = match renders.get(&id) {
             Some(r) => r,
@@ -118,7 +118,7 @@ impl RenderStorage for InMemoryStorage {
         &self,
         id: RenderID,
         new_total_checkpoints: u32,
-    ) -> Result<(), RenderStorageError> {
+    ) -> Result<(), StorageError> {
         let renders = self.renders.read().await;
         let render = match renders.get(&id) {
             Some(r) => r,
@@ -135,7 +135,7 @@ impl RenderStorage for InMemoryStorage {
         &self,
         id: RenderID,
         iteration: u32,
-    ) -> Result<Option<RenderCheckpoint>, RenderStorageError> {
+    ) -> Result<Option<RenderCheckpoint>, StorageError> {
         Ok(self
             .checkpoints
             .read()
@@ -148,7 +148,7 @@ impl RenderStorage for InMemoryStorage {
     async fn get_most_recent_render_checkpoint_iteration(
         &self,
         id: RenderID,
-    ) -> Result<Option<u32>, RenderStorageError> {
+    ) -> Result<Option<u32>, StorageError> {
         Ok(self
             .checkpoints
             .read()
@@ -162,7 +162,7 @@ impl RenderStorage for InMemoryStorage {
     async fn get_render_checkpoints_without_data(
         &self,
         id: RenderID,
-    ) -> Result<Vec<RenderCheckpointMeta>, RenderStorageError> {
+    ) -> Result<Vec<RenderCheckpointMeta>, StorageError> {
         Ok(self
             .checkpoints
             .read()
@@ -177,7 +177,7 @@ impl RenderStorage for InMemoryStorage {
         &self,
         id: RenderID,
         iteration: u32,
-    ) -> Result<bool, RenderStorageError> {
+    ) -> Result<bool, StorageError> {
         Ok(self
             .checkpoints
             .read()
@@ -189,7 +189,7 @@ impl RenderStorage for InMemoryStorage {
     async fn create_render_checkpoint(
         &self,
         render_checkpoint: RenderCheckpoint,
-    ) -> Result<(), RenderStorageError> {
+    ) -> Result<(), StorageError> {
         println!(
             "Creating render checkpoint {} for id: {}",
             render_checkpoint.iteration, render_checkpoint.render_id
@@ -201,7 +201,7 @@ impl RenderStorage for InMemoryStorage {
         Ok(())
     }
 
-    async fn delete_render_and_checkpoints(&self, id: RenderID) -> Result<(), RenderStorageError> {
+    async fn delete_render_and_checkpoints(&self, id: RenderID) -> Result<(), StorageError> {
         // Remove render
         self.renders.write().await.remove(&id);
 
@@ -212,14 +212,14 @@ impl RenderStorage for InMemoryStorage {
         Ok(())
     }
 
-    async fn get_next_id(&self) -> Result<RenderID, RenderStorageError> {
+    async fn get_next_id(&self) -> Result<RenderID, StorageError> {
         Ok(match self.renders.read().await.keys().max() {
             Some(id) => id + 1,
             None => 1,
         })
     }
 
-    async fn get_render_checkpoint_storage_usage_bytes(&self) -> Result<u64, RenderStorageError> {
+    async fn get_render_checkpoint_storage_usage_bytes(&self) -> Result<u64, StorageError> {
         let checkpoints = self.checkpoints.read().await;
 
         let key_size = std::mem::size_of::<(u32, u32)>();

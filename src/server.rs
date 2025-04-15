@@ -1,5 +1,5 @@
-mod auth;
-pub use auth::*;
+mod auth_manager;
+pub use auth_manager::*;
 
 mod formatted_render;
 pub use formatted_render::*;

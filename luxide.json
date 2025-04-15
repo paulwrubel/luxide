@@ -2,7 +2,13 @@
     "address": "127.0.0.1",
     "port": 8080,
 
-    "storage": {
+    "render_storage": {
+        "type": "postgres",
+        "host": "localhost:5432",
+        "username": "luxide",
+        "db": "luxide"
+    },
+    "user_storage": {
         "type": "postgres",
         "host": "localhost:5432",
         "username": "luxide",

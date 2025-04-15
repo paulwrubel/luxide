@@ -1,7 +1,11 @@
-use crate::config::{APIConfig, AuthSecrets};
+use crate::{
+    config::{APIConfig, AuthSecrets},
+    tracing::{GithubID, User, UserID, UserStorage},
+};
 use dashmap::DashMap;
 use oauth2::{CsrfToken, EndpointNotSet, EndpointSet, TokenResponse};
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 use uuid::Uuid;
 
 pub type SessionID = Uuid;
@@ -9,6 +13,8 @@ pub type BearerToken =
     oauth2::StandardTokenResponse<oauth2::EmptyExtraTokenFields, oauth2::basic::BasicTokenType>;
 
 pub struct AuthManager {
+    storage: Arc<dyn UserStorage>,
+
     oauth_client: oauth2::basic::BasicClient<
         EndpointSet,
         EndpointNotSet,
@@ -22,7 +28,11 @@ pub struct AuthManager {
 }
 
 impl AuthManager {
-    pub fn new_github(config: &APIConfig, secrets: &AuthSecrets) -> Self {
+    pub fn new_github(
+        storage: Arc<dyn UserStorage>,
+        config: &APIConfig,
+        secrets: &AuthSecrets,
+    ) -> Self {
         let client_id = oauth2::ClientId::new(secrets.github.client_id.clone());
         let client_secret = oauth2::ClientSecret::new(secrets.github.client_secret.clone());
         let auth_uri = oauth2::AuthUrl::new("https://github.com/login/oauth/authorize".to_string())
@@ -48,11 +58,69 @@ impl AuthManager {
             .expect("Client should build successfully");
 
         Self {
+            storage,
+
             oauth_client,
             http_client,
 
             auth_state_by_session: DashMap::new(),
         }
+    }
+
+    pub async fn get_user(&self, user_id: UserID) -> Result<Option<User>, String> {
+        self.storage
+            .get_user(user_id)
+            .await
+            .map_err(|e| e.to_string())
+    }
+
+    pub async fn get_user_by_github_id(&self, github_id: GithubID) -> Result<Option<User>, String> {
+        self.storage
+            .get_user_by_github_id(github_id)
+            .await
+            .map_err(|e| e.to_string())
+    }
+
+    pub async fn user_exists(&self, user_id: UserID) -> Result<bool, String> {
+        self.storage
+            .user_exists(user_id)
+            .await
+            .map_err(|e| e.to_string())
+    }
+
+    pub async fn user_exists_by_github_id(&self, github_id: GithubID) -> Result<bool, String> {
+        self.storage
+            .user_exists_by_github_id(github_id)
+            .await
+            .map_err(|e| e.to_string())
+    }
+
+    pub async fn create_user(&self, user: User) -> Result<User, String> {
+        self.storage
+            .create_user(user)
+            .await
+            .map_err(|e| e.to_string())
+    }
+
+    pub async fn update_user(&self, user: User) -> Result<User, String> {
+        self.storage
+            .update_user(user)
+            .await
+            .map_err(|e| e.to_string())
+    }
+
+    pub async fn delete_user(&self, user_id: UserID) -> Result<(), String> {
+        self.storage
+            .delete_user(user_id)
+            .await
+            .map_err(|e| e.to_string())
+    }
+
+    pub async fn get_next_user_id(&self) -> Result<UserID, String> {
+        self.storage
+            .get_next_user_id()
+            .await
+            .map_err(|e| e.to_string())
     }
 
     pub fn get_auth_url_and_state(&self) -> (String, CsrfToken) {
@@ -102,7 +170,7 @@ impl AuthManager {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GitHubUserInfo {
-    pub id: u64,
+    pub id: GithubID,
     pub login: String,
     pub avatar_url: String,
 }
