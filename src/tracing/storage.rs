@@ -61,16 +61,18 @@ pub struct Render {
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
     pub config: RenderConfig,
+    pub user_id: UserID,
 }
 
 impl Render {
-    pub fn new(id: RenderID, config: RenderConfig) -> Self {
+    pub fn new(id: RenderID, config: RenderConfig, user_id: UserID) -> Self {
         Self {
             id,
             state: RenderState::Created,
             created_at: chrono::Utc::now(),
             updated_at: chrono::Utc::now(),
             config,
+            user_id,
         }
     }
 
@@ -202,7 +204,14 @@ pub trait RenderStorage: Send + Sync + 'static {
 
     async fn render_exists(&self, id: RenderID) -> Result<bool, StorageError>;
 
+    async fn render_belongs_to(&self, id: RenderID, user_id: UserID) -> Result<bool, StorageError>;
+
     async fn get_all_renders(&self) -> Result<Vec<Render>, StorageError>;
+
+    async fn get_all_renders_for_user_id(
+        &self,
+        user_id: UserID,
+    ) -> Result<Vec<Render>, StorageError>;
 
     async fn create_render(&self, render: Render) -> Result<Render, StorageError>;
 

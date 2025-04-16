@@ -16,7 +16,13 @@ pub async fn create_render(
 ) -> Response {
     println!("Handing request for create_render...");
 
-    match state.render_manager.create_render(render_config).await {
+    // TODO: Add safeguard to prevent users from creating too many renders
+
+    match state
+        .render_manager
+        .create_render(render_config, claims.sub)
+        .await
+    {
         Ok(render) => (StatusCode::CREATED, Json(render)).into_response(),
         Err(e) => e.into(),
     }

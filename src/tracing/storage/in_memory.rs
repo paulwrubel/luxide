@@ -7,7 +7,7 @@ use crate::{shading::Color, utils::ProgressInfo};
 
 use super::{
     Render, RenderCheckpoint, RenderCheckpointMeta, RenderID, RenderState, RenderStorage,
-    StorageError,
+    StorageError, UserID,
 };
 
 #[derive(Clone)]
@@ -38,11 +38,33 @@ impl RenderStorage for InMemoryStorage {
         Ok(self.renders.read().await.contains_key(&id))
     }
 
+    async fn render_belongs_to(&self, id: RenderID, user_id: UserID) -> Result<bool, StorageError> {
+        Ok(match self.renders.read().await.get(&id) {
+            Some(r) => r.read().await.user_id == user_id,
+            None => false,
+        })
+    }
+
     async fn get_all_renders(&self) -> Result<Vec<Render>, StorageError> {
         Ok(tokio_stream::iter(self.renders.read().await.values())
             .then(async |r| r.read().await.clone())
             .collect::<Vec<Render>>()
             .await)
+    }
+
+    async fn get_all_renders_for_user_id(
+        &self,
+        user_id: UserID,
+    ) -> Result<Vec<Render>, StorageError> {
+        let renders = tokio_stream::iter(self.renders.read().await.values())
+            .then(async |r| r.read().await.clone())
+            .collect::<Vec<Render>>()
+            .await;
+
+        Ok(renders
+            .into_iter()
+            .filter(|r| r.user_id == user_id)
+            .collect())
     }
 
     async fn create_render(&self, render: Render) -> Result<Render, StorageError> {

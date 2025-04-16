@@ -15,7 +15,7 @@ use crate::{
     utils::{ProgressInfo, ProgressTracker},
 };
 
-use super::{Render, RenderCheckpoint, RenderID, RenderStorage, StorageError};
+use super::{Render, RenderCheckpoint, RenderID, RenderStorage, StorageError, UserID};
 
 use std::collections::HashSet;
 
@@ -450,6 +450,7 @@ impl RenderManager {
     pub async fn create_render(
         &self,
         render_config: RenderConfig,
+        user_id: UserID,
     ) -> Result<Render, RenderManagerError> {
         let render_config = render_config.merge_with_builtins();
 
@@ -459,7 +460,7 @@ impl RenderManager {
         }
 
         let next_id = self.storage.get_next_id().await?;
-        let render = Render::new(next_id, render_config);
+        let render = Render::new(next_id, render_config, user_id);
         self.storage
             .create_render(render)
             .await

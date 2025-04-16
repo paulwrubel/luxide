@@ -36,7 +36,7 @@ impl RenderStorage for PostgresStorage {
     async fn get_render(&self, id: RenderID) -> Result<Option<Render>, StorageError> {
         match sqlx::query!(
             r#"
-                SELECT id, state, created_at, updated_at, config 
+                SELECT id, state, created_at, updated_at, config, user_id
                 FROM renders
                 WHERE id = $1
             "#,
@@ -64,6 +64,7 @@ impl RenderStorage for PostgresStorage {
                     created_at: row.created_at,
                     updated_at: row.updated_at,
                     config,
+                    user_id: row.user_id as UserID,
                 }))
             }
             Ok(None) => Ok(None),
@@ -90,10 +91,33 @@ impl RenderStorage for PostgresStorage {
         }
     }
 
+    async fn render_belongs_to(&self, id: RenderID, user_id: UserID) -> Result<bool, StorageError> {
+        match sqlx::query!(
+            r#"
+                SELECT 1 as exists
+                FROM renders
+                WHERE id = $1 AND user_id = $2
+                LIMIT 1
+            "#,
+            id as i32,
+            user_id as i32
+        )
+        .fetch_optional(&self.pool)
+        .await
+        {
+            Ok(Some(_)) => Ok(true),
+            Ok(None) => Ok(false),
+            Err(e) => Err(format!(
+                "Failed to check if render with id {id} belongs to user {user_id}: {e}"
+            )
+            .into()),
+        }
+    }
+
     async fn get_all_renders(&self) -> Result<Vec<Render>, StorageError> {
         let rows = sqlx::query!(
             r#"
-                SELECT id, state, created_at, updated_at, config
+                SELECT id, state, created_at, updated_at, config, user_id
                 FROM renders
                 ORDER BY id ASC
             "#
@@ -126,6 +150,55 @@ impl RenderStorage for PostgresStorage {
                 created_at: row.created_at,
                 updated_at: row.updated_at,
                 config,
+                user_id: row.user_id as UserID,
+            });
+        }
+
+        Ok(renders)
+    }
+
+    async fn get_all_renders_for_user_id(
+        &self,
+        user_id: UserID,
+    ) -> Result<Vec<Render>, StorageError> {
+        let rows = sqlx::query!(
+            r#"
+                SELECT id, state, created_at, updated_at, config
+                FROM renders
+                WHERE user_id = $1
+                ORDER BY id ASC
+            "#,
+            user_id as i32,
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(|e| format!("Failed to get all renders for user id {}: {}", user_id, e))?;
+
+        let mut renders = Vec::with_capacity(rows.len());
+        for row in rows {
+            let state = serde_json::from_value(row.state).map_err(|e| {
+                format!(
+                    "Failed to deserialize render state for id {}: {}",
+                    row.id, e
+                )
+            })?;
+            let config = serde_json::from_value(row.config).map_err(|e| {
+                format!(
+                    "Failed to deserialize render config for id {}: {}",
+                    row.id, e
+                )
+            })?;
+
+            renders.push(Render {
+                id: row
+                    .id
+                    .try_into()
+                    .map_err(|_| "Invalid render ID (negative or too large)".to_string())?,
+                state,
+                created_at: row.created_at,
+                updated_at: row.updated_at,
+                config,
+                user_id,
             });
         }
 
@@ -135,8 +208,8 @@ impl RenderStorage for PostgresStorage {
     async fn create_render(&self, render: Render) -> Result<Render, StorageError> {
         match sqlx::query!(
             r#"
-                INSERT INTO renders (id, state, created_at, updated_at, config)
-                VALUES ($1, $2, $3, $4, $5)
+                INSERT INTO renders (id, state, created_at, updated_at, config, user_id)
+                VALUES ($1, $2, $3, $4, $5, $6)
             "#,
             render.id as i32,
             serde_json::to_value(&render.state).map_err(|e| format!(
@@ -149,6 +222,7 @@ impl RenderStorage for PostgresStorage {
                 "Failed to serialize render config for id {}: {}",
                 render.id, e
             ))?,
+            render.user_id as i32,
         )
         .execute(&self.pool)
         .await

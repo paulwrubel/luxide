@@ -8,7 +8,7 @@ use crate::{
     utils,
 };
 
-use super::{ProgressInfo, RenderCheckpointMeta, RenderStorage, StorageError};
+use super::{ProgressInfo, RenderCheckpointMeta, RenderStorage, StorageError, UserID};
 
 #[derive(Clone)]
 pub struct FileStorage {
@@ -68,12 +68,36 @@ impl RenderStorage for FileStorage {
         Ok(self.renders.read().await.iter().any(|(r, _)| r.id == id))
     }
 
+    async fn render_belongs_to(&self, id: RenderID, user_id: UserID) -> Result<bool, StorageError> {
+        Ok(self
+            .renders
+            .read()
+            .await
+            .iter()
+            .find(|(r, _)| r.id == id)
+            .is_some_and(|(r, _)| r.user_id == user_id))
+    }
+
     async fn get_all_renders(&self) -> Result<Vec<Render>, StorageError> {
         Ok(self
             .renders
             .read()
             .await
             .iter()
+            .map(|(r, _)| r.clone())
+            .collect())
+    }
+
+    async fn get_all_renders_for_user_id(
+        &self,
+        user_id: UserID,
+    ) -> Result<Vec<Render>, StorageError> {
+        Ok(self
+            .renders
+            .read()
+            .await
+            .iter()
+            .filter(|(r, _)| r.user_id == user_id)
             .map(|(r, _)| r.clone())
             .collect())
     }
