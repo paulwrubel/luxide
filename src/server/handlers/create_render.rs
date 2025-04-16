@@ -5,12 +5,13 @@ use axum::{
     response::{IntoResponse, Response},
 };
 
-use crate::deserialization::RenderConfig;
+use crate::{deserialization::RenderConfig, server::Claims};
 
 use crate::server::LuxideState;
 
 pub async fn create_render(
     State(state): State<LuxideState>,
+    claims: Claims,
     Json(render_config): Json<RenderConfig>,
 ) -> Response {
     println!("Handing request for create_render...");

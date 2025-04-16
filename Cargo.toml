@@ -47,6 +47,7 @@ reqwest = "0.12.15"
 oauth2 = { version = "5.0.0", features = ["reqwest"] }
 uuid = { version = "1.16.0", features = ["serde", "v4"] }
 dashmap = "6.1.0"
+jsonwebtoken = "9.3.1"
 
 [[bench]]
 name = "aabb"

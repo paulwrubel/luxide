@@ -1,9 +1,10 @@
 use axum::{
+    Json,
     extract::{Query, State},
     http::StatusCode,
     response::{IntoResponse, Response},
 };
-use axum_extra::extract::SignedCookieJar;
+use axum_extra::{TypedHeader, extract::SignedCookieJar, headers::ContentType};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -17,6 +18,12 @@ use crate::{
 pub struct AuthGithubCallbackQueryParameters {
     pub code: String,
     pub state: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub struct AuthLoginResponse {
+    pub token: String,
 }
 
 pub async fn auth_github_callback(
@@ -94,11 +101,24 @@ pub async fn auth_github_callback(
         }
     };
 
-    // TODO: sign and return a JWT token for the user
+    let token = match state.auth_manager.generate_new_jwt(user.id).await {
+        Ok(token) => token,
+        Err(e) => {
+            eprintln!("Failed to generate new JWT: {}", e);
+            return (StatusCode::BAD_REQUEST, "Failed to generate new JWT").into_response();
+        }
+    };
+
+    println!("Generated JWT: {}", token);
 
     println!("User: {:#?}", user);
 
-    (StatusCode::OK).into_response()
+    (
+        StatusCode::OK,
+        TypedHeader(ContentType::json()),
+        Json(AuthLoginResponse { token }),
+    )
+        .into_response()
 }
 
 async fn get_user_by_github_id(

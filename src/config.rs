@@ -46,6 +46,7 @@ pub struct APISecrets {
 #[serde(rename_all = "snake_case")]
 pub struct AuthSecrets {
     pub github: GitHubSecrets,
+    pub jwt: JWTSecrets,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -53,6 +54,13 @@ pub struct AuthSecrets {
 pub struct GitHubSecrets {
     pub client_id: String,
     pub client_secret: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub struct JWTSecrets {
+    pub private_key_pem_filename: String,
+    pub public_key_pem_filename: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

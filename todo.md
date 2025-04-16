@@ -8,9 +8,11 @@
 - [x] add support for manually specifying triangle normals outside of a model file
 - [ ] add a user auth scheme
   - [x] GitHub OAuth
-  - [ ] Persist user info to database
-    - [ ] If githubID exists, update if needed, else create user with next ID
-  - [ ] Self-generated auth tokens (JWTs), with userID included as `sub`
+  - [x] Persist user info to database
+    - [x] If githubID exists, update if needed, else create user with next ID
+  - [x] Self-generated auth tokens (JWTs), with userID included as `sub`
+  - [ ] add guards on routes for valid Claims
+  - [ ] add user ownership info to DB for renders (and checkpoints???)
   - [ ] add quota limits per-user for storage? maybe based on total bytes stores? or renders? or checkpoints? idk, think about it some more
 - [ ] ability to do a "rolling delete" of checkpoints, e.g. "only save the most recent X checkpoints"
 - [ ] maybe add a "deletion job" system, since deleting things takes FOREVER.

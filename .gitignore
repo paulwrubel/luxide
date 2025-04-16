@@ -8,3 +8,4 @@
 # Secrets
 /*.secret.json
 /*.secrets.json
+/*.pem

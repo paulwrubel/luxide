@@ -5,7 +5,7 @@ use axum_extra::extract::cookie::Key;
 
 use crate::tracing::RenderManager;
 
-use super::AuthManager;
+use super::{AuthManager, AuthManagerError, Claims, JWTValidator};
 
 #[derive(Clone)]
 pub struct LuxideState {
@@ -39,5 +39,13 @@ impl LuxideState {
 impl FromRef<LuxideState> for Key {
     fn from_ref(state: &LuxideState) -> Self {
         state.cookie_jar_key.clone()
+    }
+}
+
+impl JWTValidator for LuxideState {
+    type Error = AuthManagerError;
+
+    fn validate_jwt(&self, token: &str) -> Result<Claims, Self::Error> {
+        self.auth_manager.validate_jwt(token)
     }
 }
