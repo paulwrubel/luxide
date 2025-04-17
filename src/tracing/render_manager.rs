@@ -15,7 +15,7 @@ use crate::{
     utils::{ProgressInfo, ProgressTracker},
 };
 
-use super::{Render, RenderCheckpoint, RenderID, RenderStorage, StorageError, UserID};
+use super::{Render, RenderCheckpoint, RenderID, RenderStorage, StorageError, User};
 
 use std::collections::HashSet;
 
@@ -450,8 +450,20 @@ impl RenderManager {
     pub async fn create_render(
         &self,
         render_config: RenderConfig,
-        user_id: UserID,
+        user: User,
     ) -> Result<Render, RenderManagerError> {
+        let current_active_render_count = self.storage.get_render_count_for_user(user.id).await?;
+
+        if user
+            .max_renders
+            .is_some_and(|max_renders| max_renders <= current_active_render_count)
+        {
+            return Err(RenderManagerError::ClientError(
+                StatusCode::FORBIDDEN,
+                "User has reached their maximum number of active renders".to_string(),
+            ));
+        }
+
         let render_config = render_config.merge_with_builtins();
 
         // compile for validation purposes
@@ -460,7 +472,7 @@ impl RenderManager {
         }
 
         let next_id = self.storage.get_next_id().await?;
-        let render = Render::new(next_id, render_config, user_id);
+        let render = Render::new(next_id, render_config, user.id);
         self.storage
             .create_render(render)
             .await

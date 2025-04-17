@@ -78,6 +78,16 @@ impl RenderStorage for FileStorage {
             .is_some_and(|(r, _)| r.user_id == user_id))
     }
 
+    async fn get_render_count_for_user(&self, user_id: UserID) -> Result<u32, StorageError> {
+        Ok(self
+            .renders
+            .read()
+            .await
+            .iter()
+            .filter(|(r, _)| r.user_id == user_id)
+            .count() as u32)
+    }
+
     async fn get_all_renders(&self) -> Result<Vec<Render>, StorageError> {
         Ok(self
             .renders

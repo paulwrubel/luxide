@@ -145,22 +145,31 @@ async fn get_user_by_github_id(
             }
         },
         Ok(false) => {
-            match state
-                .auth_manager
-                .create_user(User {
-                    id: state
+            let user = if state.auth_manager.github_id_is_admin(github_id) {
+                User::new_admin(
+                    state
                         .auth_manager
                         .get_next_user_id()
                         .await
                         .expect("Failed to get next user ID"),
-                    github_id: user_info.id,
-                    username: user_info.login.clone(),
-                    avatar_url: user_info.avatar_url.clone(),
-                    created_at: chrono::Utc::now(),
-                    updated_at: chrono::Utc::now(),
-                })
-                .await
-            {
+                    github_id,
+                    user_info.login.clone(),
+                    user_info.avatar_url.clone(),
+                )
+            } else {
+                User::new(
+                    state
+                        .auth_manager
+                        .get_next_user_id()
+                        .await
+                        .expect("Failed to get next user ID"),
+                    github_id,
+                    user_info.login.clone(),
+                    user_info.avatar_url.clone(),
+                )
+            };
+
+            match state.auth_manager.create_user(user).await {
                 Ok(user) => Ok(user),
                 Err(e) => {
                     eprintln!(

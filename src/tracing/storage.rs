@@ -206,6 +206,8 @@ pub trait RenderStorage: Send + Sync + 'static {
 
     async fn render_belongs_to(&self, id: RenderID, user_id: UserID) -> Result<bool, StorageError>;
 
+    async fn get_render_count_for_user(&self, user_id: UserID) -> Result<u32, StorageError>;
+
     async fn get_all_renders(&self) -> Result<Vec<Render>, StorageError>;
 
     async fn get_all_renders_for_user_id(
@@ -345,6 +347,88 @@ pub struct User {
     pub avatar_url: String,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
+    pub role: Role,
+    pub max_renders: Option<u32>,
+    pub max_checkpoints: Option<u32>,
+    pub max_render_pixel_count: Option<u32>,
+}
+
+impl User {
+    pub fn new_admin(
+        id: UserID,
+        github_id: GithubID,
+        username: String,
+        avatar_url: String,
+    ) -> Self {
+        Self {
+            id,
+            github_id,
+            username,
+            avatar_url,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            role: Role::Admin,
+            max_renders: None,
+            max_checkpoints: None,
+            max_render_pixel_count: None,
+        }
+    }
+
+    pub fn new(id: UserID, github_id: GithubID, username: String, avatar_url: String) -> Self {
+        Self {
+            id,
+            github_id,
+            username,
+            avatar_url,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            role: Role::User,
+            max_renders: Some(1),
+            max_checkpoints: Some(10),
+            max_render_pixel_count: Some(250_000),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Role {
+    Admin,
+    User,
+}
+
+impl Default for Role {
+    fn default() -> Self {
+        Self::User
+    }
+}
+
+impl Display for Role {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Role::Admin => write!(f, "admin"),
+            Role::User => write!(f, "user"),
+        }
+    }
+}
+
+impl From<String> for Role {
+    fn from(value: String) -> Self {
+        match value.as_str() {
+            "admin" => Self::Admin,
+            "user" => Self::User,
+            _ => Self::User,
+        }
+    }
+}
+
+impl From<Role> for String {
+    fn from(value: Role) -> Self {
+        match value {
+            Role::Admin => "admin".to_string(),
+            Role::User => "user".to_string(),
+        }
+    }
 }
 
 #[async_trait::async_trait]

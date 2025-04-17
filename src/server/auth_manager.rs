@@ -25,6 +25,8 @@ pub type AuthManagerError = String;
 
 pub struct AuthManager {
     storage: Arc<dyn UserStorage>,
+
+    admin_github_ids: Vec<GithubID>,
     jwt_encoding_secret: EncodingKey,
     jwt_decoding_secret: DecodingKey,
 
@@ -82,6 +84,7 @@ impl AuthManager {
 
         Self {
             storage,
+            admin_github_ids: secrets.admin_github_ids.clone(),
             jwt_encoding_secret: EncodingKey::from_rsa_pem(&jwt_private_key)
                 .expect("Failed to parse JWT encoding secret PEM"),
             jwt_decoding_secret: DecodingKey::from_rsa_pem(&jwt_public_key)
@@ -92,6 +95,10 @@ impl AuthManager {
 
             auth_state_by_session: DashMap::new(),
         }
+    }
+
+    pub fn github_id_is_admin(&self, github_id: GithubID) -> bool {
+        self.admin_github_ids.contains(&github_id)
     }
 
     pub async fn get_user(&self, user_id: UserID) -> Result<Option<User>, AuthManagerError> {

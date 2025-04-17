@@ -16,11 +16,27 @@ pub async fn create_render(
 ) -> Response {
     println!("Handing request for create_render...");
 
-    // TODO: Add safeguard to prevent users from creating too many renders
+    let user = match state.auth_manager.get_user(claims.sub).await {
+        Ok(Some(user)) => user,
+        Ok(None) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "User not found in database".to_string(),
+            )
+                .into_response();
+        }
+        Err(e) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Failed to get user: {e}"),
+            )
+                .into_response();
+        }
+    };
 
     match state
         .render_manager
-        .create_render(render_config, claims.sub)
+        .create_render(render_config, user)
         .await
     {
         Ok(render) => (StatusCode::CREATED, Json(render)).into_response(),

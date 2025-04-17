@@ -80,7 +80,7 @@ async fn create_render_and_poll_completion(
     render_config: RenderConfig,
 ) -> Result<(), String> {
     let render = render_manager
-        .create_render(render_config)
+        .create_render(render_config, 1)
         .await
         .map_err(|e| format!("Failed to create render: {}", e))?;
 

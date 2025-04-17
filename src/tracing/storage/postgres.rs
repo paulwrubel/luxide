@@ -114,6 +114,23 @@ impl RenderStorage for PostgresStorage {
         }
     }
 
+    async fn get_render_count_for_user(&self, user_id: UserID) -> Result<u32, StorageError> {
+        match sqlx::query!(
+            r#"
+                SELECT COUNT(*)
+                FROM renders
+                WHERE user_id = $1
+            "#,
+            user_id as i32
+        )
+        .fetch_one(&self.pool)
+        .await
+        {
+            Ok(row) => Ok(row.count.expect("count should be present") as u32),
+            Err(e) => Err(format!("Failed to get render count for user {user_id}: {e}").into()),
+        }
+    }
+
     async fn get_all_renders(&self) -> Result<Vec<Render>, StorageError> {
         let rows = sqlx::query!(
             r#"
@@ -559,7 +576,8 @@ impl UserStorage for PostgresStorage {
     async fn get_user(&self, id: UserID) -> Result<Option<User>, StorageError> {
         match sqlx::query!(
             r#"
-                SELECT id, github_id, username, avatar_url, created_at, updated_at
+                SELECT id, github_id, username, avatar_url, created_at, updated_at, 
+                    role, max_renders, max_checkpoints, max_render_pixel_count
                 FROM users
                 WHERE id = $1
             "#,
@@ -575,6 +593,10 @@ impl UserStorage for PostgresStorage {
                 avatar_url: row.avatar_url,
                 created_at: row.created_at,
                 updated_at: row.updated_at,
+                role: row.role.into(),
+                max_renders: row.max_renders.map(|r| r as u32),
+                max_checkpoints: row.max_checkpoints.map(|c| c as u32),
+                max_render_pixel_count: row.max_render_pixel_count.map(|p| p as u32),
             })),
             Ok(None) => Ok(None),
             Err(e) => Err(format!("Failed to get user with id {}: {}", id, e).into()),
@@ -587,7 +609,8 @@ impl UserStorage for PostgresStorage {
     ) -> Result<Option<User>, StorageError> {
         match sqlx::query!(
             r#"
-                SELECT id, github_id, username, avatar_url, created_at, updated_at
+                SELECT id, github_id, username, avatar_url, created_at, updated_at, 
+                    role, max_renders, max_checkpoints, max_render_pixel_count
                 FROM users
                 WHERE github_id = $1
             "#,
@@ -603,6 +626,10 @@ impl UserStorage for PostgresStorage {
                 avatar_url: row.avatar_url,
                 created_at: row.created_at,
                 updated_at: row.updated_at,
+                role: row.role.into(),
+                max_renders: row.max_renders.map(|r| r as u32),
+                max_checkpoints: row.max_checkpoints.map(|c| c as u32),
+                max_render_pixel_count: row.max_render_pixel_count.map(|p| p as u32),
             })),
             Ok(None) => Ok(None),
             Err(e) => Err(format!("Failed to get user with github id {}: {}", github_id, e).into()),
@@ -654,8 +681,9 @@ impl UserStorage for PostgresStorage {
     async fn create_user(&self, user: User) -> Result<User, StorageError> {
         match sqlx::query!(
             r#"
-                INSERT INTO users (id, github_id, username, avatar_url, created_at, updated_at)
-                VALUES ($1, $2, $3, $4, $5, $6)
+                INSERT INTO users (id, github_id, username, avatar_url, created_at, updated_at,
+                    role, max_renders, max_checkpoints, max_render_pixel_count)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
             "#,
             user.id as i32,
             user.github_id as i32,
@@ -663,6 +691,10 @@ impl UserStorage for PostgresStorage {
             user.avatar_url,
             chrono::Utc::now(),
             chrono::Utc::now(),
+            user.role.to_string(),
+            user.max_renders.map(|r| r as i32),
+            user.max_checkpoints.map(|c| c as i32),
+            user.max_render_pixel_count.map(|p| p as i32),
         )
         .execute(&self.pool)
         .await
@@ -681,7 +713,8 @@ impl UserStorage for PostgresStorage {
         match sqlx::query!(
             r#"
                 UPDATE users
-                SET github_id = $2, username = $3, avatar_url = $4, updated_at = $5
+                SET github_id = $2, username = $3, avatar_url = $4, updated_at = $5,
+                    role = $6, max_renders = $7, max_checkpoints = $8, max_render_pixel_count = $9
                 WHERE id = $1
             "#,
             user.id as i32,
@@ -689,6 +722,10 @@ impl UserStorage for PostgresStorage {
             user.username,
             user.avatar_url,
             chrono::Utc::now(),
+            user.role.to_string(),
+            user.max_renders.map(|r| r as i32),
+            user.max_checkpoints.map(|c| c as i32),
+            user.max_render_pixel_count.map(|p| p as i32),
         )
         .execute(&self.pool)
         .await

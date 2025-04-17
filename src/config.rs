@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::tracing::GithubID;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub struct APIConfig {
@@ -47,6 +49,7 @@ pub struct APISecrets {
 pub struct AuthSecrets {
     pub github: GitHubSecrets,
     pub jwt: JWTSecrets,
+    pub admin_github_ids: Vec<GithubID>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
