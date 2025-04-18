@@ -11,7 +11,7 @@ use crate::{
     camera::Camera,
     geometry::Geometric,
     shading::{Color, Texture, materials::Material},
-    tracing::{RenderParameters, Scene},
+    tracing::{RenderParameters, Scene, User},
     utils::Angle,
 };
 
@@ -54,6 +54,51 @@ impl Builts {
     }
 }
 
+pub struct RenderConfigBuilder(RenderConfig);
+
+impl RenderConfigBuilder {
+    pub fn build(self) -> RenderConfig {
+        self.0
+    }
+
+    pub fn with_builtins(mut self) -> Self {
+        // builtin resources can be "overwritten" by user-defined resources
+        // so we have to make sure that we add them last
+        self.0.textures.append(&mut get_builtin_textures());
+        self.0.materials.append(&mut get_builtin_materials());
+        self.0.geometrics.append(&mut get_builtin_geometrics());
+        self.0.cameras.append(&mut get_builtin_cameras());
+        self.0.scenes.append(&mut get_builtin_scenes());
+
+        self
+    }
+
+    pub fn with_overriding_limits(mut self, user: &User) -> Self {
+        let render_limit = self.0.parameters.saved_checkpoint_limit;
+        let user_limit = user.max_checkpoints_per_render;
+
+        match (render_limit, user_limit) {
+            // user requested a limit that's higher than their permitted limit
+            (Some(render_limit), Some(user_limit)) if user_limit < render_limit => {
+                self.0.parameters.saved_checkpoint_limit = Some(user_limit);
+            }
+            // user requested no limit, but their permitted limit is non-zero
+            (None, Some(user_limit)) => {
+                self.0.parameters.saved_checkpoint_limit = Some(user_limit);
+            }
+            _ => {}
+        }
+
+        self
+    }
+}
+
+impl From<RenderConfig> for RenderConfigBuilder {
+    fn from(config: RenderConfig) -> Self {
+        Self(config)
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct RenderConfig {
@@ -73,32 +118,6 @@ pub struct RenderConfig {
 }
 
 impl RenderConfig {
-    pub fn merge_with_builtins(&self) -> Self {
-        // builtin resources can be "overwritten" by user-defined resources
-        // so we have to make sure that we add them last
-        let mut textures = get_builtin_textures();
-        textures.append(&mut self.textures.clone());
-        let mut materials = get_builtin_materials();
-        materials.append(&mut self.materials.clone());
-        let mut geometrics = get_builtin_geometrics();
-        geometrics.append(&mut self.geometrics.clone());
-        let mut cameras = get_builtin_cameras();
-        cameras.append(&mut self.cameras.clone());
-        let mut scenes = get_builtin_scenes();
-        scenes.append(&mut self.scenes.clone());
-
-        Self {
-            name: self.name.clone(),
-            parameters: self.parameters,
-            active_scene: self.active_scene.clone(),
-            scenes,
-            cameras,
-            textures,
-            materials,
-            geometrics,
-        }
-    }
-
     pub fn compile(&self) -> Result<RenderData, String> {
         let mut builts = Builts::new();
 

@@ -16,7 +16,7 @@ use luxide::{
         materials::{Dielectric, Lambertian, Material, Specular},
         textures::{Checker, Image8Bit, Noise, SolidColor},
     },
-    tracing::{FileStorage, RenderManager, RenderState, RenderStorage, Scene},
+    tracing::{FileStorage, RenderManager, RenderState, RenderStorage, Scene, User},
     utils::Angle,
 };
 use noise::{Perlin, Turbulence};
@@ -80,7 +80,10 @@ async fn create_render_and_poll_completion(
     render_config: RenderConfig,
 ) -> Result<(), String> {
     let render = render_manager
-        .create_render(render_config, 1)
+        .create_render(
+            render_config,
+            User::new_admin(1, 1, "".to_string(), "".to_string()),
+        )
         .await
         .map_err(|e| format!("Failed to create render: {}", e))?;
 

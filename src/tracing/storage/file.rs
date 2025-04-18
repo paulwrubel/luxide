@@ -264,7 +264,63 @@ impl RenderStorage for FileStorage {
         )))
     }
 
-    async fn get_most_recent_render_checkpoint_iteration(
+    async fn get_render_checkpoint_count(&self, id: RenderID) -> Result<u32, StorageError> {
+        let renders = self.renders.read().await;
+        let dir = match renders.iter().find(|(r, _)| r.id == id) {
+            Some((_, dir)) => dir,
+            None => return Err(format!("Render {} not found", id).into()),
+        };
+
+        let checkpoint_dir = dir.join("checkpoints");
+        let checkpoint_files = fs::read_dir(checkpoint_dir).map_err(|e| e.to_string())?;
+
+        let checkpoint_files = checkpoint_files.filter(|entry| {
+            let entry = match entry {
+                Ok(e) => e,
+                Err(_) => return false,
+            };
+
+            entry
+                .path()
+                .extension()
+                .map(|ext| ext == "json")
+                .unwrap_or(false)
+        });
+
+        Ok(checkpoint_files.count() as u32)
+    }
+
+    async fn get_earliest_render_checkpoint_iteration(
+        &self,
+        id: RenderID,
+    ) -> Result<Option<u32>, StorageError> {
+        let renders = self.renders.read().await;
+        let dir = match renders.iter().find(|(r, _)| r.id == id) {
+            Some((_, dir)) => dir,
+            None => return Err(format!("Render {} not found", id).into()),
+        };
+
+        let checkpoint_dir = dir.join("checkpoints");
+        let checkpoint_files = fs::read_dir(checkpoint_dir).map_err(|e| e.to_string())?;
+
+        let mut earliest_iteration = None;
+        for entry in checkpoint_files {
+            let path = entry.map_err(|e| e.to_string())?.path();
+            if path.is_file() && path.extension().map(|ext| ext == "png").unwrap_or(false) {
+                let iteration = path
+                    .file_name()
+                    .and_then(|name| name.to_str().and_then(|s| s.parse::<u32>().ok()));
+                if let Some(iteration) = iteration {
+                    earliest_iteration =
+                        Some(earliest_iteration.unwrap_or(u32::MAX).min(iteration));
+                }
+            }
+        }
+
+        Ok(earliest_iteration)
+    }
+
+    async fn get_latest_render_checkpoint_iteration(
         &self,
         id: RenderID,
     ) -> Result<Option<u32>, StorageError> {
@@ -420,6 +476,47 @@ impl RenderStorage for FileStorage {
                 .map_err(|e| e.to_string())?,
         )
         .map_err(|e| e.to_string())?;
+
+        Ok(())
+    }
+
+    async fn delete_render_checkpoint(
+        &self,
+        id: RenderID,
+        checkpoint: u32,
+    ) -> Result<(), StorageError> {
+        let renders = self.renders.read().await;
+        let dir = match renders.iter().find(|(r, _)| r.id == id) {
+            Some((_, dir)) => dir,
+            None => return Err(format!("Render {} not found", id).into()),
+        };
+
+        let checkpoint_dir = dir.join("checkpoints");
+        let checkpoint_image_file = checkpoint_dir.join(format!("{}.png", checkpoint));
+        let checkpoint_meta_file = checkpoint_dir.join(format!("{}.json", checkpoint));
+        match (
+            checkpoint_meta_file.exists(),
+            checkpoint_image_file.exists(),
+        ) {
+            (false, true) => {
+                return Err(format!(
+                    "Checkpoint iteration {} image exists but metadata file is missing for render {}",
+                    checkpoint, id
+                ).into());
+            }
+            (true, false) => {
+                return Err(format!(
+                    "Checkpoint iteration {} metadata exists but image is missing for render {}",
+                    checkpoint, id
+                )
+                .into());
+            }
+            (false, false) => return Ok(()),
+            _ => {}
+        };
+
+        fs::remove_file(&checkpoint_image_file).map_err(|e| e.to_string())?;
+        fs::remove_file(&checkpoint_meta_file).map_err(|e| e.to_string())?;
 
         Ok(())
     }

@@ -15,18 +15,40 @@ use crate::tracing::{RenderID, RenderManager};
 
 use crate::server::LuxideState;
 
-pub async fn get_last_render_checkpoint_image(
+pub async fn get_earliest_render_checkpoint_image(
     State(state): State<LuxideState>,
     Path(id): Path<RenderID>,
 ) -> Response {
     println!(
-        "Handing request for get_last_render_checkpoint_image (id: {})...",
+        "Handing request for get_earliest_render_checkpoint_image (id: {})...",
         id
     );
 
     match state
         .render_manager
-        .get_most_recent_render_checkpoint_iteration(id)
+        .get_earliest_render_checkpoint_iteration(id)
+        .await
+    {
+        Ok(Some(iteration)) => {
+            get_render_checkpoint_image_response(state.render_manager, id, iteration).await
+        }
+        Ok(None) => StatusCode::NOT_FOUND.into_response(),
+        Err(e) => e.into(),
+    }
+}
+
+pub async fn get_latest_render_checkpoint_image(
+    State(state): State<LuxideState>,
+    Path(id): Path<RenderID>,
+) -> Response {
+    println!(
+        "Handing request for get_latest_render_checkpoint_image (id: {})...",
+        id
+    );
+
+    match state
+        .render_manager
+        .get_latest_render_checkpoint_iteration(id)
         .await
     {
         Ok(Some(iteration)) => {

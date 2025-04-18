@@ -28,8 +28,12 @@ fn build_renders_router() -> Router<LuxideState> {
         .route("/", get(handlers::get_all_renders))
         .route("/", post(handlers::create_render))
         .route(
-            "/{id}/checkpoint/last",
-            get(handlers::get_last_render_checkpoint_image),
+            "/{id}/checkpoint/earliest",
+            get(handlers::get_earliest_render_checkpoint_image),
+        )
+        .route(
+            "/{id}/checkpoint/latest",
+            get(handlers::get_latest_render_checkpoint_image),
         )
         .route(
             "/{id}/checkpoint/{checkpoint_iteration}",

@@ -10,7 +10,7 @@ use serde::Serialize;
 use tokio::sync::mpsc;
 
 use crate::{
-    deserialization::RenderConfig,
+    deserialization::{RenderConfig, RenderConfigBuilder},
     tracing::{PixelData, RenderState, Threads, Tracer},
     utils::{ProgressInfo, ProgressTracker},
 };
@@ -259,6 +259,62 @@ impl RenderManager {
             }
             println!("Finished saving pixel_data");
 
+            println!("Checking if old checkpoints need to be deleted...");
+            let total_checkpoints_saved = match storage.get_render_checkpoint_count(render.id).await
+            {
+                Ok(count) => count,
+                Err(e) => {
+                    println!("  Failed to get checkpoint count: {e}");
+                    running_renders.lock().unwrap().remove(&render.id);
+                    return;
+                }
+            };
+
+            if render
+                .config
+                .parameters
+                .saved_checkpoint_limit
+                .is_some_and(|limit| limit < total_checkpoints_saved)
+            {
+                println!("  Deleting old checkpoints...");
+                println!("    Finding earliest checkpoint...");
+                let earliest_checkpoint = match storage
+                    .get_earliest_render_checkpoint_iteration(render.id)
+                    .await
+                {
+                    Ok(Some(iteration)) => iteration,
+                    Ok(None) => {
+                        println!("    No checkpoints found for render {}", render.id);
+                        running_renders.lock().unwrap().remove(&render.id);
+                        return;
+                    }
+                    Err(e) => {
+                        println!(
+                            "    Failed to get earliest render checkpoint for id {}: {}",
+                            render.id, e
+                        );
+                        running_renders.lock().unwrap().remove(&render.id);
+                        return;
+                    }
+                };
+                println!("    Found earliest checkpoint: {}", earliest_checkpoint);
+                println!("    Deleting checkpoint {}...", earliest_checkpoint);
+                match storage
+                    .delete_render_checkpoint(render.id, earliest_checkpoint)
+                    .await
+                {
+                    Err(e) => {
+                        println!("Failed to delete old render checkpoint: {e}");
+                        // remove from running set on error
+                        running_renders.lock().unwrap().remove(&render.id);
+                        return;
+                    }
+                    Ok(_) => (),
+                }
+                println!("  Finished deleting old checkpoints");
+            }
+            println!("Finished checking if old checkpoints need to be deleted");
+
             // check if render was paused
             let current_state = match storage.get_render(render.id).await {
                 Ok(Some(r)) => r.state,
@@ -464,7 +520,26 @@ impl RenderManager {
             ));
         }
 
-        let render_config = render_config.merge_with_builtins();
+        let dimensions = render_config.parameters.image_dimensions;
+        let image_pixels = dimensions.0 * dimensions.1;
+        if user
+            .max_render_pixel_count
+            .is_some_and(|max| max < image_pixels)
+        {
+            return Err(RenderManagerError::ClientError(
+                StatusCode::FORBIDDEN,
+                format!(
+                    "Render is larger than the user's maximum allowed pixels (size: {}, limit: {})",
+                    image_pixels,
+                    user.max_render_pixel_count.unwrap()
+                ),
+            ));
+        }
+
+        let render_config = RenderConfigBuilder::from(render_config)
+            .with_overriding_limits(&user)
+            .with_builtins()
+            .build();
 
         // compile for validation purposes
         if let Err(e) = render_config.compile() {
@@ -479,7 +554,7 @@ impl RenderManager {
             .map_err(|e| e.into())
     }
 
-    pub async fn get_most_recent_render_checkpoint_iteration(
+    pub async fn get_earliest_render_checkpoint_iteration(
         &self,
         id: RenderID,
     ) -> Result<Option<u32>, RenderManagerError> {
@@ -488,7 +563,21 @@ impl RenderManager {
         }
 
         self.storage
-            .get_most_recent_render_checkpoint_iteration(id)
+            .get_earliest_render_checkpoint_iteration(id)
+            .await
+            .map_err(|e| e.into())
+    }
+
+    pub async fn get_latest_render_checkpoint_iteration(
+        &self,
+        id: RenderID,
+    ) -> Result<Option<u32>, RenderManagerError> {
+        if !self.storage.render_exists(id).await? {
+            return Ok(None);
+        }
+
+        self.storage
+            .get_latest_render_checkpoint_iteration(id)
             .await
             .map_err(|e| e.into())
     }

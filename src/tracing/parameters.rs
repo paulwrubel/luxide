@@ -16,6 +16,7 @@ pub struct RenderParameters {
     pub gamma_correction: f64,
     pub samples_per_checkpoint: u32,
     pub total_checkpoints: u32,
+    pub saved_checkpoint_limit: Option<u32>,
     pub max_bounces: u32,
     pub use_scaling_truncation: bool,
 }

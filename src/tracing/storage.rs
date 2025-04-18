@@ -242,7 +242,14 @@ pub trait RenderStorage: Send + Sync + 'static {
         checkpoint: u32,
     ) -> Result<Option<RenderCheckpoint>, StorageError>;
 
-    async fn get_most_recent_render_checkpoint_iteration(
+    async fn get_render_checkpoint_count(&self, render_id: RenderID) -> Result<u32, StorageError>;
+
+    async fn get_earliest_render_checkpoint_iteration(
+        &self,
+        render_id: RenderID,
+    ) -> Result<Option<u32>, StorageError>;
+
+    async fn get_latest_render_checkpoint_iteration(
         &self,
         render_id: RenderID,
     ) -> Result<Option<u32>, StorageError>;
@@ -261,6 +268,12 @@ pub trait RenderStorage: Send + Sync + 'static {
     async fn create_render_checkpoint(
         &self,
         render_checkpoint: RenderCheckpoint,
+    ) -> Result<(), StorageError>;
+
+    async fn delete_render_checkpoint(
+        &self,
+        render_id: RenderID,
+        checkpoint: u32,
     ) -> Result<(), StorageError>;
 
     /// Delete a render and all its associated checkpoints
@@ -349,11 +362,15 @@ pub struct User {
     pub updated_at: chrono::DateTime<chrono::Utc>,
     pub role: Role,
     pub max_renders: Option<u32>,
-    pub max_checkpoints: Option<u32>,
+    pub max_checkpoints_per_render: Option<u32>,
     pub max_render_pixel_count: Option<u32>,
 }
 
 impl User {
+    pub const DEFAULT_MAX_RENDERS: u32 = 1;
+    pub const DEFAULT_MAX_CHECKPOINTS_PER_RENDER: u32 = 1;
+    pub const DEFAULT_MAX_RENDER_PIXEL_COUNT: u32 = 500 * 500;
+
     pub fn new_admin(
         id: UserID,
         github_id: GithubID,
@@ -369,7 +386,7 @@ impl User {
             updated_at: chrono::Utc::now(),
             role: Role::Admin,
             max_renders: None,
-            max_checkpoints: None,
+            max_checkpoints_per_render: None,
             max_render_pixel_count: None,
         }
     }
@@ -383,9 +400,9 @@ impl User {
             created_at: chrono::Utc::now(),
             updated_at: chrono::Utc::now(),
             role: Role::User,
-            max_renders: Some(1),
-            max_checkpoints: Some(10),
-            max_render_pixel_count: Some(250_000),
+            max_renders: Some(Self::DEFAULT_MAX_RENDERS),
+            max_checkpoints_per_render: Some(Self::DEFAULT_MAX_CHECKPOINTS_PER_RENDER),
+            max_render_pixel_count: Some(Self::DEFAULT_MAX_RENDER_PIXEL_COUNT),
         }
     }
 }

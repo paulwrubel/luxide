@@ -117,7 +117,7 @@ impl RenderStorage for PostgresStorage {
     async fn get_render_count_for_user(&self, user_id: UserID) -> Result<u32, StorageError> {
         match sqlx::query!(
             r#"
-                SELECT COUNT(*)
+                SELECT count(*)
                 FROM renders
                 WHERE user_id = $1
             "#,
@@ -385,7 +385,47 @@ impl RenderStorage for PostgresStorage {
         }
     }
 
-    async fn get_most_recent_render_checkpoint_iteration(
+    async fn get_render_checkpoint_count(&self, id: RenderID) -> Result<u32, StorageError> {
+        match sqlx::query!(
+            r#"
+                SELECT count(*)
+                FROM checkpoints
+                WHERE render_id = $1
+            "#,
+            id as i32,
+        )
+        .fetch_one(&self.pool)
+        .await
+        {
+            Ok(row) => Ok(row.count.expect("count should be present") as u32),
+            Err(e) => Err(format!("Failed to get render checkpoint count for id {id}: {e}").into()),
+        }
+    }
+
+    async fn get_earliest_render_checkpoint_iteration(
+        &self,
+        id: RenderID,
+    ) -> Result<Option<u32>, StorageError> {
+        match sqlx::query!(
+            r#"
+                SELECT min(iteration)
+                FROM checkpoints
+                WHERE render_id = $1
+            "#,
+            id as i32,
+        )
+        .fetch_one(&self.pool)
+        .await
+        {
+            Ok(row) => Ok(row.min.map(|min| min as u32)),
+            Err(e) => Err(format!(
+                "Failed to get earliest render checkpoint iteration for id {id}: {e}"
+            )
+            .into()),
+        }
+    }
+
+    async fn get_latest_render_checkpoint_iteration(
         &self,
         id: RenderID,
     ) -> Result<Option<u32>, StorageError> {
@@ -402,7 +442,7 @@ impl RenderStorage for PostgresStorage {
         {
             Ok(row) => Ok(row.max.map(|max| max as u32)),
             Err(e) => Err(format!(
-                "Failed to get most recent render checkpoint iteration for id {id}: {e}"
+                "Failed to get latest render checkpoint iteration for id {id}: {e}"
             )
             .into()),
         }
@@ -500,6 +540,34 @@ impl RenderStorage for PostgresStorage {
         }
     }
 
+    async fn delete_render_checkpoint(
+        &self,
+        id: RenderID,
+        checkpoint: u32,
+    ) -> Result<(), StorageError> {
+        match sqlx::query!(
+            r#"
+                DELETE FROM checkpoints
+                WHERE render_id = $1 AND iteration = $2
+            "#,
+            id as i32,
+            checkpoint as i32,
+        )
+        .execute(&self.pool)
+        .await
+        {
+            Ok(res) => match res.rows_affected() {
+                1 => Ok(()),
+                n => Err(format!(
+                    "Failed to delete render checkpoint for id {} and iteration {}: Expecting 1 row affected, got {}", 
+                    id, checkpoint, n
+                )
+                .into()),
+            },
+            Err(e) => Err(format!("Failed to delete render checkpoint for id {} and iteration {}: {}", id, checkpoint, e).into()),
+        }
+    }
+
     async fn delete_render_and_checkpoints(&self, id: RenderID) -> Result<(), StorageError> {
         let mut tx = self
             .pool
@@ -577,7 +645,7 @@ impl UserStorage for PostgresStorage {
         match sqlx::query!(
             r#"
                 SELECT id, github_id, username, avatar_url, created_at, updated_at, 
-                    role, max_renders, max_checkpoints, max_render_pixel_count
+                    role, max_renders, max_checkpoints_per_render, max_render_pixel_count
                 FROM users
                 WHERE id = $1
             "#,
@@ -595,7 +663,7 @@ impl UserStorage for PostgresStorage {
                 updated_at: row.updated_at,
                 role: row.role.into(),
                 max_renders: row.max_renders.map(|r| r as u32),
-                max_checkpoints: row.max_checkpoints.map(|c| c as u32),
+                max_checkpoints_per_render: row.max_checkpoints_per_render.map(|c| c as u32),
                 max_render_pixel_count: row.max_render_pixel_count.map(|p| p as u32),
             })),
             Ok(None) => Ok(None),
@@ -610,7 +678,7 @@ impl UserStorage for PostgresStorage {
         match sqlx::query!(
             r#"
                 SELECT id, github_id, username, avatar_url, created_at, updated_at, 
-                    role, max_renders, max_checkpoints, max_render_pixel_count
+                    role, max_renders, max_checkpoints_per_render, max_render_pixel_count
                 FROM users
                 WHERE github_id = $1
             "#,
@@ -628,7 +696,7 @@ impl UserStorage for PostgresStorage {
                 updated_at: row.updated_at,
                 role: row.role.into(),
                 max_renders: row.max_renders.map(|r| r as u32),
-                max_checkpoints: row.max_checkpoints.map(|c| c as u32),
+                max_checkpoints_per_render: row.max_checkpoints_per_render.map(|c| c as u32),
                 max_render_pixel_count: row.max_render_pixel_count.map(|p| p as u32),
             })),
             Ok(None) => Ok(None),
@@ -682,7 +750,7 @@ impl UserStorage for PostgresStorage {
         match sqlx::query!(
             r#"
                 INSERT INTO users (id, github_id, username, avatar_url, created_at, updated_at,
-                    role, max_renders, max_checkpoints, max_render_pixel_count)
+                    role, max_renders, max_checkpoints_per_render, max_render_pixel_count)
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
             "#,
             user.id as i32,
@@ -693,7 +761,7 @@ impl UserStorage for PostgresStorage {
             chrono::Utc::now(),
             user.role.to_string(),
             user.max_renders.map(|r| r as i32),
-            user.max_checkpoints.map(|c| c as i32),
+            user.max_checkpoints_per_render.map(|c| c as i32),
             user.max_render_pixel_count.map(|p| p as i32),
         )
         .execute(&self.pool)
@@ -713,8 +781,8 @@ impl UserStorage for PostgresStorage {
         match sqlx::query!(
             r#"
                 UPDATE users
-                SET github_id = $2, username = $3, avatar_url = $4, updated_at = $5,
-                    role = $6, max_renders = $7, max_checkpoints = $8, max_render_pixel_count = $9
+                SET github_id = $2, username = $3, avatar_url = $4, updated_at = $5, role = $6, 
+                    max_renders = $7, max_checkpoints_per_render = $8, max_render_pixel_count = $9
                 WHERE id = $1
             "#,
             user.id as i32,
@@ -724,7 +792,7 @@ impl UserStorage for PostgresStorage {
             chrono::Utc::now(),
             user.role.to_string(),
             user.max_renders.map(|r| r as i32),
-            user.max_checkpoints.map(|c| c as i32),
+            user.max_checkpoints_per_render.map(|c| c as i32),
             user.max_render_pixel_count.map(|p| p as i32),
         )
         .execute(&self.pool)

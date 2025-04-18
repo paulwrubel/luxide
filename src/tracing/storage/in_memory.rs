@@ -176,7 +176,31 @@ impl RenderStorage for InMemoryStorage {
             .cloned())
     }
 
-    async fn get_most_recent_render_checkpoint_iteration(
+    async fn get_render_checkpoint_count(&self, id: RenderID) -> Result<u32, StorageError> {
+        Ok(self
+            .checkpoints
+            .read()
+            .await
+            .iter()
+            .filter(|c| c.render_id == id)
+            .count() as u32)
+    }
+
+    async fn get_earliest_render_checkpoint_iteration(
+        &self,
+        id: RenderID,
+    ) -> Result<Option<u32>, StorageError> {
+        Ok(self
+            .checkpoints
+            .read()
+            .await
+            .iter()
+            .filter(|c| c.render_id == id)
+            .map(|c| c.iteration)
+            .min())
+    }
+
+    async fn get_latest_render_checkpoint_iteration(
         &self,
         id: RenderID,
     ) -> Result<Option<u32>, StorageError> {
@@ -229,6 +253,16 @@ impl RenderStorage for InMemoryStorage {
             self.checkpoints.write().await.push(render_checkpoint);
         }
 
+        Ok(())
+    }
+
+    async fn delete_render_checkpoint(
+        &self,
+        id: RenderID,
+        checkpoint: u32,
+    ) -> Result<(), StorageError> {
+        let mut checkpoints = self.checkpoints.write().await;
+        checkpoints.retain(|c| !(c.render_id == id && c.iteration == checkpoint));
         Ok(())
     }
 
