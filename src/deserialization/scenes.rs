@@ -1,17 +1,16 @@
 use std::sync::Arc;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
-    geometry::compounds::{List, BVH},
-    scene::Scene,
+    geometry::compounds::{BVH, List},
+    tracing::Scene,
 };
 
-use super::{cameras::CameraRefOrInline, geometrics::GeometricRefOrInline, Build, Builts};
+use super::{Build, Builts, cameras::CameraRefOrInline, geometrics::GeometricRefOrInline};
 
-#[derive(Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[serde(untagged)]
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case", untagged)]
 pub enum SceneRefOrInline {
     Ref(String),
     Inline(SceneData),
@@ -23,24 +22,25 @@ impl Build<Scene> for SceneRefOrInline {
             Self::Ref(name) => Ok(builts
                 .scenes
                 .get(name)
-                .ok_or(format!(
-                    "Scene {} not found. Is it specified in the scenes list?",
-                    name
-                ))?
+                .ok_or_else(|| {
+                    format!(
+                        "Scene {} not found. Is it specified in the scenes list?",
+                        name
+                    )
+                })?
                 .clone()),
             Self::Inline(data) => data.build(builts),
         }
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SceneData {
-    name: String,
-    geometrics: Vec<GeometricRefOrInline>,
-    use_bvh: bool,
-    camera: CameraRefOrInline,
-    background_color: [f64; 3],
+    pub geometrics: Vec<GeometricRefOrInline>,
+    pub use_bvh: bool,
+    pub camera: CameraRefOrInline,
+    pub background_color: [f64; 3],
 }
 
 impl Build<Scene> for SceneData {
@@ -52,7 +52,6 @@ impl Build<Scene> for SceneData {
         }
         let camera = self.camera.build(builts)?;
         let scene = Scene {
-            name: self.name.clone(),
             world: if self.use_bvh {
                 Arc::new(BVH::from_list(world))
             } else {

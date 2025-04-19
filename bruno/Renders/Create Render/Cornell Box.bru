@@ -1,0 +1,34 @@
+meta {
+  name: Cornell Box
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{host}}/renders
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "cornell_box",
+    "parameters": {
+      "image_dimensions": [
+        500,
+        500
+      ],
+      "tile_dimensions": [
+        1,
+        1
+      ],
+      "gamma_correction": 2,
+      "samples_per_checkpoint": 10,
+      "total_checkpoints": 100,
+      "saved_checkpoint_limit":1,
+      "max_bounces": 50,
+      "use_scaling_truncation": true
+    },
+    "active_scene": "__cornell_box"
+  }
+}

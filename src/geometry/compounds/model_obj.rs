@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{primitives::Triangle, Geometric, Point, Ray, RayHit, Vector, AABB},
+    geometry::{AABB, Geometric, Point, Ray, RayHit, Vector, primitives::Triangle},
     shading::materials::Material,
     utils::Interval,
 };
 
-use super::{List, BVH};
+use super::{BVH, List};
 
 pub struct ModelObj {
     geometric: ListOrBVH,
@@ -37,7 +37,6 @@ impl ModelObj {
         let offset = origin.0;
 
         let mut triangles = List::new();
-        let mut bounding_box = AABB::EMPTY;
         for model in models {
             let mesh = &model.mesh;
 
@@ -52,7 +51,9 @@ impl ModelObj {
             if !recalculate_normals && mesh.positions.len() != mesh.normals.len() {
                 return Err(format!(
                     "Mesh for model \"{}\" has different number of positions ({}) and normals ({}) (maybe you meant to set \"recalculate_normals\" to true?)",
-                    model.name, mesh.positions.len(), mesh.normals.len()
+                    model.name,
+                    mesh.positions.len(),
+                    mesh.normals.len()
                 ));
             }
 

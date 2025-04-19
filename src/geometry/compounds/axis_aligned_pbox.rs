@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{primitives::Parallelogram, Geometric, Point, Ray, RayHit, Vector, AABB},
+    geometry::{AABB, Geometric, Point, Ray, RayHit, Vector, primitives::Parallelogram},
     shading::materials::Material,
     utils::Interval,
 };

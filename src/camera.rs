@@ -4,9 +4,8 @@ use rand::Rng;
 
 use crate::{
     geometry::{Geometric, Point, Ray, Vector},
-    parameters::Parameters,
-    scene::Scene,
     shading::Color,
+    tracing::{RenderParameters, Scene},
     utils::{Angle, Interval},
 };
 
@@ -55,7 +54,7 @@ impl Camera {
         }
     }
 
-    pub fn initialize(&mut self, parameters: &Parameters, scene: &Scene) {
+    pub fn initialize(&mut self, parameters: &RenderParameters, scene: &Scene) {
         self.center = self.eye_location;
         self.background_color = scene.background_color;
 
@@ -152,7 +151,7 @@ impl Camera {
 
             // if the surface is black, it's not going to let any incoming light contribute to the outgoing color
             // so we can safely say no light is reflected and simply return the accumulated color so far
-            if bounces == max_bounces && reflectance == Color::BLACK {
+            if bounces >= max_bounces || reflectance == Color::BLACK {
                 return accumulated_color;
             }
 
@@ -176,7 +175,7 @@ impl Camera {
         // at this point, we must have failed to intersect.
         //
         // normally, we could just return the background color.
-        // however, because of a desgin decision I made, it is completely possible
+        // however, because of a design decision I made, it is completely possible
         // to have a material be both reflective and emissive. this means we need to
         // account for cases where the accumulated_color is non-zero due to emissive
         // materials AND the ray is reflected.

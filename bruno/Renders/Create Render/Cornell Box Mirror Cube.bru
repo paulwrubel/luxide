@@ -1,0 +1,111 @@
+meta {
+  name: Cornell Box Mirror Cube
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{host}}/renders
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "cornell_box_mirror_cube_uhd",
+    "parameters": {
+      "image_dimensions": [
+        2000,
+        2000
+      ],
+      "tile_dimensions": [
+        1,
+        1
+      ],
+      "gamma_correction": 2,
+      "samples_per_checkpoint": 10,
+      "total_checkpoints": 100,
+      "max_bounces": 50,
+      "use_scaling_truncation": true
+    },
+    "active_scene": {
+      "geometrics": [
+        "__cornell_box_room",
+        "mirror_cube"
+      ],
+      "use_bvh": true,
+      "camera": "__cornell_box",
+      "background_color": [
+        0,
+        0,
+        0
+      ]
+    },
+    "geometrics": {
+      "glass_cube": {
+        "type": "rotate_x",
+        "degrees": 45,
+        "around": [
+          0.5,
+          0.5,
+          -0.5
+        ],
+        "geometric": {
+          "type": "rotate_y",
+          "degrees": 45,
+          "around": [
+            0.5,
+            0.5,
+            -0.5
+          ],
+          "geometric": {
+            "type": "box",
+            "a": [
+              0.3,
+              0.3,
+              -0.3
+            ],
+            "b": [
+              0.7,
+              0.7,
+              -0.7
+            ],
+            "material": "__dielectric_glass"
+          }
+        }
+      },
+      "mirror_cube": {
+        "type": "rotate_x",
+        "degrees": 45,
+        "around": [
+          0.5,
+          0.5,
+          -0.5
+        ],
+        "geometric": {
+          "type": "rotate_y",
+          "degrees": 45,
+          "around": [
+            0.5,
+            0.5,
+            -0.5
+          ],
+          "geometric": {
+            "type": "box",
+            "a": [
+              0.3,
+              0.3,
+              -0.3
+            ],
+            "b": [
+              0.7,
+              0.7,
+              -0.7
+            ],
+            "material": "__specular_mirror"
+          }
+        }
+      }
+    }
+  }
+}

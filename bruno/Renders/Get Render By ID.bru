@@ -1,0 +1,19 @@
+meta {
+  name: Get Render By ID
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{host}}/renders/:id?format=light
+  body: none
+  auth: inherit
+}
+
+params:query {
+  format: light
+}
+
+params:path {
+  id: 2
+}

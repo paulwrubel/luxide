@@ -1,0 +1,5 @@
+BEGIN;
+
+DROP VIEW IF EXISTS render_states;
+
+COMMIT;

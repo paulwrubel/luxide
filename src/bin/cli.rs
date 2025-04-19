@@ -1,26 +1,26 @@
-use std::{collections::HashMap, env, fs, num::NonZeroUsize, sync::Arc, thread, time::Instant};
+use std::{fs, path::PathBuf, sync::Arc};
 
+use clap::Parser;
 use luxide::{
     camera::Camera,
+    deserialization::RenderConfig,
     geometry::{
-        compounds::{AxisAlignedPBox, List, BVH},
+        Geometric, Point, Vector,
+        compounds::{AxisAlignedPBox, BVH, List},
         instances::{RotateYAxis, Translate},
         primitives::{Parallelogram, Sphere},
-        volumes, Geometric, Point, Vector,
+        volumes,
     },
-    parameters::Parameters,
-    scene::Scene,
     shading::{
+        Color, Texture,
         materials::{Dielectric, Lambertian, Material, Specular},
         textures::{Checker, Image8Bit, Noise, SolidColor},
-        Color, Texture,
     },
-    tracer::Tracer,
-    utils::{self, Angle},
+    tracing::{FileStorage, RenderManager, RenderState, RenderStorage, Scene, User},
+    utils::Angle,
 };
 use noise::{Perlin, Turbulence};
 use rand::Rng;
-use time::OffsetDateTime;
 
 const _SD: (u32, u32) = (640, 480);
 const _HD: (u32, u32) = (1280, 720);
@@ -32,120 +32,88 @@ const _16K: (u32, u32) = (15360, 8640);
 
 const OUTPUT_DIR: &str = "./output";
 
-fn main() -> Result<(), String> {
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    /// Path to the JSON configuration file (optional)
+    config_filename: String,
+    /// Output directory for render files
+    #[arg(short, long, default_value = OUTPUT_DIR)]
+    output_dir: String,
+}
+
+#[tokio::main]
+async fn main() -> Result<(), String> {
     println!("Starting Luxide...");
 
-    let args: Vec<String> = env::args().collect();
-    if args.len() > 1 {
-        run(&args[1])
-    } else {
-        run_legacy()
+    let args = Args::parse();
+
+    // Create storage backend
+    let storage: Arc<dyn RenderStorage> =
+        Arc::new(FileStorage::new(PathBuf::from(&args.output_dir))?);
+
+    // Config file mode
+    println!("Using configuration file: {}", args.config_filename);
+    let render_config_str =
+        fs::read_to_string(&args.config_filename).map_err(|err| err.to_string())?;
+    let render_config: RenderConfig = serde_json::from_str(&render_config_str)
+        .map_err(|err| format!("Failed to parse configuration file: {}", err))?;
+
+    // create render manager
+    let render_manager = Arc::new(
+        RenderManager::new(Arc::clone(&storage))
+            .await
+            .map_err(|e| format!("Failed to initialize render manager: {}", e))?,
+    );
+
+    // start render manager
+    let (_, res2) = tokio::join!(
+        render_manager.start(),
+        create_render_and_poll_completion(Arc::clone(&render_manager), render_config)
+    );
+
+    res2.map_err(|e| format!("Failed to create render: {}", e))
+}
+
+async fn create_render_and_poll_completion(
+    render_manager: Arc<RenderManager>,
+    render_config: RenderConfig,
+) -> Result<(), String> {
+    let render = render_manager
+        .create_render(
+            render_config,
+            User::new_admin(1, 1, "".to_string(), "".to_string()),
+        )
+        .await
+        .map_err(|e| format!("Failed to create render: {}", e))?;
+
+    // Poll until render is complete
+    loop {
+        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+
+        let current_render = render_manager
+            .get_render(render.id, 1)
+            .await
+            .map_err(|e| format!("Failed to get render status: {}", e))?;
+
+        match current_render {
+            Some(r) => match r.state {
+                RenderState::FinishedCheckpointIteration(n)
+                    if n == r.config.parameters.total_checkpoints =>
+                {
+                    break;
+                }
+                _ => continue,
+            },
+            None => return Err("Render disappeared".to_string()),
+        }
     }
-}
 
-fn run(config_filename: &str) -> Result<(), String> {
-    let local_utc_offset = time::UtcOffset::current_local_offset().unwrap();
-
-    println!("Parsing configuration file...");
-    let (parameters, scene) = luxide::deserialization::parse_json(config_filename)?;
-
-    let now = OffsetDateTime::now_utc().to_offset(local_utc_offset);
-    let formatted_timestamp = utils::get_formatted_timestamp_for(now);
-
-    let sub_folder = format!("{}_{}", scene.name, formatted_timestamp);
-
-    let output_dir = format!("{OUTPUT_DIR}/{sub_folder}");
-    println!("Initializing output directory: {output_dir}");
-    fs::create_dir_all(&output_dir).map_err(|err| err.to_string())?;
-
-    let thread_count = thread::available_parallelism()
-        .unwrap_or(NonZeroUsize::new(24).unwrap())
-        .get();
-
-    let mut tracer = Tracer::new(thread_count, local_utc_offset);
-    println!(
-        "Rendering scene \"{}\" with {} threads...",
-        scene.name, thread_count
-    );
-    let start = Instant::now();
-    match tracer.render(&parameters, &scene, 2) {
-        Ok(()) => {
-            println!("Saved image!");
-        }
-        Err(e) => {
-            println!("Failed to save image: {e}");
-        }
-    };
-    let elapsed = start.elapsed();
-    println!("Done in {}", utils::format_duration(elapsed));
+    println!("Render completed successfully!");
     Ok(())
 }
 
-fn run_legacy() -> Result<(), String> {
-    let selected_scene_name = "final_scene";
-
-    let local_utc_offset = time::UtcOffset::current_local_offset().unwrap();
-
-    println!("Assembling scenes...");
-    let mut scenes = HashMap::new();
-    scenes.insert("random_spheres", random_spheres());
-    scenes.insert("two_spheres", two_spheres());
-    scenes.insert("earth", earth());
-    scenes.insert("two_perlin_spheres", two_perlin_spheres());
-    scenes.insert("quads", quads());
-    scenes.insert("simple_light", simple_light());
-    scenes.insert("cornell_box", cornell_box());
-    scenes.insert("final_scene", final_scene());
-
-    let scene = scenes.get_mut(selected_scene_name).unwrap();
-
-    let now = OffsetDateTime::now_utc().to_offset(local_utc_offset);
-    let formatted_timestamp = utils::get_formatted_timestamp_for(now);
-    let output_dir = format!(
-        "{}/{}_{}",
-        OUTPUT_DIR, selected_scene_name, formatted_timestamp
-    );
-    println!("Initializing output directory: {output_dir}");
-    fs::create_dir_all(&output_dir).map_err(|err| err.to_string())?;
-
-    let parameters = Parameters {
-        output_dir: OUTPUT_DIR.to_string(),
-        use_subdir: true,
-        file_basename: selected_scene_name.to_string(),
-        file_ext: "png".to_string(),
-        image_dimensions: (6000, 6000),
-        tile_dimensions: (10, 10),
-
-        gamma_correction: 2.0,
-        samples_per_round: 25,
-        round_limit: None,
-        max_bounces: 40,
-        use_scaling_truncation: true,
-
-        pixels_per_progress_update: 100000,
-        progress_memory: 50,
-    };
-
-    let thread_count = thread::available_parallelism()
-        .unwrap_or(NonZeroUsize::new(24).unwrap())
-        .get();
-
-    let mut tracer = Tracer::new(thread_count, local_utc_offset);
-    println!("Rendering scene \"{selected_scene_name}\" with {thread_count} threads...");
-    let start = Instant::now();
-    match tracer.render(&parameters, &scene, 2) {
-        Ok(()) => {
-            println!("Saved image!");
-        }
-        Err(e) => {
-            println!("Failed to save image: {e}");
-        }
-    };
-    let elapsed = start.elapsed();
-    println!("Done in {}", utils::format_duration(elapsed));
-    Ok(())
-}
-
+#[allow(dead_code)]
 fn final_scene() -> Scene {
     let mut rng = rand::thread_rng();
 
@@ -349,13 +317,14 @@ fn final_scene() -> Scene {
     );
 
     Scene {
-        name: "final_scene".to_string(),
+        // name: "final_scene".to_string(),
         camera,
         world,
         background_color: Color::BLACK,
     }
 }
 
+#[allow(dead_code)]
 fn cornell_box() -> Scene {
     // Textures
     let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::BLACK));
@@ -498,13 +467,14 @@ fn cornell_box() -> Scene {
     );
 
     Scene {
-        name: "cornell_box".to_string(),
+        // name: "cornell_box".to_string(),
         camera,
         world: Arc::new(world),
         background_color: Color::BLACK,
     }
 }
 
+#[allow(dead_code)]
 fn simple_light() -> Scene {
     // Textures
     let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::BLACK));
@@ -580,13 +550,14 @@ fn simple_light() -> Scene {
     );
 
     Scene {
-        name: "simple_light".to_string(),
+        // name: "simple_light".to_string(),
         camera,
         world: Arc::new(world),
         background_color: Color::BLACK,
     }
 }
 
+#[allow(dead_code)]
 fn quads() -> Scene {
     // Textures
     let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::BLACK));
@@ -676,13 +647,14 @@ fn quads() -> Scene {
     );
 
     Scene {
-        name: "quads".to_string(),
+        // name: "quads".to_string(),
         camera,
         world: Arc::new(world),
         background_color: Color::new(0.7, 0.8, 1.0),
     }
 }
 
+#[allow(dead_code)]
 fn two_perlin_spheres() -> Scene {
     // Textures
     let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::BLACK));
@@ -741,13 +713,14 @@ fn two_perlin_spheres() -> Scene {
     );
 
     Scene {
-        name: "two_perlin_spheres".to_string(),
+        // name: "two_perlin_spheres".to_string(),
         camera,
         world: Arc::new(world),
         background_color: Color::new(0.7, 0.8, 1.0),
     }
 }
 
+#[allow(dead_code)]
 fn earth() -> Scene {
     // Textures
     let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::BLACK));
@@ -818,13 +791,14 @@ fn earth() -> Scene {
     );
 
     Scene {
-        name: "earth".to_string(),
+        // name: "earth".to_string(),
         camera,
         world: Arc::new(world),
         background_color: Color::new(0.7, 0.8, 1.0),
     }
 }
 
+#[allow(dead_code)]
 fn two_spheres() -> Scene {
     // Materials
     let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::BLACK));
@@ -870,13 +844,14 @@ fn two_spheres() -> Scene {
     );
 
     Scene {
-        name: "two_spheres".to_string(),
+        // name: "two_spheres".to_string(),
         world: Arc::new(world),
         camera,
         background_color: Color::new(0.7, 0.8, 1.0),
     }
 }
 
+#[allow(dead_code)]
 fn random_spheres() -> Scene {
     // Textures
     let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::BLACK));
@@ -1006,7 +981,7 @@ fn random_spheres() -> Scene {
     );
 
     Scene {
-        name: "random_spheres".to_string(),
+        // name: "random_spheres".to_string(),
         world,
         camera,
         background_color: Color::new(0.7, 0.8, 1.0),

@@ -1,11 +1,12 @@
 use std::ops::{Index, IndexMut, Neg};
 
 use auto_ops::{impl_op_ex, impl_op_ex_commutative};
+use bincode::{Decode, Encode};
 use rand::Rng;
 
 use crate::utils::Angle;
 
-#[derive(Debug, Copy, Clone, PartialEq, Default)]
+#[derive(Debug, Copy, Clone, PartialEq, Default, Encode, Decode)]
 pub struct Vector {
     pub x: f64,
     pub y: f64,
@@ -36,17 +37,25 @@ impl Vector {
         y: 0.0,
         z: 0.0,
     };
+    pub const UNIT_X: Self = Self::RIGHT;
 
     pub const UP: Self = Self {
         x: 0.0,
         y: 1.0,
         z: 0.0,
     };
+    pub const UNIT_Y: Self = Self::UP;
 
     pub const FORWARD: Self = Self {
         x: 0.0,
         y: 0.0,
         z: -1.0,
+    };
+
+    pub const UNIT_Z: Self = Self {
+        x: 0.0,
+        y: 0.0,
+        z: 1.0,
     };
 
     pub fn new(x: f64, y: f64, z: f64) -> Self {

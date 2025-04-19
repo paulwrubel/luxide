@@ -1,10 +1,10 @@
 #![forbid(unsafe_code)]
 
 pub mod camera;
+pub mod config;
 pub mod deserialization;
 pub mod geometry;
-pub mod parameters;
-pub mod scene;
+pub mod server;
 pub mod shading;
-pub mod tracer;
+pub mod tracing;
 pub mod utils;

@@ -1,22 +1,22 @@
 use std::sync::Arc;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     geometry::{
-        compounds::{AxisAlignedPBox, List, ModelObj, BVH},
+        Geometric,
+        compounds::{AxisAlignedPBox, BVH, List, ModelObj},
         instances::{RotateXAxis, RotateYAxis, RotateZAxis, Translate},
         primitives::{Parallelogram, Sphere, Triangle},
-        volumes, Geometric,
+        volumes,
     },
     utils::Angle,
 };
 
-use super::{materials::MaterialRefOrInline, Build, Builts};
+use super::{Build, Builts, materials::MaterialRefOrInline};
 
-#[derive(Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[serde(untagged)]
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case", untagged)]
 pub enum GeometricRefOrInline {
     Ref(String),
     Inline(Box<GeometricData>),
@@ -34,9 +34,8 @@ impl Build<Arc<dyn Geometric>> for GeometricRefOrInline {
     }
 }
 
-#[derive(Deserialize)]
-#[serde(tag = "type")]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(tag = "type", deny_unknown_fields)]
 pub enum GeometricData {
     #[serde(rename = "box")]
     CompoundAxisAlignedPBox {
@@ -104,6 +103,9 @@ pub enum GeometricData {
         a: [f64; 3],
         b: [f64; 3],
         c: [f64; 3],
+        a_normal: Option<[f64; 3]>,
+        b_normal: Option<[f64; 3]>,
+        c_normal: Option<[f64; 3]>,
         is_culled: Option<bool>,
         material: MaterialRefOrInline,
     },
@@ -253,15 +255,21 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
                 a,
                 b,
                 c,
+                a_normal,
+                b_normal,
+                c_normal,
                 is_culled,
                 material,
             } => {
                 let material = material.build(builts)?;
 
-                Ok(Arc::new(Triangle::new(
+                Ok(Arc::new(Triangle::new_with_optional_normals(
                     (*a).into(),
                     (*b).into(),
                     (*c).into(),
+                    a_normal.as_ref().map(|a| (*a).into()),
+                    b_normal.as_ref().map(|b| (*b).into()),
+                    c_normal.as_ref().map(|c| (*c).into()),
                     (*is_culled).unwrap_or(false),
                     material,
                 )))

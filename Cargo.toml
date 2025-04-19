@@ -1,7 +1,15 @@
+[[bin]]
+name = "luxide-api"
+path = "src/bin/api.rs"
+
+[[bin]]
+name = "luxide-cli"
+path = "src/bin/cli.rs"
+
 [package]
 name = "luxide"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 description = "A path tracer"
 license = "MIT"
 repository = "https://github.com/paulwrubel/luxide"
@@ -13,7 +21,6 @@ inherits = "dev"
 opt-level = 1
 
 [dependencies]
-time = { version = "0.3.30", features = ["formatting", "local-offset", "macros", "parsing"] }
 auto_ops = "0.3.0"
 image = "0.24.7"
 noise = "0.8.2"
@@ -25,6 +32,22 @@ serde = { version = "1.0.193", features = ["derive"] }
 indexmap = { version = "2.1.0", features = ["serde"] }
 serde_json = "1.0.108"
 tobj = "4.0.0"
+axum = { version = "0.8.1", features = ["macros"] }
+clap = { version = "4.5.32", features = ["derive"] }
+tokio = { version = "1.44.1", features = ["full"] }
+base64 = "0.22.1"
+axum-extra = { version = "0.10.0", features = ["cookie-signed", "typed-header"] }
+futures = "0.3.31"
+tokio-stream = "0.1.17"
+async-trait = "0.1.88"
+sqlx = { version = "0.8.3", features = ["postgres", "runtime-tokio", "chrono"] }
+bincode = { version = "2.0.1", features = ["derive"] }
+chrono = { version = "0.4.40", features = ["serde"] }
+reqwest = "0.12.15"
+oauth2 = { version = "5.0.0", features = ["reqwest"] }
+uuid = { version = "1.16.0", features = ["serde", "v4"] }
+dashmap = "6.1.0"
+jsonwebtoken = "9.3.1"
 
 [[bench]]
 name = "aabb"

@@ -1,0 +1,16 @@
+meta {
+  name: Get Render Image By ID
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{host}}/renders/:id/checkpoint/:checkpoint_iteration
+  body: none
+  auth: inherit
+}
+
+params:path {
+  checkpoint_iteration: 100
+  id: 4
+}

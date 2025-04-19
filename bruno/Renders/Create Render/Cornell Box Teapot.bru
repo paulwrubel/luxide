@@ -1,0 +1,69 @@
+meta {
+  name: Cornell Box Teapot
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{host}}/renders
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "cornell_box_teapot",
+    "parameters": {
+      "image_dimensions": [
+        2000,
+        2000
+      ],
+      "tile_dimensions": [
+        1,
+        1
+      ],
+      "gamma_correction": 2,
+      "samples_per_checkpoint": 100,
+      "total_checkpoints": 100,
+      "max_bounces": 50,
+      "use_scaling_truncation": true
+    },
+    "active_scene": {
+      "geometrics": [
+        "__cornell_box_room",
+        "utah_teapot"
+      ],
+      "use_bvh": true,
+      "camera": "__cornell_box",
+      "background_color": [
+        0,
+        0,
+        0
+      ]
+    },
+    "geometrics": {
+      "utah_teapot": {
+        "type": "rotate_y",
+        "degrees": 135,
+        "around": [
+          0.5,
+          0.000001,
+          -0.5
+        ],
+        "geometric": {
+          "type": "obj_model",
+          "filename": "./models/teapot_normals.obj",
+          "origin": [
+            0.5,
+            0.1,
+            -0.5
+          ],
+          "scale": 0.15,
+          "recalculate_normals": false,
+          "use_bvh": true,
+          "material": "__dielectric_glass"
+        }
+      }
+    }
+  }
+}

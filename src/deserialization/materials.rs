@@ -1,14 +1,13 @@
 use std::sync::Arc;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::shading::materials::{Dielectric, Lambertian, Material, Specular};
 
-use super::{textures::TextureRefOrInline, Build, Builts};
+use super::{Build, Builts, textures::TextureRefOrInline};
 
-#[derive(Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[serde(untagged)]
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case", untagged)]
 pub enum MaterialRefOrInline {
     Ref(String),
     Inline(Box<MaterialData>),
@@ -26,10 +25,8 @@ impl Build<Arc<dyn Material>> for MaterialRefOrInline {
     }
 }
 
-#[derive(Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[serde(tag = "type")]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case", tag = "type", deny_unknown_fields)]
 pub enum MaterialData {
     Dielectric {
         reflectance_texture: TextureRefOrInline,

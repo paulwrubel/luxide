@@ -4,3 +4,11 @@
 
 # Output directory for images
 /output
+
+# sqlx
+/.sqlx
+
+# Secrets
+/*.secret.json
+/*.secrets.json
+/*.pem

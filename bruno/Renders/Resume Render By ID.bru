@@ -1,0 +1,15 @@
+meta {
+  name: Resume Render By ID
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{host}}/renders/:id/resume
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: 10
+}

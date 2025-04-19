@@ -1,0 +1,21 @@
+meta {
+  name: Update Render Total Checkpoints
+  type: http
+  seq: 6
+}
+
+put {
+  url: {{host}}/renders/:id/parameters/total_checkpoints
+  body: json
+  auth: inherit
+}
+
+params:path {
+  id: 2
+}
+
+body:json {
+  {
+    "new_total_checkpoints": 50
+  }
+}

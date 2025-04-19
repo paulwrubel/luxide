@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::{
     geometry::{Point, Ray, RayHit, Vector},
-    shading::{textures::SolidColor, Color, Texture},
+    shading::{Color, Texture, textures::SolidColor},
 };
 
 use super::Material;

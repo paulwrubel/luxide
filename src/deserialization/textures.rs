@@ -1,17 +1,16 @@
 use std::sync::Arc;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::shading::{
-    textures::{Checker, Image8Bit, SolidColor},
     Texture,
+    textures::{Checker, Image8Bit, SolidColor},
 };
 
 use super::{Build, Builts};
 
-#[derive(Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[serde(untagged)]
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case", untagged)]
 pub enum TextureRefOrInline {
     Ref(String),
     Inline(Box<TextureData>),
@@ -29,10 +28,8 @@ impl Build<Arc<dyn Texture>> for TextureRefOrInline {
     }
 }
 
-#[derive(Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[serde(tag = "type")]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case", tag = "type", deny_unknown_fields)]
 pub enum TextureData {
     Checker {
         scale: f64,

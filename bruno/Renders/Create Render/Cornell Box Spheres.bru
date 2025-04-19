@@ -1,0 +1,68 @@
+meta {
+  name: Cornell Box Spheres
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{host}}/renders
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "cornell_box_spheres_hd",
+    "parameters": {
+      "image_dimensions": [
+        1200,
+        1200
+      ],
+      "tile_dimensions": [
+        1,
+        1
+      ],
+      "gamma_correction": 2,
+      "samples_per_checkpoint": 10,
+      "total_checkpoints": 100,
+      "max_bounces": 50,
+      "use_scaling_truncation": true
+    },
+    "active_scene": {
+      "geometrics": [
+        "__cornell_box_room",
+        "far_left_sphere",
+        "near_right_sphere"
+      ],
+      "use_bvh": true,
+      "camera": "__cornell_box",
+      "background_color": [
+        0,
+        0,
+        0
+      ]
+    },
+    "geometrics": {
+      "far_left_sphere": {
+        "type": "sphere",
+        "center": [
+          0.3,
+          0.2001,
+          -0.7
+        ],
+        "radius": 0.2,
+        "material": "__specular_mirror"
+      },
+      "near_right_sphere": {
+        "type": "sphere",
+        "center": [
+          0.7,
+          0.2001,
+          -0.3
+        ],
+        "radius": 0.2,
+        "material": "__dielectric_glass"
+      }
+    }
+  }
+}
