@@ -92,7 +92,7 @@ async fn create_render_and_poll_completion(
         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
 
         let current_render = render_manager
-            .get_render(render.id)
+            .get_render(render.id, 1)
             .await
             .map_err(|e| format!("Failed to get render status: {}", e))?;
 

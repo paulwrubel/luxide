@@ -11,12 +11,16 @@ use axum_extra::{
 };
 use image::ImageOutputFormat;
 
-use crate::tracing::{RenderID, RenderManager};
+use crate::{
+    server::Claims,
+    tracing::{RenderID, RenderManager, UserID},
+};
 
 use crate::server::LuxideState;
 
 pub async fn get_earliest_render_checkpoint_image(
     State(state): State<LuxideState>,
+    claims: Claims,
     Path(id): Path<RenderID>,
 ) -> Response {
     println!(
@@ -26,11 +30,12 @@ pub async fn get_earliest_render_checkpoint_image(
 
     match state
         .render_manager
-        .get_earliest_render_checkpoint_iteration(id)
+        .get_earliest_render_checkpoint_iteration(id, claims.sub)
         .await
     {
         Ok(Some(iteration)) => {
-            get_render_checkpoint_image_response(state.render_manager, id, iteration).await
+            get_render_checkpoint_image_response(state.render_manager, id, iteration, claims.sub)
+                .await
         }
         Ok(None) => StatusCode::NOT_FOUND.into_response(),
         Err(e) => e.into(),
@@ -39,6 +44,7 @@ pub async fn get_earliest_render_checkpoint_image(
 
 pub async fn get_latest_render_checkpoint_image(
     State(state): State<LuxideState>,
+    claims: Claims,
     Path(id): Path<RenderID>,
 ) -> Response {
     println!(
@@ -48,11 +54,12 @@ pub async fn get_latest_render_checkpoint_image(
 
     match state
         .render_manager
-        .get_latest_render_checkpoint_iteration(id)
+        .get_latest_render_checkpoint_iteration(id, claims.sub)
         .await
     {
         Ok(Some(iteration)) => {
-            get_render_checkpoint_image_response(state.render_manager, id, iteration).await
+            get_render_checkpoint_image_response(state.render_manager, id, iteration, claims.sub)
+                .await
         }
         Ok(None) => StatusCode::NOT_FOUND.into_response(),
         Err(e) => e.into(),
@@ -61,6 +68,7 @@ pub async fn get_latest_render_checkpoint_image(
 
 pub async fn get_render_checkpoint_image(
     State(state): State<LuxideState>,
+    claims: Claims,
     Path((id, checkpoint_iteration)): Path<(RenderID, u32)>,
 ) -> Response {
     println!(
@@ -68,16 +76,18 @@ pub async fn get_render_checkpoint_image(
         id, checkpoint_iteration
     );
 
-    get_render_checkpoint_image_response(state.render_manager, id, checkpoint_iteration).await
+    get_render_checkpoint_image_response(state.render_manager, id, checkpoint_iteration, claims.sub)
+        .await
 }
 
 async fn get_render_checkpoint_image_response(
     render_manager: Arc<RenderManager>,
     id: RenderID,
     checkpoint_iteration: u32,
+    user_id: UserID,
 ) -> Response {
     match render_manager
-        .get_render_checkpoint_as_image(id, checkpoint_iteration)
+        .get_render_checkpoint_as_image(id, checkpoint_iteration, user_id)
         .await
     {
         Ok(Some(image)) => {

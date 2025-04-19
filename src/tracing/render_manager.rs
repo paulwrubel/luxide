@@ -15,7 +15,7 @@ use crate::{
     utils::{ProgressInfo, ProgressTracker},
 };
 
-use super::{Render, RenderCheckpoint, RenderID, RenderStorage, StorageError, User};
+use super::{Render, RenderCheckpoint, RenderID, RenderStorage, Role, StorageError, User, UserID};
 
 use std::collections::HashSet;
 
@@ -381,24 +381,49 @@ impl RenderManager {
         join_handle
     }
 
-    pub async fn get_render(&self, id: RenderID) -> Result<Option<Render>, RenderManagerError> {
+    pub async fn get_render(
+        &self,
+        id: RenderID,
+        user_id: UserID,
+    ) -> Result<Option<Render>, RenderManagerError> {
         if !self.storage.render_exists(id).await? {
             return Ok(None);
+        }
+
+        if !self.storage.render_belongs_to(id, user_id).await? {
+            return Err(RenderManagerError::ClientError(
+                StatusCode::FORBIDDEN,
+                "Forbidden".to_string(),
+            ));
         }
 
         self.storage.get_render(id).await.map_err(|e| e.into())
     }
 
-    pub async fn get_all_renders(&self) -> Result<Vec<Render>, RenderManagerError> {
-        self.storage.get_all_renders().await.map_err(|e| e.into())
+    pub async fn get_all_renders(
+        &self,
+        user_id: UserID,
+    ) -> Result<Vec<Render>, RenderManagerError> {
+        self.storage
+            .get_all_renders_for_user_id(user_id)
+            .await
+            .map_err(|e| e.into())
     }
 
     pub async fn get_render_stats(
         &self,
         id: RenderID,
+        user_id: UserID,
     ) -> Result<Option<RenderStats>, RenderManagerError> {
         if !self.storage.render_exists(id).await? {
             return Ok(None);
+        }
+
+        if !self.storage.render_belongs_to(id, user_id).await? {
+            return Err(RenderManagerError::ClientError(
+                StatusCode::FORBIDDEN,
+                "Forbidden".to_string(),
+            ));
         }
 
         let render = self.storage.get_render(id).await?.unwrap();
@@ -557,9 +582,17 @@ impl RenderManager {
     pub async fn get_earliest_render_checkpoint_iteration(
         &self,
         id: RenderID,
+        user_id: UserID,
     ) -> Result<Option<u32>, RenderManagerError> {
         if !self.storage.render_exists(id).await? {
             return Ok(None);
+        }
+
+        if !self.storage.render_belongs_to(id, user_id).await? {
+            return Err(RenderManagerError::ClientError(
+                StatusCode::FORBIDDEN,
+                "Forbidden".to_string(),
+            ));
         }
 
         self.storage
@@ -571,9 +604,17 @@ impl RenderManager {
     pub async fn get_latest_render_checkpoint_iteration(
         &self,
         id: RenderID,
+        user_id: UserID,
     ) -> Result<Option<u32>, RenderManagerError> {
         if !self.storage.render_exists(id).await? {
             return Ok(None);
+        }
+
+        if !self.storage.render_belongs_to(id, user_id).await? {
+            return Err(RenderManagerError::ClientError(
+                StatusCode::FORBIDDEN,
+                "Forbidden".to_string(),
+            ));
         }
 
         self.storage
@@ -586,9 +627,17 @@ impl RenderManager {
         &self,
         id: RenderID,
         iteration: u32,
+        user_id: UserID,
     ) -> Result<Option<RenderCheckpoint>, RenderManagerError> {
         if !self.storage.render_exists(id).await? {
             return Ok(None);
+        }
+
+        if !self.storage.render_belongs_to(id, user_id).await? {
+            return Err(RenderManagerError::ClientError(
+                StatusCode::FORBIDDEN,
+                "Forbidden".to_string(),
+            ));
         }
 
         if !self.storage.render_checkpoint_exists(id, iteration).await? {
@@ -604,7 +653,17 @@ impl RenderManager {
     pub async fn delete_render_and_checkpoints(
         &self,
         id: RenderID,
+        user_id: UserID,
     ) -> Result<(), RenderManagerError> {
+        if self.storage.render_exists(id).await?
+            && !self.storage.render_belongs_to(id, user_id).await?
+        {
+            return Err(RenderManagerError::ClientError(
+                StatusCode::FORBIDDEN,
+                "Forbidden".to_string(),
+            ));
+        }
+
         // check if render is running
         let is_running = self.running_renders.lock().unwrap().contains(&id);
         if is_running {
@@ -621,9 +680,13 @@ impl RenderManager {
             .map_err(|e| e.into())
     }
 
-    pub async fn pause_render(&self, id: RenderID) -> Result<(), RenderManagerError> {
-        // get render
-        let render = match self.get_render(id).await? {
+    pub async fn pause_render(
+        &self,
+        id: RenderID,
+        user_id: UserID,
+    ) -> Result<(), RenderManagerError> {
+        // get render (which will also check permissions)
+        let render = match self.get_render(id, user_id).await? {
             Some(r) => r,
             None => {
                 return Err(RenderManagerError::ClientError(
@@ -660,9 +723,13 @@ impl RenderManager {
         }
     }
 
-    pub async fn resume_render(&self, id: RenderID) -> Result<(), RenderManagerError> {
-        // get render
-        let render = match self.get_render(id).await? {
+    pub async fn resume_render(
+        &self,
+        id: RenderID,
+        user_id: UserID,
+    ) -> Result<(), RenderManagerError> {
+        // get render (which will also check permissions)
+        let render = match self.get_render(id, user_id).await? {
             Some(r) => r,
             None => {
                 return Err(RenderManagerError::ClientError(
@@ -718,9 +785,10 @@ impl RenderManager {
         &self,
         id: RenderID,
         new_total_checkpoints: u32,
+        user_id: UserID,
     ) -> Result<(), RenderManagerError> {
-        // get render
-        let render = match self.get_render(id).await? {
+        // get render (which will also check permissions)
+        let render = match self.get_render(id, user_id).await? {
             Some(r) => r,
             None => {
                 return Err(RenderManagerError::ClientError(
@@ -776,12 +844,20 @@ impl RenderManager {
         &self,
         id: RenderID,
         iteration: u32,
+        user_id: UserID,
     ) -> Result<Option<RgbaImage>, RenderManagerError> {
-        let render = self.storage.get_render(id).await?;
-        let params = match render {
-            Some(r) => r.config.parameters,
-            None => return Ok(None),
+        // get render (which will also check permissions)
+        let render = match self.get_render(id, user_id).await? {
+            Some(r) => r,
+            None => {
+                return Err(RenderManagerError::ClientError(
+                    StatusCode::NOT_FOUND,
+                    "Render not found".to_string(),
+                ));
+            }
         };
+
+        let params = render.config.parameters;
 
         let checkpoint = self.storage.get_render_checkpoint(id, iteration).await?;
         Ok(checkpoint.map(|rcp| rcp.as_image(&params)))
@@ -789,7 +865,16 @@ impl RenderManager {
 
     pub async fn get_render_checkpoint_storage_usage_bytes(
         &self,
+        user: User,
     ) -> Result<u64, RenderManagerError> {
+        // check if user is admin
+        if user.role != Role::Admin {
+            return Err(RenderManagerError::ClientError(
+                StatusCode::FORBIDDEN,
+                "Forbidden".to_string(),
+            ));
+        }
+
         self.storage
             .get_render_checkpoint_storage_usage_bytes()
             .await

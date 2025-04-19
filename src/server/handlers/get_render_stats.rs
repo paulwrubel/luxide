@@ -6,7 +6,7 @@ use axum::{
 };
 
 use crate::{
-    server::LuxideState,
+    server::{Claims, LuxideState},
     tracing::{RenderCheckpointStats, RenderID, RenderStats},
     utils::format_duration,
 };
@@ -63,11 +63,12 @@ impl From<RenderCheckpointStats> for FormattedRenderCheckpointStats {
 
 pub async fn get_render_stats(
     State(state): State<LuxideState>,
+    claims: Claims,
     Path(id): Path<RenderID>,
 ) -> Response {
     println!("Handing request for get_render_stats (id: {})...", id);
 
-    match state.render_manager.get_render_stats(id).await {
+    match state.render_manager.get_render_stats(id, claims.sub).await {
         Ok(Some(stats)) => {
             (StatusCode::OK, Json(FormattedRenderStats::from(stats))).into_response()
         }
