@@ -25,6 +25,9 @@ pub use get_render_stats::*;
 mod get_render;
 pub use get_render::*;
 
+mod not_found;
+pub use not_found::*;
+
 mod pause_render;
 pub use pause_render::*;
 
