@@ -1,0 +1,300 @@
+{
+    "title": "Luxide Render Settings",
+    "description": "An set of settings for a render using the Luxide renderer",
+    "type": "object",
+    "properties": {
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "output_dir": { "type": "string" },
+                "use_subdir": { "type": "boolean" },
+                "file_basename": { "type": "string" },
+                "file_ext": {
+                    "enum": [ "png", "jpg" ]
+                },
+                "image_dimensions": {
+                    "type": "array",
+                    "items": {
+                        "type": "number",
+                        "minimum": 1
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                },
+                "tile_dimensions": {
+                    "type": "array",
+                    "items": {
+                        "type": "number",
+                        "minimum": 1
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                },
+                "gamma_correction": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                },
+                "samples_per_round": {
+                    "type": "number",
+                    "minimum": 1
+                },
+                "round_limit": {
+                    "oneOf": [
+                        { "type": "null" },
+                        {
+                            "type": "number",
+                            "minimum": 1
+                        }
+                    ]
+                },
+                "max_bounces": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "use_scaling_truncation": { "type": "boolean" },
+                "pixels_per_progress_update": {
+                    "type": "number",
+                    "minimum": 1
+                },
+                "progress_memory": {
+                    "type": "number",
+                    "minimum": 1
+                }
+            },
+            "additionalProperties": false,
+            "required": [
+                "output_dir",
+                "use_subdir",
+                "file_basename",
+                "file_ext",
+                "image_dimensions",
+                "tile_dimensions",
+                "gamma_correction",
+                "samples_per_round",
+                "round_limit",
+                "max_bounces",
+                "use_scaling_truncation",
+                "pixels_per_progress_update",
+                "progress_memory"
+            ]
+        },
+        "active_scene": { "$ref": "#/$defs/scene" },
+        "scenes": {
+            "type": "object",
+            "patternProperties": { "": "#/$defs/scene_data" }
+        },
+        "cameras": {
+            "type": "object",
+            "patternProperties": { "": "#/$defs/camera_data" }
+        },
+        "geometrics": {
+            "type": "object",
+            "patternProperties": { "": "#/$defs/geometric_data" }
+        },
+        "materials": {
+            "type": "object",
+            "patternProperties": { "": "#/$defs/material_data" }
+        },
+        "textures": {
+            "type": "object",
+            "patternProperties": { "": "#/$defs/texture_data" }
+        }
+    },
+    "required": [
+        "parameters",
+        "active_scene"
+    ],
+    "$defs": {
+        "vector": {
+            "type": "array",
+            "items": { "type": "number" },
+            "minItems": 3,
+            "maxItems": 3
+        },
+        "color": {
+            "type": "array",
+            "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+            },
+            "minItems": 3,
+            "maxItems": 3
+        },
+        "point": { "$ref": "#/$defs/vector" },
+        "scene": {
+            "oneOf": [
+                { "type": "string" },
+                { "$ref": "#/$defs/scene_data" }
+            ]
+        },
+        "scene_data": {
+            "type": "object",
+            "properties": {
+                "name": { "type": "string" },
+                "geometrics": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/geometric"
+                    },
+                    "minItems": 1
+                },
+                "use_bvh": { "type": "boolean" },
+                "camera": { "$ref": "#/$defs/camera" },
+                "background_color": { "$ref": "#/$defs/color" }
+            },
+            "additionalProperties": false,
+            "required": [
+                "name",
+                "geometrics",
+                "camera",
+                "background_color"
+            ]
+        },
+        "camera": {
+            "oneOf": [
+                { "type": "string" },
+                { "$ref": "#/$defs/camera_data" }
+            ]
+        },
+        "camera_data": {
+            "type": "object",
+            "properties": {
+                "vertical_field_of_view_degrees": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "eye_location": { "$ref": "#/$defs/vector" },
+                "target_location": { "$ref": "#/$defs/point" },
+                "view_up": { "$ref": "#/$defs/vector" },
+                "defocus_angle_degrees": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "focus_distance": {
+                    "oneOf": [
+                        {
+                            "type": "number",
+                            "minimum": 0
+                        },
+                        { "enum": [ "eye_to_target" ] }
+                    ]
+                }
+            },
+            "additionalProperties": false,
+            "required": [
+                "vertical_field_of_view_degrees",
+                "eye_location",
+                "target_location",
+                "view_up",
+                "defocus_angle_degrees",
+                "focus_distance"
+            ]
+        },
+
+        "geometric": {
+            "oneOf": [
+                { "type": "string" },
+                { "$ref": "#/$defs/geometric_data" }
+            ]
+        },
+        "geometric_data": {
+            "oneOf": [
+                { "$ref": "#/$defs/box" },
+                { "$ref": "#/$defs/list" },
+                { "$ref": "#/$defs/rotate_y" },
+                { "$ref": "#/$defs/translate" },
+                { "$ref": "#/$defs/parallelogram" },
+                { "$ref": "#/$defs/sphere" },
+                { "$ref": "#/$defs/constant_volume" }
+            ]
+        },
+        "box": {
+            "type": "object",
+            "properties": {
+                "type": { "enum": [ "box" ] },
+                "a": { "$ref": "#/$defs/point" },
+                "b": { "$ref": "#/$defs/point" },
+                "is_culled": { "type": "boolean" },
+                "material": { "$ref": "#/$defs/material" }
+            },
+            "additionalProperties": false,
+            "required": [
+                "type",
+                "a",
+                "b",
+                "material"
+            ]
+        },
+        "list": {
+            "type": "object",
+            "properties": {
+                "type": { "enum": [ "list" ] },
+                "use_bvh": { "type": "boolean" },
+                "geometrics": {
+                    "type": "array",
+                    "items": { "$ref": "#/$defs/geometric" }
+                }
+            },
+            "additionalProperties": false,
+            "required": [
+                "type",
+                "geometrics"
+            ]
+        },
+        "rotate_y": {
+            "type": "object",
+            "allOf": [
+                {
+                    "properties": {
+                        "type": { "enum": [ "rotate_y" ] },
+                        "geometric": { "$ref": "#/$defs/geometric" },
+                        "around": { "$ref": "#/$defs/point" }
+                    }
+                },
+                {
+                    "oneOf": [
+                        {
+                            "properties": {
+                                "degrees": { "type": "number" }
+                            }
+                        },
+                        {
+                            "properties": {
+                                "radians": { "type": "number" }
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        "translate": {
+            "type": "object"
+        },
+        "parallelogram": {
+            "type": "object"
+        },
+        "sphere": {
+            "type": "object"
+        },
+        "constant_volume": {
+            "type": "object"
+        },
+        "material": {
+            "oneOf": [
+                { "type": "string" },
+                {
+
+                }
+            ]
+        },
+        "texture": {
+            "oneOf": [
+                { "type": "string" },
+                {
+
+                }
+            ]
+        }
+    }
+}
