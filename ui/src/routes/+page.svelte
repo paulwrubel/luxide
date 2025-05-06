@@ -28,8 +28,4 @@
 	.main-content {
 		margin: 1rem;
 	}
-
-	:global(.mdc-top-app-bar) {
-		background-color: #1976d2;
-	}
 </style>
