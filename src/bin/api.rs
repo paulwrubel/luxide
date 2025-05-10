@@ -88,7 +88,7 @@ async fn main() -> Result<(), String> {
         &secrets.auth,
     ));
 
-    let router = build_router().with_state(LuxideState::new_with_generated_key(
+    let router = build_router(&config).with_state(LuxideState::new_with_generated_key(
         Arc::clone(&render_manager),
         Arc::clone(&auth_manager),
     ));

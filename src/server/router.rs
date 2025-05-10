@@ -2,18 +2,23 @@ use std::net::{Ipv4Addr, SocketAddr};
 
 use axum::{
     Router,
+    http::Method,
     routing::{delete, get, post, put},
 };
 use include_dir::{Dir, include_dir};
+use tower_http::cors::CorsLayer;
+
+use crate::config::APIConfig;
 
 use super::{LuxideState, handlers};
 
 static UI_BUILD_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/ui/build");
 
-pub fn build_router() -> Router<LuxideState> {
+pub fn build_router(config: &APIConfig) -> Router<LuxideState> {
     Router::new()
-        .nest("/api/v1", build_api_router())
+        .nest("/api/v1", build_api_router(config))
         .merge(build_ui_router())
+        .layer(get_cors_layer(config))
 }
 
 fn get_content_type(path: &str) -> &'static str {
@@ -57,7 +62,28 @@ fn build_ui_router() -> Router<LuxideState> {
     })
 }
 
-fn build_api_router() -> Router<LuxideState> {
+fn get_cors_layer(config: &APIConfig) -> CorsLayer {
+    // for development, allow both the Vite dev server and the public URL
+    let mut allowed_origins = vec![
+        "http://localhost:5173".parse().unwrap(),
+        "https://localhost:5173".parse().unwrap(),
+    ];
+
+    // add the public URL if configured
+    if let Some(public_url) = &config.public_url {
+        allowed_origins.push(public_url.parse().unwrap());
+    }
+
+    let allowed_headers = ["Content-Type".parse().unwrap()];
+
+    CorsLayer::new()
+        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
+        .allow_origin(allowed_origins)
+        .allow_headers(allowed_headers)
+        .allow_credentials(true)
+}
+
+fn build_api_router(config: &APIConfig) -> Router<LuxideState> {
     let api_router = Router::new().route("/", get(handlers::index)).route(
         "/usage",
         get(handlers::get_global_render_checkpoint_storage_usage),
@@ -100,6 +126,7 @@ fn build_auth_router() -> Router<LuxideState> {
     Router::new()
         .route("/login", get(handlers::auth_login))
         .route("/github/callback", get(handlers::auth_github_callback))
+        .route("/current_user_info", get(handlers::get_current_user_info))
 }
 
 pub async fn serve(router: Router, address: &str, port: u16) -> Result<(), String> {

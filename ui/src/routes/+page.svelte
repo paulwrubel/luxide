@@ -2,6 +2,8 @@
 	import TopAppBar, { Row, Section, Title } from '@smui/top-app-bar';
 	import IconButton, { Icon } from '@smui/icon-button';
 	import { mdiInformation } from '@mdi/js';
+
+	import LoginButton from '$lib/LoginButton.svelte';
 </script>
 
 <TopAppBar variant="static">
@@ -15,6 +17,7 @@
 					<path fill="currentColor" d={mdiInformation} />
 				</Icon>
 			</IconButton>
+			<LoginButton />
 		</Section>
 	</Row>
 </TopAppBar>

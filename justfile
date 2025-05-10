@@ -9,6 +9,9 @@ alias run := run-docker
 run-docker: build-api
     docker compose up -d --build
 
+run-ui: run-docker
+    cd ui && npm run dev
+
 [group('run')]
 run-local: build-api run-postgres
     ./target/release/{{binary_name_api}}

@@ -13,6 +13,9 @@ pub use delete_render::*;
 mod get_all_renders;
 pub use get_all_renders::*;
 
+mod get_current_user_info;
+pub use get_current_user_info::*;
+
 mod get_render_checkpoint_image;
 pub use get_render_checkpoint_image::*;
 

@@ -57,10 +57,14 @@ impl AuthManager {
         let token_uri =
             oauth2::TokenUrl::new("https://github.com/login/oauth/access_token".to_string())
                 .expect("Invalid token URL");
-        let redirect_uri = oauth2::RedirectUrl::new(format!(
-            "http://{}:{}/auth/github/callback",
-            config.address, config.port
-        ))
+
+        // ui callback that will then call our API
+        let path = "/auth/github/callback";
+        let redirect_uri = if let Some(public_url) = &config.public_url {
+            oauth2::RedirectUrl::new(format!("{}{}", public_url.trim_end_matches('/'), path))
+        } else {
+            oauth2::RedirectUrl::new(format!("http://{}:{}{}", config.address, config.port, path))
+        }
         .expect("Invalid redirect URL");
 
         let oauth_client = oauth2::basic::BasicClient::new(client_id)
@@ -194,11 +198,30 @@ impl AuthManager {
         &self,
         authorization_code: String,
     ) -> Result<BearerToken, AuthManagerError> {
-        self.oauth_client
+        let token_result = self
+            .oauth_client
             .exchange_code(oauth2::AuthorizationCode::new(authorization_code))
             .request_async(&self.http_client)
-            .await
-            .map_err(|e| e.to_string())
+            .await;
+
+        match token_result {
+            Ok(token) => Ok(token),
+            Err(e) => {
+                println!("Token exchange error details: {:?}", e);
+                match e {
+                    oauth2::RequestTokenError::ServerResponse(e) => {
+                        Err(format!("GitHub server error: {}", e))
+                    }
+                    oauth2::RequestTokenError::Request(e) => Err(format!("Request error: {}", e)),
+                    oauth2::RequestTokenError::Parse(e, data) => Err(format!(
+                        "Parse error: {}. Raw response: {}",
+                        e,
+                        String::from_utf8_lossy(&data)
+                    )),
+                    _ => Err(format!("Unknown error: {:?}", e)),
+                }
+            }
+        }
     }
 
     pub async fn get_github_user_info(
