@@ -13,7 +13,7 @@ use axum_extra::{
 };
 use dashmap::DashMap;
 use jsonwebtoken::{DecodingKey, EncodingKey};
-use oauth2::{CsrfToken, EndpointNotSet, EndpointSet, TokenResponse};
+use oauth2::{CsrfToken, EndpointNotSet, EndpointSet, RedirectUrl, TokenResponse};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use uuid::Uuid;
@@ -71,7 +71,7 @@ impl AuthManager {
             .set_client_secret(client_secret)
             .set_auth_uri(auth_uri)
             .set_token_uri(token_uri)
-            .set_redirect_uri(redirect_uri);
+            .set_redirect_uri(redirect_uri.clone());
 
         let http_client = reqwest::ClientBuilder::new()
             .redirect(reqwest::redirect::Policy::none())
@@ -188,8 +188,19 @@ impl AuthManager {
         .map_err(|e| e.to_string())
     }
 
-    pub fn get_auth_url_and_state(&self) -> (String, CsrfToken) {
-        let (url, state) = self.oauth_client.authorize_url(CsrfToken::new_random).url();
+    pub fn get_auth_url_and_state(&self, origin: Option<String>) -> (String, CsrfToken) {
+        let oauth_client = match origin {
+            // update redirect uri if we were given an origin from the API caller
+            Some(ref origin) => {
+                let redirect_url = format!("{origin}/auth/github/callback");
+                let redirect_url = RedirectUrl::new(redirect_url).expect("invalid redirect URL");
+
+                &self.oauth_client.clone().set_redirect_uri(redirect_url)
+            }
+            None => &self.oauth_client,
+        };
+
+        let (url, state) = oauth_client.authorize_url(CsrfToken::new_random).url();
 
         (url.to_string(), state)
     }

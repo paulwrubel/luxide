@@ -16,7 +16,7 @@ static UI_BUILD_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/ui/build");
 
 pub fn build_router(config: &APIConfig) -> Router<LuxideState> {
     Router::new()
-        .nest("/api/v1", build_api_router(config))
+        .nest("/api/v1", build_api_router())
         .merge(build_ui_router())
         .layer(get_cors_layer(config))
 }
@@ -74,7 +74,10 @@ fn get_cors_layer(config: &APIConfig) -> CorsLayer {
         allowed_origins.push(public_url.parse().unwrap());
     }
 
-    let allowed_headers = ["Content-Type".parse().unwrap()];
+    let allowed_headers = [
+        "Content-Type".parse().unwrap(),
+        "Authorization".parse().unwrap(),
+    ];
 
     CorsLayer::new()
         .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
@@ -83,7 +86,7 @@ fn get_cors_layer(config: &APIConfig) -> CorsLayer {
         .allow_credentials(true)
 }
 
-fn build_api_router(config: &APIConfig) -> Router<LuxideState> {
+fn build_api_router() -> Router<LuxideState> {
     let api_router = Router::new().route("/", get(handlers::index)).route(
         "/usage",
         get(handlers::get_global_render_checkpoint_storage_usage),

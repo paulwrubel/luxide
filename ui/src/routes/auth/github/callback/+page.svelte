@@ -1,46 +1,58 @@
-<!-- Auth callback page that handles the OAuth flow -->
+<!-- auth callback page that handles the OAuth flow -->
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
+	import { fetchAuthTokenGitHub } from '$lib/api';
+	import { setToken } from '$lib/state/auth.svelte';
 
-	let error: string | null = null;
-	let loading = true;
+	// component-level state with runes
+	let { error, loading } = $state({
+		error: null as string | null,
+		loading: true
+	});
 
-	onMount(async () => {
+	console.log('hit the page!');
+
+	// handle the oauth callback
+	async function handleCallback() {
+		console.log('doing the callback!');
 		try {
-			// Get code and state from URL params
-			const code = $page.url.searchParams.get('code');
-			const state = $page.url.searchParams.get('state');
+			// get code and state from URL params
+			const code = page.url.searchParams.get('code');
+			const state = page.url.searchParams.get('state');
 
 			if (!code || !state) {
-				throw new Error('Missing code or state parameter');
+				throw new Error('missing code or state parameter');
 			}
 
-			// Exchange code for token
-			const response = await fetch(`/api/v1/auth/github/callback?code=${code}&state=${state}`, {
-				// credentials: 'include' // Important: send cookies
-			});
+			// exchange code for token
+			const token = await fetchAuthTokenGitHub(code, state);
 
-			if (!response.ok) {
-				throw new Error('Failed to authenticate');
+			// use auth state to handle token
+			setToken(token);
+
+			// get origin from localStorage
+			const origin = localStorage.getItem('ui_origin');
+			console.log(origin);
+
+			// redirect to home page
+			if (origin) {
+				// remove origin from localStorage
+				localStorage.removeItem('ui_origin');
+				window.location.href = origin;
+			} else {
+				goto('/');
 			}
-
-			const data = await response.json();
-
-			// Store the token securely
-			localStorage.setItem('auth_token', data.token);
-			console.log('auth_token: ', data);
-
-			// Redirect to home page or dashboard
-			goto('/');
 		} catch (e) {
-			console.error('Auth error:', e);
-			error = e instanceof Error ? e.message : 'Authentication failed';
+			console.error('auth error:', e);
+			error = e instanceof Error ? e.message : 'authentication failed';
 		} finally {
 			loading = false;
 		}
-	});
+	}
+
+	// run immediately
+	handleCallback();
 </script>
 
 <div class="flex items-center justify-center min-h-screen">

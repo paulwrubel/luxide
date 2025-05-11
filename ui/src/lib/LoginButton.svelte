@@ -1,13 +1,14 @@
 <script lang="ts">
 	import Button from '@smui/button';
-	import { login } from '$lib/api';
+	import { navigateToAPILogin } from '$lib/api';
 </script>
 
 <Button
 	color="secondary"
 	variant="raised"
-	onclick={() => {
-		console.log('Bazinga!');
-		login();
-	}}>Log In</Button
+	onclick={async () => {
+		await navigateToAPILogin();
+	}}
 >
+	Log In
+</Button>
