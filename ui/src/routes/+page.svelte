@@ -40,9 +40,9 @@
 </main>
 
 <style>
-	.main-content {
+	/* .main-content {
 		height: 100vh;
-	}
+	} */
 
 	.card-image {
 		width: 100%;
