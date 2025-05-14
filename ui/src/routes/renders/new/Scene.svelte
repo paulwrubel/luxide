@@ -1,12 +1,15 @@
 <script lang="ts">
 	import { toRadians } from '$lib/math';
+	import type { RenderConfig } from '$lib/render.svelte';
 	import { T } from '@threlte/core';
-	import { DoubleSide, FrontSide } from 'three';
+	import { getContext } from 'svelte';
+
+	const config = getContext<RenderConfig>('render');
 </script>
 
 <T.PerspectiveCamera
 	makeDefault
-	fov={40}
+	fov={40.0}
 	position={[0.5, 0.5, 1.44144]}
 	oncreate={(camera) => {
 		camera.lookAt(0.5, 0.5, 0);

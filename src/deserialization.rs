@@ -558,8 +558,8 @@ fn get_builtin_cameras() -> IndexMap<String, CameraData> {
         prefix_builtin_key("cornell_box") => CameraData {
             vertical_field_of_view_degrees:40.0,
             eye_location: [0.5, 0.5, 1.44144],
-            target_location: [0.5,0.5,0.0],
-            view_up: [0.0,1.0,0.0],
+            target_location: [0.5, 0.5, 0.0],
+            view_up: [0.0, 1.0, 0.0],
             defocus_angle_degrees: 0.0,
             focus_distance: FocusDistance::Type(FocusDistanceType::EyeToTarget),
         }
