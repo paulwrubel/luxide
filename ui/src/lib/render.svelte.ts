@@ -1,4 +1,10 @@
-import { setContext } from 'svelte';
+export function isNonNullObject(x: unknown): x is Record<string, unknown> {
+	return typeof x === 'object' && x !== null;
+}
+
+export function isTypedObject(x: unknown): x is Record<string, unknown> & { type: string } {
+	return isNonNullObject(x) && 'type' in x && typeof x.type === 'string';
+}
 
 // main render configuration type
 export type RenderConfig = {
@@ -24,25 +30,30 @@ export type RenderParameters = {
 	use_scaling_truncation: boolean;
 };
 
-// export type RenderState =
-// 	| { type: 'created' }
-// 	| { type: 'running'; checkpoint_iteration: number; progress_info: ProgressInfo }
-// 	| { type: 'finished_checkpoint_iteration'; iteration: number }
-// 	| { type: 'pausing'; checkpoint_iteration: number; progress_info: ProgressInfo }
-// 	| { type: 'paused'; iteration: number };
-
-// export type ProgressInfo = {
-// 	tiles_completed: number;
-// 	total_tiles: number;
-// 	estimated_time_remaining_seconds?: number;
-// };
-
 export type SceneData = {
 	geometrics: (string | GeometricData)[];
 	use_bvh: boolean;
 	camera: string | CameraData;
 	background_color: [number, number, number];
 };
+
+export function isSceneData(x: unknown): x is SceneData {
+	return (
+		isNonNullObject(x) && ['geometrics', 'camera', 'background_color'].every((key) => key in x)
+	);
+}
+
+export function getSceneData(config: RenderConfig, nameOrData: string | SceneData): SceneData {
+	if (isSceneData(nameOrData)) {
+		return nameOrData;
+	}
+
+	const scene = config.scenes?.[nameOrData];
+	if (!scene) {
+		throw new Error(`Scene ${nameOrData} not found`);
+	}
+	return scene;
+}
 
 // camera types
 export type CameraData = {
@@ -53,6 +64,32 @@ export type CameraData = {
 	defocus_angle_degrees: number;
 	focus_distance: 'eye_to_target' | number;
 };
+
+export function isCameraData(data: unknown): data is CameraData {
+	return (
+		isNonNullObject(data) &&
+		[
+			'vertical_field_of_view_degrees',
+			'eye_location',
+			'target_location',
+			'view_up',
+			'defocus_angle_degrees',
+			'focus_distance'
+		].every((key) => key in data)
+	);
+}
+
+export function getCameraData(config: RenderConfig, nameOrData: string | CameraData): CameraData {
+	if (isCameraData(nameOrData)) {
+		return nameOrData;
+	}
+
+	const camera = config.cameras?.[nameOrData];
+	if (!camera) {
+		throw new Error(`Camera ${nameOrData} not found`);
+	}
+	return camera;
+}
 
 // geometric types
 export type GeometricData =
@@ -65,6 +102,52 @@ export type GeometricData =
 	| GeometricSphere
 	| GeometricTriangle
 	| GeometricConstantVolume;
+
+export function isGeometricData(data: unknown): data is GeometricData {
+	return (
+		isTypedObject(data) &&
+		[
+			'box',
+			'list',
+			'obj_model',
+			'rotate_x',
+			'rotate_y',
+			'rotate_z',
+			'translate',
+			'parallelogram',
+			'sphere',
+			'triangle',
+			'constant_volume'
+		].includes(data.type)
+	);
+}
+
+export function isComposite(
+	data: GeometricData
+): data is GeometricList | GeometricInstanceRotate | GeometricInstanceTranslate {
+	return (
+		data.type === 'list' ||
+		data.type === 'rotate_x' ||
+		data.type === 'rotate_y' ||
+		data.type === 'rotate_z' ||
+		data.type === 'translate'
+	);
+}
+
+export function getGeometricData(
+	config: RenderConfig,
+	nameOrData: string | GeometricData
+): GeometricData {
+	if (isGeometricData(nameOrData)) {
+		return nameOrData;
+	}
+
+	const geometric = config.geometrics?.[nameOrData];
+	if (!geometric) {
+		throw new Error(`Geometric ${nameOrData} not found`);
+	}
+	return geometric;
+}
 
 export type GeometricBox = {
 	type: 'box';
@@ -140,6 +223,25 @@ export type GeometricConstantVolume = {
 // material types
 export type MaterialData = MaterialDielectric | MaterialLambertian | MaterialSpecular;
 
+export function isMaterialData(data: unknown): data is MaterialData {
+	return isTypedObject(data) && ['dielectric', 'lambertian', 'specular'].includes(data.type);
+}
+
+export function getMaterialData(
+	config: RenderConfig,
+	nameOrData: string | MaterialData
+): MaterialData {
+	if (isMaterialData(nameOrData)) {
+		return nameOrData;
+	}
+
+	const material = config.materials?.[nameOrData];
+	if (!material) {
+		throw new Error(`Material ${nameOrData} not found`);
+	}
+	return material;
+}
+
 export type MaterialDielectric = {
 	type: 'dielectric';
 	reflectance_texture: string | TextureData;
@@ -163,6 +265,25 @@ export type MaterialSpecular = {
 // texture types
 export type TextureData = TextureChecker | TextureImage | TextureSolidColor;
 
+export function isTextureData(data: unknown): data is TextureData {
+	return isTypedObject(data) && ['checker', 'image', 'solid_color'].includes(data.type);
+}
+
+export function getTextureData(
+	config: RenderConfig,
+	nameOrData: string | TextureData
+): TextureData {
+	if (isTextureData(nameOrData)) {
+		return nameOrData;
+	}
+
+	const texture = config.textures?.[nameOrData];
+	if (!texture) {
+		throw new Error(`Texture ${nameOrData} not found`);
+	}
+	return texture;
+}
+
 export type TextureChecker = {
 	type: 'checker';
 	scale: number;
@@ -184,11 +305,11 @@ export type TextureSolidColor = {
 // utility types
 export type Angle = { degrees: number } | { radians: number };
 
-export function getDefaultRender(): RenderConfig {
-	return getCornellBoxRender();
+export function getDefaultRenderConfig(): RenderConfig {
+	return getCornellBoxRenderConfig();
 }
 
-export function getCornellBoxRender(): RenderConfig {
+export function getCornellBoxRenderConfig(): RenderConfig {
 	return {
 		name: 'cornell_box',
 		parameters: {
@@ -201,21 +322,18 @@ export function getCornellBoxRender(): RenderConfig {
 			max_bounces: 50,
 			use_scaling_truncation: true
 		},
-		active_scene: 'cornell_box',
-		scenes: {
-			cornell_box: {
-				geometrics: ['room', 'far_left_box', 'near_right_box'],
-				use_bvh: true,
-				camera: {
-					vertical_field_of_view_degrees: 40.0,
-					eye_location: [0.5, 0.5, 1.44144],
-					target_location: [0.5, 0.5, 0.0],
-					view_up: [0.0, 1.0, 0.0],
-					defocus_angle_degrees: 0.0,
-					focus_distance: 'eye_to_target'
-				},
-				background_color: [0.0, 0.0, 0.0]
-			}
+		active_scene: {
+			geometrics: ['room', 'far_left_box', 'near_right_box'],
+			use_bvh: true,
+			camera: {
+				vertical_field_of_view_degrees: 40.0,
+				eye_location: [0.5, 0.5, 1.44144],
+				target_location: [0.5, 0.5, 0.0],
+				view_up: [0.0, 1.0, 0.0],
+				defocus_angle_degrees: 0.0,
+				focus_distance: 'eye_to_target'
+			},
+			background_color: [0.0, 0.0, 0.0]
 		},
 		geometrics: {
 			left_wall: {
@@ -335,6 +453,10 @@ export function getCornellBoxRender(): RenderConfig {
 			}
 		},
 		textures: {
+			black: {
+				type: 'solid_color',
+				color: [0.0, 0.0, 0.0]
+			},
 			white: {
 				type: 'solid_color',
 				color: [0.73, 0.73, 0.73]
@@ -354,12 +476,3 @@ export function getCornellBoxRender(): RenderConfig {
 		}
 	};
 }
-
-// store state
-const config = $state({} as RenderConfig);
-
-// export function setConfig(newConfig: RenderConfig) {
-// 	config = newConfig;
-// }
-
-setContext('render', config);

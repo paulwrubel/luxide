@@ -1,65 +1,185 @@
 <script lang="ts">
 	import { toRadians } from '$lib/math';
-	import type { RenderConfig } from '$lib/render.svelte';
+	import {
+		type GeometricData,
+		type MaterialData,
+		type RenderConfig,
+		getCameraData,
+		getDefaultRenderConfig,
+		getGeometricData,
+		getMaterialData,
+		getSceneData,
+		getTextureData,
+		isComposite
+	} from '$lib/render.svelte';
 	import { T } from '@threlte/core';
 	import { getContext } from 'svelte';
+	import * as THREE from 'three';
+	import { createParallelogramMesh } from './utils';
+	import { emissive } from 'three/tsl';
+	import { PointLight } from 'three';
 
-	const config = getContext<RenderConfig>('render');
+	const config = getContext<RenderConfig>('renderConfig');
+
+	const activeScene = $derived(getSceneData(config, config.active_scene));
+	const camera = $derived(getCameraData(config, activeScene.camera));
+
+	const threeCam = $derived.by<THREE.PerspectiveCamera>(() => {
+		const cam = new THREE.PerspectiveCamera();
+
+		cam.fov = camera.vertical_field_of_view_degrees;
+
+		const [posX, posY, posZ] = camera.eye_location;
+		cam.position.set(posX, posY, posZ);
+
+		const [targetX, targetY, targetZ] = camera.target_location;
+		cam.lookAt(targetX, targetY, targetZ);
+
+		return cam;
+	});
+
+	$inspect(threeCam);
 </script>
 
-<T.PerspectiveCamera
-	makeDefault
-	fov={40.0}
-	position={[0.5, 0.5, 1.44144]}
-	oncreate={(camera) => {
-		camera.lookAt(0.5, 0.5, 0);
-	}}
-/>
+{#snippet geometry(data: string | GeometricData)}
+	{@const standardProps = { castShadow: true, receiveShadow: true }}
 
-<T.Mesh position={[0.1, 0.1, -0.1]}>
+	{@const geometricData = getGeometricData(config, data)}
+	{#if geometricData.type === 'box'}
+		<!-- box implementation -->
+	{:else if geometricData.type === 'list'}
+		<!-- list implementation -->
+		{#each geometricData.geometrics as geometric}
+			{@render geometry(geometric)}
+		{/each}
+	{:else if geometricData.type === 'obj_model'}
+		<!-- obj_model implementation -->
+	{:else if geometricData.type === 'rotate_x'}
+		<!-- rotate_x implementation -->
+	{:else if geometricData.type === 'rotate_y'}
+		<!-- rotate_y implementation -->
+	{:else if geometricData.type === 'rotate_z'}
+		<!-- rotate_z implementation -->
+	{:else if geometricData.type === 'translate'}
+		<!-- translate implementation -->
+	{:else if geometricData.type === 'parallelogram'}
+		<!-- parallelogram implementation -->
+		<T is={createParallelogramMesh(geometricData)} {...standardProps}>
+			{@render material(geometricData.material)}
+		</T>
+	{:else if geometricData.type === 'sphere'}
+		<!-- sphere implementation -->
+		<T.Mesh {...standardProps}>
+			<T.SphereGeometry args={[geometricData.radius]} />
+			{@render material(geometricData.material)}
+		</T.Mesh>
+	{:else if geometricData.type === 'triangle'}
+		<!-- triangle implementation -->
+	{:else if geometricData.type === 'constant_volume'}
+		<!-- constant_volume implementation -->
+	{/if}
+
+	{@render lightSource(data)}
+{/snippet}
+
+{#snippet material(data: string | MaterialData)}
+	{@const materialData = getMaterialData(config, data)}
+
+	{@const reflectanceTextureData = getTextureData(config, materialData.reflectance_texture)}
+	{@const emittanceTextureData = getTextureData(config, materialData.emittance_texture)}
+	{@const emissiveColor =
+		emittanceTextureData.type === 'solid_color' ? emittanceTextureData.color : undefined}
+
+	{#if materialData.type === 'dielectric'}
+		<!-- dielectric implementation -->
+	{:else if materialData.type === 'lambertian'}
+		<!-- lambertian implementation -->
+		{#if reflectanceTextureData.type === 'solid_color'}
+			<T.MeshStandardMaterial color={reflectanceTextureData.color} emissive={emissiveColor} />
+		{/if}
+	{:else if materialData.type === 'specular'}
+		<!-- specular implementation -->
+	{/if}
+{/snippet}
+
+{#snippet lightSource(geometric: string | GeometricData)}
+	{@const geometricData = getGeometricData(config, geometric)}
+	<!-- {@debug geometricData} -->
+	{#if !isComposite(geometricData) && geometricData.type !== 'constant_volume'}
+		<!-- {@debug geometricData} -->
+		{@const materialData = getMaterialData(config, geometricData.material)}
+		{@const emittanceTextureData = getTextureData(config, materialData.emittance_texture)}
+		{@const emissiveColor =
+			emittanceTextureData.type === 'solid_color' ? emittanceTextureData.color : undefined}
+
+		{#if emissiveColor !== undefined}
+			<T.PointLight
+				position={[0.5, 0.99, -0.5]}
+				intensity={0.1}
+				color={(() => {
+					console.log('point lighting: ', emissiveColor);
+					return emissiveColor;
+				})()}
+				castShadow
+				receiveShadow
+			/>
+		{/if}
+	{/if}
+{/snippet}
+
+<T is={threeCam} makeDefault />
+
+{#each activeScene.geometrics as geometric}
+	{@render geometry(geometric)}
+{/each}
+
+<!-- <T.AmbientLight /> -->
+
+<!-- <T.Mesh position={[0.1, 0.1, -0.1]}>
 	<T.SphereGeometry args={[0.05]} />
 	<T.MeshLambertMaterial color="green" emissive="white" />
-</T.Mesh>
-<T.PointLight position={[0.1, 0.1, -0.1]} castShadow receiveShadow />
+</T.Mesh> -->
+
+<!-- <T.PointLight position={[0.1, 0.1, -0.1]} castShadow receiveShadow /> -->
 
 <!-- sphere -->
-<T.Mesh position={[0.5, 0.5, -0.5]} castShadow receiveShadow>
+<!-- <T.Mesh position={[0.5, 0.5, -0.5]} castShadow receiveShadow>
 	<T.SphereGeometry args={[0.25]} />
 	<T.MeshStandardMaterial color="green" />
-</T.Mesh>
+</T.Mesh> -->
 
 <!-- left wall -->
-<T.Mesh position={[0, 0.5, -0.5]} rotation={[0, toRadians(90), 0]} castShadow receiveShadow>
+<!-- <T.Mesh position={[0, 0.5, -0.5]} rotation={[0, toRadians(90), 0]} castShadow receiveShadow>
 	<T.PlaneGeometry args={[1, 1]} />
 	<T.MeshStandardMaterial color="red" />
-</T.Mesh>
+</T.Mesh> -->
 
 <!-- right wall -->
-<T.Mesh position={[1, 0.5, -0.5]} rotation={[0, toRadians(-90), 0]} castShadow receiveShadow>
+<!-- <T.Mesh position={[1, 0.5, -0.5]} rotation={[0, toRadians(-90), 0]} castShadow receiveShadow>
 	<T.PlaneGeometry args={[1, 1]} />
 	<T.MeshStandardMaterial color="blue" />
-</T.Mesh>
+</T.Mesh> -->
 
 <!-- floor -->
-<T.Mesh position={[0.5, 0, -0.5]} rotation={[toRadians(-90), 0, 0]} castShadow receiveShadow>
+<!-- <T.Mesh position={[0.5, 0, -0.5]} rotation={[toRadians(-90), 0, 0]} castShadow receiveShadow>
 	<T.PlaneGeometry args={[1, 1]} />
 	<T.MeshStandardMaterial color="green" />
-</T.Mesh>
+</T.Mesh> -->
 
 <!-- ceiling -->
-<T.Mesh position={[0.5, 1, -0.5]} rotation={[toRadians(90), 0, 0]} castShadow receiveShadow>
+<!-- <T.Mesh position={[0.5, 1, -0.5]} rotation={[toRadians(90), 0, 0]} castShadow receiveShadow>
 	<T.PlaneGeometry args={[1, 1]} />
 	<T.MeshStandardMaterial color="purple" />
-</T.Mesh>
+</T.Mesh> -->
 
 <!-- back wall -->
-<T.Mesh position={[0.5, 0.5, -1.0]} rotation={[0, 0, 0]} castShadow receiveShadow>
+<!-- <T.Mesh position={[0.5, 0.5, -1.0]} rotation={[0, 0, 0]} castShadow receiveShadow>
 	<T.PlaneGeometry args={[1, 1]} />
 	<T.MeshStandardMaterial color="white" />
-</T.Mesh>
+</T.Mesh> -->
 
 <!-- front wall -->
-<T.Mesh position={[0.5, 0.5, 0]} rotation={[toRadians(180), 0, 0]} castShadow receiveShadow>
+<!-- <T.Mesh position={[0.5, 0.5, 0]} rotation={[toRadians(180), 0, 0]} castShadow receiveShadow>
 	<T.PlaneGeometry args={[1, 1]} />
 	<T.MeshStandardMaterial color="white" />
-</T.Mesh>
+</T.Mesh> -->

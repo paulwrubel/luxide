@@ -4,6 +4,9 @@
 	import Scene from './Scene.svelte';
 	import Slider from '@smui/slider';
 	import FormField from '@smui/form-field';
+	import { getDefaultRenderConfig, getSceneData, getCameraData } from '$lib/render.svelte';
+	import { setContext } from 'svelte';
+
 	// desired canvas dimensions
 	let width = $state(500);
 	let height = $state(500);
@@ -26,9 +29,17 @@
 			return [containerHeight * aspectRatio, containerHeight];
 		} else {
 			// container is taller than desired ratio, so width is limiting factor
-			return [Math.max(containerWidth, width), Math.max(containerWidth / aspectRatio, height)];
+			return [containerWidth, containerWidth / aspectRatio];
 		}
 	});
+
+	// store state
+	const renderConfig = $state(getDefaultRenderConfig());
+
+	setContext('renderConfig', renderConfig);
+
+	const activeScene = $derived(getSceneData(renderConfig, renderConfig.active_scene));
+	const camera = $derived(getCameraData(renderConfig, activeScene.camera));
 </script>
 
 <div class="view-container">
@@ -42,6 +53,10 @@
 			<FormField class="drawer-element">
 				<Slider bind:value={height} min={100} max={5000} step={10} />
 				Height = {height}
+			</FormField>
+			<FormField class="drawer-element">
+				<Slider bind:value={camera.target_location[0]} min={0.0} max={1.0} step={0.01} />
+				Target X = {camera.target_location[0]}
 			</FormField>
 		</Content>
 	</Drawer>
