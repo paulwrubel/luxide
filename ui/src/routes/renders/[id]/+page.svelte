@@ -1,16 +1,16 @@
 <script lang="ts">
 	import Drawer, { AppContent, Content } from '@smui/drawer';
 	import { Canvas } from '@threlte/core';
-	import Scene from './Scene.svelte';
 	import Slider from '@smui/slider';
 	import FormField from '@smui/form-field';
 	import { getDefaultRenderConfig, getSceneData, getCameraData } from '$lib/render';
-	import { setContext } from 'svelte';
+	import { onDestroy, setContext } from 'svelte';
 	import Button from '@smui/button';
-	import { postRender } from '$lib/api';
+	import { getLatestCheckpointImage, postRender } from '$lib/api';
 	import { auth } from '$lib/state/auth.svelte';
 	import { goto } from '$app/navigation';
 	import CircularProgress from '@smui/circular-progress';
+	import { page } from '$app/state';
 
 	// desired canvas dimensions
 	let width = $state(500);
@@ -48,29 +48,28 @@
 
 	let isCreatingRender = $state(false);
 
-	async function handleCreateRender() {
-		isCreatingRender = true;
-
+	const imageURL = $derived.by(async () => {
 		if (auth.token === undefined) {
-			goto('/');
-			return;
+			throw new Error('YOU AINT LOGGED IN!');
 		}
 
-		postRender(auth.token, renderConfig)
-			.then(() => {
-				isCreatingRender = false;
-				goto('/');
-			})
-			.catch(() => {
-				isCreatingRender = false;
-			});
-	}
+		const imageBlob = await getLatestCheckpointImage(auth.token, Number(page.params.id));
+
+		return URL.createObjectURL(imageBlob);
+	});
+
+	onDestroy(async () => {
+		const url = await imageURL;
+		if (url) {
+			URL.revokeObjectURL(url);
+		}
+	});
 </script>
 
 <div class="view-container">
 	<Drawer>
 		<Content class="drawer-content">
-			<FormField class="drawer-element">
+			<!-- <FormField class="drawer-element">
 				<Slider bind:value={width} min={100} max={5000} step={10} />
 				Width = {width}
 			</FormField>
@@ -81,8 +80,8 @@
 			<FormField class="drawer-element">
 				<Slider bind:value={camera.target_location[0]} min={0.0} max={1.0} step={0.01} />
 				Target X = {camera.target_location[0]}
-			</FormField>
-			<Button
+			</FormField> -->
+			<!-- <Button
 				onclick={() => {
 					handleCreateRender();
 				}}
@@ -95,7 +94,7 @@
 				{:else}
 					Create Render
 				{/if}
-			</Button>
+			</Button> -->
 		</Content>
 	</Drawer>
 	<AppContent class="app-content">
@@ -105,9 +104,9 @@
 			bind:clientHeight={containerHeight}
 		>
 			<div style="width: {canvasSize[0]}px; height: {canvasSize[1]}px;" class="canvas-container">
-				<Canvas>
-					<Scene />
-				</Canvas>
+				{#await imageURL then url}
+					<img alt="Render" src={url} />
+				{/await}
 			</div>
 		</div>
 	</AppContent>

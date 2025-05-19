@@ -298,7 +298,7 @@ export type TextureImage = {
 };
 
 export type TextureSolidColor = {
-	type: 'solid_color';
+	type: 'color';
 	color: [number, number, number];
 };
 
@@ -454,23 +454,23 @@ export function getCornellBoxRenderConfig(): RenderConfig {
 		},
 		textures: {
 			black: {
-				type: 'solid_color',
+				type: 'color',
 				color: [0.0, 0.0, 0.0]
 			},
 			white: {
-				type: 'solid_color',
+				type: 'color',
 				color: [0.73, 0.73, 0.73]
 			},
 			white_light: {
-				type: 'solid_color',
+				type: 'color',
 				color: [7.0, 7.0, 7.0]
 			},
 			red: {
-				type: 'solid_color',
+				type: 'color',
 				color: [0.65, 0.05, 0.05]
 			},
 			green: {
-				type: 'solid_color',
+				type: 'color',
 				color: [0.12, 0.45, 0.15]
 			}
 		}

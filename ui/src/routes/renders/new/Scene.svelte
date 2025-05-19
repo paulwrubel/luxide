@@ -11,7 +11,7 @@
 		getSceneData,
 		getTextureData,
 		isComposite
-	} from '$lib/render.svelte';
+	} from '$lib/render';
 	import { T } from '@threlte/core';
 	import { getContext } from 'svelte';
 	import * as THREE from 'three';
@@ -88,13 +88,13 @@
 	{@const reflectanceTextureData = getTextureData(config, materialData.reflectance_texture)}
 	{@const emittanceTextureData = getTextureData(config, materialData.emittance_texture)}
 	{@const emissiveColor =
-		emittanceTextureData.type === 'solid_color' ? emittanceTextureData.color : undefined}
+		emittanceTextureData.type === 'color' ? emittanceTextureData.color : undefined}
 
 	{#if materialData.type === 'dielectric'}
 		<!-- dielectric implementation -->
 	{:else if materialData.type === 'lambertian'}
 		<!-- lambertian implementation -->
-		{#if reflectanceTextureData.type === 'solid_color'}
+		{#if reflectanceTextureData.type === 'color'}
 			<T.MeshStandardMaterial color={reflectanceTextureData.color} emissive={emissiveColor} />
 		{/if}
 	{:else if materialData.type === 'specular'}
@@ -110,7 +110,7 @@
 		{@const materialData = getMaterialData(config, geometricData.material)}
 		{@const emittanceTextureData = getTextureData(config, materialData.emittance_texture)}
 		{@const emissiveColor =
-			emittanceTextureData.type === 'solid_color' ? emittanceTextureData.color : undefined}
+			emittanceTextureData.type === 'color' ? emittanceTextureData.color : undefined}
 
 		{#if emissiveColor !== undefined}
 			<T.PointLight

@@ -1,4 +1,4 @@
-import type { GeometricParallelogram } from '$lib/render.svelte';
+import type { GeometricParallelogram } from '$lib/render';
 import * as THREE from 'three';
 
 // creates a mesh representing a parallelogram based on lower left corner and u,v vectors

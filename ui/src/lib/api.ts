@@ -1,3 +1,5 @@
+import type { RenderConfig } from './render';
+
 function getBaseURL(): string {
 	return window.location.origin;
 }
@@ -75,8 +77,54 @@ export async function fetchUserInfo(token: string): Promise<User> {
 	});
 
 	if (!response.ok) {
+		if (response.status === 401) {
+			throw new Error('Unauthorized');
+		}
 		throw new Error('failed to fetch user');
 	}
 
 	return (await response.json()) as User;
+}
+
+export type PostRenderResponse = {
+	id: number;
+	state: string;
+	created_at: string;
+	updated_at: string;
+	config: RenderConfig;
+	user_id: number;
+};
+
+export async function postRender(
+	token: string,
+	renderConfig: RenderConfig
+): Promise<PostRenderResponse> {
+	const response = await fetch(`${getAPIURL()}/renders`, {
+		headers: {
+			Authorization: `Bearer ${token}`,
+			'Content-Type': 'application/json'
+		},
+		method: 'POST',
+		body: JSON.stringify(renderConfig)
+	});
+
+	if (!response.ok || response.status !== 201) {
+		const body = await response.text();
+		throw new Error(`failed to create render: (${response.status}: ${body})`);
+	}
+
+	return (await response.json()) as PostRenderResponse;
+}
+
+export async function getLatestCheckpointImage(token: string, renderID: number): Promise<Blob> {
+	const response = await fetch(`${getAPIURL()}/renders/${renderID}/checkpoint/earliest`, {
+		headers: { Authorization: `Bearer ${token}` }
+	});
+
+	if (!response.ok) {
+		const body = await response.text();
+		throw new Error(`failed to get latest checkpoint image: (${response.status}: ${body})`);
+	}
+
+	return await response.blob();
 }
