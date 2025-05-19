@@ -8,7 +8,7 @@ use super::{Build, Builts};
 #[serde(rename_all = "snake_case", untagged)]
 pub enum CameraRefOrInline {
     Ref(String),
-    Inline(Box<CameraData>),
+    Inline(CameraData),
 }
 
 impl Build<Camera> for CameraRefOrInline {

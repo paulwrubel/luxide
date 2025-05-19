@@ -10,7 +10,7 @@ use super::{Build, Builts, textures::TextureRefOrInline};
 #[serde(rename_all = "snake_case", untagged)]
 pub enum MaterialRefOrInline {
     Ref(String),
-    Inline(Box<MaterialData>),
+    Inline(MaterialData),
 }
 
 impl Build<Arc<dyn Material>> for MaterialRefOrInline {
