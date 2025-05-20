@@ -77,7 +77,7 @@ export async function fetchUserInfo(token: string): Promise<User> {
 	});
 
 	if (!response.ok) {
-		if (response.status === 401) {
+		if (response.status === 401 || response.status === 404) {
 			throw new Error('Unauthorized');
 		}
 		throw new Error('failed to fetch user');
@@ -86,12 +86,7 @@ export async function fetchUserInfo(token: string): Promise<User> {
 	return (await response.json()) as User;
 }
 
-export type PostRenderResponse = {
-	id: number;
-	state: string;
-	created_at: string;
-	updated_at: string;
-	config: RenderConfig;
+export type PostRenderResponse = Render & {
 	user_id: number;
 };
 
@@ -114,6 +109,92 @@ export async function postRender(
 	}
 
 	return (await response.json()) as PostRenderResponse;
+}
+
+export type Render = {
+	id: number;
+	state: RenderState;
+	created_at: string;
+	updated_at: string;
+	config: RenderConfig;
+};
+
+export type RenderState =
+	| RenderStateCreated
+	| RenderStateRunning
+	| RenderStateFinishedCheckpointIteration
+	| RenderStatePausing
+	| RenderStatePaused;
+
+export type RenderStateCreated = 'created';
+
+export function isRenderStateCreated(state: RenderState): state is RenderStateCreated {
+	return state === 'created';
+}
+
+export type RenderStateRunning = {
+	running: {
+		checkpoint_iteration: number;
+		progress_info: ProgressInfoPrecise;
+	};
+};
+
+export function isRenderStateRunning(state: RenderState): state is RenderStateRunning {
+	return typeof state === 'object' && 'running' in state;
+}
+
+export type RenderStateFinishedCheckpointIteration = {
+	finished_checkpoint_iteration: number;
+};
+
+export function isRenderStateFinishedCheckpointIteration(
+	state: RenderState
+): state is RenderStateFinishedCheckpointIteration {
+	return typeof state === 'object' && 'finished_checkpoint_iteration' in state;
+}
+
+export type RenderStatePausing = {
+	pausing: {
+		checkpoint_iteration: number;
+		progress_info: ProgressInfoPrecise;
+	};
+};
+
+export function isRenderStatePausing(state: RenderState): state is RenderStatePausing {
+	return typeof state === 'object' && 'pausing' in state;
+}
+
+export type RenderStatePaused = {
+	paused: number;
+};
+
+export function isRenderStatePaused(state: RenderState): state is RenderStatePaused {
+	return typeof state === 'object' && 'paused' in state;
+}
+
+export type ProgressInfoPrecise = {
+	progress: number;
+	elapsed: Duration;
+	estimated_remaining: Duration;
+	estimated_total: Duration;
+};
+
+export type Duration = {
+	secs: number;
+	nanos: number;
+};
+
+export async function getRender(token: string, renderID: number): Promise<Render> {
+	const response = await fetch(`${getAPIURL()}/renders/${renderID}?format=precise`, {
+		headers: { Authorization: `Bearer ${token}` }
+	});
+
+	if (!response.ok) {
+		const body = await response.text();
+		throw new Error(`failed to get render: (${response.status}: ${body})`);
+	}
+
+	return (await response.json()) as Render;
 }
 
 export async function getLatestCheckpointImage(token: string, renderID: number): Promise<Blob> {
