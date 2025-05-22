@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { auth, authenticatedUser } from '$lib/state/auth.svelte';
+	import { getToken, authenticatedUser, isAuthenticated } from '$lib/state/auth.svelte';
 	import CircularProgress from '@smui/circular-progress';
 </script>
 
-{#if auth.token}
+{#if isAuthenticated()}
 	{#await authenticatedUser()}
 		<CircularProgress indeterminate />
 		<span>Loading user info...</span>

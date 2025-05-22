@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { toRadians } from '$lib/math';
 	import {
 		type GeometricData,
 		type MaterialData,
@@ -10,7 +9,8 @@
 		getMaterialData,
 		getSceneData,
 		getTextureData,
-		isComposite
+		isComposite,
+		toRadians
 	} from '$lib/render';
 	import { T } from '@threlte/core';
 	import { getContext } from 'svelte';
@@ -47,6 +47,9 @@
 	{@const geometricData = getGeometricData(config, data)}
 	{#if geometricData.type === 'box'}
 		<!-- box implementation -->
+		<T.Mesh {...standardProps}>
+			<T.BoxGeometry args={[geometricData.a[0], geometricData.a[1], geometricData.a[2]]} />
+		</T.Mesh>
 	{:else if geometricData.type === 'list'}
 		<!-- list implementation -->
 		{#each geometricData.geometrics as geometric}
@@ -56,10 +59,19 @@
 		<!-- obj_model implementation -->
 	{:else if geometricData.type === 'rotate_x'}
 		<!-- rotate_x implementation -->
+		<T.Mesh {...standardProps} rotation={[toRadians(geometricData), 0, 0]}>
+			{@render geometry(geometricData.geometric)}
+		</T.Mesh>
 	{:else if geometricData.type === 'rotate_y'}
 		<!-- rotate_y implementation -->
+		<T.Mesh {...standardProps} rotation={[0, toRadians(geometricData), 0]}>
+			{@render geometry(geometricData.geometric)}
+		</T.Mesh>
 	{:else if geometricData.type === 'rotate_z'}
 		<!-- rotate_z implementation -->
+		<T.Mesh {...standardProps} rotation={[0, 0, toRadians(geometricData)]}>
+			{@render geometry(geometricData.geometric)}
+		</T.Mesh>
 	{:else if geometricData.type === 'translate'}
 		<!-- translate implementation -->
 	{:else if geometricData.type === 'parallelogram'}

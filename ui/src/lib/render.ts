@@ -1,3 +1,5 @@
+import { degreesToRadians, radiansToDegrees } from './math';
+
 export function isNonNullObject(x: unknown): x is Record<string, unknown> {
 	return typeof x === 'object' && x !== null;
 }
@@ -304,6 +306,20 @@ export type TextureSolidColor = {
 
 // utility types
 export type Angle = { degrees: number } | { radians: number };
+
+export function toRadians(angle: Angle): number {
+	if ('degrees' in angle) {
+		return degreesToRadians(angle.degrees);
+	}
+	return angle.radians;
+}
+
+export function toDegrees(angle: Angle): number {
+	if ('radians' in angle) {
+		return radiansToDegrees(angle.radians);
+	}
+	return angle.degrees;
+}
 
 export function getDefaultRenderConfig(): RenderConfig {
 	return getCornellBoxRenderConfig();

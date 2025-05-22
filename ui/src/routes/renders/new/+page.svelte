@@ -8,20 +8,25 @@
 	import { setContext } from 'svelte';
 	import Button from '@smui/button';
 	import { postRender } from '$lib/api';
-	import { auth } from '$lib/state/auth.svelte';
+	import { getToken } from '$lib/state/auth.svelte';
 	import { goto } from '$app/navigation';
 	import CircularProgress from '@smui/circular-progress';
 
-	// desired canvas dimensions
-	let width = $state(500);
-	let height = $state(500);
-	let aspectRatio = $derived(width / height);
+	const authToken = getToken();
 
-	// track container dimensions using state rune
+	// store state
+	const renderConfig = $state(getDefaultRenderConfig());
+	setContext('renderConfig', renderConfig);
+
+	let aspectRatio = $derived(
+		renderConfig.parameters.image_dimensions[0] / renderConfig.parameters.image_dimensions[1]
+	);
+
+	// track container dimensions
 	let containerWidth = $state(0);
 	let containerHeight = $state(0);
 
-	// calculate canvas dimensions using derived rune
+	// calculate canvas dimensions
 	const canvasSize = $derived.by(() => {
 		// if container isn't measured yet, return zeros
 		if (!containerWidth || !containerHeight) return [0, 0];
@@ -38,11 +43,6 @@
 		}
 	});
 
-	// store state
-	const renderConfig = $state(getDefaultRenderConfig());
-
-	setContext('renderConfig', renderConfig);
-
 	const activeScene = $derived(getSceneData(renderConfig, renderConfig.active_scene));
 	const camera = $derived(getCameraData(renderConfig, activeScene.camera));
 
@@ -51,15 +51,10 @@
 	async function handleCreateRender() {
 		isCreatingRender = true;
 
-		if (auth.token === undefined) {
-			goto('/');
-			return;
-		}
-
-		postRender(auth.token, renderConfig)
-			.then(() => {
+		postRender(authToken, renderConfig)
+			.then((response) => {
 				isCreatingRender = false;
-				goto('/');
+				goto(`/renders/${response.id}`);
 			})
 			.catch(() => {
 				isCreatingRender = false;
@@ -71,12 +66,22 @@
 	<Drawer>
 		<Content class="drawer-content">
 			<FormField class="drawer-element">
-				<Slider bind:value={width} min={100} max={5000} step={10} />
-				Width = {width}
+				<Slider
+					bind:value={renderConfig.parameters.image_dimensions[0]}
+					min={100}
+					max={5000}
+					step={10}
+				/>
+				Width = {renderConfig.parameters.image_dimensions[0]}
 			</FormField>
 			<FormField class="drawer-element">
-				<Slider bind:value={height} min={100} max={5000} step={10} />
-				Height = {height}
+				<Slider
+					bind:value={renderConfig.parameters.image_dimensions[1]}
+					min={100}
+					max={5000}
+					step={10}
+				/>
+				Height = {renderConfig.parameters.image_dimensions[1]}
 			</FormField>
 			<FormField class="drawer-element">
 				<Slider bind:value={camera.target_location[0]} min={0.0} max={1.0} step={0.01} />

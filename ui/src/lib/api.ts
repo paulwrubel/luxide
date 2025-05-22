@@ -184,6 +184,19 @@ export type Duration = {
 	nanos: number;
 };
 
+export async function getAllRenders(token: string): Promise<Render[]> {
+	const response = await fetch(`${getAPIURL()}/renders?format=precise`, {
+		headers: { Authorization: `Bearer ${token}` }
+	});
+
+	if (!response.ok) {
+		const body = await response.text();
+		throw new Error(`failed to get renders: (${response.status}: ${body})`);
+	}
+
+	return (await response.json()) as Render[];
+}
+
 export async function getRender(token: string, renderID: number): Promise<Render> {
 	const response = await fetch(`${getAPIURL()}/renders/${renderID}?format=precise`, {
 		headers: { Authorization: `Bearer ${token}` }
@@ -195,6 +208,62 @@ export async function getRender(token: string, renderID: number): Promise<Render
 	}
 
 	return (await response.json()) as Render;
+}
+
+export async function pauseRender(token: string, renderID: number): Promise<void> {
+	const response = await fetch(`${getAPIURL()}/renders/${renderID}/pause`, {
+		headers: { Authorization: `Bearer ${token}` },
+		method: 'POST'
+	});
+
+	if (!response.ok) {
+		const body = await response.text();
+		throw new Error(`failed to pause render: (${response.status}: ${body})`);
+	}
+}
+
+export async function resumeRender(token: string, renderID: number): Promise<void> {
+	const response = await fetch(`${getAPIURL()}/renders/${renderID}/resume`, {
+		headers: { Authorization: `Bearer ${token}` },
+		method: 'POST'
+	});
+
+	if (!response.ok) {
+		const body = await response.text();
+		throw new Error(`failed to resume render: (${response.status}: ${body})`);
+	}
+}
+
+export async function deleteRender(token: string, renderID: number): Promise<void> {
+	const response = await fetch(`${getAPIURL()}/renders/${renderID}`, {
+		headers: { Authorization: `Bearer ${token}` },
+		method: 'DELETE'
+	});
+
+	if (!response.ok) {
+		const body = await response.text();
+		throw new Error(`failed to delete render: (${response.status}: ${body})`);
+	}
+}
+
+export async function updateRenderTotalCheckpoints(
+	token: string,
+	renderID: number,
+	newTotalCheckpoints: number
+): Promise<void> {
+	const response = await fetch(`${getAPIURL()}/renders/${renderID}/parameters/total_checkpoints`, {
+		headers: {
+			Authorization: `Bearer ${token}`,
+			'Content-Type': 'application/json'
+		},
+		method: 'PUT',
+		body: JSON.stringify({ new_total_checkpoints: newTotalCheckpoints })
+	});
+
+	if (!response.ok) {
+		const body = await response.text();
+		throw new Error(`failed to update render total checkpoints: (${response.status}: ${body})`);
+	}
 }
 
 export async function getLatestCheckpointImage(token: string, renderID: number): Promise<Blob> {

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { auth } from '$lib/state/auth.svelte';
+	import { isAuthenticated } from '$lib/state/auth.svelte';
 	import TopAppBar, { Row, Section, Title } from '@smui/top-app-bar';
 	import LoginButton from '$lib/LoginButton.svelte';
 	import UserInfo from '$lib/UserInfo.svelte';
@@ -26,7 +26,7 @@
 					<Title>Luxide</Title>
 				</Section>
 				<Section align="end" toolbar>
-					{#if auth.token}
+					{#if isAuthenticated()}
 						<UserInfo />
 					{:else}
 						<LoginButton />

@@ -11,6 +11,9 @@
 	$error: color-palette.$red-700
 );
 
+// typography styles
+@use '@material/typography/mdc-typography';
+
 html,
 body {
 	background-color: #111111;

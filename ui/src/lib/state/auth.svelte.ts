@@ -1,7 +1,8 @@
+import { goto } from '$app/navigation';
 import { fetchUserInfo, type User } from '$lib/api';
 
 // global auth state
-export const auth = $state({
+const auth = $state({
 	token: localStorage?.getItem('auth_token') ?? undefined
 });
 
@@ -20,6 +21,15 @@ const user = $derived.by(() => {
 
 export async function authenticatedUser(): Promise<User | undefined> {
 	return user ? await user : undefined;
+}
+
+export function getToken(): string {
+	if (!auth.token) {
+		goto('/login');
+		return '';
+	}
+
+	return auth.token;
 }
 
 // set token function to be called from components

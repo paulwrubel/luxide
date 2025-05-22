@@ -1,50 +1,21 @@
-<script>
-	import { createQuery } from '@tanstack/svelte-query';
-	import { auth } from '$lib/state/auth.svelte';
-	import { page } from '$app/state';
+<script lang="ts">
 	import {
-		getLatestCheckpointImage,
-		getRender,
 		isRenderStateCreated,
 		isRenderStateFinishedCheckpointIteration,
 		isRenderStatePaused,
 		isRenderStatePausing,
-		isRenderStateRunning
+		isRenderStateRunning,
+		type Render
 	} from '$lib/api';
 	import LinearProgress from '@smui/linear-progress';
-	import { onDestroy } from 'svelte';
+	import type { CreateQueryResult } from '@tanstack/svelte-query';
 
-	const imageURLQuery = createQuery({
-		queryKey: ['latestCheckpoint', Number(page.params.id)],
-		queryFn: async () => {
-			if (auth.token === undefined) {
-				throw new Error('YOU AINT LOGGED IN!');
-			}
+	type Props = {
+		renderQuery: CreateQueryResult<Render, Error>;
+		imageURLQuery: CreateQueryResult<string, Error>;
+	};
 
-			return await getLatestCheckpointImage(auth.token, Number(page.params.id)).then((blob) => {
-				return URL.createObjectURL(blob);
-			});
-		},
-		refetchInterval: 1000
-	});
-
-	const renderQuery = createQuery({
-		queryKey: ['render', Number(page.params.id)],
-		queryFn: async () => {
-			if (auth.token === undefined) {
-				throw new Error('YOU AINT LOGGED IN!');
-			}
-			return await getRender(auth.token, Number(page.params.id));
-		},
-		refetchInterval: 1000
-	});
-
-	onDestroy(async () => {
-		const url = $imageURLQuery.data;
-		if (url) {
-			URL.revokeObjectURL(url);
-		}
-	});
+	const { renderQuery, imageURLQuery }: Props = $props();
 </script>
 
 <div class="app-content-sizing-container">
@@ -62,24 +33,26 @@
 		<p>Error loading render!!</p>
 	{:else if $renderQuery.isSuccess}
 		{@const state = $renderQuery.data.state}
+		{@const totalCheckpoints = $renderQuery.data.config.parameters.total_checkpoints}
 		{#if isRenderStateCreated(state)}
 			<p>CREATED</p>
 		{:else if isRenderStateRunning(state)}
 			<LinearProgress progress={state.running.progress_info.progress} />
 			<p>
-				Running to checkpoint {state.running.checkpoint_iteration}
+				Running to checkpoint {state.running.checkpoint_iteration} / {totalCheckpoints}
 			</p>
 		{:else if isRenderStateFinishedCheckpointIteration(state)}
 			<p>
-				Finished checkpoint {state.finished_checkpoint_iteration}
+				Finished checkpoint {state.finished_checkpoint_iteration} / {totalCheckpoints}
 			</p>
 		{:else if isRenderStatePausing(state)}
+			<LinearProgress progress={state.pausing.progress_info.progress} />
 			<p>
-				Pausing at checkpoint {state.pausing.checkpoint_iteration}
+				Pausing at checkpoint {state.pausing.checkpoint_iteration} / {totalCheckpoints}
 			</p>
 		{:else if isRenderStatePaused(state)}
 			<p>
-				Paused at checkpoint {state.paused}
+				Paused at checkpoint {state.paused} / {totalCheckpoints}
 			</p>
 		{/if}
 	{/if}
