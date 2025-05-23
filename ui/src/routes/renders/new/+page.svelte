@@ -11,6 +11,7 @@
 	import { getToken } from '$lib/state/auth.svelte';
 	import { goto } from '$app/navigation';
 	import CircularProgress from '@smui/circular-progress';
+	import Controls from './Controls.svelte';
 
 	const authToken = getToken();
 
@@ -43,9 +44,6 @@
 		}
 	});
 
-	const activeScene = $derived(getSceneData(renderConfig, renderConfig.active_scene));
-	const camera = $derived(getCameraData(renderConfig, activeScene.camera));
-
 	let isCreatingRender = $state(false);
 
 	async function handleCreateRender() {
@@ -65,28 +63,7 @@
 <div class="view-container">
 	<Drawer>
 		<Content class="drawer-content">
-			<FormField class="drawer-element">
-				<Slider
-					bind:value={renderConfig.parameters.image_dimensions[0]}
-					min={100}
-					max={5000}
-					step={10}
-				/>
-				Width = {renderConfig.parameters.image_dimensions[0]}
-			</FormField>
-			<FormField class="drawer-element">
-				<Slider
-					bind:value={renderConfig.parameters.image_dimensions[1]}
-					min={100}
-					max={5000}
-					step={10}
-				/>
-				Height = {renderConfig.parameters.image_dimensions[1]}
-			</FormField>
-			<FormField class="drawer-element">
-				<Slider bind:value={camera.target_location[0]} min={0.0} max={1.0} step={0.01} />
-				Target X = {camera.target_location[0]}
-			</FormField>
+			<Controls {renderConfig} />
 			<Button
 				onclick={() => {
 					handleCreateRender();

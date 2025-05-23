@@ -442,7 +442,7 @@ export function getCornellBoxRenderConfig(): RenderConfig {
 					is_culled: false,
 					material: 'lambertian_white'
 				},
-				degrees: -18.0,
+				degrees: 342.0,
 				around: [0.65, 0.0, -0.35]
 			}
 		},

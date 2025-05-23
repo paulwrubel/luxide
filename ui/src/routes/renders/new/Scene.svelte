@@ -15,7 +15,7 @@
 	import { T } from '@threlte/core';
 	import { getContext } from 'svelte';
 	import * as THREE from 'three';
-	import { createParallelogramMesh } from './utils';
+	import { createParallelogramMesh, createTriangleMesh } from './utils';
 	import { emissive } from 'three/tsl';
 	import { PointLight } from 'three';
 
@@ -38,160 +38,246 @@
 		return cam;
 	});
 
-	$inspect(threeCam);
+	function getGeometricMeshesAndLights(data: string | GeometricData): (THREE.Mesh | THREE.Light)[] {
+		const geometricData = getGeometricData(config, data);
+
+		const meshes: (THREE.Mesh | THREE.Light)[] = [];
+
+		switch (geometricData.type) {
+			case 'box': {
+				const mesh = new THREE.Mesh();
+
+				const width = Math.abs(geometricData.a[0] - geometricData.b[0]);
+				const height = Math.abs(geometricData.a[1] - geometricData.b[1]);
+				const depth = Math.abs(geometricData.a[2] - geometricData.b[2]);
+
+				const position = [
+					(geometricData.a[0] + geometricData.b[0]) / 2,
+					(geometricData.a[1] + geometricData.b[1]) / 2,
+					(geometricData.a[2] + geometricData.b[2]) / 2
+				];
+
+				mesh.geometry = new THREE.BoxGeometry(width, height, depth);
+				const materials = getMaterials(geometricData.material);
+				if (materials.length === 1) {
+					mesh.material = materials[0];
+				} else if (materials.length > 1) {
+					mesh.material = materials;
+				}
+
+				mesh.position.set(position[0], position[1], position[2]);
+
+				meshes.push(mesh);
+				break;
+			}
+			case 'list': {
+				meshes.push(
+					...geometricData.geometrics
+						.map((elementData) =>
+							getGeometricMeshesAndLights(getGeometricData(config, elementData))
+						)
+						.flat()
+				);
+				break;
+			}
+			case 'obj_model': {
+				break;
+			}
+			case 'rotate_x': {
+				const subMeshes = getGeometricMeshesAndLights(geometricData.geometric);
+
+				subMeshes.forEach((subMesh) => {
+					subMesh.rotation.x += toRadians(geometricData);
+				});
+
+				meshes.push(...subMeshes);
+				break;
+			}
+			case 'rotate_y': {
+				const subMeshes = getGeometricMeshesAndLights(geometricData.geometric);
+
+				subMeshes.forEach((subMesh) => {
+					subMesh.rotation.y += toRadians(geometricData);
+				});
+
+				meshes.push(...subMeshes);
+				break;
+			}
+			case 'rotate_z': {
+				const subMeshes = getGeometricMeshesAndLights(geometricData.geometric);
+
+				subMeshes.forEach((subMesh) => {
+					subMesh.rotation.z += toRadians(geometricData);
+				});
+
+				meshes.push(...subMeshes);
+				break;
+			}
+			case 'translate': {
+				const subMeshes = getGeometricMeshesAndLights(geometricData.geometric);
+
+				subMeshes.forEach((subMesh) => {
+					subMesh.position.set(
+						subMesh.position.x + geometricData.translation[0],
+						subMesh.position.y + geometricData.translation[1],
+						subMesh.position.z + geometricData.translation[2]
+					);
+				});
+
+				meshes.push(...subMeshes);
+				break;
+			}
+			case 'parallelogram': {
+				const mesh = createParallelogramMesh(geometricData);
+
+				const materials = getMaterials(geometricData.material);
+				if (materials.length === 1) {
+					mesh.material = materials[0];
+				} else if (materials.length > 1) {
+					mesh.material = materials;
+				}
+
+				meshes.push(mesh);
+				break;
+			}
+			case 'sphere': {
+				const mesh = new THREE.Mesh();
+
+				mesh.geometry = new THREE.SphereGeometry(geometricData.radius);
+				const materials = getMaterials(geometricData.material);
+				if (materials.length === 1) {
+					mesh.material = materials[0];
+				} else if (materials.length > 1) {
+					mesh.material = materials;
+				}
+
+				meshes.push(mesh);
+				break;
+			}
+			case 'triangle': {
+				const mesh = createTriangleMesh(geometricData);
+
+				const materials = getMaterials(geometricData.material);
+				if (materials.length === 1) {
+					mesh.material = materials[0];
+				} else if (materials.length > 1) {
+					mesh.material = materials;
+				}
+
+				meshes.push(mesh);
+				break;
+			}
+			case 'constant_volume': {
+				break;
+			}
+		}
+
+		meshes.push(...getLightSources(data));
+
+		meshes.forEach((mesh) => {
+			mesh.castShadow = true;
+			mesh.receiveShadow = true;
+		});
+
+		return meshes;
+	}
+
+	function getLightSources(geometric: string | GeometricData): THREE.Light[] {
+		const geometricData = getGeometricData(config, geometric);
+
+		const lightSources: THREE.Light[] = [];
+		if (!isComposite(geometricData) && geometricData.type !== 'constant_volume') {
+			const materialData = getMaterialData(config, geometricData.material);
+			const emittanceTextureData = getTextureData(config, materialData.emittance_texture);
+			const emissiveColor =
+				emittanceTextureData.type === 'color' ? emittanceTextureData.color : undefined;
+
+			if (emissiveColor !== undefined) {
+				const pointLight = new THREE.PointLight();
+
+				pointLight.position.set(0.5, 0.99, -0.5);
+				pointLight.intensity = 0.1;
+				pointLight.color = new THREE.Color(...emissiveColor);
+
+				lightSources.push(pointLight);
+			}
+		}
+
+		lightSources.forEach((light) => {
+			light.castShadow = true;
+			light.receiveShadow = true;
+		});
+
+		return lightSources;
+	}
+
+	function getMaterials(data: string | MaterialData): THREE.Material[] {
+		const materialData = getMaterialData(config, data);
+
+		const reflectanceTextureData = getTextureData(config, materialData.reflectance_texture);
+		const emittanceTextureData = getTextureData(config, materialData.emittance_texture);
+		const emissiveColor =
+			emittanceTextureData.type === 'color' ? emittanceTextureData.color : undefined;
+
+		const materials: THREE.Material[] = [];
+
+		switch (materialData.type) {
+			case 'dielectric': {
+				break;
+			}
+			case 'lambertian': {
+				switch (reflectanceTextureData.type) {
+					case 'checker': {
+						break;
+					}
+					case 'image': {
+						break;
+					}
+					case 'color': {
+						const material = new THREE.MeshLambertMaterial({
+							color: new THREE.Color(...reflectanceTextureData.color),
+							emissive: emissiveColor ? new THREE.Color(...emissiveColor) : undefined
+						});
+
+						materials.push(material);
+						break;
+					}
+				}
+				break;
+			}
+			case 'specular': {
+				switch (reflectanceTextureData.type) {
+					case 'checker': {
+						break;
+					}
+					case 'image': {
+						break;
+					}
+					case 'color': {
+						const material = new THREE.MeshStandardMaterial({
+							color: new THREE.Color(...reflectanceTextureData.color),
+							emissive: emissiveColor ? new THREE.Color(...emissiveColor) : undefined,
+
+							metalness: 1.0,
+							roughness: materialData.roughness
+						});
+
+						materials.push(material);
+						break;
+					}
+				}
+			}
+		}
+
+		return materials;
+	}
 </script>
 
-{#snippet geometry(data: string | GeometricData)}
-	{@const standardProps = { castShadow: true, receiveShadow: true }}
-
-	{@const geometricData = getGeometricData(config, data)}
-	{#if geometricData.type === 'box'}
-		<!-- box implementation -->
-		<T.Mesh {...standardProps}>
-			<T.BoxGeometry args={[geometricData.a[0], geometricData.a[1], geometricData.a[2]]} />
-		</T.Mesh>
-	{:else if geometricData.type === 'list'}
-		<!-- list implementation -->
-		{#each geometricData.geometrics as geometric}
-			{@render geometry(geometric)}
-		{/each}
-	{:else if geometricData.type === 'obj_model'}
-		<!-- obj_model implementation -->
-	{:else if geometricData.type === 'rotate_x'}
-		<!-- rotate_x implementation -->
-		<T.Mesh {...standardProps} rotation={[toRadians(geometricData), 0, 0]}>
-			{@render geometry(geometricData.geometric)}
-		</T.Mesh>
-	{:else if geometricData.type === 'rotate_y'}
-		<!-- rotate_y implementation -->
-		<T.Mesh {...standardProps} rotation={[0, toRadians(geometricData), 0]}>
-			{@render geometry(geometricData.geometric)}
-		</T.Mesh>
-	{:else if geometricData.type === 'rotate_z'}
-		<!-- rotate_z implementation -->
-		<T.Mesh {...standardProps} rotation={[0, 0, toRadians(geometricData)]}>
-			{@render geometry(geometricData.geometric)}
-		</T.Mesh>
-	{:else if geometricData.type === 'translate'}
-		<!-- translate implementation -->
-	{:else if geometricData.type === 'parallelogram'}
-		<!-- parallelogram implementation -->
-		<T is={createParallelogramMesh(geometricData)} {...standardProps}>
-			{@render material(geometricData.material)}
-		</T>
-	{:else if geometricData.type === 'sphere'}
-		<!-- sphere implementation -->
-		<T.Mesh {...standardProps}>
-			<T.SphereGeometry args={[geometricData.radius]} />
-			{@render material(geometricData.material)}
-		</T.Mesh>
-	{:else if geometricData.type === 'triangle'}
-		<!-- triangle implementation -->
-	{:else if geometricData.type === 'constant_volume'}
-		<!-- constant_volume implementation -->
-	{/if}
-
-	{@render lightSource(data)}
-{/snippet}
-
-{#snippet material(data: string | MaterialData)}
-	{@const materialData = getMaterialData(config, data)}
-
-	{@const reflectanceTextureData = getTextureData(config, materialData.reflectance_texture)}
-	{@const emittanceTextureData = getTextureData(config, materialData.emittance_texture)}
-	{@const emissiveColor =
-		emittanceTextureData.type === 'color' ? emittanceTextureData.color : undefined}
-
-	{#if materialData.type === 'dielectric'}
-		<!-- dielectric implementation -->
-	{:else if materialData.type === 'lambertian'}
-		<!-- lambertian implementation -->
-		{#if reflectanceTextureData.type === 'color'}
-			<T.MeshStandardMaterial color={reflectanceTextureData.color} emissive={emissiveColor} />
-		{/if}
-	{:else if materialData.type === 'specular'}
-		<!-- specular implementation -->
-	{/if}
-{/snippet}
-
-{#snippet lightSource(geometric: string | GeometricData)}
-	{@const geometricData = getGeometricData(config, geometric)}
-	<!-- {@debug geometricData} -->
-	{#if !isComposite(geometricData) && geometricData.type !== 'constant_volume'}
-		<!-- {@debug geometricData} -->
-		{@const materialData = getMaterialData(config, geometricData.material)}
-		{@const emittanceTextureData = getTextureData(config, materialData.emittance_texture)}
-		{@const emissiveColor =
-			emittanceTextureData.type === 'color' ? emittanceTextureData.color : undefined}
-
-		{#if emissiveColor !== undefined}
-			<T.PointLight
-				position={[0.5, 0.99, -0.5]}
-				intensity={0.1}
-				color={(() => {
-					console.log('point lighting: ', emissiveColor);
-					return emissiveColor;
-				})()}
-				castShadow
-				receiveShadow
-			/>
-		{/if}
-	{/if}
-{/snippet}
-
 <T is={threeCam} makeDefault />
+<T.AmbientLight intensity={0.05} />
 
 {#each activeScene.geometrics as geometric}
-	{@render geometry(geometric)}
+	{#each getGeometricMeshesAndLights(geometric) as meshOrLight}
+		<T is={meshOrLight} />
+	{/each}
 {/each}
-
-<!-- <T.AmbientLight /> -->
-
-<!-- <T.Mesh position={[0.1, 0.1, -0.1]}>
-	<T.SphereGeometry args={[0.05]} />
-	<T.MeshLambertMaterial color="green" emissive="white" />
-</T.Mesh> -->
-
-<!-- <T.PointLight position={[0.1, 0.1, -0.1]} castShadow receiveShadow /> -->
-
-<!-- sphere -->
-<!-- <T.Mesh position={[0.5, 0.5, -0.5]} castShadow receiveShadow>
-	<T.SphereGeometry args={[0.25]} />
-	<T.MeshStandardMaterial color="green" />
-</T.Mesh> -->
-
-<!-- left wall -->
-<!-- <T.Mesh position={[0, 0.5, -0.5]} rotation={[0, toRadians(90), 0]} castShadow receiveShadow>
-	<T.PlaneGeometry args={[1, 1]} />
-	<T.MeshStandardMaterial color="red" />
-</T.Mesh> -->
-
-<!-- right wall -->
-<!-- <T.Mesh position={[1, 0.5, -0.5]} rotation={[0, toRadians(-90), 0]} castShadow receiveShadow>
-	<T.PlaneGeometry args={[1, 1]} />
-	<T.MeshStandardMaterial color="blue" />
-</T.Mesh> -->
-
-<!-- floor -->
-<!-- <T.Mesh position={[0.5, 0, -0.5]} rotation={[toRadians(-90), 0, 0]} castShadow receiveShadow>
-	<T.PlaneGeometry args={[1, 1]} />
-	<T.MeshStandardMaterial color="green" />
-</T.Mesh> -->
-
-<!-- ceiling -->
-<!-- <T.Mesh position={[0.5, 1, -0.5]} rotation={[toRadians(90), 0, 0]} castShadow receiveShadow>
-	<T.PlaneGeometry args={[1, 1]} />
-	<T.MeshStandardMaterial color="purple" />
-</T.Mesh> -->
-
-<!-- back wall -->
-<!-- <T.Mesh position={[0.5, 0.5, -1.0]} rotation={[0, 0, 0]} castShadow receiveShadow>
-	<T.PlaneGeometry args={[1, 1]} />
-	<T.MeshStandardMaterial color="white" />
-</T.Mesh> -->
-
-<!-- front wall -->
-<!-- <T.Mesh position={[0.5, 0.5, 0]} rotation={[toRadians(180), 0, 0]} castShadow receiveShadow>
-	<T.PlaneGeometry args={[1, 1]} />
-	<T.MeshStandardMaterial color="white" />
-</T.Mesh> -->
