@@ -61,7 +61,7 @@
 </script>
 
 <div class="view-container">
-	<Drawer>
+	<Drawer class="drawer">
 		<Content class="drawer-content">
 			<Controls {renderConfig} />
 			<Button
@@ -100,6 +100,10 @@
 		display: flex;
 		width: 100%;
 		height: 100%;
+	}
+
+	:global(.drawer) {
+		width: 350px;
 	}
 
 	:global(.drawer-content) {
