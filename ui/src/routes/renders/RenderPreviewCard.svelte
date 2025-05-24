@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Card, { Content, Media, PrimaryAction } from '@smui/card';
+	import { Card, Spinner } from 'flowbite-svelte';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { getToken } from '$lib/state/auth.svelte';
 	import { getLatestCheckpointImage } from '$lib/api';
@@ -24,63 +24,40 @@
 	});
 </script>
 
-<Card class="render-card">
-	<PrimaryAction onclick={() => goto(`/renders/${render.id}`)}>
-		<Content class="card-content">
-			<h2 class="mdc-typography--headline6">
-				{render.id}
-			</h2>
-			<code class="mdc-typography--body1"
-				><em>
-					{render.config.name}
-				</em>
-			</code>
-		</Content>
-		<Media class="media">
+<Card href={`/renders/${render.id}`} class="!bg-zinc-800 !text-zinc-200 hover:!bg-zinc-700">
+	<!-- card image section -->
+	<div class="flex w-full items-center justify-center p-2">
+		{#if $checkpointImageURLQuery.isPending}
 			{@const renderSize = render.config.parameters.image_dimensions}
-			{#if $checkpointImageURLQuery.isPending}
-				<img
-					src="https://placehold.co/{renderSize[0]}x{renderSize[1]}?text=Render%20{render.id}"
-					alt="Render Placeholder"
-					class="card-image"
-				/>
-			{:else if $checkpointImageURLQuery.isError}
-				<img
-					src="https://placehold.co/{renderSize[0]}x{renderSize[1]}?text=Render%20{render.id}"
-					alt="Render Error Placeholder"
-					class="card-image"
-				/>
-			{:else if $checkpointImageURLQuery.isSuccess}
-				<img src={$checkpointImageURLQuery.data} alt="Render Preview" class="card-image" />
-			{/if}
-		</Media>
-	</PrimaryAction>
+			<div class="flex flex-col items-center justify-center p-4">
+				<Spinner size="8" color="primary" />
+				<span class="mt-2 text-sm">loading preview...</span>
+			</div>
+		{:else if $checkpointImageURLQuery.isError}
+			{@const renderSize = render.config.parameters.image_dimensions}
+			<img
+				src="https://placehold.co/{renderSize[0]}x{renderSize[1]}?text=Error"
+				alt="Render Error"
+				class="max-h-48 w-full object-scale-down"
+			/>
+		{:else if $checkpointImageURLQuery.isSuccess}
+			<img
+				src={$checkpointImageURLQuery.data}
+				alt="Render Preview"
+				class="max-h-48 w-full object-scale-down"
+			/>
+		{/if}
+	</div>
+
+	<!-- card header section -->
+	<div class="flex items-baseline justify-between border-t p-3">
+		<h5 class="text-lg font-semibold">
+			{render.id}
+		</h5>
+		<code class="text-sm font-light italic">
+			{render.config.name}
+		</code>
+	</div>
 </Card>
 
-<style>
-	/* :global(.render-card) {
-		height: 200px;
-	} */
-
-	:global(.card-content) {
-		display: flex;
-		justify-content: space-between;
-		align-items: baseline;
-	}
-
-	:global(.card-content) * {
-		margin: 0;
-	}
-
-	:global(.media) {
-		display: flex;
-		justify-content: center;
-		align-items: center;
-	}
-
-	.card-image {
-		width: 100%;
-		height: fit-content(100%);
-		object-fit: scale-down;
-	}
-</style>
+<!-- using Tailwind classes directly in HTML instead of CSS -->

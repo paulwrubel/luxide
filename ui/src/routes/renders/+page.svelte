@@ -1,10 +1,6 @@
 <script lang="ts">
-	import { Icon } from '@smui/icon-button';
-	// import { mdiInformation } from '@mdi/js';
 	import { mdiPlus } from '@mdi/js';
-	import LayoutGrid, { Cell } from '@smui/layout-grid';
-	import Card, { Content, Media } from '@smui/card';
-	import Fab from '@smui/fab';
+	import { Button, Spinner, Alert } from 'flowbite-svelte';
 	import { goto } from '$app/navigation';
 	import { getToken } from '$lib/state/auth.svelte';
 	import { createQuery } from '@tanstack/svelte-query';
@@ -21,47 +17,31 @@
 		}
 	});
 
-	const placeholderItem = Array.from({ length: 10 });
+	const placeholderItem = Array.from({ length: 100 });
 </script>
 
-<main class="main-content">
-	<Fab
-		class="create-render-fab"
-		onclick={() => {
-			goto('/renders/new');
-		}}
-	>
-		<Icon tag="svg" viewBox="0 0 24 24">
-			<path fill="currentColor" d={mdiPlus} />
-		</Icon>
-	</Fab>
-	<LayoutGrid fixedColumnWidth class="render-grid">
-		{#if $allRendersQuery.isPending}
-			<p>Loading...</p>
-		{:else if $allRendersQuery.isError}
-			<p>Error loading renders!!</p>
-		{:else if $allRendersQuery.isSuccess}
+<div class="flex w-full flex-col p-12">
+	{#if $allRendersQuery.isPending}
+		<div class="flex w-full justify-center py-8">
+			<Spinner size="12" color="primary" />
+			<span class="ml-2">Loading renders...</span>
+		</div>
+	{:else if $allRendersQuery.isError}
+		<Alert color="red" class="w-full">
+			<span class="font-medium">Error loading renders</span>
+		</Alert>
+	{:else if $allRendersQuery.isSuccess}
+		<div class="flex w-full flex-wrap justify-center gap-4">
 			{#each $allRendersQuery.data as render}
-				<Cell span={3}>
+				<div class="w-80">
 					<RenderPreviewCard {render} />
-				</Cell>
+				</div>
 			{/each}
-			<Cell span={3}>
+			<div class="w-80">
 				<NewRenderCard />
-			</Cell>
-		{/if}
-	</LayoutGrid>
-</main>
+			</div>
+		</div>
+	{/if}
+</div>
 
-<style>
-	.main-content {
-		display: flex;
-		flex-direction: column;
-		width: 100%;
-		padding: 1rem;
-	}
-
-	:global(.create-render-fab) {
-		align-self: flex-end;
-	}
-</style>
+<!-- using Tailwind classes directly in HTML instead of CSS -->

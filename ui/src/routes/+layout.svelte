@@ -1,8 +1,9 @@
 <script lang="ts">
+	import '../app.css';
 	import { isAuthenticated } from '$lib/state/auth.svelte';
-	import TopAppBar, { Row, Section, Title } from '@smui/top-app-bar';
-	import LoginButton from '$lib/LoginButton.svelte';
-	import UserInfo from '$lib/UserInfo.svelte';
+	import { Navbar, NavBrand } from 'flowbite-svelte';
+	import LoginButton from './LoginButton.svelte';
+	import UserInfo from './UserInfo.svelte';
 	import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query';
 	import { SvelteQueryDevtools } from '@tanstack/svelte-query-devtools';
 	import { browser } from '$app/environment';
@@ -18,45 +19,35 @@
 	});
 </script>
 
-<QueryClientProvider client={queryClient}>
-	<div class="app-container">
-		<TopAppBar variant="static">
-			<Row>
-				<Section>
-					<Title>Luxide</Title>
-				</Section>
-				<Section align="end" toolbar>
-					{#if isAuthenticated()}
-						<UserInfo />
-					{:else}
-						<LoginButton />
-					{/if}
-				</Section>
-			</Row>
-		</TopAppBar>
+<!-- for applying global styles -->
+<main class="bg-zinc-50 dark:bg-zinc-950">
+	<QueryClientProvider client={queryClient}>
+		<!-- flex container for the entire app -->
+		<div class="flex min-h-screen w-full flex-col">
+			<!-- app bar -->
+			<Navbar fluid class="border-b border-zinc-800 bg-zinc-900">
+				<NavBrand href="/">
+					<span class="self-center whitespace-nowrap text-xl font-semibold text-white">
+						Luxide (Flowbite)
+					</span>
+				</NavBrand>
+				{#if isAuthenticated()}
+					<UserInfo />
+				{:else}
+					<LoginButton />
+				{/if}
+			</Navbar>
 
-		<div class="content-container">
+			<!-- main content -->
 			{@render children()}
 		</div>
-	</div>
-	<SvelteQueryDevtools />
-</QueryClientProvider>
+		<SvelteQueryDevtools buttonPosition="bottom-right" />
+	</QueryClientProvider>
+</main>
 
 <style>
-	/* container for the entire app */
-	.app-container {
-		display: flex;
-		flex-direction: column;
-		height: 100vh;
-		width: 100%;
-		overflow: hidden;
-	}
+	/* this style block is purposefully empty */
+	/* is it used in the preprocess step for tailwind (I think) to apply the styles globally */
 
-	/* container for the main content below the app bar */
-	.content-container {
-		flex: 1;
-		overflow: auto;
-		display: flex;
-		min-width: 0; /* prevent flex items from overflowing */
-	}
+	/* in any case, you'll find it to be... problematic to remove :) */
 </style>

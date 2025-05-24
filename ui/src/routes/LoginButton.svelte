@@ -1,11 +1,10 @@
 <script lang="ts">
-	import Button from '@smui/button';
+	import { Button } from 'flowbite-svelte';
 	import { navigateToAPILogin } from '$lib/api';
 </script>
 
 <Button
-	color="secondary"
-	variant="raised"
+	color="primary"
 	onclick={async () => {
 		await navigateToAPILogin();
 	}}

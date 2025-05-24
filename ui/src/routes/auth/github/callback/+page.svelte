@@ -55,15 +55,15 @@
 	handleCallback();
 </script>
 
-<div class="flex items-center justify-center min-h-screen">
+<div class="flex min-h-screen items-center justify-center">
 	{#if loading}
 		<div class="text-center">
-			<div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mb-4"></div>
+			<div class="mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-gray-900"></div>
 			<p class="text-lg">Completing authentication...</p>
 		</div>
 	{:else if error}
 		<div class="text-center text-red-600">
-			<p class="text-lg mb-4">Authentication failed</p>
+			<p class="mb-4 text-lg">Authentication failed</p>
 			<p class="text-sm">{error}</p>
 			<a href="/" class="mt-4 inline-block text-blue-600 hover:underline">Return to home</a>
 		</div>
