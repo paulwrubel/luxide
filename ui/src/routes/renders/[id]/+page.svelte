@@ -1,23 +1,11 @@
 <script lang="ts">
-	import { Drawer, Button, Spinner, Input, Sidebar } from 'flowbite-svelte';
+	import { Sidebar } from 'flowbite-svelte';
 	import DisplayRender from './DisplayRender.svelte';
 	import { getToken } from '$lib/state/auth.svelte';
 	import { page } from '$app/state';
-	import {
-		deleteRender,
-		getLatestCheckpointImage,
-		getRender,
-		isRenderStatePaused,
-		isRenderStatePausing,
-		isRenderStateRunning,
-		pauseRender,
-		resumeRender,
-		updateRenderTotalCheckpoints
-	} from '$lib/api';
-	// Replaced with Flowbite Input
+	import { getLatestCheckpointImage, getRender } from '$lib/api';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { onDestroy } from 'svelte';
-	import { goto } from '$app/navigation';
 	import Controls from './Controls.svelte';
 
 	const AUTO_REFRESH_INTERVAL_MS = 1000;
@@ -51,13 +39,18 @@
 </script>
 
 <div class="flex h-full w-full flex-1">
-	<Sidebar divClass="!bg-inherit" alwaysOpen position="static" class="z-10 !bg-zinc-900">
+	<Sidebar
+		divClass="!bg-inherit h-full"
+		alwaysOpen
+		position="static"
+		class="w-82 z-10 !bg-zinc-900"
+	>
 		{#if $renderQuery.isSuccess}
 			<Controls render={$renderQuery.data} />
 		{/if}
 	</Sidebar>
 
-	<div class="h-full min-w-0 flex-1 self-center p-4">
+	<div class="h-full min-w-0 flex-1 self-center">
 		<DisplayRender {renderQuery} {imageURLQuery} />
 	</div>
 </div>

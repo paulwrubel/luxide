@@ -327,7 +327,7 @@ export function getDefaultRenderConfig(): RenderConfig {
 
 export function getCornellBoxRenderConfig(): RenderConfig {
 	return {
-		name: 'cornell_box',
+		name: 'Cornell Box',
 		parameters: {
 			image_dimensions: [500, 500],
 			tile_dimensions: [1, 1],
@@ -339,7 +339,7 @@ export function getCornellBoxRenderConfig(): RenderConfig {
 			use_scaling_truncation: true
 		},
 		active_scene: {
-			geometrics: ['room', 'far_left_box', 'near_right_box'],
+			geometrics: ['Room', 'Far Left Box', 'Near Right Box'],
 			use_bvh: true,
 			camera: {
 				vertical_field_of_view_degrees: 40.0,
@@ -352,140 +352,140 @@ export function getCornellBoxRenderConfig(): RenderConfig {
 			background_color: [0.0, 0.0, 0.0]
 		},
 		geometrics: {
-			left_wall: {
+			'Left Wall': {
 				type: 'parallelogram',
 				lower_left: [0.0, 0.0, 0.0],
 				u: [0.0, 0.0, -1.0],
 				v: [0.0, 1.0, 0.0],
 				is_culled: false,
-				material: 'lambertian_green'
+				material: 'Green'
 			},
-			right_wall: {
+			'Right Wall': {
 				type: 'parallelogram',
 				lower_left: [1.0, 0.0, -1.0],
 				u: [0.0, 0.0, 1.0],
 				v: [0.0, 1.0, 0.0],
 				is_culled: false,
-				material: 'lambertian_red'
+				material: 'Red'
 			},
-			floor: {
+			Floor: {
 				type: 'parallelogram',
 				lower_left: [0.0, 0.0, 0.0],
 				u: [1.0, 0.0, 0.0],
 				v: [0.0, 0.0, -1.0],
 				is_culled: false,
-				material: 'lambertian_white'
+				material: 'White'
 			},
-			ceiling: {
+			Ceiling: {
 				type: 'parallelogram',
 				lower_left: [0.0, 1.0, -1.0],
 				u: [1.0, 0.0, 0.0],
 				v: [0.0, 0.0, 1.0],
 				is_culled: false,
-				material: 'lambertian_white'
+				material: 'White'
 			},
-			far_wall: {
+			'Far Wall': {
 				type: 'parallelogram',
 				lower_left: [0.0, 0.0, -1.0],
 				u: [1.0, 0.0, 0.0],
 				v: [0.0, 1.0, 0.0],
 				is_culled: false,
-				material: 'lambertian_white'
+				material: 'White'
 			},
-			near_wall: {
+			'Near Wall': {
 				type: 'parallelogram',
 				lower_left: [1.0, 0.0, 0.0],
 				u: [-1.0, 0.0, 0.0],
 				v: [0.0, 1.0, 0.0],
 				is_culled: true,
-				material: 'lambertian_white'
+				material: 'White'
 			},
-			ceiling_light: {
+			'Ceiling Light': {
 				type: 'parallelogram',
 				lower_left: [0.35, 0.999, -0.65],
 				u: [0.3, 0.0, 0.0],
 				v: [0.0, 0.0, 0.3],
 				is_culled: false,
-				material: 'lambertian_white_light'
+				material: 'White Light'
 			},
-			room: {
+			Room: {
 				type: 'list',
 				geometrics: [
-					'left_wall',
-					'right_wall',
-					'floor',
-					'ceiling',
-					'ceiling_light',
-					'far_wall',
-					'near_wall'
+					'Left Wall',
+					'Right Wall',
+					'Floor',
+					'Ceiling',
+					'Ceiling Light',
+					'Far Wall',
+					'Near Wall'
 				],
 				use_bvh: true
 			},
-			far_left_box: {
+			'Far Left Box': {
 				type: 'rotate_y',
 				geometric: {
 					type: 'box',
 					a: [0.2, 0.0, -0.5],
 					b: [0.5, 0.6, -0.8],
 					is_culled: false,
-					material: 'lambertian_white'
+					material: 'White'
 				},
 				degrees: 15.0,
 				around: [0.35, 0.0, -0.65]
 			},
-			near_right_box: {
+			'Near Right Box': {
 				type: 'rotate_y',
 				geometric: {
 					type: 'box',
 					a: [0.5, 0.0, -0.2],
 					b: [0.8, 0.3, -0.5],
 					is_culled: false,
-					material: 'lambertian_white'
+					material: 'White'
 				},
 				degrees: 342.0,
 				around: [0.65, 0.0, -0.35]
 			}
 		},
 		materials: {
-			lambertian_white: {
+			White: {
 				type: 'lambertian',
-				reflectance_texture: 'white',
-				emittance_texture: 'black'
+				reflectance_texture: 'White',
+				emittance_texture: 'Black'
 			},
-			lambertian_white_light: {
+			'White Light': {
 				type: 'lambertian',
-				reflectance_texture: 'black',
-				emittance_texture: 'white_light'
+				reflectance_texture: 'Black',
+				emittance_texture: 'White Light'
 			},
-			lambertian_red: {
+			Red: {
 				type: 'lambertian',
-				reflectance_texture: 'red',
-				emittance_texture: 'black'
+				reflectance_texture: 'Red',
+				emittance_texture: 'Black'
 			},
-			lambertian_green: {
+			Green: {
 				type: 'lambertian',
-				reflectance_texture: 'green',
-				emittance_texture: 'black'
+				reflectance_texture: 'Green',
+				emittance_texture: 'Black'
 			}
 		},
 		textures: {
-			black: {
+			Black: {
 				type: 'color',
 				color: [0.0, 0.0, 0.0]
 			},
-			white: {
+			White: {
 				type: 'color',
 				color: [0.73, 0.73, 0.73]
 			},
-			white_light: {
+			'White Light': {
 				type: 'color',
 				color: [7.0, 7.0, 7.0]
 			},
-			red: {
+			Red: {
 				type: 'color',
 				color: [0.65, 0.05, 0.05]
 			},
-			green: {
+			Green: {
 				type: 'color',
 				color: [0.12, 0.45, 0.15]
 			}

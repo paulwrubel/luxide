@@ -12,6 +12,7 @@
 	import { goto } from '$app/navigation';
 	import CircularProgress from '@smui/circular-progress';
 	import Controls from './Controls.svelte';
+	import { Sidebar } from 'flowbite-svelte';
 
 	const authToken = getToken();
 
@@ -60,9 +61,14 @@
 	}
 </script>
 
-<div class="view-container">
-	<Drawer class="drawer">
-		<Content class="drawer-content">
+<div class="flex h-full w-full flex-1">
+	<Sidebar
+		divClass="!bg-inherit h-full"
+		alwaysOpen
+		position="static"
+		class="w-128 z-10 !bg-zinc-900"
+	>
+		<div class="flex h-full flex-col items-stretch gap-2">
 			<Controls {renderConfig} />
 			<Button
 				onclick={() => {
@@ -70,7 +76,7 @@
 				}}
 				disabled={isCreatingRender}
 				variant="raised"
-				class="drawer-element drawer-element--end"
+				class="mt-auto"
 			>
 				{#if isCreatingRender}
 					<CircularProgress />
@@ -78,69 +84,20 @@
 					Create Render
 				{/if}
 			</Button>
-		</Content>
-	</Drawer>
-	<AppContent class="app-content">
-		<div
-			class="app-content-sizing-container"
-			bind:clientWidth={containerWidth}
-			bind:clientHeight={containerHeight}
-		>
-			<div style="width: {canvasSize[0]}px; height: {canvasSize[1]}px;" class="canvas-container">
-				<Canvas>
-					<Scene />
-				</Canvas>
-			</div>
 		</div>
-	</AppContent>
+	</Sidebar>
+	<div
+		class="m-8 flex flex-1 items-center justify-center"
+		bind:clientWidth={containerWidth}
+		bind:clientHeight={containerHeight}
+	>
+		<div
+			style="width: {canvasSize[0]}px; height: {canvasSize[1]}px;"
+			class="box-sizing border-1 border-zinc-500"
+		>
+			<Canvas>
+				<Scene />
+			</Canvas>
+		</div>
+	</div>
 </div>
-
-<style>
-	.view-container {
-		display: flex;
-		width: 100%;
-		height: 100%;
-	}
-
-	:global(.drawer) {
-		width: 350px;
-	}
-
-	:global(.drawer-content) {
-		display: flex;
-		flex-direction: column;
-		align-items: stretch;
-		padding: 1rem;
-	}
-
-	:global(.drawer-element) {
-		display: flex;
-		flex-direction: column;
-		align-items: stretch;
-	}
-
-	:global(.drawer-element--end) {
-		margin-top: auto;
-	}
-
-	:global(.app-content) {
-		flex: 1;
-		padding: 1rem;
-		display: flex;
-		min-width: 0;
-		overflow: hidden;
-	}
-
-	.app-content-sizing-container {
-		flex: 1;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		overflow: hidden;
-	}
-
-	.canvas-container {
-		box-sizing: border-box;
-		border: 1px solid var(--mdc-theme-surface-variant, #e7e0ec);
-	}
-</style>

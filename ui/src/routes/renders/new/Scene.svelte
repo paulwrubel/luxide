@@ -4,7 +4,6 @@
 		type MaterialData,
 		type RenderConfig,
 		getCameraData,
-		getDefaultRenderConfig,
 		getGeometricData,
 		getMaterialData,
 		getSceneData,
@@ -16,8 +15,6 @@
 	import { getContext } from 'svelte';
 	import * as THREE from 'three';
 	import { createParallelogramMesh, createTriangleMesh } from './utils';
-	import { emissive } from 'three/tsl';
-	import { PointLight } from 'three';
 
 	const config = getContext<RenderConfig>('renderConfig');
 

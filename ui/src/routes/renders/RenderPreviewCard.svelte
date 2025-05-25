@@ -4,7 +4,6 @@
 	import { getToken } from '$lib/state/auth.svelte';
 	import { getLatestCheckpointImage } from '$lib/api';
 	import type { Render } from '$lib/api';
-	import { goto } from '$app/navigation';
 
 	type Props = {
 		render: Render;
