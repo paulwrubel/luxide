@@ -61,7 +61,7 @@
 	}
 </script>
 
-<div class="flex h-full w-full flex-1">
+<div class="flex h-full max-h-[calc(100vh-4rem)] w-full flex-1">
 	<Sidebar
 		divClass="!bg-inherit h-full"
 		alwaysOpen

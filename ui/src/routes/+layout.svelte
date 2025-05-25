@@ -25,7 +25,7 @@
 		<!-- flex container for the entire app -->
 		<div class="flex min-h-screen w-full flex-col">
 			<!-- app bar -->
-			<Navbar fluid class="border-b border-zinc-800 bg-zinc-900">
+			<Navbar fluid class="flex h-16 items-center border-b border-zinc-800 bg-zinc-900">
 				<NavBrand href="/">
 					<span class="self-center whitespace-nowrap text-xl font-semibold text-white">
 						Luxide (Flowbite)
