@@ -28,7 +28,7 @@
 			<Navbar fluid class="flex h-16 items-center border-b border-zinc-800 bg-zinc-900">
 				<NavBrand href="/">
 					<span class="self-center whitespace-nowrap text-xl font-semibold text-white">
-						Luxide (Flowbite)
+						Luxide
 					</span>
 				</NavBrand>
 				{#if isAuthenticated()}
@@ -44,10 +44,3 @@
 		<SvelteQueryDevtools buttonPosition="bottom-right" />
 	</QueryClientProvider>
 </main>
-
-<style>
-	/* this style block is purposefully empty */
-	/* is it used in the preprocess step for tailwind (I think) to apply the styles globally */
-
-	/* in any case, you'll find it to be... problematic to remove :) */
-</style>

@@ -1,18 +1,13 @@
 <script lang="ts">
-	import Drawer, { AppContent, Content } from '@smui/drawer';
 	import { Canvas } from '@threlte/core';
 	import Scene from './Scene.svelte';
-	import Slider from '@smui/slider';
-	import FormField from '@smui/form-field';
-	import { getDefaultRenderConfig, getSceneData, getCameraData } from '$lib/render';
+	import { getDefaultRenderConfig } from '$lib/render';
 	import { setContext } from 'svelte';
-	import Button from '@smui/button';
 	import { postRender } from '$lib/api';
 	import { getToken } from '$lib/state/auth.svelte';
 	import { goto } from '$app/navigation';
-	import CircularProgress from '@smui/circular-progress';
 	import Controls from './Controls.svelte';
-	import { Sidebar } from 'flowbite-svelte';
+	import { Sidebar, Button, Progressradial, Spinner } from 'flowbite-svelte';
 
 	const authToken = getToken();
 
@@ -75,11 +70,10 @@
 					handleCreateRender();
 				}}
 				disabled={isCreatingRender}
-				variant="raised"
 				class="mt-auto"
 			>
 				{#if isCreatingRender}
-					<CircularProgress />
+					<Spinner size="4" />
 				{:else}
 					Create Render
 				{/if}

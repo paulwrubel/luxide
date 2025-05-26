@@ -1,7 +1,5 @@
 <script lang="ts">
-	import { mdiPlus } from '@mdi/js';
-	import { Button, Spinner, Alert } from 'flowbite-svelte';
-	import { goto } from '$app/navigation';
+	import { Spinner, Alert } from 'flowbite-svelte';
 	import { getToken } from '$lib/state/auth.svelte';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { getAllRenders } from '$lib/api';
