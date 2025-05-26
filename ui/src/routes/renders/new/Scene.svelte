@@ -32,6 +32,11 @@
 		const [targetX, targetY, targetZ] = camera.target_location;
 		cam.lookAt(targetX, targetY, targetZ);
 
+		const [upX, upY, upZ] = camera.view_up;
+		cam.up.set(upX, upY, upZ);
+
+		// cam.focus = camera.focus_distance;
+
 		return cam;
 	});
 

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getCameraData, getGeometricData, getSceneData, type RenderConfig } from '$lib/render';
+	import CameraControlsCard from './CameraControlsCard.svelte';
 	import GeometricControlsCard from './GeometricControlsCard.svelte';
 	import { Label, Range, TabItem, Tabs } from 'flowbite-svelte';
 
@@ -19,14 +20,19 @@
 		ulClass="justify-center"
 		contentClass="!bg-zinc-900 border-t-[1px] border-zinc-600 rounded-none mt-0"
 	>
-		<TabItem title="Cameras">
+		<TabItem open title="Parameters">
 			<div class="flex flex-col items-center gap-4">
 				{#each activeScene.geometrics as geometric}
 					<!-- <GeometricControlsCard {renderConfig} {geometric} /> -->
 				{/each}
 			</div>
 		</TabItem>
-		<TabItem open title="Geometrics">
+		<TabItem title="Camera">
+			<div class="flex flex-col items-center gap-4">
+				<CameraControlsCard {renderConfig} {camera} />
+			</div>
+		</TabItem>
+		<TabItem title="Geometrics">
 			<div class="flex flex-col items-center gap-4">
 				{#each activeScene.geometrics as geometric}
 					<GeometricControlsCard {renderConfig} {geometric} />
@@ -80,16 +86,4 @@
 		<Range bind:value={camera.target_location[2]} min={0.0} max={1.0} step={0.01} />
 		<span>Camera Target: Z = {camera.target_location[2]}</span>
 	</Label>
-	{#each activeScene.geometrics as geometric}
-		{@const geometricData = getGeometricData(renderConfig, geometric)}
-
-		{#if geometricData.type === 'rotate_y'}
-			{#if 'degrees' in geometricData}
-				<Label class="flex flex-col gap-2">
-					<Range bind:value={geometricData.degrees} min={0.0} max={360.0} step={1.0} />
-					<span>Degrees = {geometricData.degrees}</span>
-				</Label>
-			{/if}
-		{/if}
-	{/each}
 </div>

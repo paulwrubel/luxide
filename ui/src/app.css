@@ -34,6 +34,11 @@
 @source "../node_modules/flowbite-svelte-icons/dist";
 
 @layer base {
+	/* ensure default text color aligned with dark mode setting */
+	html {
+		@apply text-zinc-800 dark:text-zinc-200;
+	}
+
 	/* disable chrome cancel button */
 	input[type='search']::-webkit-search-cancel-button {
 		display: none;

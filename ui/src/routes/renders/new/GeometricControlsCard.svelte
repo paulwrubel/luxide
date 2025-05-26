@@ -5,6 +5,7 @@
 		type GeometricData,
 		type GeometricInstanceRotate,
 		type GeometricList,
+		type GeometricParallelogram,
 		type RenderConfig
 	} from '$lib/render';
 	import { Card, Heading, Input, Label, Range } from 'flowbite-svelte';
@@ -54,6 +55,8 @@
 	</div>
 	{#if typeof data !== 'string'}
 		{@render controlsGeometric(data)}
+	{:else}
+		{@render controlsGeometric(geometricData)}
 	{/if}
 {/snippet}
 
@@ -64,6 +67,8 @@
 		{@render controlsGeometricList(data)}
 	{:else if data.type === 'rotate_x' || data.type === 'rotate_y' || data.type === 'rotate_z'}
 		{@render controlsGeometricRotate(data)}
+	{:else if data.type === 'parallelogram'}
+		{@render controlsGeometricParallelogram(data)}
 	{:else}
 		<Heading tag="h6" class="text-sm">Unknown geometric! (or not yet implemented...)</Heading>
 	{/if}
@@ -114,7 +119,7 @@
 
 {#snippet controlsGeometricRotate(data: GeometricInstanceRotate)}
 	{#if 'degrees' in data}
-		<Label class="mb-2 flex flex-col">
+		<Label class="mb-2 flex flex-col gap-1.5">
 			<span class="flex justify-between">
 				<span>Degrees of Rotation</span>
 				<span>{data.degrees}</span>
@@ -124,6 +129,60 @@
 	{/if}
 
 	{@render controlsSubGeometric(data.geometric)}
+{/snippet}
+
+{#snippet controlsGeometricParallelogram(data: GeometricParallelogram)}
+	<div class="flex items-center gap-2">
+		<Heading tag="h6" class="flex-1 whitespace-nowrap">Lower Left:</Heading>
+		<div class="flex items-center gap-2">
+			<Label class="mb-2 flex flex-col">
+				<span class="px-2">X</span>
+				<Input type="number" bind:value={data.lower_left[0]} />
+			</Label>
+			<Label class="mb-2 flex flex-col">
+				<span class="px-2">Y</span>
+				<Input type="number" bind:value={data.lower_left[1]} />
+			</Label>
+			<Label class="mb-2 flex flex-col">
+				<span class="px-2">Z</span>
+				<Input type="number" bind:value={data.lower_left[2]} />
+			</Label>
+		</div>
+	</div>
+	<div class="flex items-center gap-2">
+		<Heading tag="h6" class="flex-1 whitespace-nowrap"><em>u</em> Vector:</Heading>
+		<div class="flex items-center gap-2">
+			<Label class="mb-2 flex flex-col">
+				<span class="px-2">X</span>
+				<Input type="number" bind:value={data.u[0]} />
+			</Label>
+			<Label class="mb-2 flex flex-col">
+				<span class="px-2">Y</span>
+				<Input type="number" bind:value={data.u[1]} />
+			</Label>
+			<Label class="mb-2 flex flex-col">
+				<span class="px-2">Z</span>
+				<Input type="number" bind:value={data.u[2]} />
+			</Label>
+		</div>
+	</div>
+	<div class="flex items-center gap-2">
+		<Heading tag="h6" class="flex-1 whitespace-nowrap"><em>v</em> Vector:</Heading>
+		<div class="flex items-center gap-2">
+			<Label class="mb-2 flex flex-col">
+				<span class="px-2">X</span>
+				<Input type="number" bind:value={data.v[0]} />
+			</Label>
+			<Label class="mb-2 flex flex-col">
+				<span class="px-2">Y</span>
+				<Input type="number" bind:value={data.v[1]} />
+			</Label>
+			<Label class="mb-2 flex flex-col">
+				<span class="px-2">Z</span>
+				<Input type="number" bind:value={data.v[2]} />
+			</Label>
+		</div>
+	</div>
 {/snippet}
 
 <Card class="flex max-w-full flex-col !bg-zinc-800 !text-zinc-200">
@@ -136,9 +195,7 @@
 				{geometric}
 			</Heading>
 		{:else}
-			<span>
-				<!-- empty to fill flex space -->
-			</span>
+			<Heading tag="h2" class="text-xl font-light italic">inline</Heading>
 		{/if}
 		<div class="flex flex-row">
 			<Heading tag="h3" class="text-lg font-light italic">
