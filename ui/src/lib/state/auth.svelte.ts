@@ -1,5 +1,5 @@
 import { goto } from '$app/navigation';
-import { fetchUserInfo, type User } from '$lib/api';
+import { fetchUserInfo, type User } from '$lib/utils/api';
 
 // global auth state
 const auth = $state({

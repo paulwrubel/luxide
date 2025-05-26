@@ -6,7 +6,7 @@
 		isRenderStatePausing,
 		isRenderStateRunning,
 		type Render
-	} from '$lib/api';
+	} from '$lib/utils/api';
 	import type { CreateQueryResult } from '@tanstack/svelte-query';
 	import { Progressbar, type ColorType } from 'flowbite-svelte';
 
@@ -48,7 +48,8 @@
 		<p>Error loading render!!</p>
 	{:else if $renderQuery.isSuccess}
 		{@const state = $renderQuery.data.state}
-		{@const totalCheckpoints = $renderQuery.data.config.parameters.total_checkpoints}
+		{@const totalCheckpoints =
+			$renderQuery.data.config.parameters.total_checkpoints}
 		{#if isRenderStateCreated(state)}
 			<p>CREATED</p>
 		{:else if isRenderStateRunning(state)}

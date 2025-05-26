@@ -3,7 +3,7 @@
 	import DisplayRender from './DisplayRender.svelte';
 	import { getToken } from '$lib/state/auth.svelte';
 	import { page } from '$app/state';
-	import { getLatestCheckpointImage, getRender } from '$lib/api';
+	import { getLatestCheckpointImage, getRender } from '$lib/utils/api';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { onDestroy } from 'svelte';
 	import Controls from './Controls.svelte';
@@ -15,7 +15,10 @@
 	const imageURLQuery = createQuery({
 		queryKey: ['latestCheckpoint', Number(page.params.id), authToken],
 		queryFn: async () => {
-			return await getLatestCheckpointImage(authToken, Number(page.params.id)).then((blob) => {
+			return await getLatestCheckpointImage(
+				authToken,
+				Number(page.params.id)
+			).then((blob) => {
 				return URL.createObjectURL(blob);
 			});
 		},

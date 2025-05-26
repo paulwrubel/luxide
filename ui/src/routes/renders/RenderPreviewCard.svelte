@@ -2,8 +2,8 @@
 	import { Card, Spinner } from 'flowbite-svelte';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { getToken } from '$lib/state/auth.svelte';
-	import { getLatestCheckpointImage } from '$lib/api';
-	import type { Render } from '$lib/api';
+	import { getLatestCheckpointImage } from '$lib/utils/api';
+	import type { Render } from '$lib/utils/api';
 
 	type Props = {
 		render: Render;
@@ -16,14 +16,19 @@
 	const checkpointImageURLQuery = createQuery({
 		queryKey: ['latestCheckpoint', render.id, authToken],
 		queryFn: async () => {
-			return await getLatestCheckpointImage(authToken, render.id).then((blob) => {
-				return URL.createObjectURL(blob);
-			});
+			return await getLatestCheckpointImage(authToken, render.id).then(
+				(blob) => {
+					return URL.createObjectURL(blob);
+				}
+			);
 		}
 	});
 </script>
 
-<Card href={`/renders/${render.id}`} class="!bg-zinc-800 !text-zinc-200 hover:!bg-zinc-700">
+<Card
+	href={`/renders/${render.id}`}
+	class="!bg-zinc-800 !text-zinc-200 hover:!bg-zinc-700"
+>
 	<!-- card image section -->
 	<div class="flex w-full items-center justify-center p-2">
 		{#if $checkpointImageURLQuery.isPending}

@@ -9,7 +9,7 @@
 		isRenderStateRunning,
 		deleteRender,
 		type Render
-	} from '$lib/api';
+	} from '$lib/utils/api';
 	import { Button, Spinner, Input, Label } from 'flowbite-svelte';
 	import { getToken } from '$lib/state/auth.svelte';
 	import { page } from '$app/state';
@@ -33,12 +33,18 @@
 		isPausingOrResumingRender = false;
 	}
 
-	let newCheckpointLimitValue = $state<number>(render.config.parameters.total_checkpoints);
+	let newCheckpointLimitValue = $state<number>(
+		render.config.parameters.total_checkpoints
+	);
 
 	let isUpdatingRenderTotalCheckpoints = $state(false);
 	async function handleUpdateRenderTotalCheckpoints() {
 		isUpdatingRenderTotalCheckpoints = true;
-		await updateRenderTotalCheckpoints(authToken, Number(page.params.id), newCheckpointLimitValue);
+		await updateRenderTotalCheckpoints(
+			authToken,
+			Number(page.params.id),
+			newCheckpointLimitValue
+		);
 		isUpdatingRenderTotalCheckpoints = false;
 	}
 
@@ -50,7 +56,12 @@
 <div class="flex h-full flex-col items-stretch gap-4">
 	<Label class="block">
 		<span class="mb-1 block">Checkpoint Limit</span>
-		<Input type="number" required class="w-full" bind:value={newCheckpointLimitValue} />
+		<Input
+			type="number"
+			required
+			class="w-full"
+			bind:value={newCheckpointLimitValue}
+		/>
 	</Label>
 
 	<Button
@@ -58,7 +69,8 @@
 		outline
 		onclick={handleUpdateRenderTotalCheckpoints}
 		disabled={!Number.isInteger(newCheckpointLimitValue) ||
-			newCheckpointLimitValue <= render.config.parameters.total_checkpoints}>Update</Button
+			newCheckpointLimitValue <= render.config.parameters.total_checkpoints}
+		>Update</Button
 	>
 	<span class="mt-auto w-full border-b-[1px] border-b-zinc-600"></span>
 	<div class="flex justify-evenly gap-2">
@@ -66,7 +78,8 @@
 			color={isPaused || isPausing ? 'primary' : 'amber'}
 			outline
 			onclick={handlePauseOrResumeRender}
-			disabled={isPausingOrResumingRender || !(isPaused || isPausing || isRunning)}
+			disabled={isPausingOrResumingRender ||
+				!(isPaused || isPausing || isRunning)}
 		>
 			{#if isPausingOrResumingRender}
 				<span class="flex items-center justify-center">

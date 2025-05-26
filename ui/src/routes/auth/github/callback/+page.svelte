@@ -2,7 +2,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { fetchAuthTokenGitHub } from '$lib/api';
+	import { fetchAuthTokenGitHub } from '$lib/utils/api';
 	import { setToken } from '$lib/state/auth.svelte';
 
 	// component-level state with runes
@@ -58,14 +58,18 @@
 <div class="flex min-h-screen items-center justify-center">
 	{#if loading}
 		<div class="text-center">
-			<div class="mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-gray-900"></div>
+			<div
+				class="mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-gray-900"
+			></div>
 			<p class="text-lg">Completing authentication...</p>
 		</div>
 	{:else if error}
 		<div class="text-center text-red-600">
 			<p class="mb-4 text-lg">Authentication failed</p>
 			<p class="text-sm">{error}</p>
-			<a href="/" class="mt-4 inline-block text-blue-600 hover:underline">Return to home</a>
+			<a href="/" class="mt-4 inline-block text-blue-600 hover:underline"
+				>Return to home</a
+			>
 		</div>
 	{/if}
 </div>

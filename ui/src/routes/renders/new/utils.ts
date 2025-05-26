@@ -1,7 +1,12 @@
-import type { GeometricParallelogram, GeometricTriangle } from '$lib/render';
+import type {
+	GeometricParallelogram,
+	GeometricTriangle
+} from '$lib/utils/render';
 import * as THREE from 'three';
 
-export function createTriangleMesh(geometricData: GeometricTriangle): THREE.Mesh {
+export function createTriangleMesh(
+	geometricData: GeometricTriangle
+): THREE.Mesh {
 	const { a, b, c, a_normal, b_normal, c_normal } = geometricData;
 
 	// create a custom geometry with vertices directly
@@ -59,7 +64,9 @@ export function createTriangleMesh(geometricData: GeometricTriangle): THREE.Mesh
 
 // creates a mesh representing a parallelogram based on lower left corner and u,v vectors
 // this is more direct than transforming a PlaneGeometry
-export function createParallelogramMesh(geometricData: GeometricParallelogram): THREE.Mesh {
+export function createParallelogramMesh(
+	geometricData: GeometricParallelogram
+): THREE.Mesh {
 	const { lower_left, u, v } = geometricData;
 
 	// create a custom geometry with vertices directly

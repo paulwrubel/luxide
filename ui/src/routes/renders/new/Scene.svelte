@@ -10,7 +10,7 @@
 		getTextureData,
 		isComposite,
 		toRadians
-	} from '$lib/render';
+	} from '$lib/utils/render';
 	import { T } from '@threlte/core';
 	import { getContext } from 'svelte';
 	import * as THREE from 'three';
@@ -29,18 +29,20 @@
 		const [posX, posY, posZ] = camera.eye_location;
 		cam.position.set(posX, posY, posZ);
 
-		const [targetX, targetY, targetZ] = camera.target_location;
-		cam.lookAt(targetX, targetY, targetZ);
-
 		const [upX, upY, upZ] = camera.view_up;
 		cam.up.set(upX, upY, upZ);
+
+		const [targetX, targetY, targetZ] = camera.target_location;
+		cam.lookAt(targetX, targetY, targetZ);
 
 		// cam.focus = camera.focus_distance;
 
 		return cam;
 	});
 
-	function getGeometricMeshesAndLights(data: string | GeometricData): (THREE.Mesh | THREE.Light)[] {
+	function getGeometricMeshesAndLights(
+		data: string | GeometricData
+	): (THREE.Mesh | THREE.Light)[] {
 		const geometricData = getGeometricData(config, data);
 
 		const meshes: (THREE.Mesh | THREE.Light)[] = [];
@@ -188,11 +190,19 @@
 		const geometricData = getGeometricData(config, geometric);
 
 		const lightSources: THREE.Light[] = [];
-		if (!isComposite(geometricData) && geometricData.type !== 'constant_volume') {
+		if (
+			!isComposite(geometricData) &&
+			geometricData.type !== 'constant_volume'
+		) {
 			const materialData = getMaterialData(config, geometricData.material);
-			const emittanceTextureData = getTextureData(config, materialData.emittance_texture);
+			const emittanceTextureData = getTextureData(
+				config,
+				materialData.emittance_texture
+			);
 			const emissiveColor =
-				emittanceTextureData.type === 'color' ? emittanceTextureData.color : undefined;
+				emittanceTextureData.type === 'color'
+					? emittanceTextureData.color
+					: undefined;
 
 			if (emissiveColor !== undefined) {
 				const pointLight = new THREE.PointLight();
@@ -216,10 +226,18 @@
 	function getMaterials(data: string | MaterialData): THREE.Material[] {
 		const materialData = getMaterialData(config, data);
 
-		const reflectanceTextureData = getTextureData(config, materialData.reflectance_texture);
-		const emittanceTextureData = getTextureData(config, materialData.emittance_texture);
+		const reflectanceTextureData = getTextureData(
+			config,
+			materialData.reflectance_texture
+		);
+		const emittanceTextureData = getTextureData(
+			config,
+			materialData.emittance_texture
+		);
 		const emissiveColor =
-			emittanceTextureData.type === 'color' ? emittanceTextureData.color : undefined;
+			emittanceTextureData.type === 'color'
+				? emittanceTextureData.color
+				: undefined;
 
 		const materials: THREE.Material[] = [];
 
@@ -238,7 +256,9 @@
 					case 'color': {
 						const material = new THREE.MeshLambertMaterial({
 							color: new THREE.Color(...reflectanceTextureData.color),
-							emissive: emissiveColor ? new THREE.Color(...emissiveColor) : undefined
+							emissive: emissiveColor
+								? new THREE.Color(...emissiveColor)
+								: undefined
 						});
 
 						materials.push(material);
@@ -258,7 +278,9 @@
 					case 'color': {
 						const material = new THREE.MeshStandardMaterial({
 							color: new THREE.Color(...reflectanceTextureData.color),
-							emissive: emissiveColor ? new THREE.Color(...emissiveColor) : undefined,
+							emissive: emissiveColor
+								? new THREE.Color(...emissiveColor)
+								: undefined,
 
 							metalness: 1.0,
 							roughness: materialData.roughness

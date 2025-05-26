@@ -1,5 +1,10 @@
 <script lang="ts">
-	import { getCameraData, getGeometricData, getSceneData, type RenderConfig } from '$lib/render';
+	import {
+		getCameraData,
+		getGeometricData,
+		getSceneData,
+		type RenderConfig
+	} from '$lib/utils/render';
 	import CameraControlsCard from './CameraControlsCard.svelte';
 	import GeometricControlsCard from './GeometricControlsCard.svelte';
 	import { Label, Range, TabItem, Tabs } from 'flowbite-svelte';
@@ -10,7 +15,9 @@
 
 	const { renderConfig }: Props = $props();
 
-	const activeScene = $derived(getSceneData(renderConfig, renderConfig.active_scene));
+	const activeScene = $derived(
+		getSceneData(renderConfig, renderConfig.active_scene)
+	);
 	const camera = $derived(getCameraData(renderConfig, activeScene.camera));
 </script>
 
@@ -75,15 +82,30 @@
 		<span>Height = {renderConfig.parameters.image_dimensions[1]}</span>
 	</Label>
 	<Label class="flex flex-col gap-2">
-		<Range bind:value={camera.target_location[0]} min={0.0} max={1.0} step={0.01} />
+		<Range
+			bind:value={camera.target_location[0]}
+			min={0.0}
+			max={1.0}
+			step={0.01}
+		/>
 		<span>Camera Target: X = {camera.target_location[0]}</span>
 	</Label>
 	<Label class="flex flex-col gap-2">
-		<Range bind:value={camera.target_location[1]} min={0.0} max={1.0} step={0.01} />
+		<Range
+			bind:value={camera.target_location[1]}
+			min={0.0}
+			max={1.0}
+			step={0.01}
+		/>
 		<span>Camera Target: Y = {camera.target_location[1]}</span>
 	</Label>
 	<Label class="flex flex-col gap-2">
-		<Range bind:value={camera.target_location[2]} min={0.0} max={1.0} step={0.01} />
+		<Range
+			bind:value={camera.target_location[2]}
+			min={0.0}
+			max={1.0}
+			step={0.01}
+		/>
 		<span>Camera Target: Z = {camera.target_location[2]}</span>
 	</Label>
 </div>

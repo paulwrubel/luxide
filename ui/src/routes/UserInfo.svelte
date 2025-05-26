@@ -1,5 +1,9 @@
 <script lang="ts">
-	import { authenticatedUser, isAuthenticated, clearToken } from '$lib/state/auth.svelte';
+	import {
+		authenticatedUser,
+		isAuthenticated,
+		clearToken
+	} from '$lib/state/auth.svelte';
 	import { Spinner, Dropdown, DropdownItem } from 'flowbite-svelte';
 
 	// function to handle logout
@@ -21,7 +25,11 @@
 				class="flex items-center gap-2 rounded p-1 text-white hover:bg-zinc-800"
 				id="user-menu-button"
 			>
-				<img src={user?.avatar_url} alt="User avatar" class="h-8 w-auto rounded-md" />
+				<img
+					src={user?.avatar_url}
+					alt="User avatar"
+					class="h-8 w-auto rounded-md"
+				/>
 				<span class="text-sm font-medium">{user?.username}</span>
 			</button>
 

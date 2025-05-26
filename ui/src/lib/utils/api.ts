@@ -17,13 +17,18 @@ export type LoginResponse = {
 };
 
 export async function navigateToAPILogin() {
-	const response = await fetch(`${getAPIURL()}/auth/login?origin=${window.location.origin}`, {
-		credentials: 'include'
-	});
+	const response = await fetch(
+		`${getAPIURL()}/auth/login?origin=${window.location.origin}`,
+		{
+			credentials: 'include'
+		}
+	);
 
 	if (!response.ok) {
 		const body = await response.text();
-		throw new Error(`failed to start login sequence: (${response.status}: ${body})`);
+		throw new Error(
+			`failed to start login sequence: (${response.status}: ${body})`
+		);
 	}
 
 	const body = (await response.json()) as LoginResponse;
@@ -52,14 +57,22 @@ export type User = {
 	max_render_pixel_count?: number;
 };
 
-export async function fetchAuthTokenGitHub(code: string, state: string): Promise<string> {
-	const response = await fetch(`${getAPIURL()}/auth/github/callback?code=${code}&state=${state}`, {
-		credentials: 'include'
-	});
+export async function fetchAuthTokenGitHub(
+	code: string,
+	state: string
+): Promise<string> {
+	const response = await fetch(
+		`${getAPIURL()}/auth/github/callback?code=${code}&state=${state}`,
+		{
+			credentials: 'include'
+		}
+	);
 
 	if (!response.ok) {
 		const body = await response.text();
-		throw new Error(`failed to retrieve auth token: (${response.status}: ${body})`);
+		throw new Error(
+			`failed to retrieve auth token: (${response.status}: ${body})`
+		);
 	}
 
 	const tokenResponse = await response.json();
@@ -128,7 +141,9 @@ export type RenderState =
 
 export type RenderStateCreated = 'created';
 
-export function isRenderStateCreated(state: RenderState): state is RenderStateCreated {
+export function isRenderStateCreated(
+	state: RenderState
+): state is RenderStateCreated {
 	return state === 'created';
 }
 
@@ -139,7 +154,9 @@ export type RenderStateRunning = {
 	};
 };
 
-export function isRenderStateRunning(state: RenderState): state is RenderStateRunning {
+export function isRenderStateRunning(
+	state: RenderState
+): state is RenderStateRunning {
 	return typeof state === 'object' && 'running' in state;
 }
 
@@ -160,7 +177,9 @@ export type RenderStatePausing = {
 	};
 };
 
-export function isRenderStatePausing(state: RenderState): state is RenderStatePausing {
+export function isRenderStatePausing(
+	state: RenderState
+): state is RenderStatePausing {
 	return typeof state === 'object' && 'pausing' in state;
 }
 
@@ -168,7 +187,9 @@ export type RenderStatePaused = {
 	paused: number;
 };
 
-export function isRenderStatePaused(state: RenderState): state is RenderStatePaused {
+export function isRenderStatePaused(
+	state: RenderState
+): state is RenderStatePaused {
 	return typeof state === 'object' && 'paused' in state;
 }
 
@@ -197,10 +218,16 @@ export async function getAllRenders(token: string): Promise<Render[]> {
 	return (await response.json()) as Render[];
 }
 
-export async function getRender(token: string, renderID: number): Promise<Render> {
-	const response = await fetch(`${getAPIURL()}/renders/${renderID}?format=precise`, {
-		headers: { Authorization: `Bearer ${token}` }
-	});
+export async function getRender(
+	token: string,
+	renderID: number
+): Promise<Render> {
+	const response = await fetch(
+		`${getAPIURL()}/renders/${renderID}?format=precise`,
+		{
+			headers: { Authorization: `Bearer ${token}` }
+		}
+	);
 
 	if (!response.ok) {
 		const body = await response.text();
@@ -210,7 +237,10 @@ export async function getRender(token: string, renderID: number): Promise<Render
 	return (await response.json()) as Render;
 }
 
-export async function pauseRender(token: string, renderID: number): Promise<void> {
+export async function pauseRender(
+	token: string,
+	renderID: number
+): Promise<void> {
 	const response = await fetch(`${getAPIURL()}/renders/${renderID}/pause`, {
 		headers: { Authorization: `Bearer ${token}` },
 		method: 'POST'
@@ -222,7 +252,10 @@ export async function pauseRender(token: string, renderID: number): Promise<void
 	}
 }
 
-export async function resumeRender(token: string, renderID: number): Promise<void> {
+export async function resumeRender(
+	token: string,
+	renderID: number
+): Promise<void> {
 	const response = await fetch(`${getAPIURL()}/renders/${renderID}/resume`, {
 		headers: { Authorization: `Bearer ${token}` },
 		method: 'POST'
@@ -234,7 +267,10 @@ export async function resumeRender(token: string, renderID: number): Promise<voi
 	}
 }
 
-export async function deleteRender(token: string, renderID: number): Promise<void> {
+export async function deleteRender(
+	token: string,
+	renderID: number
+): Promise<void> {
 	const response = await fetch(`${getAPIURL()}/renders/${renderID}`, {
 		headers: { Authorization: `Bearer ${token}` },
 		method: 'DELETE'
@@ -251,29 +287,42 @@ export async function updateRenderTotalCheckpoints(
 	renderID: number,
 	newTotalCheckpoints: number
 ): Promise<void> {
-	const response = await fetch(`${getAPIURL()}/renders/${renderID}/parameters/total_checkpoints`, {
-		headers: {
-			Authorization: `Bearer ${token}`,
-			'Content-Type': 'application/json'
-		},
-		method: 'PUT',
-		body: JSON.stringify({ new_total_checkpoints: newTotalCheckpoints })
-	});
+	const response = await fetch(
+		`${getAPIURL()}/renders/${renderID}/parameters/total_checkpoints`,
+		{
+			headers: {
+				Authorization: `Bearer ${token}`,
+				'Content-Type': 'application/json'
+			},
+			method: 'PUT',
+			body: JSON.stringify({ new_total_checkpoints: newTotalCheckpoints })
+		}
+	);
 
 	if (!response.ok) {
 		const body = await response.text();
-		throw new Error(`failed to update render total checkpoints: (${response.status}: ${body})`);
+		throw new Error(
+			`failed to update render total checkpoints: (${response.status}: ${body})`
+		);
 	}
 }
 
-export async function getLatestCheckpointImage(token: string, renderID: number): Promise<Blob> {
-	const response = await fetch(`${getAPIURL()}/renders/${renderID}/checkpoint/earliest`, {
-		headers: { Authorization: `Bearer ${token}` }
-	});
+export async function getLatestCheckpointImage(
+	token: string,
+	renderID: number
+): Promise<Blob> {
+	const response = await fetch(
+		`${getAPIURL()}/renders/${renderID}/checkpoint/earliest`,
+		{
+			headers: { Authorization: `Bearer ${token}` }
+		}
+	);
 
 	if (!response.ok) {
 		const body = await response.text();
-		throw new Error(`failed to get latest checkpoint image: (${response.status}: ${body})`);
+		throw new Error(
+			`failed to get latest checkpoint image: (${response.status}: ${body})`
+		);
 	}
 
 	return await response.blob();

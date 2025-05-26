@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { Canvas } from '@threlte/core';
 	import Scene from './Scene.svelte';
-	import { getDefaultRenderConfig } from '$lib/render';
+	import { getDefaultRenderConfig } from '$lib/utils/render';
 	import { setContext } from 'svelte';
-	import { postRender } from '$lib/api';
+	import { postRender } from '$lib/utils/api';
 	import { getToken } from '$lib/state/auth.svelte';
 	import { goto } from '$app/navigation';
 	import Controls from './Controls.svelte';
@@ -16,7 +16,8 @@
 	setContext('renderConfig', renderConfig);
 
 	let aspectRatio = $derived(
-		renderConfig.parameters.image_dimensions[0] / renderConfig.parameters.image_dimensions[1]
+		renderConfig.parameters.image_dimensions[0] /
+			renderConfig.parameters.image_dimensions[1]
 	);
 
 	// track container dimensions

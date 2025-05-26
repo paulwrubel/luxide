@@ -7,7 +7,7 @@
 		type GeometricList,
 		type GeometricParallelogram,
 		type RenderConfig
-	} from '$lib/render';
+	} from '$lib/utils/render';
 	import { Card, Heading, Input, Label, Range } from 'flowbite-svelte';
 	import { ChevronDownOutline, ChevronUpOutline } from 'flowbite-svelte-icons';
 	import { slide } from 'svelte/transition';
@@ -35,14 +35,19 @@
 	<div class="border-r-[1px] border-zinc-600"></div>
 {/snippet}
 
-{#snippet controlsSubGeometric(data: string | GeometricData, includeSeparator?: boolean)}
+{#snippet controlsSubGeometric(
+	data: string | GeometricData,
+	includeSeparator?: boolean
+)}
 	{@const geometricData = getGeometricData(renderConfig, data)}
 
 	{#if includeSeparator}
 		{@render separator()}
 	{/if}
 	<div class="flex justify-between">
-		<Heading tag="h2" class="text-lg font-bold italic">Affected Geometric</Heading>
+		<Heading tag="h2" class="text-lg font-bold italic"
+			>Affected Geometric</Heading
+		>
 		<div class="flex gap-2">
 			{#if typeof data === 'string'}
 				<Heading tag="h3" class="text-lg font-light not-italic">{data}</Heading>
@@ -50,7 +55,9 @@
 				<Heading tag="h3" class="text-lg font-light italic">inline</Heading>
 			{/if}
 			{@render separatorVertical()}
-			<Heading tag="h3" class="text-lg font-light italic">{geometricData.type}</Heading>
+			<Heading tag="h3" class="text-lg font-light italic"
+				>{geometricData.type}</Heading
+			>
 		</div>
 	</div>
 	{#if typeof data !== 'string'}
@@ -70,7 +77,9 @@
 	{:else if data.type === 'parallelogram'}
 		{@render controlsGeometricParallelogram(data)}
 	{:else}
-		<Heading tag="h6" class="text-sm">Unknown geometric! (or not yet implemented...)</Heading>
+		<Heading tag="h6" class="text-sm"
+			>Unknown geometric! (or not yet implemented...)</Heading
+		>
 	{/if}
 {/snippet}
 
@@ -150,7 +159,9 @@
 		</div>
 	</div>
 	<div class="flex items-center gap-2">
-		<Heading tag="h6" class="flex-1 whitespace-nowrap"><em>u</em> Vector:</Heading>
+		<Heading tag="h6" class="flex-1 whitespace-nowrap"
+			><em>u</em> Vector:</Heading
+		>
 		<div class="flex items-center gap-2">
 			<Label class="mb-2 flex flex-col">
 				<span class="px-2">X</span>
@@ -167,7 +178,9 @@
 		</div>
 	</div>
 	<div class="flex items-center gap-2">
-		<Heading tag="h6" class="flex-1 whitespace-nowrap"><em>v</em> Vector:</Heading>
+		<Heading tag="h6" class="flex-1 whitespace-nowrap"
+			><em>v</em> Vector:</Heading
+		>
 		<div class="flex items-center gap-2">
 			<Label class="mb-2 flex flex-col">
 				<span class="px-2">X</span>

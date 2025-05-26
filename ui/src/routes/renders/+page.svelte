@@ -2,7 +2,7 @@
 	import { Spinner, Alert } from 'flowbite-svelte';
 	import { getToken } from '$lib/state/auth.svelte';
 	import { createQuery } from '@tanstack/svelte-query';
-	import { getAllRenders } from '$lib/api';
+	import { getAllRenders } from '$lib/utils/api';
 	import RenderPreviewCard from './RenderPreviewCard.svelte';
 	import NewRenderCard from './NewRenderCard.svelte';
 

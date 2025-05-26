@@ -4,7 +4,9 @@ export function isNonNullObject(x: unknown): x is Record<string, unknown> {
 	return typeof x === 'object' && x !== null;
 }
 
-export function isTypedObject(x: unknown): x is Record<string, unknown> & { type: string } {
+export function isTypedObject(
+	x: unknown
+): x is Record<string, unknown> & { type: string } {
 	return isNonNullObject(x) && 'type' in x && typeof x.type === 'string';
 }
 
@@ -41,11 +43,15 @@ export type SceneData = {
 
 export function isSceneData(x: unknown): x is SceneData {
 	return (
-		isNonNullObject(x) && ['geometrics', 'camera', 'background_color'].every((key) => key in x)
+		isNonNullObject(x) &&
+		['geometrics', 'camera', 'background_color'].every((key) => key in x)
 	);
 }
 
-export function getSceneData(config: RenderConfig, nameOrData: string | SceneData): SceneData {
+export function getSceneData(
+	config: RenderConfig,
+	nameOrData: string | SceneData
+): SceneData {
 	if (isSceneData(nameOrData)) {
 		return nameOrData;
 	}
@@ -81,7 +87,10 @@ export function isCameraData(data: unknown): data is CameraData {
 	);
 }
 
-export function getCameraData(config: RenderConfig, nameOrData: string | CameraData): CameraData {
+export function getCameraData(
+	config: RenderConfig,
+	nameOrData: string | CameraData
+): CameraData {
 	if (isCameraData(nameOrData)) {
 		return nameOrData;
 	}
@@ -126,7 +135,10 @@ export function isGeometricData(data: unknown): data is GeometricData {
 
 export function isComposite(
 	data: GeometricData
-): data is GeometricList | GeometricInstanceRotate | GeometricInstanceTranslate {
+): data is
+	| GeometricList
+	| GeometricInstanceRotate
+	| GeometricInstanceTranslate {
 	return (
 		data.type === 'list' ||
 		data.type === 'rotate_x' ||
@@ -223,10 +235,16 @@ export type GeometricConstantVolume = {
 };
 
 // material types
-export type MaterialData = MaterialDielectric | MaterialLambertian | MaterialSpecular;
+export type MaterialData =
+	| MaterialDielectric
+	| MaterialLambertian
+	| MaterialSpecular;
 
 export function isMaterialData(data: unknown): data is MaterialData {
-	return isTypedObject(data) && ['dielectric', 'lambertian', 'specular'].includes(data.type);
+	return (
+		isTypedObject(data) &&
+		['dielectric', 'lambertian', 'specular'].includes(data.type)
+	);
 }
 
 export function getMaterialData(
@@ -268,7 +286,10 @@ export type MaterialSpecular = {
 export type TextureData = TextureChecker | TextureImage | TextureSolidColor;
 
 export function isTextureData(data: unknown): data is TextureData {
-	return isTypedObject(data) && ['checker', 'image', 'solid_color'].includes(data.type);
+	return (
+		isTypedObject(data) &&
+		['checker', 'image', 'solid_color'].includes(data.type)
+	);
 }
 
 export function getTextureData(
