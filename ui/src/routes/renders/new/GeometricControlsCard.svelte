@@ -1,4 +1,7 @@
 <script lang="ts">
+	import NestedGeometricHeader from './NestedGeometricHeader.svelte';
+	import RangeControl from '$lib/RangeControl.svelte';
+	import Separator from '$lib/Separator.svelte';
 	import {
 		getGeometricData,
 		type GeometricBox,
@@ -8,16 +11,19 @@
 		type GeometricParallelogram,
 		type RenderConfig
 	} from '$lib/utils/render';
-	import { Card, Heading, Input, Label, Range } from 'flowbite-svelte';
+	import VectorInputControl from '$lib/VectorInputControl.svelte';
+	import { Card, Heading } from 'flowbite-svelte';
 	import { ChevronDownOutline, ChevronUpOutline } from 'flowbite-svelte-icons';
 	import { slide } from 'svelte/transition';
+	import { getContext } from 'svelte';
 
 	type Props = {
-		renderConfig: RenderConfig;
 		geometric: string | GeometricData;
 	};
 
-	const { renderConfig, geometric }: Props = $props();
+	const { geometric }: Props = $props();
+
+	const renderConfig = getContext<RenderConfig>('renderConfig');
 
 	const geometricData = getGeometricData(renderConfig, geometric);
 
@@ -27,44 +33,11 @@
 	}
 </script>
 
-{#snippet separator()}
-	<div class="border-b-[1px] border-zinc-600"></div>
-{/snippet}
-
-{#snippet separatorVertical()}
-	<div class="border-r-[1px] border-zinc-600"></div>
-{/snippet}
-
-{#snippet controlsSubGeometric(
-	data: string | GeometricData,
-	includeSeparator?: boolean
-)}
+{#snippet controlsSubGeometric(data: string | GeometricData)}
 	{@const geometricData = getGeometricData(renderConfig, data)}
 
-	{#if includeSeparator}
-		{@render separator()}
-	{/if}
-	<div class="flex justify-between">
-		<Heading tag="h2" class="text-lg font-bold italic"
-			>Affected Geometric</Heading
-		>
-		<div class="flex gap-2">
-			{#if typeof data === 'string'}
-				<Heading tag="h3" class="text-lg font-light not-italic">{data}</Heading>
-			{:else}
-				<Heading tag="h3" class="text-lg font-light italic">inline</Heading>
-			{/if}
-			{@render separatorVertical()}
-			<Heading tag="h3" class="text-lg font-light italic"
-				>{geometricData.type}</Heading
-			>
-		</div>
-	</div>
-	{#if typeof data !== 'string'}
-		{@render controlsGeometric(data)}
-	{:else}
-		{@render controlsGeometric(geometricData)}
-	{/if}
+	<NestedGeometricHeader {data} />
+	{@render controlsGeometric(geometricData)}
 {/snippet}
 
 {#snippet controlsGeometric(data: GeometricData)}
@@ -84,118 +57,65 @@
 {/snippet}
 
 {#snippet controlsGeometricBox(data: GeometricBox)}
-	<div class="flex items-center gap-2">
-		<Heading tag="h6" class="flex-1 whitespace-nowrap">Corner 1:</Heading>
-		<div class="flex items-center gap-2">
-			<Label class="mb-2 flex flex-col">
-				<span class="px-2">X</span>
-				<Input type="number" bind:value={data.a[0]} />
-			</Label>
-			<Label class="mb-2 flex flex-col">
-				<span class="px-2">Y</span>
-				<Input type="number" bind:value={data.a[1]} />
-			</Label>
-			<Label class="mb-2 flex flex-col">
-				<span class="px-2">Z</span>
-				<Input type="number" bind:value={data.a[2]} />
-			</Label>
-		</div>
-	</div>
-	<div class="flex items-center gap-2">
-		<Heading tag="h6" class="flex-1 whitespace-nowrap">Corner 2:</Heading>
-		<div class="flex items-center gap-2">
-			<Label class="mb-2 flex flex-col">
-				<span class="px-2">X</span>
-				<Input type="number" bind:value={data.b[0]} />
-			</Label>
-			<Label class="mb-2 flex flex-col">
-				<span class="px-2">Y</span>
-				<Input type="number" bind:value={data.b[1]} />
-			</Label>
-			<Label class="mb-2 flex flex-col">
-				<span class="px-2">Z</span>
-				<Input type="number" bind:value={data.b[2]} />
-			</Label>
-		</div>
-	</div>
+	<VectorInputControl
+		label="Corner 1"
+		bind:values={data.a}
+		valueLabels={['X', 'Y', 'Z']}
+	/>
+	<VectorInputControl
+		label="Corner 2"
+		bind:values={data.b}
+		valueLabels={['X', 'Y', 'Z']}
+	/>
 {/snippet}
 
 {#snippet controlsGeometricList(data: GeometricList)}
 	{#each data.geometrics as subGeometric, index}
-		{@render controlsSubGeometric(subGeometric, index > 0)}
+		{#if index > 0}
+			<Separator />
+		{/if}
+		{@render controlsSubGeometric(subGeometric)}
 	{/each}
 {/snippet}
 
 {#snippet controlsGeometricRotate(data: GeometricInstanceRotate)}
 	{#if 'degrees' in data}
-		<Label class="mb-2 flex flex-col gap-1.5">
-			<span class="flex justify-between">
-				<span>Degrees of Rotation</span>
-				<span>{data.degrees}</span>
-			</span>
-			<Range bind:value={data.degrees} min={0.0} max={360.0} step={1.0} />
-		</Label>
+		<RangeControl
+			label="Degrees of Rotation"
+			bind:value={data.degrees}
+			min={0.0}
+			max={360.0}
+			step={1.0}
+		/>
+	{:else}
+		<RangeControl
+			label="Radians of Rotation"
+			bind:value={data.radians}
+			min={0.0}
+			max={2 * Math.PI}
+			step={0.01}
+		/>
 	{/if}
-
+	<Separator />
 	{@render controlsSubGeometric(data.geometric)}
 {/snippet}
 
 {#snippet controlsGeometricParallelogram(data: GeometricParallelogram)}
-	<div class="flex items-center gap-2">
-		<Heading tag="h6" class="flex-1 whitespace-nowrap">Lower Left:</Heading>
-		<div class="flex items-center gap-2">
-			<Label class="mb-2 flex flex-col">
-				<span class="px-2">X</span>
-				<Input type="number" bind:value={data.lower_left[0]} />
-			</Label>
-			<Label class="mb-2 flex flex-col">
-				<span class="px-2">Y</span>
-				<Input type="number" bind:value={data.lower_left[1]} />
-			</Label>
-			<Label class="mb-2 flex flex-col">
-				<span class="px-2">Z</span>
-				<Input type="number" bind:value={data.lower_left[2]} />
-			</Label>
-		</div>
-	</div>
-	<div class="flex items-center gap-2">
-		<Heading tag="h6" class="flex-1 whitespace-nowrap"
-			><em>u</em> Vector:</Heading
-		>
-		<div class="flex items-center gap-2">
-			<Label class="mb-2 flex flex-col">
-				<span class="px-2">X</span>
-				<Input type="number" bind:value={data.u[0]} />
-			</Label>
-			<Label class="mb-2 flex flex-col">
-				<span class="px-2">Y</span>
-				<Input type="number" bind:value={data.u[1]} />
-			</Label>
-			<Label class="mb-2 flex flex-col">
-				<span class="px-2">Z</span>
-				<Input type="number" bind:value={data.u[2]} />
-			</Label>
-		</div>
-	</div>
-	<div class="flex items-center gap-2">
-		<Heading tag="h6" class="flex-1 whitespace-nowrap"
-			><em>v</em> Vector:</Heading
-		>
-		<div class="flex items-center gap-2">
-			<Label class="mb-2 flex flex-col">
-				<span class="px-2">X</span>
-				<Input type="number" bind:value={data.v[0]} />
-			</Label>
-			<Label class="mb-2 flex flex-col">
-				<span class="px-2">Y</span>
-				<Input type="number" bind:value={data.v[1]} />
-			</Label>
-			<Label class="mb-2 flex flex-col">
-				<span class="px-2">Z</span>
-				<Input type="number" bind:value={data.v[2]} />
-			</Label>
-		</div>
-	</div>
+	<VectorInputControl
+		label="Lower Left"
+		bind:values={data.lower_left}
+		valueLabels={['X', 'Y', 'Z']}
+	/>
+	<VectorInputControl bind:values={data.u} valueLabels={['X', 'Y', 'Z']}>
+		{#snippet label()}
+			<em>u</em> Vector
+		{/snippet}
+	</VectorInputControl>
+	<VectorInputControl bind:values={data.v} valueLabels={['X', 'Y', 'Z']}>
+		{#snippet label()}
+			<em>v</em> Vector
+		{/snippet}
+	</VectorInputControl>
 {/snippet}
 
 <Card class="flex max-w-full flex-col !bg-zinc-800 !text-zinc-200">
@@ -223,7 +143,7 @@
 	</button>
 	{#if isExpanded}
 		<div transition:slide={{ duration: 300 }}>
-			{@render separator()}
+			<Separator />
 			<div class="flex flex-col gap-2 p-4">
 				<!-- controls -->
 				{@render controlsGeometric(geometricData)}

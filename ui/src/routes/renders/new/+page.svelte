@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Canvas } from '@threlte/core';
 	import Scene from './Scene.svelte';
-	import { getDefaultRenderConfig } from '$lib/utils/render';
+	import { getDefaultRenderConfig } from '$lib/utils/renderSamples';
 	import { setContext } from 'svelte';
 	import { postRender } from '$lib/utils/api';
 	import { getToken } from '$lib/state/auth.svelte';

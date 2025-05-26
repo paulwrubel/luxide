@@ -4,8 +4,8 @@
 
 	type Props = {
 		label: string | Snippet;
-		value: [number, number, number];
-		valueLabels: [string, string, string];
+		value: [number, number];
+		valueLabels: [string, string];
 	};
 
 	let { label, value = $bindable(), valueLabels }: Props = $props();
@@ -27,10 +27,6 @@
 		<Label class="mb-2 flex flex-col">
 			<span class="px-2">{valueLabels[1]}</span>
 			<Input type="number" bind:value={value[1]} />
-		</Label>
-		<Label class="mb-2 flex flex-col">
-			<span class="px-2">{valueLabels[2]}</span>
-			<Input type="number" bind:value={value[2]} />
 		</Label>
 	</div>
 </div>

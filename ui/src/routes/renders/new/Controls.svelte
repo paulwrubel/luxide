@@ -1,13 +1,13 @@
 <script lang="ts">
 	import {
 		getCameraData,
-		getGeometricData,
 		getSceneData,
 		type RenderConfig
 	} from '$lib/utils/render';
 	import CameraControlsCard from './CameraControlsCard.svelte';
 	import GeometricControlsCard from './GeometricControlsCard.svelte';
 	import { Label, Range, TabItem, Tabs } from 'flowbite-svelte';
+	import ParametersControlsCard from './ParametersControlsCard.svelte';
 
 	type Props = {
 		renderConfig: RenderConfig;
@@ -29,34 +29,32 @@
 	>
 		<TabItem open title="Parameters">
 			<div class="flex flex-col items-center gap-4">
-				{#each activeScene.geometrics as geometric}
-					<!-- <GeometricControlsCard {renderConfig} {geometric} /> -->
-				{/each}
+				<ParametersControlsCard parameters={renderConfig.parameters} />
 			</div>
 		</TabItem>
 		<TabItem title="Camera">
 			<div class="flex flex-col items-center gap-4">
-				<CameraControlsCard {renderConfig} {camera} />
+				<CameraControlsCard {camera} />
 			</div>
 		</TabItem>
 		<TabItem title="Geometrics">
 			<div class="flex flex-col items-center gap-4">
 				{#each activeScene.geometrics as geometric}
-					<GeometricControlsCard {renderConfig} {geometric} />
+					<GeometricControlsCard {geometric} />
 				{/each}
 			</div>
 		</TabItem>
 		<TabItem title="Materials">
 			<div class="flex flex-col items-center gap-4">
 				{#each activeScene.geometrics as geometric}
-					<!-- <GeometricControlsCard {renderConfig} {geometric} /> -->
+					<!-- <GeometricControlsCard {geometric} /> -->
 				{/each}
 			</div>
 		</TabItem>
 		<TabItem title="Textures">
 			<div class="flex flex-col items-center gap-4">
 				{#each activeScene.geometrics as geometric}
-					<!-- <GeometricControlsCard {renderConfig} {geometric} /> -->
+					<!-- <GeometricControlsCard {geometric} /> -->
 				{/each}
 			</div>
 		</TabItem>
