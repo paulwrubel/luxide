@@ -5,9 +5,7 @@
 
 <InfoCircleOutline class="text-amber-400" />
 <Tooltip>
-	<Heading tag="h6">Incorrect Preview</Heading>
-	<P>Editing this property will not affect the preview.</P>
-	<P>
-		You may only be able to see this property's effects by creating a render.
-	</P>
+	<Heading tag="h6">Warning: Advanced Property</Heading>
+	<P>This property is advanced and may not be visible in the preview.</P>
+	<P>It is recommended to leave this property at its default value.</P>
 </Tooltip>

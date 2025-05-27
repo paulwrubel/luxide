@@ -1,17 +1,9 @@
 <script lang="ts">
 	import ControlsCard from '$lib/ControlsCard.svelte';
-	import RangeControl from '$lib/RangeControl.svelte';
-	import {
-		getCameraData,
-		type CameraData,
-		type RenderConfig,
-		type RenderParameters
-	} from '$lib/utils/render';
-	import Vector2InputControl from '$lib/Vector2InputControl.svelte';
-	import Vector3InputControl from '$lib/Vector3InputControl.svelte';
+	import OptionalControl from '$lib/OptionalControl.svelte';
+	import WarningIconAdvancedProperty from '$lib/property-icons/WarningIconAdvancedProperty.svelte';
+	import { type RenderConfig, type RenderParameters } from '$lib/utils/render';
 	import VectorInputControl from '$lib/VectorInputControl.svelte';
-	import { Heading, P, Tooltip } from 'flowbite-svelte';
-	import { InfoCircleOutline } from 'flowbite-svelte-icons';
 	import { getContext } from 'svelte';
 
 	type Props = {
@@ -33,25 +25,104 @@
 	    use_scaling_truncation: boolean;
     */
 
-	let testValues = $state<[number, number, number]>([1, 2, 3]);
+	$inspect(renderConfig.parameters.saved_checkpoint_limit);
 </script>
 
 {#snippet controlsParameters(data: RenderParameters)}
 	<VectorInputControl
 		label="Size"
-		bind:values={data.image_dimensions}
-		valueLabels={['width', 'height']}
+		bind:value={data.image_dimensions}
+		valueLabel={['width', 'height']}
 	/>
 	<VectorInputControl
 		label="Tile Size"
-		bind:values={data.tile_dimensions}
-		valueLabels={['width', 'height']}
+		bind:value={data.tile_dimensions}
+		valueLabel={['width', 'height']}
+	>
+		{#snippet labelPrefix()}
+			<WarningIconAdvancedProperty />
+		{/snippet}
+	</VectorInputControl>
+	<VectorInputControl
+		label="Gamma Correction"
+		allowWrappingLabel
+		labelSpacePercentage={70}
+		bind:value={data.gamma_correction}
+		valueLabel="gamma"
+	>
+		{#snippet labelPrefix()}
+			<WarningIconAdvancedProperty />
+		{/snippet}
+	</VectorInputControl>
+	<VectorInputControl
+		label="Samples Per Checkpoint"
+		labelSpacePercentage={70}
+		bind:value={data.samples_per_checkpoint}
+		valueLabel="samples"
 	/>
 	<VectorInputControl
-		label="Test Item"
-		bind:values={testValues}
-		valueLabels={['width', 'height BUT REALLY LONG TEXT', 'bazings']}
+		label="Total Checkpoints"
+		labelSpacePercentage={70}
+		bind:value={data.total_checkpoints}
+		valueLabel="checkpoints"
 	/>
+	<OptionalControl
+		label="Enforce Checkpoint Limit?"
+		enabled={data.saved_checkpoint_limit !== undefined}
+		onchange={(e) => {
+			data.saved_checkpoint_limit = e.currentTarget.checked ? 1 : undefined;
+		}}
+	>
+		<!-- <VectorInputControl
+			label="Gamma Correction"
+			allowWrappingLabel
+			labelSpacePercentage={70}
+			bind:value={data.gamma_correction}
+			valueLabel="gamma"
+		>
+			{#snippet labelPrefix()}
+				<WarningIconAdvancedProperty />
+			{/snippet}
+		</VectorInputControl> -->
+		<!-- <VectorInputControl
+			label="Total Checkpoints"
+			labelSpacePercentage={70}
+			bind:value={data.total_checkpoints}
+			valueLabel="checkpoints"
+		/> -->
+		{#if data.saved_checkpoint_limit !== undefined}
+			<VectorInputControl
+				label="Saved Checkpoint Limit"
+				labelSpacePercentage={70}
+				bind:value={data.saved_checkpoint_limit}
+				valueLabel="checkpoints"
+			>
+				{#snippet labelPrefix()}
+					<WarningIconAdvancedProperty />
+				{/snippet}
+			</VectorInputControl>
+		{/if}
+	</OptionalControl>
+	<VectorInputControl
+		label="Max Light Bounces"
+		labelSpacePercentage={70}
+		bind:value={data.max_bounces}
+		valueLabel="bounces"
+	>
+		{#snippet labelPrefix()}
+			<WarningIconAdvancedProperty />
+		{/snippet}
+	</VectorInputControl>
+	<!-- <VectorInputControl
+		label="Use Scaling Truncation"
+		labelSpacePercentage={70}
+		bind:value={data.use_scaling_truncation}
+		valueLabel="use"
+	>
+		{#snippet labelPrefix()}
+			<WarningIconAdvancedProperty />
+		{/snippet}
+	</VectorInputControl> -->
 
 	<!-- <RangeControl
 		label="Vertical FOV (degrees)"

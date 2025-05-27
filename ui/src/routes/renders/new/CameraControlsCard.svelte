@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ControlsCard from '$lib/ControlsCard.svelte';
+	import WarningIconUnaffectedPreview from '$lib/property-icons/WarningIconUnaffectedPreview.svelte';
 	import RangeControl from '$lib/RangeControl.svelte';
 	import {
 		getCameraData,
@@ -7,8 +8,6 @@
 		type RenderConfig
 	} from '$lib/utils/render';
 	import VectorInputControl from '$lib/VectorInputControl.svelte';
-	import { Heading, P, Tooltip } from 'flowbite-svelte';
-	import { InfoCircleOutline } from 'flowbite-svelte-icons';
 	import { getContext } from 'svelte';
 
 	type Props = {
@@ -32,18 +31,18 @@
 	/>
 	<VectorInputControl
 		label="Eye"
-		bind:values={data.eye_location}
-		valueLabels={['X', 'Y', 'Z']}
+		bind:value={data.eye_location}
+		valueLabel={['X', 'Y', 'Z']}
 	/>
 	<VectorInputControl
 		label="Target"
-		bind:values={data.target_location}
-		valueLabels={['X', 'Y', 'Z']}
+		bind:value={data.target_location}
+		valueLabel={['X', 'Y', 'Z']}
 	/>
 	<VectorInputControl
 		label="View Up"
-		bind:values={data.view_up}
-		valueLabels={['X', 'Y', 'Z']}
+		bind:value={data.view_up}
+		valueLabel={['X', 'Y', 'Z']}
 	/>
 	<RangeControl
 		label="Defocus Angle (degrees)"
@@ -52,15 +51,7 @@
 		step={1.0}
 	>
 		{#snippet labelPrefix()}
-			<InfoCircleOutline class="text-amber-400" />
-			<Tooltip>
-				<Heading tag="h6">Incorrect Preview</Heading>
-				<P>Editing this property will not affect the preview.</P>
-				<P
-					>You may only be able to see this property's effects by creating a
-					render.</P
-				>
-			</Tooltip>
+			<WarningIconUnaffectedPreview />
 		{/snippet}
 	</RangeControl>
 	<!-- <RangeControl label="Focus Distance" bind:value={data.focus_distance} /> -->

@@ -50,13 +50,6 @@
 			<!-- empty span for spacing -->
 			<span></span>
 		{/if}
-		<!-- {#if typeof leftLabel === 'string'}
-			<Heading tag="h2" class="text-xl font-bold">
-				{leftLabel}
-			</Heading>
-		{:else}
-			<Heading tag="h2" class="text-xl font-light italic">inline</Heading>
-		{/if} -->
 		<div class="flex flex-row">
 			{#if rightLabel}
 				{@render label(rightLabel, rightLabelStyle)}

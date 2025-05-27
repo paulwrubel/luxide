@@ -59,13 +59,13 @@
 {#snippet controlsGeometricBox(data: GeometricBox)}
 	<VectorInputControl
 		label="Corner 1"
-		bind:values={data.a}
-		valueLabels={['X', 'Y', 'Z']}
+		bind:value={data.a}
+		valueLabel={['X', 'Y', 'Z']}
 	/>
 	<VectorInputControl
 		label="Corner 2"
-		bind:values={data.b}
-		valueLabels={['X', 'Y', 'Z']}
+		bind:value={data.b}
+		valueLabel={['X', 'Y', 'Z']}
 	/>
 {/snippet}
 
@@ -103,15 +103,15 @@
 {#snippet controlsGeometricParallelogram(data: GeometricParallelogram)}
 	<VectorInputControl
 		label="Lower Left"
-		bind:values={data.lower_left}
-		valueLabels={['X', 'Y', 'Z']}
+		bind:value={data.lower_left}
+		valueLabel={['X', 'Y', 'Z']}
 	/>
-	<VectorInputControl bind:values={data.u} valueLabels={['X', 'Y', 'Z']}>
+	<VectorInputControl bind:value={data.u} valueLabel={['X', 'Y', 'Z']}>
 		{#snippet label()}
 			<em>u</em> Vector
 		{/snippet}
 	</VectorInputControl>
-	<VectorInputControl bind:values={data.v} valueLabels={['X', 'Y', 'Z']}>
+	<VectorInputControl bind:value={data.v} valueLabel={['X', 'Y', 'Z']}>
 		{#snippet label()}
 			<em>v</em> Vector
 		{/snippet}

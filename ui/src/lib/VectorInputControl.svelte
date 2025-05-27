@@ -1,36 +1,110 @@
 <script lang="ts">
+	import '../app.css';
 	import { Heading, Label, Input } from 'flowbite-svelte';
 	import type { Snippet } from 'svelte';
 
 	type Props = {
 		label: string | Snippet;
-		values: number[];
-		valueLabels: string[];
-	};
+		labelSpacePercentage?: 0 | 10 | 20 | 30 | 40 | 50 | 60 | 70 | 80 | 90 | 100;
+		allowWrappingLabel?: boolean;
+		labelPrefix?: Snippet;
+		labelSuffix?: Snippet;
+	} & (
+		| {
+				value: number[];
+				valueLabel: string[];
+		  }
+		| {
+				value: number;
+				valueLabel: string;
+		  }
+	);
 
-	let { label, values = $bindable(), valueLabels }: Props = $props();
+	let {
+		label,
+		labelSpacePercentage = 40,
+		allowWrappingLabel,
+		labelPrefix,
+		labelSuffix,
+		value = $bindable(),
+		valueLabel = $bindable()
+	}: Props = $props();
+
+	function getGridColumnsTemplateForPercentage(
+		percentage: Props['labelSpacePercentage']
+	): string {
+		switch (percentage) {
+			case 0:
+				return 'grid-cols-[0fr_100fr]';
+			case 10:
+				return 'grid-cols-[10fr_90fr]';
+			case 20:
+				return 'grid-cols-[20fr_80fr]';
+			case 30:
+				return 'grid-cols-[30fr_70fr]';
+			case 40:
+				return 'grid-cols-[40fr_60fr]';
+			case 50:
+				return 'grid-cols-[50fr_50fr]';
+			case 60:
+				return 'grid-cols-[60fr_40fr]';
+			case 70:
+				return 'grid-cols-[70fr_30fr]';
+			case 80:
+				return 'grid-cols-[80fr_20fr]';
+			case 90:
+				return 'grid-cols-[90fr_10fr]';
+			case 100:
+				return 'grid-cols-[100fr_0fr]';
+			default:
+				return 'grid-cols-[30fr_70fr]';
+		}
+	}
+
+	const gridStr = getGridColumnsTemplateForPercentage(labelSpacePercentage);
 </script>
 
-<div class="flex items-center gap-2">
-	<Heading tag="h6" class="flex-3 mt-3 whitespace-nowrap font-normal">
-		{#if typeof label === 'string'}
-			{label}:
+{#snippet labelledInput(label: string, index: number, totalElements: number)}
+	<Label class={`mb-2 flex w-full flex-col`}>
+		<span class="flex-1 overflow-hidden text-ellipsis px-2">
+			{label}
+		</span>
+		{#if typeof value === 'number'}
+			<Input type="number" bind:value />
 		{:else}
-			{@render label()}:
+			<Input type="number" bind:value={value[index]} />
 		{/if}
+	</Label>
+{/snippet}
+
+<div class={['grid items-center', gridStr]}>
+	<Heading tag="h6" class="mt-3 overflow-hidden font-normal">
+		<span
+			class={[
+				'flex items-center gap-2',
+				allowWrappingLabel ? 'whitespace-normal' : 'whitespace-nowrap'
+			]}
+		>
+			{#if labelPrefix}
+				{@render labelPrefix()}
+			{/if}
+			{#if typeof label === 'string'}
+				{label}
+			{:else}
+				{@render label()}
+			{/if}
+			{#if labelSuffix}
+				{@render labelSuffix()}
+			{/if}
+		</span>
 	</Heading>
-	<div class="flex-7 items-flex-end flex max-w-[70%] gap-2">
-		{#each values as _, i}
-			<Label
-				class={`mb-2 flex max-w-[${(100 / values.length).toFixed(0)}%] flex-col`}
-			>
-				<span class="flex-1 overflow-hidden text-ellipsis text-nowrap px-2">
-					{#if valueLabels[i]}
-						{valueLabels[i]}
-					{/if}
-				</span>
-				<Input type="number" bind:value={values[i]} />
-			</Label>
-		{/each}
+	<div class="items-flex-end flex gap-2">
+		{#if typeof value === 'number'}
+			{@render labelledInput(valueLabel as string, 0, 1)}
+		{:else}
+			{#each value as _, i}
+				{@render labelledInput(valueLabel[i], i, value.length)}
+			{/each}
+		{/if}
 	</div>
 </div>
