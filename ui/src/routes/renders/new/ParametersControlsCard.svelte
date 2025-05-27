@@ -25,6 +25,19 @@
 	    use_scaling_truncation: boolean;
     */
 
+	let savedCheckpointLimitLocal = $state(
+		renderConfig.parameters.saved_checkpoint_limit ?? 1
+	);
+	// sync to real state object
+	$effect(() => {
+		console.log('running effect over: ', savedCheckpointLimitLocal);
+		if (savedCheckpointLimitLocal !== undefined) {
+			renderConfig.parameters.saved_checkpoint_limit =
+				savedCheckpointLimitLocal;
+		}
+	});
+
+	$inspect(savedCheckpointLimitLocal);
 	$inspect(renderConfig.parameters.saved_checkpoint_limit);
 </script>
 
@@ -70,7 +83,9 @@
 		label="Enforce Checkpoint Limit?"
 		enabled={data.saved_checkpoint_limit !== undefined}
 		onchange={(e) => {
-			data.saved_checkpoint_limit = e.currentTarget.checked ? 1 : undefined;
+			renderConfig.parameters.saved_checkpoint_limit = e.currentTarget.checked
+				? savedCheckpointLimitLocal
+				: undefined;
 		}}
 	>
 		<!-- <VectorInputControl
@@ -90,18 +105,28 @@
 			bind:value={data.total_checkpoints}
 			valueLabel="checkpoints"
 		/> -->
-		{#if data.saved_checkpoint_limit !== undefined}
-			<VectorInputControl
-				label="Saved Checkpoint Limit"
-				labelSpacePercentage={70}
-				bind:value={data.saved_checkpoint_limit}
-				valueLabel="checkpoints"
-			>
-				{#snippet labelPrefix()}
-					<WarningIconAdvancedProperty />
-				{/snippet}
-			</VectorInputControl>
-		{/if}
+		<VectorInputControl
+			label="Saved Checkpoint Limit"
+			labelSpacePercentage={70}
+			bind:value={savedCheckpointLimitLocal}
+			valueLabel="checkpoints"
+		>
+			{#snippet labelPrefix()}
+				<WarningIconAdvancedProperty />
+			{/snippet}
+		</VectorInputControl>
+		<!-- {#if renderConfig.parameters.saved_checkpoint_limit !== undefined} -->
+		<!-- <VectorInputControl
+			label="Saved Checkpoint Limit"
+			labelSpacePercentage={70}
+			bind:value={renderConfig.parameters.saved_checkpoint_limit as number}
+			valueLabel="checkpoints"
+		>
+			{#snippet labelPrefix()}
+				<WarningIconAdvancedProperty />
+			{/snippet}
+		</VectorInputControl> -->
+		<!-- {/if} -->
 	</OptionalControl>
 	<VectorInputControl
 		label="Max Light Bounces"

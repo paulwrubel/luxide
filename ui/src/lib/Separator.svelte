@@ -1,9 +1,10 @@
 <script lang="ts">
 	type Props = {
 		vertical?: boolean;
+		class?: string;
 	};
 
-	const { vertical }: Props = $props();
+	const { vertical, class: className }: Props = $props();
 </script>
 
 {#if vertical}

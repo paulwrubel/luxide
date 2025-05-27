@@ -7,7 +7,8 @@
 	import { getToken } from '$lib/state/auth.svelte';
 	import { goto } from '$app/navigation';
 	import Controls from './Controls.svelte';
-	import { Sidebar, Button, Progressradial, Spinner } from 'flowbite-svelte';
+	import { Sidebar, Progressradial, Spinner, Button } from 'flowbite-svelte';
+	import Separator from '$lib/Separator.svelte';
 
 	const authToken = getToken();
 
@@ -79,6 +80,7 @@
 					Create Render
 				{/if}
 			</Button>
+			<div class="border-1 h-4 border-zinc-900"></div>
 		</div>
 	</Sidebar>
 	<div

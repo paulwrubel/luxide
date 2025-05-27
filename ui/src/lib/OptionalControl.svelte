@@ -3,7 +3,8 @@
 	import type { Snippet } from 'svelte';
 	import type { ChangeEventHandler } from 'svelte/elements';
 	import Separator from './Separator.svelte';
-	import { slide } from 'svelte/transition';
+	import { fly, slide } from 'svelte/transition';
+	import { flip } from 'svelte/animate';
 
 	type Props = {
 		label: string | Snippet;
@@ -27,16 +28,16 @@
 </script>
 
 <div class="flex max-w-full flex-col">
-	<!-- {#if enabled}
+	{#if enabled}
 		<Separator />
 	{:else}
 		<span class="h-[1px]"></span>
-	{/if} -->
+	{/if}
 	<Toggle
 		bind:checked={enabled}
 		{onchange}
 		size="large"
-		class="flex w-full items-center justify-between"
+		class="flex w-full items-center justify-between py-2"
 	>
 		{#snippet offLabel()}
 			<Heading tag="h6" class="overflow-hidden font-normal">
@@ -62,9 +63,10 @@
 		{/snippet}
 	</Toggle>
 	{#if enabled}
-		<div transition:slide={{ duration: 1000 }}>
+		<div transition:slide={{ duration: 300 }}>
 			{@render children()}
-			<!-- <Separator /> -->
 		</div>
+		<Separator />
+		<span class="h-[1px]"></span>
 	{/if}
 </div>
