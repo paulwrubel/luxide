@@ -1,14 +1,17 @@
 <script lang="ts">
 	import '../app.css';
-	import { isAuthenticated } from '$lib/state/auth.svelte';
+	import { initAuth, auth } from '$lib/state/auth.svelte';
 	import { Navbar, NavBrand } from 'flowbite-svelte';
 	import LoginButton from './LoginButton.svelte';
 	import UserInfo from './UserInfo.svelte';
 	import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query';
 	import { SvelteQueryDevtools } from '@tanstack/svelte-query-devtools';
 	import { browser } from '$app/environment';
+	import { onMount } from 'svelte';
 
 	let { children } = $props();
+
+	onMount(() => initAuth());
 
 	const queryClient = new QueryClient({
 		defaultOptions: {
@@ -36,7 +39,7 @@
 						Luxide
 					</span>
 				</NavBrand>
-				{#if isAuthenticated()}
+				{#if auth.isAuthenticated}
 					<UserInfo />
 				{:else}
 					<LoginButton />

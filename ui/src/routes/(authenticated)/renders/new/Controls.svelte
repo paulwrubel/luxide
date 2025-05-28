@@ -21,7 +21,7 @@
 	const camera = $derived(getCameraData(renderConfig, activeScene.camera));
 </script>
 
-<div class="flex flex-col gap-4">
+<div class="flex flex-col">
 	<Tabs
 		tabStyle="pill"
 		ulClass="justify-center"
@@ -29,7 +29,7 @@
 	>
 		<TabItem open title="Parameters">
 			<div class="flex flex-col items-center gap-4">
-				<ParametersControlsCard parameters={renderConfig.parameters} />
+				<ParametersControlsCard />
 			</div>
 		</TabItem>
 		<TabItem title="Camera">
@@ -59,51 +59,4 @@
 			</div>
 		</TabItem>
 	</Tabs>
-
-	<Label class="flex flex-col gap-2">
-		<Range
-			bind:value={renderConfig.parameters.image_dimensions[0]}
-			min={100}
-			max={5000}
-			step={10}
-		/>
-		<span>Width = {renderConfig.parameters.image_dimensions[0]}</span>
-	</Label>
-
-	<Label class="flex flex-col gap-2">
-		<Range
-			bind:value={renderConfig.parameters.image_dimensions[1]}
-			min={100}
-			max={5000}
-			step={10}
-		/>
-		<span>Height = {renderConfig.parameters.image_dimensions[1]}</span>
-	</Label>
-	<Label class="flex flex-col gap-2">
-		<Range
-			bind:value={camera.target_location[0]}
-			min={0.0}
-			max={1.0}
-			step={0.01}
-		/>
-		<span>Camera Target: X = {camera.target_location[0]}</span>
-	</Label>
-	<Label class="flex flex-col gap-2">
-		<Range
-			bind:value={camera.target_location[1]}
-			min={0.0}
-			max={1.0}
-			step={0.01}
-		/>
-		<span>Camera Target: Y = {camera.target_location[1]}</span>
-	</Label>
-	<Label class="flex flex-col gap-2">
-		<Range
-			bind:value={camera.target_location[2]}
-			min={0.0}
-			max={1.0}
-			step={0.01}
-		/>
-		<span>Camera Target: Z = {camera.target_location[2]}</span>
-	</Label>
 </div>

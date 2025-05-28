@@ -52,9 +52,9 @@ export type User = {
 	created_at: Date;
 	updated_at: Date;
 	role: Role;
-	max_renders?: number;
-	max_checkpoints_per_render?: number;
-	max_render_pixel_count?: number;
+	max_renders: number | null;
+	max_checkpoints_per_render: number | null;
+	max_render_pixel_count: number | null;
 };
 
 export async function fetchAuthTokenGitHub(
@@ -84,7 +84,12 @@ export async function fetchAuthTokenGitHub(
 	return tokenResponse.token;
 }
 
-export async function fetchUserInfo(token: string): Promise<User> {
+export async function fetchUserInfo(
+	token: string,
+	customFetch?: typeof window.fetch
+): Promise<User> {
+	const fetch = customFetch ?? window.fetch;
+
 	const response = await fetch(`${getAPIURL()}/auth/current_user_info`, {
 		headers: { Authorization: `Bearer ${token}` }
 	});

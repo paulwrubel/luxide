@@ -11,7 +11,7 @@
 		type Render
 	} from '$lib/utils/api';
 	import { Button, Spinner, Input, Label } from 'flowbite-svelte';
-	import { getToken } from '$lib/state/auth.svelte';
+	import { getToken, auth } from '$lib/state/auth.svelte';
 	import { page } from '$app/state';
 
 	type Props = {
@@ -20,15 +20,15 @@
 
 	const { render }: Props = $props();
 
-	const authToken = getToken();
+	const token = auth.validToken;
 
 	let isPausingOrResumingRender = $state(false);
 	async function handlePauseOrResumeRender() {
 		isPausingOrResumingRender = true;
 		if (isPaused || isPausing) {
-			await resumeRender(authToken, Number(page.params.id));
+			await resumeRender(token, Number(page.params.id));
 		} else if (isRunning) {
-			await pauseRender(authToken, Number(page.params.id));
+			await pauseRender(token, Number(page.params.id));
 		}
 		isPausingOrResumingRender = false;
 	}
@@ -41,7 +41,7 @@
 	async function handleUpdateRenderTotalCheckpoints() {
 		isUpdatingRenderTotalCheckpoints = true;
 		await updateRenderTotalCheckpoints(
-			authToken,
+			token,
 			Number(page.params.id),
 			newCheckpointLimitValue
 		);
@@ -93,7 +93,7 @@
 		<Button
 			color="red"
 			onclick={() => {
-				deleteRender(authToken, Number(page.params.id)).then(() => {
+				deleteRender(token, Number(page.params.id)).then(() => {
 					goto('/renders');
 				});
 			}}

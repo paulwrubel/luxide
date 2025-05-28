@@ -3,16 +3,18 @@
 	import type { Snippet } from 'svelte';
 	import type { ChangeEventHandler } from 'svelte/elements';
 	import Separator from './Separator.svelte';
-	import { fly, slide } from 'svelte/transition';
+	import { fade, fly, slide } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
+	import ToggleControl from './ToggleControl.svelte';
 
 	type Props = {
 		label: string | Snippet;
 		allowWrappingLabel?: boolean;
 		labelPrefix?: Snippet;
 		labelSuffix?: Snippet;
-		enabled: boolean;
+		checked: boolean;
 		onchange?: ChangeEventHandler<HTMLInputElement>;
+		disabled?: boolean;
 		children: Snippet;
 	};
 
@@ -21,52 +23,36 @@
 		allowWrappingLabel,
 		labelPrefix,
 		labelSuffix,
-		enabled = $bindable(),
+		checked = $bindable(),
 		onchange,
+		disabled,
 		children
 	}: Props = $props();
 </script>
 
 <div class="flex max-w-full flex-col">
-	{#if enabled}
-		<Separator />
-	{:else}
-		<span class="h-[1px]"></span>
-	{/if}
-	<Toggle
-		bind:checked={enabled}
+	<div class="h-[1px]">
+		{#if checked}
+			<div transition:fade={{ duration: 200 }}>
+				<Separator />
+			</div>
+		{/if}
+	</div>
+	<ToggleControl
+		{label}
+		{allowWrappingLabel}
+		{labelPrefix}
+		{labelSuffix}
+		{checked}
 		{onchange}
-		size="large"
-		class="flex w-full items-center justify-between py-2"
-	>
-		{#snippet offLabel()}
-			<Heading tag="h6" class="overflow-hidden font-normal">
-				<span
-					class={[
-						'flex items-center gap-2',
-						allowWrappingLabel ? 'whitespace-normal' : 'whitespace-nowrap'
-					]}
-				>
-					{#if labelPrefix}
-						{@render labelPrefix()}
-					{/if}
-					{#if typeof label === 'string'}
-						{label}
-					{:else}
-						{@render label()}
-					{/if}
-					{#if labelSuffix}
-						{@render labelSuffix()}
-					{/if}
-				</span>
-			</Heading>
-		{/snippet}
-	</Toggle>
-	{#if enabled}
+		{disabled}
+	/>
+	{#if checked}
 		<div transition:slide={{ duration: 300 }}>
 			{@render children()}
 		</div>
-		<Separator />
-		<span class="h-[1px]"></span>
+		<div transition:fade={{ duration: 200 }}>
+			<Separator />
+		</div>
 	{/if}
 </div>

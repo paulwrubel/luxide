@@ -1,11 +1,13 @@
 <script lang="ts">
 	import '../app.css';
-	import { Heading, Label, Input } from 'flowbite-svelte';
+	import { Heading, Label, Input, Helper } from 'flowbite-svelte';
 	import type { Snippet } from 'svelte';
 
 	type Props = {
 		label: string | Snippet;
 		labelSpacePercentage?: 0 | 10 | 20 | 30 | 40 | 50 | 60 | 70 | 80 | 90 | 100;
+		isErrored?: boolean;
+		errorMessage?: string;
 		allowWrappingLabel?: boolean;
 		labelPrefix?: Snippet;
 		labelSuffix?: Snippet;
@@ -13,22 +15,39 @@
 		| {
 				value: number[];
 				valueLabel: string[];
+				onchange?: (
+					e: Event & { currentTarget: HTMLInputElement },
+					index: number
+				) => void;
 		  }
 		| {
 				value: number;
 				valueLabel: string;
+				onchange?: (e: Event & { currentTarget: HTMLInputElement }) => void;
 		  }
 	);
 
 	let {
 		label,
 		labelSpacePercentage = 40,
+		isErrored,
+		errorMessage,
 		allowWrappingLabel,
 		labelPrefix,
 		labelSuffix,
 		value = $bindable(),
-		valueLabel = $bindable()
+		valueLabel = $bindable(),
+		onchange: onChange
 	}: Props = $props();
+
+	function handleChanged(
+		e: Event & { currentTarget: HTMLInputElement },
+		index?: number
+	) {
+		if (onChange) {
+			onChange(e, index ?? 0);
+		}
+	}
 
 	function getGridColumnsTemplateForPercentage(
 		percentage: Props['labelSpacePercentage']
@@ -65,14 +84,24 @@
 </script>
 
 {#snippet labelledInput(label: string, index: number, totalElements: number)}
-	<Label class={`mb-2 flex w-full flex-col`}>
+	<Label class={`mb-0 flex w-full flex-col`}>
 		<span class="flex-1 overflow-hidden text-ellipsis px-2">
 			{label}
 		</span>
 		{#if typeof value === 'number'}
-			<Input type="number" bind:value />
+			<Input
+				type="number"
+				bind:value
+				onchange={handleChanged}
+				color={isErrored ? 'red' : 'default'}
+			/>
 		{:else}
-			<Input type="number" bind:value={value[index]} />
+			<Input
+				type="number"
+				bind:value={value[index]}
+				onchange={(e) => handleChanged}
+				color={isErrored ? 'red' : 'default'}
+			/>
 		{/if}
 	</Label>
 {/snippet}
@@ -98,13 +127,20 @@
 			{/if}
 		</span>
 	</Heading>
-	<div class="items-flex-end flex gap-2">
-		{#if typeof value === 'number'}
-			{@render labelledInput(valueLabel as string, 0, 1)}
+	<div class="flex flex-col">
+		<div class="items-flex-end flex gap-2">
+			{#if typeof value === 'number'}
+				{@render labelledInput(valueLabel as string, 0, 1)}
+			{:else}
+				{#each value as _, i}
+					{@render labelledInput(valueLabel[i], i, value.length)}
+				{/each}
+			{/if}
+		</div>
+		{#if isErrored && errorMessage}
+			<Helper color="red">{errorMessage}</Helper>
 		{:else}
-			{#each value as _, i}
-				{@render labelledInput(valueLabel[i], i, value.length)}
-			{/each}
+			<span class="h-4"></span>
 		{/if}
 	</div>
 </div>

@@ -4,13 +4,13 @@
 	import { getDefaultRenderConfig } from '$lib/utils/renderSamples';
 	import { setContext } from 'svelte';
 	import { postRender } from '$lib/utils/api';
-	import { getToken } from '$lib/state/auth.svelte';
+	import { getToken, auth } from '$lib/state/auth.svelte';
 	import { goto } from '$app/navigation';
 	import Controls from './Controls.svelte';
 	import { Sidebar, Progressradial, Spinner, Button } from 'flowbite-svelte';
 	import Separator from '$lib/Separator.svelte';
 
-	const authToken = getToken();
+	const token = auth.validToken;
 
 	// store state
 	const renderConfig = $state(getDefaultRenderConfig());
@@ -47,7 +47,7 @@
 	async function handleCreateRender() {
 		isCreatingRender = true;
 
-		postRender(authToken, renderConfig)
+		postRender(token, renderConfig)
 			.then((response) => {
 				isCreatingRender = false;
 				goto(`/renders/${response.id}`);
@@ -60,28 +60,25 @@
 
 <div class="flex h-full max-h-[calc(100vh-4rem)] w-full flex-1">
 	<Sidebar
-		divClass="!bg-inherit h-full"
+		divClass="!bg-inherit h-full flex flex-col items-stretch gap-2"
 		alwaysOpen
 		position="static"
 		class="w-128 z-10 !bg-zinc-900"
 	>
-		<div class="flex h-full flex-col items-stretch gap-2">
-			<Controls {renderConfig} />
-			<Button
-				onclick={() => {
-					handleCreateRender();
-				}}
-				disabled={isCreatingRender}
-				class="mt-auto"
-			>
-				{#if isCreatingRender}
-					<Spinner size="4" />
-				{:else}
-					Create Render
-				{/if}
-			</Button>
-			<div class="border-1 h-4 border-zinc-900"></div>
-		</div>
+		<Controls {renderConfig} />
+		<Separator class="mt-auto" />
+		<Button
+			onclick={() => {
+				handleCreateRender();
+			}}
+			disabled={isCreatingRender}
+		>
+			{#if isCreatingRender}
+				<Spinner size="4" />
+			{:else}
+				Create Render
+			{/if}
+		</Button>
 	</Sidebar>
 	<div
 		class="m-8 flex flex-1 items-center justify-center"

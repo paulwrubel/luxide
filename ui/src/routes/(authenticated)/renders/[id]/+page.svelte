@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Sidebar } from 'flowbite-svelte';
 	import DisplayRender from './DisplayRender.svelte';
-	import { getToken } from '$lib/state/auth.svelte';
+	import { getToken, auth } from '$lib/state/auth.svelte';
 	import { page } from '$app/state';
 	import { getLatestCheckpointImage, getRender } from '$lib/utils/api';
 	import { createQuery } from '@tanstack/svelte-query';
@@ -10,25 +10,24 @@
 
 	const AUTO_REFRESH_INTERVAL_MS = 1000;
 
-	const authToken = getToken();
+	const token = auth.validToken;
 
 	const imageURLQuery = createQuery({
-		queryKey: ['latestCheckpoint', Number(page.params.id), authToken],
+		queryKey: ['latestCheckpoint', Number(page.params.id), token],
 		queryFn: async () => {
-			return await getLatestCheckpointImage(
-				authToken,
-				Number(page.params.id)
-			).then((blob) => {
-				return URL.createObjectURL(blob);
-			});
+			return await getLatestCheckpointImage(token, Number(page.params.id)).then(
+				(blob) => {
+					return URL.createObjectURL(blob);
+				}
+			);
 		},
 		refetchInterval: AUTO_REFRESH_INTERVAL_MS
 	});
 
 	const renderQuery = createQuery({
-		queryKey: ['render', Number(page.params.id), authToken],
+		queryKey: ['render', Number(page.params.id), token],
 		queryFn: async () => {
-			return await getRender(authToken, Number(page.params.id));
+			return await getRender(token, Number(page.params.id));
 		},
 		refetchInterval: AUTO_REFRESH_INTERVAL_MS
 	});

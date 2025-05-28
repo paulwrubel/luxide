@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Card, Spinner } from 'flowbite-svelte';
 	import { createQuery } from '@tanstack/svelte-query';
-	import { getToken } from '$lib/state/auth.svelte';
+	import { getToken, auth } from '$lib/state/auth.svelte';
 	import { getLatestCheckpointImage } from '$lib/utils/api';
 	import type { Render } from '$lib/utils/api';
 
@@ -11,16 +11,14 @@
 
 	const { render }: Props = $props();
 
-	const authToken = getToken();
+	const token = auth.validToken;
 
 	const checkpointImageURLQuery = createQuery({
-		queryKey: ['latestCheckpoint', render.id, authToken],
+		queryKey: ['latestCheckpoint', render.id, token],
 		queryFn: async () => {
-			return await getLatestCheckpointImage(authToken, render.id).then(
-				(blob) => {
-					return URL.createObjectURL(blob);
-				}
-			);
+			return await getLatestCheckpointImage(token, render.id).then((blob) => {
+				return URL.createObjectURL(blob);
+			});
 		}
 	});
 </script>

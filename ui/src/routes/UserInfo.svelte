@@ -1,9 +1,5 @@
 <script lang="ts">
-	import {
-		authenticatedUser,
-		isAuthenticated,
-		clearToken
-	} from '$lib/state/auth.svelte';
+	import { auth, clearToken } from '$lib/state/auth.svelte';
 	import { Spinner, Dropdown, DropdownItem } from 'flowbite-svelte';
 
 	// function to handle logout
@@ -13,24 +9,24 @@
 	}
 </script>
 
-{#if isAuthenticated()}
+{#if auth.isAuthenticated}
 	<div class="relative">
-		{#await authenticatedUser()}
+		{#if auth.user === undefined}
 			<div class="flex items-center gap-2">
 				<Spinner color="blue" size="4" class="text-white" />
 				<span class="text-sm text-white">Loading...</span>
 			</div>
-		{:then user}
+		{:else}
 			<button
 				class="flex items-center gap-2 rounded p-1 text-white hover:bg-zinc-800"
 				id="user-menu-button"
 			>
 				<img
-					src={user?.avatar_url}
+					src={auth.validUser.avatar_url}
 					alt="User avatar"
 					class="h-8 w-auto rounded-md"
 				/>
-				<span class="text-sm font-medium">{user?.username}</span>
+				<span class="text-sm font-medium">{auth.validUser.username}</span>
 			</button>
 
 			<Dropdown triggeredBy="#user-menu-button" class="z-10 rounded-lg">
@@ -41,6 +37,6 @@
 					Log Out
 				</DropdownItem>
 			</Dropdown>
-		{/await}
+		{/if}
 	</div>
 {/if}

@@ -1,17 +1,17 @@
 <script lang="ts">
 	import { Spinner, Alert } from 'flowbite-svelte';
-	import { getToken } from '$lib/state/auth.svelte';
+	import { auth } from '$lib/state/auth.svelte';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { getAllRenders } from '$lib/utils/api';
 	import RenderPreviewCard from './RenderPreviewCard.svelte';
 	import NewRenderCard from './NewRenderCard.svelte';
 
-	const authToken = getToken();
+	const token = auth.validToken;
 
 	const allRendersQuery = createQuery({
-		queryKey: ['renders', authToken],
+		queryKey: ['renders', token],
 		queryFn: async () => {
-			return await getAllRenders(authToken);
+			return await getAllRenders(token);
 		}
 	});
 

@@ -3,11 +3,4 @@
 	import { navigateToAPILogin } from '$lib/utils/api';
 </script>
 
-<Button
-	color="primary"
-	onclick={async () => {
-		await navigateToAPILogin();
-	}}
->
-	Log In
-</Button>
+<Button color="primary" onclick={navigateToAPILogin}>Log In</Button>

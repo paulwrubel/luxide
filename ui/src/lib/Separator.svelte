@@ -8,7 +8,7 @@
 </script>
 
 {#if vertical}
-	<div class="border-r-[1px] border-zinc-600"></div>
+	<div class={['border-r-[1px] border-zinc-600', className]}></div>
 {:else}
-	<div class="border-b-[1px] border-zinc-600"></div>
+	<div class={['border-b-[1px] border-zinc-600', className]}></div>
 {/if}
