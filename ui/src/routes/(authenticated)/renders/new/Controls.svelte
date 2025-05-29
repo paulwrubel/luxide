@@ -24,7 +24,7 @@
 <div class="flex flex-col">
 	<Tabs
 		tabStyle="pill"
-		ulClass="justify-center"
+		ulClass="justify-center mb-4"
 		contentClass="!bg-zinc-900 border-t-[1px] border-zinc-600 rounded-none mt-0"
 	>
 		<TabItem open title="Parameters">

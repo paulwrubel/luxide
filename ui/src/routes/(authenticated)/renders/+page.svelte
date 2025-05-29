@@ -7,6 +7,7 @@
 	import NewRenderCard from './NewRenderCard.svelte';
 
 	const token = auth.validToken;
+	const user = auth.validUser;
 
 	const allRendersQuery = createQuery({
 		queryKey: ['renders', token],
@@ -15,7 +16,11 @@
 		}
 	});
 
-	const placeholderItem = Array.from({ length: 100 });
+	const canCreateNewRender = $derived(
+		user.max_renders === null ||
+			($allRendersQuery.data !== undefined &&
+				$allRendersQuery.data.length < user.max_renders)
+	);
 </script>
 
 <div class="flex w-full flex-col p-12">
@@ -35,9 +40,11 @@
 					<RenderPreviewCard {render} />
 				</div>
 			{/each}
-			<div class="w-80">
-				<NewRenderCard />
-			</div>
+			{#if canCreateNewRender}
+				<div class="w-80">
+					<NewRenderCard />
+				</div>
+			{/if}
 		</div>
 	{/if}
 </div>

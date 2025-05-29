@@ -29,6 +29,12 @@
 	<div class="flex flex-col gap-2 p-4">
 		<!-- controls -->
 		<VectorInputControl
+			label="Name"
+			bind:value={renderConfig.name}
+			inputType="string"
+			valueLabel="name"
+		/>
+		<VectorInputControl
 			label="Size"
 			bind:value={parameters.image_dimensions}
 			valueLabel={['width', 'height']}

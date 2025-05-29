@@ -1,11 +1,12 @@
-<script lang="ts">
+<script lang="ts" generics="T extends string | number">
 	import '../app.css';
 	import { Heading, Label, Input, Helper } from 'flowbite-svelte';
 	import type { Snippet } from 'svelte';
 
-	type Props = {
+	type Props<T> = {
 		label: string | Snippet;
 		labelSpacePercentage?: 0 | 10 | 20 | 30 | 40 | 50 | 60 | 70 | 80 | 90 | 100;
+		inputType?: string;
 		isErrored?: boolean;
 		errorMessage?: string;
 		allowWrappingLabel?: boolean;
@@ -13,7 +14,7 @@
 		labelSuffix?: Snippet;
 	} & (
 		| {
-				value: number[];
+				value: T[];
 				valueLabel: string[];
 				onchange?: (
 					e: Event & { currentTarget: HTMLInputElement },
@@ -21,7 +22,7 @@
 				) => void;
 		  }
 		| {
-				value: number;
+				value: T;
 				valueLabel: string;
 				onchange?: (e: Event & { currentTarget: HTMLInputElement }) => void;
 		  }
@@ -30,6 +31,7 @@
 	let {
 		label,
 		labelSpacePercentage = 40,
+		inputType = 'number',
 		isErrored,
 		errorMessage,
 		allowWrappingLabel,
@@ -38,7 +40,7 @@
 		value = $bindable(),
 		valueLabel = $bindable(),
 		onchange: onChange
-	}: Props = $props();
+	}: Props<T> = $props();
 
 	function handleChanged(
 		e: Event & { currentTarget: HTMLInputElement },
@@ -50,7 +52,7 @@
 	}
 
 	function getGridColumnsTemplateForPercentage(
-		percentage: Props['labelSpacePercentage']
+		percentage: Props<T>['labelSpacePercentage']
 	): string {
 		switch (percentage) {
 			case 0:
@@ -80,26 +82,33 @@
 		}
 	}
 
+	function isNonArrayT(value: T | T[]): value is T {
+		return typeof value === 'string' || typeof value === 'number';
+	}
+
 	const gridStr = getGridColumnsTemplateForPercentage(labelSpacePercentage);
 </script>
 
-{#snippet labelledInput(label: string, index: number, totalElements: number)}
+{#snippet labelledInput(label: string, index: number)}
 	<Label class={`mb-0 flex w-full flex-col`}>
 		<span class="flex-1 overflow-hidden text-ellipsis px-2">
 			{label}
 		</span>
-		{#if typeof value === 'number'}
+		{#if isNonArrayT(value)}
 			<Input
-				type="number"
+				type={inputType}
 				bind:value
 				onchange={handleChanged}
 				color={isErrored ? 'red' : 'default'}
 			/>
 		{:else}
+			<!-- for some reason, the type guard above isn't 
+			     guaranteeing that value is T[] here -->
+			{@const valueArr = value as T[]}
 			<Input
-				type="number"
-				bind:value={value[index]}
-				onchange={(e) => handleChanged}
+				type={inputType}
+				bind:value={valueArr[index]}
+				onchange={(e) => handleChanged(e, index)}
 				color={isErrored ? 'red' : 'default'}
 			/>
 		{/if}
@@ -129,11 +138,11 @@
 	</Heading>
 	<div class="flex flex-col">
 		<div class="items-flex-end flex gap-2">
-			{#if typeof value === 'number'}
-				{@render labelledInput(valueLabel as string, 0, 1)}
+			{#if typeof value === 'number' || typeof value === 'string'}
+				{@render labelledInput(valueLabel as string, 0)}
 			{:else}
 				{#each value as _, i}
-					{@render labelledInput(valueLabel[i], i, value.length)}
+					{@render labelledInput(valueLabel[i], i)}
 				{/each}
 			{/if}
 		</div>
