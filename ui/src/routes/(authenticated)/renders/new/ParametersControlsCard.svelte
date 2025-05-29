@@ -23,28 +23,45 @@
 
 	const pixelLimit = $derived(user.max_render_pixel_count);
 	const maxCheckpoints = $derived(user.max_checkpoints_per_render);
+
+	$inspect(parameters);
 </script>
 
 <ControlsCard startExpanded leftLabel="parameters" leftLabelStyle="light">
 	<div class="flex flex-col gap-2 p-4">
 		<!-- controls -->
-		<VectorInputControl
+		<!-- <VectorInputControl
 			label="Name"
-			bind:value={renderConfig.name}
+			value={renderConfig.name}
+			onchange={(v) => (renderConfig.name = v)}
 			inputType="string"
 			valueLabel="name"
-		/>
+		/> -->
 		<VectorInputControl
 			label="Size"
-			bind:value={parameters.image_dimensions}
+			value={parameters.image_dimensions}
+			onchange={(v: number[]) => {
+				parameters.image_dimensions = v as [number, number];
+			}}
 			valueLabel={['width', 'height']}
 			isErrored={pixelLimit !== null && pixels > pixelLimit}
 			errorMessage="Image dimensions must not exceed {pixelLimit}"
 		/>
 		<VectorInputControl
 			label="Tile Size"
-			bind:value={parameters.tile_dimensions}
+			value={parameters.tile_dimensions}
+			onchange={(v: number[]) => {
+				parameters.tile_dimensions = v as [number, number];
+			}}
 			valueLabel={['width', 'height']}
+			isErrored={parameters.tile_dimensions[0] < 1 ||
+				parameters.tile_dimensions[0] > parameters.image_dimensions[0] ||
+				parameters.tile_dimensions[1] < 1 ||
+				parameters.tile_dimensions[1] > parameters.image_dimensions[1]}
+			errorMessage={parameters.tile_dimensions[0] < 1 ||
+			parameters.tile_dimensions[1] < 1
+				? 'Tile dimensions must be at least 1 pixel'
+				: `Tile dimensions must be at most ${parameters.image_dimensions[0]} x ${parameters.image_dimensions[1]} pixels`}
 		>
 			{#snippet labelSuffix()}
 				<WarningIconAdvancedProperty />
@@ -54,8 +71,16 @@
 			label="Gamma Correction"
 			allowWrappingLabel
 			labelSpacePercentage={70}
-			bind:value={parameters.gamma_correction}
+			value={parameters.gamma_correction}
+			onchange={(v: number) => {
+				parameters.gamma_correction = v;
+			}}
 			valueLabel="gamma"
+			isErrored={parameters.gamma_correction < 1 ||
+				parameters.gamma_correction > 5}
+			errorMessage={parameters.gamma_correction < 1
+				? 'Gamma correction must be at least 1'
+				: 'Gamma correction must be at most 5'}
 		>
 			{#snippet labelSuffix()}
 				<WarningIconAdvancedProperty />
@@ -64,14 +89,30 @@
 		<VectorInputControl
 			label="Samples Per Checkpoint"
 			labelSpacePercentage={70}
-			bind:value={parameters.samples_per_checkpoint}
+			value={parameters.samples_per_checkpoint}
+			onchange={(v: number) => {
+				parameters.samples_per_checkpoint = v;
+			}}
 			valueLabel="samples"
+			isErrored={parameters.samples_per_checkpoint < 1 ||
+				parameters.samples_per_checkpoint > 1000}
+			errorMessage={parameters.samples_per_checkpoint < 1
+				? 'At least 1 sample per checkpoint is required'
+				: 'No greater than 1000 samples per checkpoint are allowed'}
 		/>
 		<VectorInputControl
 			label="Total Checkpoints"
 			labelSpacePercentage={70}
-			bind:value={parameters.total_checkpoints}
+			value={parameters.total_checkpoints}
+			onchange={(v: number) => {
+				parameters.total_checkpoints = v;
+			}}
 			valueLabel="checkpoints"
+			isErrored={parameters.total_checkpoints < 1 ||
+				parameters.total_checkpoints > 1000}
+			errorMessage={parameters.total_checkpoints < 1
+				? 'No less than 1 checkpoint is allowed'
+				: 'No greater than 1000 checkpoints are allowed'}
 		/>
 		<OptionalControl
 			label="Enforce Checkpoint Limit?"
@@ -89,14 +130,18 @@
 			<VectorInputControl
 				label="Saved Checkpoint Limit"
 				labelSpacePercentage={70}
-				bind:value={savedCheckpointLimitLocal}
-				onchange={(e: Event & { currentTarget: HTMLInputElement }) => {
-					parameters.saved_checkpoint_limit = parseInt(e.currentTarget.value);
+				value={savedCheckpointLimitLocal}
+				onchange={(v: number) => {
+					parameters.saved_checkpoint_limit = v;
+					savedCheckpointLimitLocal = v;
 				}}
 				valueLabel="checkpoints"
-				isErrored={maxCheckpoints !== null &&
-					savedCheckpointLimitLocal > maxCheckpoints}
-				errorMessage="No greater than {maxCheckpoints} checkpoints are permitted"
+				isErrored={savedCheckpointLimitLocal < 0 ||
+					(maxCheckpoints !== null &&
+						savedCheckpointLimitLocal > maxCheckpoints)}
+				errorMessage={savedCheckpointLimitLocal < 0
+					? 'Cannot save less than 0 checkpoints'
+					: `No greater than ${maxCheckpoints} checkpoints are permitted`}
 			>
 				{#snippet labelSuffix()}
 					<WarningIconAdvancedProperty />
@@ -112,8 +157,15 @@
 		<VectorInputControl
 			label="Max Light Bounces"
 			labelSpacePercentage={70}
-			bind:value={parameters.max_bounces}
+			value={parameters.max_bounces}
+			onchange={(v: number) => {
+				parameters.max_bounces = v;
+			}}
 			valueLabel="bounces"
+			isErrored={parameters.max_bounces < 0 || parameters.max_bounces > 200}
+			errorMessage={parameters.max_bounces < 0
+				? 'No less than 0 bounces are permitted'
+				: 'No greater than 200 bounces are permitted'}
 		>
 			{#snippet labelSuffix()}
 				<WarningIconAdvancedProperty />

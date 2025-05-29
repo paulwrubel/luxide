@@ -3,7 +3,7 @@
 	import { Heading, Label, Input, Helper } from 'flowbite-svelte';
 	import type { Snippet } from 'svelte';
 
-	type Props = {
+	type Props<T> = {
 		label: string | Snippet;
 		labelSpacePercentage?: 0 | 10 | 20 | 30 | 40 | 50 | 60 | 70 | 80 | 90 | 100;
 		isErrored?: boolean;
@@ -13,14 +13,14 @@
 		labelSuffix?: Snippet;
 	} & (
 		| {
-				value: number[];
+				value: T[];
 				valueLabel: string[];
-				onchange?: (value: number[]) => void;
+				onchange?: (value: T, index: number) => void;
 		  }
 		| {
-				value: number;
+				value: T;
 				valueLabel: string;
-				onchange?: (value: number) => void;
+				onchange?: (value: T) => void;
 		  }
 	);
 
@@ -32,33 +32,34 @@
 		allowWrappingLabel,
 		labelPrefix,
 		labelSuffix,
-		value,
-		valueLabel,
+		value = $bindable(),
+		valueLabel = $bindable(),
 		onchange: onChange
-	}: Props = $props();
+	}: Props<T> = $props();
 
 	function handleChanged(
 		e: Event & { currentTarget: HTMLInputElement },
 		index?: number
 	) {
-		console.log(e.currentTarget.value);
-		let eventValue = parseInt(e.currentTarget.value, 10);
-		console.log(eventValue);
-		console.log(index);
-		if (index === undefined) {
-			const newValue = isNaN(eventValue) ? 0 : eventValue;
-			console.log(newValue);
-			console.log(onChange);
-			(onChange as (v: number) => void)?.(newValue);
+		const eventValue = e.currentTarget.value;
+		let eventValueT: T;
+		if (typeof value === 'number') {
+			eventValueT = parseInt(eventValue);
+
+			if (isNaN(eventValueT)) {
+				eventValueT = 0;
+			}
 		} else {
-			const newValueArr = value as number[];
-			newValueArr[index] = isNaN(eventValue) ? 0 : eventValue;
-			(onChange as (v: number[]) => void)?.(newValueArr);
+			eventValueT = eventValue;
+		}
+
+		if (onChange) {
+			onChange(eventValue as T, index ?? 0);
 		}
 	}
 
 	function getGridColumnsTemplateForPercentage(
-		percentage: Props['labelSpacePercentage']
+		percentage: Props<T>['labelSpacePercentage']
 	): string {
 		switch (percentage) {
 			case 0:
@@ -88,13 +89,8 @@
 		}
 	}
 
-	function isNumber(value: number | number[]): value is number {
-		console.log(value);
-		return typeof value === 'number';
-	}
-
-	function isArray(value: number | number[]): value is number[] {
-		return Array.isArray(value);
+	function isNonArrayT(value: T | T[]): value is T {
+		return typeof value === 'string' || typeof value === 'number';
 	}
 
 	const gridStr = getGridColumnsTemplateForPercentage(labelSpacePercentage);
@@ -105,23 +101,23 @@
 		<span class="flex-1 overflow-hidden text-ellipsis px-2">
 			{label}
 		</span>
-		{#if !isArray(value)}
-			<Input type="text" color={isErrored ? 'red' : 'default'}>
-				{#snippet children(props)}
-					<input {...props} bind:value oninput={(e) => handleChanged(e)} />
-				{/snippet}
-			</Input>
+		{#if isNonArrayT(value)}
+			<Input
+				type={inputType}
+				bind:value
+				onchange={handleChanged}
+				color={isErrored ? 'red' : 'default'}
+			/>
 		{:else}
-			{@const valueArr = value as number[]}
-			<Input type="text" color={isErrored ? 'red' : 'default'}>
-				{#snippet children(props)}
-					<input
-						{...props}
-						bind:value={valueArr[index]}
-						oninput={(e) => handleChanged(e, index)}
-					/>
-				{/snippet}
-			</Input>
+			<!-- for some reason, the type guard above isn't 
+			     guaranteeing that value is T[] here -->
+			{@const valueArr = value as T[]}
+			<Input
+				type={inputType}
+				bind:value={valueArr[index]}
+				onchange={(e) => handleChanged(e, index)}
+				color={isErrored ? 'red' : 'default'}
+			/>
 		{/if}
 	</Label>
 {/snippet}
