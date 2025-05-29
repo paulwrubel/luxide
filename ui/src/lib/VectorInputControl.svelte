@@ -112,6 +112,8 @@
 				{/snippet}
 			</Input>
 		{:else}
+			<!-- for some reason, the type guard above isn't 
+			     guaranteeing that value is T[] here -->
 			{@const valueArr = value as number[]}
 			<Input type="text" color={isErrored ? 'red' : 'default'}>
 				{#snippet children(props)}

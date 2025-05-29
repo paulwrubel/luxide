@@ -3,11 +3,13 @@
 	import OptionalControl from '$lib/OptionalControl.svelte';
 	import WarningIconAdvancedProperty from '$lib/property-icons/WarningIconAdvancedProperty.svelte';
 	import { auth } from '$lib/state/auth.svelte';
+	import StringInputControl from '$lib/StringInputControl.svelte';
 	import ToggleControl from '$lib/ToggleControl.svelte';
 	import { type RenderConfig } from '$lib/utils/render';
 	import VectorInputControl from '$lib/VectorInputControl.svelte';
 	import { Tooltip } from 'flowbite-svelte';
 	import { getContext } from 'svelte';
+	import { render } from 'svelte/server';
 
 	const user = auth.validUser;
 
@@ -30,13 +32,14 @@
 <ControlsCard startExpanded leftLabel="parameters" leftLabelStyle="light">
 	<div class="flex flex-col gap-2 p-4">
 		<!-- controls -->
-		<!-- <VectorInputControl
+		<StringInputControl
 			label="Name"
 			value={renderConfig.name}
-			onchange={(v) => (renderConfig.name = v)}
-			inputType="string"
+			onchange={(v: string) => (renderConfig.name = v)}
 			valueLabel="name"
-		/> -->
+			isErrored={renderConfig.name === ''}
+			errorMessage="Render name must not be blank"
+		/>
 		<VectorInputControl
 			label="Size"
 			value={parameters.image_dimensions}
