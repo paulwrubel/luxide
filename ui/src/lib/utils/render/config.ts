@@ -9,7 +9,8 @@ import type { TextureData } from './texture';
 export const RenderConfigSchema = z.object({
 	name: z.string().nonempty(),
 	parameters: RenderParametersSchema,
-	active_scene: z.union([z.string().default(''), SceneDataSchema])
+	active_scene: z.union([SceneDataSchema, z.string()])
+	// active_scene: SceneDataSchema
 });
 
 // main render configuration type

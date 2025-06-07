@@ -1,5 +1,9 @@
 import { z } from 'zod';
-import { type CameraData, CameraDataSchema } from './camera';
+import {
+	CAMERA_SCHEMA_DEFAULTS,
+	type CameraData,
+	CameraDataSchema
+} from './camera';
 import type { RenderConfig } from './config';
 import type { GeometricData } from './geometric';
 import { isNonNullObject } from './utils';
@@ -11,16 +15,26 @@ export type SceneData = {
 	background_color: [number, number, number];
 };
 
-export const SceneDataSchema = z.object({
-	// geometrics: z.array(z.union([z.string(), GeometricDataSchema])),
-	// use_bvh: z.boolean().optional(),
-	camera: z.union([z.string(), CameraDataSchema])
-	// background_color: z.tuple([
-	// 	z.number().min(0).max(1),
-	// 	z.number().min(0).max(1),
-	// 	z.number().min(0).max(1)
-	// ])
-});
+const SCENE_SCHEMA_DEFAULTS: SceneData = {
+	geometrics: [],
+	use_bvh: true,
+	camera: CAMERA_SCHEMA_DEFAULTS,
+	background_color: [0.0, 0.0, 0.0]
+};
+
+export const SceneDataSchema = z
+	.object({
+		// geometrics: z.array(z.union([z.string(), GeometricDataSchema])),
+		// use_bvh: z.boolean().optional(),
+		camera: z.union([CameraDataSchema, z.string()])
+		// camera: CameraDataSchema
+		// background_color: z.tuple([
+		// 	z.number().min(0).max(1),
+		// 	z.number().min(0).max(1),
+		// 	z.number().min(0).max(1)
+		// ])
+	})
+	.default(SCENE_SCHEMA_DEFAULTS);
 
 export function isSceneData(x: unknown): x is SceneData {
 	return (

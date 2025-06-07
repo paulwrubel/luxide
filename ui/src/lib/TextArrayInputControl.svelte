@@ -44,6 +44,9 @@
 		valueErrors
 	} = $derived(arrayProxy(superform, field));
 
+	// $inspect($arrayValues);
+	// $inspect($valueErrors);
+
 	const gridStr = getGridColumnsTemplateForPercentage(labelSpacePercentage);
 </script>
 
@@ -71,7 +74,7 @@
 	<div class="flex flex-col">
 		<div class="items-flex-end flex gap-2">
 			{#each $arrayValues as _, i}
-				<div class="flex flex-col">
+				<div class="flex w-full flex-col">
 					<TextInput
 						{superform}
 						field={`${path}[${i}]`}

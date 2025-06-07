@@ -1,9 +1,11 @@
 import type {
-	GeometricParallelogram,
-	GeometricTriangle,
 	RenderConfig,
 	RenderConfigSchema
 } from '$lib/utils/render/config';
+import type {
+	GeometricTriangle,
+	GeometricParallelogram
+} from '$lib/utils/render/geometric';
 import type { FormPathLeaves, SuperForm } from 'sveltekit-superforms';
 import * as THREE from 'three';
 import type z from 'zod';
@@ -127,13 +129,6 @@ export function syncronizeRenderConfig(
 			);
 		}
 
-		const { valid } = await superform.validateForm();
-		if (valid) {
-			// whole form is valid, so we can just
-			// copy everything and be done with it
-			renderConfig.parameters = form.parameters;
-		}
-
 		function isRecord(value: unknown): value is Record<string, unknown> {
 			return typeof value === 'object' && value !== null;
 		}
@@ -143,15 +138,6 @@ export function syncronizeRenderConfig(
 			configParent: Record<string, unknown>,
 			parentPath?: string
 		): Promise<void> {
-			const rootIsValid = parentPath
-				? await isValid(parentPath)
-				: (await superform.validateForm()).valid;
-
-			if (rootIsValid) {
-				configParent = formParent;
-				return;
-			}
-
 			for (const path of Object.keys(formParent)) {
 				const field = formParent[path];
 				const configField = configParent[path];
@@ -167,10 +153,9 @@ export function syncronizeRenderConfig(
 				const fieldIsValid = await isValid(
 					fieldPath as FormPathLeaves<z.infer<typeof RenderConfigSchema>>
 				);
+
 				if (fieldIsValid) {
 					configParent[path] = field;
-				} else {
-					console.log('error! not setting', fieldPath, 'to', field);
 				}
 			}
 		}

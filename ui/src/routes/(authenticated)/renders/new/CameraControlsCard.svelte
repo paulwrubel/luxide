@@ -9,8 +9,13 @@
 	import VectorInputControl from '$lib/VectorInputControl.svelte';
 	import { getContext } from 'svelte';
 	import { z } from 'zod';
-	import type { FormPathLeaves, SuperForm } from 'sveltekit-superforms';
+	import type {
+		FormPathArrays,
+		FormPathLeaves,
+		SuperForm
+	} from 'sveltekit-superforms';
 	import { type CameraData, getCameraData } from '$lib/utils/render/camera';
+	import TextArrayInputControl from '$lib/TextArrayInputControl.svelte';
 
 	const schema = RenderConfigSchema;
 
@@ -42,22 +47,38 @@
 		max={170.0}
 		step={1.0}
 	/>
-	<!-- <VectorInputControl
+	<TextArrayInputControl
+		{superform}
+		field={`${path}.eye_location` as FormPathArrays<z.infer<typeof schema>>}
 		label="Eye"
-		bind:value={data.eye_location}
-		valueLabel={['x', 'y', 'z']}
+		valueLabels={['x', 'y', 'z']}
+		type="number"
 	/>
-	<VectorInputControl
+	<TextArrayInputControl
+		{superform}
+		field={`${path}.target_location` as FormPathArrays<z.infer<typeof schema>>}
+		label="Target"
+		valueLabels={['x', 'y', 'z']}
+		type="number"
+	/>
+	<TextArrayInputControl
+		{superform}
+		field={`${path}.view_up` as FormPathArrays<z.infer<typeof schema>>}
+		label="View Up"
+		valueLabels={['x', 'y', 'z']}
+		type="number"
+	/>
+	<!-- <VectorInputControl
 		label="Target"
 		bind:value={data.target_location}
 		valueLabel={['x', 'y', 'z']}
-	/>
-	<VectorInputControl
+	/> -->
+	<!-- <VectorInputControl
 		label="View Up"
 		bind:value={data.view_up}
 		valueLabel={['x', 'y', 'z']}
-	/>
-	<RangeControl
+	/> -->
+	<!-- <RangeControl
 		label="Defocus Angle (degrees)"
 		bind:value={data.defocus_angle_degrees}
 		min={0.0}
