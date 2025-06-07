@@ -8,12 +8,18 @@
 	import GeometricControlsCard from './GeometricControlsCard.svelte';
 	import { Label, Range, TabItem, Tabs } from 'flowbite-svelte';
 	import ParametersControlsCard from './ParametersControlsCard.svelte';
+	import { type SuperForm } from 'sveltekit-superforms';
+	import { RenderConfigSchema } from '$lib/utils/render';
+	import { z } from 'zod';
+
+	const schema = RenderConfigSchema;
 
 	type Props = {
+		superform: SuperForm<z.infer<typeof schema>>;
 		renderConfig: RenderConfig;
 	};
 
-	const { renderConfig }: Props = $props();
+	const { superform, renderConfig }: Props = $props();
 
 	const activeScene = $derived(
 		getSceneData(renderConfig, renderConfig.active_scene)
@@ -29,7 +35,7 @@
 	>
 		<TabItem open title="Parameters">
 			<div class="flex flex-col items-center gap-4">
-				<ParametersControlsCard />
+				<ParametersControlsCard {superform} />
 			</div>
 		</TabItem>
 		<TabItem title="Camera">

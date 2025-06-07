@@ -1,19 +1,12 @@
 <script lang="ts">
 	import { Heading, Toggle } from 'flowbite-svelte';
 	import type { Snippet } from 'svelte';
-	import { RenderConfigSchema } from './utils/render';
-	import {
-		formFieldProxy,
-		type FormPathLeaves,
-		type SuperForm
-	} from 'sveltekit-superforms';
-	import { z } from 'zod';
-
-	const schema = RenderConfigSchema;
+	import type { FormEventHandler, ChangeEventHandler } from 'svelte/elements';
 
 	type Props = {
-		superform: SuperForm<z.infer<typeof schema>>;
-		field: FormPathLeaves<z.infer<typeof schema>, boolean>;
+		checked: boolean;
+		oninput?: FormEventHandler<HTMLInputElement>;
+		onchange?: ChangeEventHandler<HTMLInputElement>;
 		label: string | Snippet;
 		allowWrappingLabel?: boolean;
 		labelPrefix?: Snippet;
@@ -22,21 +15,22 @@
 	};
 
 	let {
-		superform,
-		field,
+		checked,
+		oninput,
+		onchange,
 		label,
 		allowWrappingLabel,
 		labelPrefix,
 		labelSuffix,
 		disabled
 	}: Props = $props();
-
-	const { value } = formFieldProxy(superform, field);
 </script>
 
 <div class="flex max-w-full flex-col">
 	<Toggle
-		bind:checked={$value}
+		bind:checked
+		{oninput}
+		{onchange}
 		{disabled}
 		size="large"
 		class="flex w-full items-center justify-between py-2"

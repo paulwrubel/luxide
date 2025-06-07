@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { degreesToRadians, radiansToDegrees } from './math';
 
 export function isNonNullObject(x: unknown): x is Record<string, unknown> {
@@ -10,29 +11,46 @@ export function isTypedObject(
 	return isNonNullObject(x) && 'type' in x && typeof x.type === 'string';
 }
 
-// main render configuration type
-export type RenderConfig = {
-	name: string;
-	parameters: RenderParameters;
-	active_scene: string | SceneData;
-	scenes?: Record<string, SceneData>;
-	cameras?: Record<string, CameraData>;
-	textures?: Record<string, TextureData>;
-	materials?: Record<string, MaterialData>;
-	geometrics?: Record<string, GeometricData>;
-};
+// render parameters
+export type RenderParameters = z.infer<typeof renderParametersSchema>;
 
 // render parameters
-export type RenderParameters = {
-	image_dimensions: [number, number];
-	tile_dimensions: [number, number];
-	gamma_correction: number;
-	samples_per_checkpoint: number;
-	total_checkpoints: number;
-	saved_checkpoint_limit?: number;
-	max_bounces: number;
-	use_scaling_truncation: boolean;
-};
+// export type RenderParameters = {
+// 	image_dimensions: [number, number];
+// 	tile_dimensions: [number, number];
+// 	gamma_correction: number;
+// 	samples_per_checkpoint: number;
+// 	total_checkpoints: number;
+// 	saved_checkpoint_limit?: number;
+// 	max_bounces: number;
+// 	use_scaling_truncation: boolean;
+// };
+
+const renderParametersSchema = z
+	.object({
+		image_dimensions: z.tuple([
+			z.number().int().min(1),
+			z.number().int().min(1)
+		]),
+		tile_dimensions: z.tuple([
+			z.number().int().min(1),
+			z.number().int().min(1)
+		]),
+		gamma_correction: z.number().min(1).max(5),
+		samples_per_checkpoint: z.number().int().min(1).max(1000),
+		total_checkpoints: z.number().int().min(1).max(1000),
+		saved_checkpoint_limit: z.number().int().min(0).max(1000).optional(),
+		max_bounces: z.number().int().min(1).max(200),
+		use_scaling_truncation: z.boolean()
+	})
+	.refine((params) => params.tile_dimensions[0] <= params.image_dimensions[0], {
+		message: 'Cannot be larger than image dimensions',
+		path: ['tile_dimensions', 0]
+	})
+	.refine((params) => params.tile_dimensions[1] <= params.image_dimensions[1], {
+		message: 'Cannot be larger than image dimensions',
+		path: ['tile_dimensions', 1]
+	});
 
 export type SceneData = {
 	geometrics: (string | GeometricData)[];
@@ -341,3 +359,20 @@ export function toDegrees(angle: Angle): number {
 	}
 	return angle.degrees;
 }
+
+// main render configuration type
+export type RenderConfig = {
+	name: string;
+	parameters: RenderParameters;
+	active_scene: string | SceneData;
+	scenes?: Record<string, SceneData>;
+	cameras?: Record<string, CameraData>;
+	textures?: Record<string, TextureData>;
+	materials?: Record<string, MaterialData>;
+	geometrics?: Record<string, GeometricData>;
+};
+
+export const RenderConfigSchema = z.object({
+	name: z.string().nonempty(),
+	parameters: renderParametersSchema
+});

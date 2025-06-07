@@ -37,10 +37,12 @@
 		"prettier-plugin-tailwindcss": "^0.6.11",
 		"svelte": "^5.0.0",
 		"svelte-check": "^4.0.0",
+		"sveltekit-superforms": "^2.25.0",
 		"tailwindcss": "^4.0.0",
 		"typescript": "^5.0.0",
 		"typescript-eslint": "^8.20.0",
-		"vite": "^6.2.6"
+		"vite": "^6.2.6",
+		"zod": "^3.25.45"
 	},
 	"dependencies": {
 		"@sveltejs/adapter-static": "^3.0.8",

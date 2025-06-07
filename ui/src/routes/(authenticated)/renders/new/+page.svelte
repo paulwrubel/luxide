@@ -1,20 +1,72 @@
 <script lang="ts">
 	import { Canvas } from '@threlte/core';
 	import Scene from './Scene.svelte';
-	import { getDefaultRenderConfig } from '$lib/utils/renderSamples';
+	import { getDefaultRenderConfig } from '$lib/utils/renderTemplates';
 	import { setContext } from 'svelte';
 	import { postRender } from '$lib/utils/api';
-	import { getToken, auth } from '$lib/state/auth.svelte';
+	import { auth } from '$lib/state/auth.svelte';
 	import { goto } from '$app/navigation';
 	import Controls from './Controls.svelte';
-	import { Sidebar, Progressradial, Spinner, Button } from 'flowbite-svelte';
+	import { Sidebar, Spinner, Button } from 'flowbite-svelte';
 	import Separator from '$lib/Separator.svelte';
+	import { zod } from 'sveltekit-superforms/adapters';
+	import {
+		message,
+		superForm,
+		type FormPathLeaves
+	} from 'sveltekit-superforms';
+	import type { PageProps } from './$types';
+	import { RenderConfigSchema } from '$lib/utils/render';
+	import type { z } from 'zod';
+	import { syncronizeRenderConfig } from './utils';
 
-	const token = auth.validToken;
+	const { data }: PageProps = $props();
+
+	const user = auth.validUser;
 
 	// store state
 	const renderConfig = $state(getDefaultRenderConfig());
 	setContext('renderConfig', renderConfig);
+
+	const schema = RenderConfigSchema.refine(
+		({ parameters }) => {
+			if (user.max_render_pixel_count !== null) {
+				const [x, y] = parameters.image_dimensions;
+				return x * y <= user.max_render_pixel_count;
+			}
+			return true;
+		},
+		{
+			message: 'Image dimensions are too large',
+			path: ['parameters', 'image_dimensions']
+		}
+	).refine(
+		({ parameters }) => {
+			if (user.max_checkpoints_per_render !== null) {
+				return (
+					parameters.saved_checkpoint_limit !== undefined &&
+					parameters.saved_checkpoint_limit <= user.max_checkpoints_per_render
+				);
+			}
+			return true;
+		},
+		{
+			message: 'Saved checkpoint limit is too large',
+			path: ['parameters', 'saved_checkpoint_limit']
+		}
+	);
+
+	const superform = superForm(data.form, {
+		SPA: true,
+		dataType: 'json',
+		validationMethod: 'oninput',
+		validators: zod(schema)
+	});
+	const { form, enhance } = superform;
+
+	form.subscribe(syncronizeRenderConfig(superform, renderConfig));
+
+	const token = auth.validToken;
 
 	let aspectRatio = $derived(
 		renderConfig.parameters.image_dimensions[0] /
@@ -60,25 +112,27 @@
 
 <div class="flex h-full max-h-[calc(100vh-4rem)] w-full flex-1">
 	<Sidebar
-		divClass="!bg-inherit h-full flex flex-col items-stretch gap-2"
+		divClass="!bg-inherit h-full flex flex-col items-stretch !gap-2"
 		alwaysOpen
 		position="static"
 		class="w-128 z-10 !bg-zinc-900"
 	>
-		<Controls {renderConfig} />
-		<Separator class="mt-auto" />
-		<Button
-			onclick={() => {
-				handleCreateRender();
-			}}
-			disabled={isCreatingRender}
-		>
-			{#if isCreatingRender}
-				<Spinner size="4" />
-			{:else}
-				Create Render
-			{/if}
-		</Button>
+		<form use:enhance class="flex min-h-full flex-col items-stretch gap-2">
+			<Controls {renderConfig} {superform} />
+			<Separator class="mt-auto" />
+			<Button
+				onclick={() => {
+					handleCreateRender();
+				}}
+				disabled={isCreatingRender}
+			>
+				{#if isCreatingRender}
+					<Spinner size="4" />
+				{:else}
+					<span>Create Render</span>
+				{/if}
+			</Button>
+		</form>
 	</Sidebar>
 	<div
 		class="m-8 flex flex-1 items-center justify-center"

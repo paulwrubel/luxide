@@ -4,6 +4,38 @@ export function getDefaultRenderConfig(): RenderConfig {
 	return getCornellBoxRenderConfig();
 }
 
+export function getEmptyRenderConfig(): RenderConfig {
+	return {
+		name: 'Blank',
+		parameters: {
+			image_dimensions: [500, 500],
+			tile_dimensions: [1, 1],
+			gamma_correction: 2.0,
+			samples_per_checkpoint: 10,
+			total_checkpoints: 100,
+			saved_checkpoint_limit: 1,
+			max_bounces: 50,
+			use_scaling_truncation: true
+		},
+		active_scene: {
+			geometrics: [],
+			use_bvh: true,
+			camera: {
+				vertical_field_of_view_degrees: 40.0,
+				eye_location: [0.0, 0.0, -10.0],
+				target_location: [0.0, 0.0, 0.0],
+				view_up: [0.0, 1.0, 0.0],
+				defocus_angle_degrees: 0.0,
+				focus_distance: 'eye_to_target'
+			},
+			background_color: [0.0, 0.0, 0.0]
+		},
+		geometrics: {},
+		materials: {},
+		textures: {}
+	};
+}
+
 export function getCornellBoxRenderConfig(): RenderConfig {
 	return {
 		name: 'Cornell Box',

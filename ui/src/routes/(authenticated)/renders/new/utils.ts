@@ -1,8 +1,12 @@
 import type {
 	GeometricParallelogram,
-	GeometricTriangle
+	GeometricTriangle,
+	RenderConfig,
+	RenderConfigSchema
 } from '$lib/utils/render';
+import type { FormPathLeaves, SuperForm } from 'sveltekit-superforms';
 import * as THREE from 'three';
+import type z from 'zod';
 
 export function createTriangleMesh(
 	geometricData: GeometricTriangle
@@ -107,4 +111,70 @@ export function createParallelogramMesh(
 
 	// create and return mesh
 	return mesh;
+}
+
+export function syncronizeRenderConfig(
+	superform: SuperForm<z.infer<typeof RenderConfigSchema>>,
+	renderConfig: RenderConfig
+) {
+	return async (form: z.infer<typeof RenderConfigSchema>) => {
+		// function to simplify checking a field error
+		async function isValid(path: string): Promise<boolean> {
+			return (
+				(await superform.validate(
+					path as FormPathLeaves<z.infer<typeof RenderConfigSchema>>
+				)) === undefined
+			);
+		}
+
+		const { valid } = await superform.validateForm();
+		if (valid) {
+			// whole form is valid, so we can just
+			// copy everything and be done with it
+			renderConfig.parameters = form.parameters;
+		}
+
+		function isRecord(value: unknown): value is Record<string, unknown> {
+			return typeof value === 'object' && value !== null;
+		}
+
+		async function updateFields(
+			formParent: Record<string, unknown>,
+			configParent: Record<string, unknown>,
+			parentPath?: string
+		): Promise<void> {
+			const rootIsValid = parentPath
+				? await isValid(parentPath)
+				: (await superform.validateForm()).valid;
+
+			if (rootIsValid) {
+				configParent = formParent;
+				return;
+			}
+
+			for (const path of Object.keys(formParent)) {
+				const field = formParent[path];
+				const configField = configParent[path];
+				const fieldPath = parentPath ? `${parentPath}.${path}` : path;
+				// if this is an object, it's a nested field
+				// so we need to recurse
+				if (isRecord(field) && isRecord(configField)) {
+					await updateFields(field, configField, fieldPath);
+					continue;
+				}
+
+				// otherwise, we can check the field directly
+				const fieldIsValid = await isValid(
+					fieldPath as FormPathLeaves<z.infer<typeof RenderConfigSchema>>
+				);
+				if (fieldIsValid) {
+					configParent[path] = field;
+				} else {
+					console.log('error! not setting', fieldPath, 'to', field);
+				}
+			}
+		}
+
+		await updateFields(form, renderConfig);
+	};
 }

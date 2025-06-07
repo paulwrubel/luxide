@@ -1,5 +1,4 @@
 <script lang="ts">
-	import '../app.css';
 	import { Heading, Label, Input, Helper } from 'flowbite-svelte';
 	import type { Snippet } from 'svelte';
 
@@ -106,24 +105,16 @@
 			{label}
 		</span>
 		{#if !isArray(value)}
-			<Input type="text" color={isErrored ? 'red' : 'default'}>
-				{#snippet children(props)}
-					<input {...props} bind:value oninput={(e) => handleChanged(e)} />
-				{/snippet}
-			</Input>
+			<Input type="text" bind:value color={isErrored ? 'red' : 'default'} />
 		{:else}
 			<!-- for some reason, the type guard above isn't 
 			     guaranteeing that value is T[] here -->
 			{@const valueArr = value as number[]}
-			<Input type="text" color={isErrored ? 'red' : 'default'}>
-				{#snippet children(props)}
-					<input
-						{...props}
-						bind:value={valueArr[index]}
-						oninput={(e) => handleChanged(e, index)}
-					/>
-				{/snippet}
-			</Input>
+			<Input
+				type="text"
+				bind:value={valueArr[index]}
+				color={isErrored ? 'red' : 'default'}
+			/>
 		{/if}
 	</Label>
 {/snippet}

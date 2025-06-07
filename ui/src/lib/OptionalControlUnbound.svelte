@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { Heading, Toggle } from 'flowbite-svelte';
 	import type { Snippet } from 'svelte';
-	import type { ChangeEventHandler } from 'svelte/elements';
+	import type { ChangeEventHandler, FormEventHandler } from 'svelte/elements';
 	import Separator from './Separator.svelte';
 	import { fade, fly, slide } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import ToggleControl from './ToggleControl.svelte';
+	import ToggleControlUnbound from './ToggleControlUnbound.svelte';
 
 	type Props = {
 		label: string | Snippet;
@@ -13,6 +14,7 @@
 		labelPrefix?: Snippet;
 		labelSuffix?: Snippet;
 		checked: boolean;
+		oninput?: FormEventHandler<HTMLInputElement>;
 		onchange?: ChangeEventHandler<HTMLInputElement>;
 		disabled?: boolean;
 		children: Snippet;
@@ -23,7 +25,8 @@
 		allowWrappingLabel,
 		labelPrefix,
 		labelSuffix,
-		checked = $bindable(),
+		checked,
+		oninput,
 		onchange,
 		disabled,
 		children
@@ -38,13 +41,14 @@
 			</div>
 		{/if}
 	</div>
-	<ToggleControl
+	<ToggleControlUnbound
+		{checked}
+		{oninput}
+		{onchange}
 		{label}
 		{allowWrappingLabel}
 		{labelPrefix}
 		{labelSuffix}
-		{checked}
-		{onchange}
 		{disabled}
 	/>
 	{#if checked}
