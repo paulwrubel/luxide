@@ -7,7 +7,7 @@
 		type FormPathArrays
 	} from 'sveltekit-superforms';
 	import z from 'zod';
-	import { RenderConfigSchema } from './utils/render';
+	import { RenderConfigSchema } from './utils/render/config';
 	import TextInput from './TextInput.svelte';
 	import { getGridColumnsTemplateForPercentage } from './utils';
 

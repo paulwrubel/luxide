@@ -6,7 +6,7 @@
 		formFieldProxy
 	} from 'sveltekit-superforms';
 	import z from 'zod';
-	import type { RenderConfigSchema } from './utils/render';
+	import type { RenderConfigSchema } from './utils/render/config';
 	import type { FormEventHandler, ChangeEventHandler } from 'svelte/elements';
 
 	type Props = {

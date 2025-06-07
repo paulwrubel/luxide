@@ -2,20 +2,20 @@
 	import NestedGeometricHeader from './NestedGeometricHeader.svelte';
 	import RangeControl from '$lib/RangeControl.svelte';
 	import Separator from '$lib/Separator.svelte';
-	import {
-		getGeometricData,
-		type GeometricBox,
-		type GeometricData,
-		type GeometricInstanceRotate,
-		type GeometricList,
-		type GeometricParallelogram,
-		type RenderConfig
-	} from '$lib/utils/render';
+	import { type RenderConfig } from '$lib/utils/render/config';
 	import VectorInputControl from '$lib/VectorInputControl.svelte';
 	import { Card, Heading } from 'flowbite-svelte';
 	import { ChevronDownOutline, ChevronUpOutline } from 'flowbite-svelte-icons';
 	import { slide } from 'svelte/transition';
 	import { getContext } from 'svelte';
+	import {
+		type GeometricData,
+		getGeometricData,
+		type GeometricBox,
+		type GeometricList,
+		type GeometricInstanceRotate,
+		type GeometricParallelogram
+	} from '$lib/utils/render/geometric';
 
 	type Props = {
 		geometric: string | GeometricData;

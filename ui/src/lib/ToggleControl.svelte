@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Heading, Toggle } from 'flowbite-svelte';
 	import type { Snippet } from 'svelte';
-	import { RenderConfigSchema } from './utils/render';
+	import { RenderConfigSchema } from './utils/render/config';
 	import {
 		formFieldProxy,
 		type FormPathLeaves,

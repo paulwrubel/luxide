@@ -1,26 +1,39 @@
 <script lang="ts">
 	import { Label, Range } from 'flowbite-svelte';
 	import type { Snippet } from 'svelte';
+	import { formFieldProxy } from 'sveltekit-superforms';
+	import type { SuperForm } from 'sveltekit-superforms';
+	import { RenderConfigSchema } from './utils/render/config';
+	import type { z } from 'zod';
+	import type { FormPathLeaves } from 'sveltekit-superforms';
+
+	const schema = RenderConfigSchema;
 
 	type Props = {
+		superform: SuperForm<z.infer<typeof schema>>;
+		field: FormPathLeaves<z.infer<typeof schema>, number>;
 		label: string;
 		labelPrefix?: Snippet;
 		labelSuffix?: Snippet;
-		value: number;
 		min?: number;
 		max?: number;
 		step?: number;
 	};
 
-	let {
+	const {
+		superform,
+		field,
 		label,
 		labelPrefix,
 		labelSuffix,
-		value = $bindable(),
 		min,
 		max,
 		step
 	}: Props = $props();
+
+	const { value } = $derived(formFieldProxy(superform, field));
+
+	$inspect($value);
 </script>
 
 <Label class="mb-2 flex flex-col gap-1.5">
@@ -34,7 +47,7 @@
 				{@render labelSuffix()}
 			{/if}
 		</span>
-		<span>{value}</span>
+		<span>{$value}</span>
 	</span>
-	<Range bind:value {min} {max} {step} />
+	<Range bind:value={$value as number} {min} {max} {step} />
 </Label>

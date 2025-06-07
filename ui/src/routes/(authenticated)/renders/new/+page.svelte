@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Canvas } from '@threlte/core';
 	import Scene from './Scene.svelte';
-	import { getDefaultRenderConfig } from '$lib/utils/renderTemplates';
+	import { getDefaultRenderConfig } from '$lib/utils/render/templates';
 	import { setContext } from 'svelte';
 	import { postRender } from '$lib/utils/api';
 	import { auth } from '$lib/state/auth.svelte';
@@ -16,7 +16,7 @@
 		type FormPathLeaves
 	} from 'sveltekit-superforms';
 	import type { PageProps } from './$types';
-	import { RenderConfigSchema } from '$lib/utils/render';
+	import { RenderConfigSchema } from '$lib/utils/render/config';
 	import type { z } from 'zod';
 	import { syncronizeRenderConfig } from './utils';
 

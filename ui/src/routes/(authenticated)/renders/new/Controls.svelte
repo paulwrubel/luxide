@@ -1,16 +1,14 @@
 <script lang="ts">
-	import {
-		getCameraData,
-		getSceneData,
-		type RenderConfig
-	} from '$lib/utils/render';
+	import { type RenderConfig } from '$lib/utils/render/config';
 	import CameraControlsCard from './CameraControlsCard.svelte';
 	import GeometricControlsCard from './GeometricControlsCard.svelte';
 	import { Label, Range, TabItem, Tabs } from 'flowbite-svelte';
 	import ParametersControlsCard from './ParametersControlsCard.svelte';
 	import { type SuperForm } from 'sveltekit-superforms';
-	import { RenderConfigSchema } from '$lib/utils/render';
+	import { RenderConfigSchema } from '$lib/utils/render/config';
 	import { z } from 'zod';
+	import { getCameraData } from '$lib/utils/render/camera';
+	import { getSceneData } from '$lib/utils/render/scene';
 
 	const schema = RenderConfigSchema;
 
@@ -24,7 +22,9 @@
 	const activeScene = $derived(
 		getSceneData(renderConfig, renderConfig.active_scene)
 	);
-	const camera = $derived(getCameraData(renderConfig, activeScene.camera));
+	const { data: camera } = $derived(
+		getCameraData(renderConfig, activeScene.camera)
+	);
 </script>
 
 <div class="flex flex-col">
@@ -40,7 +40,7 @@
 		</TabItem>
 		<TabItem title="Camera">
 			<div class="flex flex-col items-center gap-4">
-				<CameraControlsCard {camera} />
+				<CameraControlsCard {superform} {camera} />
 			</div>
 		</TabItem>
 		<TabItem title="Geometrics">

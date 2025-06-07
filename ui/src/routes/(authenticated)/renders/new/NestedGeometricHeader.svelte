@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { Heading } from 'flowbite-svelte';
 	import Separator from '$lib/Separator.svelte';
-	import {
-		getGeometricData,
-		type GeometricData,
-		type RenderConfig
-	} from '$lib/utils/render';
+	import { type RenderConfig } from '$lib/utils/render/config';
 	import { getContext } from 'svelte';
+	import {
+		type GeometricData,
+		getGeometricData
+	} from '$lib/utils/render/geometric';
 
 	type Props = {
 		data: string | GeometricData;

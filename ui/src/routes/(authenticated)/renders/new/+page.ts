@@ -1,5 +1,5 @@
-import { RenderConfigSchema } from '$lib/utils/render';
-import { getDefaultRenderConfig } from '$lib/utils/renderTemplates';
+import { RenderConfigSchema } from '$lib/utils/render/config';
+import { getDefaultRenderConfig } from '$lib/utils/render/templates';
 import type { PageLoad } from './$types';
 import { superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';

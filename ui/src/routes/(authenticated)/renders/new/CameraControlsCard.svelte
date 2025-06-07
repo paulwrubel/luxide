@@ -3,46 +3,59 @@
 	import WarningIconUnaffectedPreview from '$lib/property-icons/WarningIconUnaffectedPreview.svelte';
 	import RangeControl from '$lib/RangeControl.svelte';
 	import {
-		getCameraData,
-		type CameraData,
+		RenderConfigSchema,
 		type RenderConfig
-	} from '$lib/utils/render';
+	} from '$lib/utils/render/config';
 	import VectorInputControl from '$lib/VectorInputControl.svelte';
 	import { getContext } from 'svelte';
+	import { z } from 'zod';
+	import type { FormPathLeaves, SuperForm } from 'sveltekit-superforms';
+	import { type CameraData, getCameraData } from '$lib/utils/render/camera';
+
+	const schema = RenderConfigSchema;
 
 	type Props = {
+		superform: SuperForm<z.infer<typeof schema>>;
 		camera: string | CameraData;
 	};
 
-	const { camera }: Props = $props();
+	const { superform, camera }: Props = $props();
 
 	const renderConfig = getContext<RenderConfig>('renderConfig');
 
-	const cameraData = getCameraData(renderConfig, camera);
+	const { data: cameraData, path } = $derived(
+		getCameraData(renderConfig, camera)
+	);
+
+	$inspect(renderConfig.active_scene);
 </script>
 
 {#snippet controlsCamera(data: CameraData)}
 	<RangeControl
+		{superform}
+		field={`${path}.vertical_field_of_view_degrees` as FormPathLeaves<
+			z.infer<typeof schema>,
+			number
+		>}
 		label="Vertical FOV (degrees)"
-		bind:value={data.vertical_field_of_view_degrees}
 		min={10.0}
 		max={170.0}
 		step={1.0}
 	/>
-	<VectorInputControl
+	<!-- <VectorInputControl
 		label="Eye"
 		bind:value={data.eye_location}
-		valueLabel={['X', 'Y', 'Z']}
+		valueLabel={['x', 'y', 'z']}
 	/>
 	<VectorInputControl
 		label="Target"
 		bind:value={data.target_location}
-		valueLabel={['X', 'Y', 'Z']}
+		valueLabel={['x', 'y', 'z']}
 	/>
 	<VectorInputControl
 		label="View Up"
 		bind:value={data.view_up}
-		valueLabel={['X', 'Y', 'Z']}
+		valueLabel={['x', 'y', 'z']}
 	/>
 	<RangeControl
 		label="Defocus Angle (degrees)"
@@ -53,7 +66,7 @@
 		{#snippet labelPrefix()}
 			<WarningIconUnaffectedPreview />
 		{/snippet}
-	</RangeControl>
+	</RangeControl> -->
 	<!-- <RangeControl label="Focus Distance" bind:value={data.focus_distance} /> -->
 {/snippet}
 

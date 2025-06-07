@@ -3,7 +3,7 @@ import type {
 	GeometricTriangle,
 	RenderConfig,
 	RenderConfigSchema
-} from '$lib/utils/render';
+} from '$lib/utils/render/config';
 import type { FormPathLeaves, SuperForm } from 'sveltekit-superforms';
 import * as THREE from 'three';
 import type z from 'zod';

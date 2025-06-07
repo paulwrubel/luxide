@@ -7,7 +7,7 @@
 		type SuperForm
 	} from 'sveltekit-superforms';
 	import type { z } from 'zod';
-	import { RenderConfigSchema } from '$lib/utils/render';
+	import { RenderConfigSchema } from '$lib/utils/render/config';
 	import TextInput from './TextInput.svelte';
 	import { getGridColumnsTemplateForPercentage } from './utils';
 	import type { ChangeEventHandler, FormEventHandler } from 'svelte/elements';

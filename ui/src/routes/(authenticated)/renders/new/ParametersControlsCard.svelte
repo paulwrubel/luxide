@@ -6,11 +6,11 @@
 	import TextInputControl from '$lib/TextInputControl.svelte';
 	import TextArrayInputControl from '$lib/TextArrayInputControl.svelte';
 	import ToggleControl from '$lib/ToggleControl.svelte';
-	import { type RenderConfig } from '$lib/utils/render';
+	import { type RenderConfig } from '$lib/utils/render/config';
 	import { Tooltip } from 'flowbite-svelte';
 	import { getContext } from 'svelte';
 	import { type SuperForm } from 'sveltekit-superforms';
-	import { RenderConfigSchema } from '$lib/utils/render';
+	import { RenderConfigSchema } from '$lib/utils/render/config';
 	import { z } from 'zod';
 
 	const schema = RenderConfigSchema;

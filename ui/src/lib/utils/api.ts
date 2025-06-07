@@ -1,4 +1,4 @@
-import type { RenderConfig } from './render';
+import type { RenderConfig } from './render/config';
 
 function getBaseURL(): string {
 	return window.location.origin;

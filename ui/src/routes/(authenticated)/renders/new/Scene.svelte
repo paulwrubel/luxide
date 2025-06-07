@@ -1,25 +1,27 @@
 <script lang="ts">
-	import {
-		type GeometricData,
-		type MaterialData,
-		type RenderConfig,
-		getCameraData,
-		getGeometricData,
-		getMaterialData,
-		getSceneData,
-		getTextureData,
-		isComposite,
-		toRadians
-	} from '$lib/utils/render';
+	import { type RenderConfig } from '$lib/utils/render/config';
 	import { T } from '@threlte/core';
 	import { getContext } from 'svelte';
 	import * as THREE from 'three';
 	import { createParallelogramMesh, createTriangleMesh } from './utils';
+	import { getCameraData } from '$lib/utils/render/camera';
+	import {
+		type GeometricData,
+		getGeometricData,
+		isComposite
+	} from '$lib/utils/render/geometric';
+	import {
+		getMaterialData,
+		type MaterialData
+	} from '$lib/utils/render/material';
+	import { getSceneData } from '$lib/utils/render/scene';
+	import { getTextureData } from '$lib/utils/render/texture';
+	import { toRadians } from '$lib/utils/render/utils';
 
 	const config = getContext<RenderConfig>('renderConfig');
 
 	const activeScene = $derived(getSceneData(config, config.active_scene));
-	const camera = $derived(getCameraData(config, activeScene.camera));
+	const { data: camera } = $derived(getCameraData(config, activeScene.camera));
 
 	const threeCam = $derived.by<THREE.PerspectiveCamera>(() => {
 		const cam = new THREE.PerspectiveCamera();

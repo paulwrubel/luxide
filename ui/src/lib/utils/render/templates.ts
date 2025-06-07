@@ -1,4 +1,4 @@
-import type { RenderConfig } from './render';
+import type { RenderConfig } from './config';
 
 export function getDefaultRenderConfig(): RenderConfig {
 	return getCornellBoxRenderConfig();
