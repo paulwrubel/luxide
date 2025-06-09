@@ -22,12 +22,6 @@
 	const activeScene = $derived(
 		getSceneData(renderConfig, renderConfig.active_scene)
 	);
-
-	// const { data: camera } = $derived(
-	// 	getCameraData(renderConfig, activeScene.camera)
-	// );
-
-	// $inspect(camera);
 </script>
 
 <div class="flex flex-col">

@@ -32,8 +32,6 @@
 	}: Props = $props();
 
 	const { value } = $derived(formFieldProxy(superform, field));
-
-	$inspect($value);
 </script>
 
 <Label class="mb-2 flex flex-col gap-1.5">
