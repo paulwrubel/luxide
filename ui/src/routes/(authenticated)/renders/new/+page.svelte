@@ -10,17 +10,10 @@
 	import { Sidebar, Spinner, Button } from 'flowbite-svelte';
 	import Separator from '$lib/Separator.svelte';
 	import { zod } from 'sveltekit-superforms/adapters';
-	import {
-		message,
-		superForm,
-		type FormPathLeaves
-	} from 'sveltekit-superforms';
+	import { superForm } from 'sveltekit-superforms';
 	import type { PageProps } from './$types';
 	import { RenderConfigSchema } from '$lib/utils/render/config';
-	import type { z } from 'zod';
 	import { syncronizeRenderConfig } from './utils';
-	import type { SceneData } from '$lib/utils/render/scene';
-	import type { CameraData } from '$lib/utils/render/camera';
 
 	const { data }: PageProps = $props();
 
@@ -58,23 +51,13 @@
 		}
 	);
 
-	(
-		(renderConfig.active_scene as SceneData).camera as CameraData
-	).eye_location[0] = null;
-
-	const res = schema.safeParse(renderConfig);
-
-	console.log(res.error);
-
 	const superform = superForm(data.form, {
 		SPA: true,
 		dataType: 'json',
 		validationMethod: 'oninput',
 		validators: zod(schema)
 	});
-	const { form, enhance, errors } = superform;
-
-	$inspect($errors.active_scene);
+	const { form, enhance } = superform;
 
 	form.subscribe(syncronizeRenderConfig(superform, renderConfig));
 

@@ -10,6 +10,23 @@ export function isTypedObject(
 	return isNonNullObject(x) && 'type' in x && typeof x.type === 'string';
 }
 
+export function getNextUniqueName<T>(
+	collection: Record<string, T>,
+	baseName: string
+): string {
+	let cardinal = 1;
+	let name = `${baseName} ${cardinal}`;
+	while (name in collection) {
+		cardinal++;
+		name = `${baseName} ${cardinal}`;
+	}
+	return name;
+}
+
+export function capitalize(str: string): string {
+	return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 // Angle
 
 export type Angle = { degrees: number } | { radians: number };

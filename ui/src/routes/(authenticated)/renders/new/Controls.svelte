@@ -22,9 +22,12 @@
 	const activeScene = $derived(
 		getSceneData(renderConfig, renderConfig.active_scene)
 	);
-	const { data: camera } = $derived(
-		getCameraData(renderConfig, activeScene.camera)
-	);
+
+	// const { data: camera } = $derived(
+	// 	getCameraData(renderConfig, activeScene.camera)
+	// );
+
+	// $inspect(camera);
 </script>
 
 <div class="flex flex-col">
@@ -40,13 +43,13 @@
 		</TabItem>
 		<TabItem title="Camera">
 			<div class="flex flex-col items-center gap-4">
-				<CameraControlsCard {superform} {camera} />
+				<CameraControlsCard {superform} camera={activeScene.camera} />
 			</div>
 		</TabItem>
 		<TabItem title="Geometrics">
 			<div class="flex flex-col items-center gap-4">
 				{#each activeScene.geometrics as geometric}
-					<GeometricControlsCard {geometric} />
+					<!-- <GeometricControlsCard {superform} {geometric} /> -->
 				{/each}
 			</div>
 		</TabItem>

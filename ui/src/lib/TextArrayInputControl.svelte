@@ -44,8 +44,7 @@
 		valueErrors
 	} = $derived(arrayProxy(superform, field));
 
-	// $inspect($arrayValues);
-	// $inspect($valueErrors);
+	$inspect(field);
 
 	const gridStr = getGridColumnsTemplateForPercentage(labelSpacePercentage);
 </script>

@@ -6,7 +6,7 @@ export function getDefaultRenderConfig(): RenderConfig {
 
 export function getEmptyRenderConfig(): RenderConfig {
 	return {
-		name: 'Blank',
+		name: 'Empty',
 		parameters: {
 			image_dimensions: [500, 500],
 			tile_dimensions: [1, 1],
@@ -17,18 +17,24 @@ export function getEmptyRenderConfig(): RenderConfig {
 			max_bounces: 50,
 			use_scaling_truncation: true
 		},
-		active_scene: {
-			geometrics: [],
-			use_bvh: true,
-			camera: {
+		active_scene: 'Scene 1',
+		scenes: {
+			'Scene 1': {
+				geometrics: [],
+				use_bvh: true,
+				camera: 'Camera 1',
+				background_color: [0.0, 0.0, 0.0]
+			}
+		},
+		cameras: {
+			'Camera 1': {
 				vertical_field_of_view_degrees: 40.0,
 				eye_location: [0.0, 0.0, -10.0],
 				target_location: [0.0, 0.0, 0.0],
 				view_up: [0.0, 1.0, 0.0],
 				defocus_angle_degrees: 0.0,
 				focus_distance: 'eye_to_target'
-			},
-			background_color: [0.0, 0.0, 0.0]
+			}
 		},
 		geometrics: {},
 		materials: {},
@@ -49,18 +55,24 @@ export function getCornellBoxRenderConfig(): RenderConfig {
 			max_bounces: 50,
 			use_scaling_truncation: true
 		},
-		active_scene: {
-			geometrics: ['Room', 'Far Left Box', 'Near Right Box'],
-			use_bvh: true,
-			camera: {
+		active_scene: 'Cornell Box',
+		scenes: {
+			'Cornell Box': {
+				geometrics: ['Room', 'Far Left Box', 'Near Right Box'],
+				use_bvh: true,
+				camera: 'Camera 1',
+				background_color: [0.0, 0.0, 0.0]
+			}
+		},
+		cameras: {
+			'Camera 1': {
 				vertical_field_of_view_degrees: 40.0,
 				eye_location: [0.5, 0.5, 1.44144],
 				target_location: [0.5, 0.5, 0.0],
 				view_up: [0.0, 1.0, 0.0],
 				defocus_angle_degrees: 0.0,
 				focus_distance: 'eye_to_target'
-			},
-			background_color: [0.0, 0.0, 0.0]
+			}
 		},
 		geometrics: {
 			'Left Wall': {
@@ -134,27 +146,29 @@ export function getCornellBoxRenderConfig(): RenderConfig {
 			},
 			'Far Left Box': {
 				type: 'rotate_y',
-				geometric: {
-					type: 'box',
-					a: [0.2, 0.0, -0.5],
-					b: [0.5, 0.6, -0.8],
-					is_culled: false,
-					material: 'White'
-				},
+				geometric: 'Far Left Box - Unrotated',
 				degrees: 15.0,
 				around: [0.35, 0.0, -0.65]
 			},
+			'Far Left Box - Unrotated': {
+				type: 'box',
+				a: [0.2, 0.0, -0.5],
+				b: [0.5, 0.6, -0.8],
+				is_culled: false,
+				material: 'White'
+			},
 			'Near Right Box': {
 				type: 'rotate_y',
-				geometric: {
-					type: 'box',
-					a: [0.5, 0.0, -0.2],
-					b: [0.8, 0.3, -0.5],
-					is_culled: false,
-					material: 'White'
-				},
+				geometric: 'Near Right Box - Unrotated',
 				degrees: 342.0,
 				around: [0.65, 0.0, -0.35]
+			},
+			'Near Right Box - Unrotated': {
+				type: 'box',
+				a: [0.5, 0.0, -0.2],
+				b: [0.8, 0.3, -0.5],
+				is_culled: false,
+				material: 'White'
 			}
 		},
 		materials: {

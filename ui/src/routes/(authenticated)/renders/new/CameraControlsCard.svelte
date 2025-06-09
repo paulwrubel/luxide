@@ -21,7 +21,7 @@
 
 	type Props = {
 		superform: SuperForm<z.infer<typeof schema>>;
-		camera: string | CameraData;
+		camera: string;
 	};
 
 	const { superform, camera }: Props = $props();
@@ -32,7 +32,8 @@
 		getCameraData(renderConfig, camera)
 	);
 
-	$inspect(renderConfig.active_scene);
+	// $inspect(cameraData);
+	// $inspect(path);
 </script>
 
 {#snippet controlsCamera(data: CameraData)}

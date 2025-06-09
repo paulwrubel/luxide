@@ -1,4 +1,4 @@
-import type { RenderConfig } from './render/config';
+import type { RawRenderConfig, RenderConfig } from './render/config';
 
 function getBaseURL(): string {
 	return window.location.origin;
@@ -134,7 +134,7 @@ export type Render = {
 	state: RenderState;
 	created_at: string;
 	updated_at: string;
-	config: RenderConfig;
+	config: RawRenderConfig;
 };
 
 export type RenderState =

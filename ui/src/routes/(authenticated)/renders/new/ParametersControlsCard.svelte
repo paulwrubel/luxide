@@ -23,11 +23,6 @@
 
 	let user = auth.validUser;
 
-	user = {
-		...user,
-		max_checkpoints_per_render: 1
-	};
-
 	const renderConfig = getContext<RenderConfig>('renderConfig');
 	const parameters = $derived(renderConfig.parameters);
 	const savedCheckpointLimit = $derived(parameters.saved_checkpoint_limit ?? 1);
