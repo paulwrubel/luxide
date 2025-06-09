@@ -45,7 +45,7 @@
 	function getGeometricMeshesAndLights(
 		data: string | GeometricData
 	): (THREE.Mesh | THREE.Light)[] {
-		const geometricData = getGeometricData(config, data);
+		const { data: geometricData } = getGeometricData(config, data);
 
 		const meshes: (THREE.Mesh | THREE.Light)[] = [];
 
@@ -80,7 +80,9 @@
 				meshes.push(
 					...geometricData.geometrics
 						.map((elementData) =>
-							getGeometricMeshesAndLights(getGeometricData(config, elementData))
+							getGeometricMeshesAndLights(
+								getGeometricData(config, elementData).data
+							)
 						)
 						.flat()
 				);
@@ -189,7 +191,7 @@
 	}
 
 	function getLightSources(geometric: string | GeometricData): THREE.Light[] {
-		const geometricData = getGeometricData(config, geometric);
+		const { data: geometricData } = getGeometricData(config, geometric);
 
 		const lightSources: THREE.Light[] = [];
 		if (

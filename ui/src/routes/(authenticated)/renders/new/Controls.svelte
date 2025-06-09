@@ -48,8 +48,8 @@
 		</TabItem>
 		<TabItem title="Geometrics">
 			<div class="flex flex-col items-center gap-4">
-				{#each activeScene.geometrics as geometric}
-					<!-- <GeometricControlsCard {superform} {geometric} /> -->
+				{#each activeScene.geometrics as geometricName}
+					<GeometricControlsCard {superform} {geometricName} />
 				{/each}
 			</div>
 		</TabItem>

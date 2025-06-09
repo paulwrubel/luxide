@@ -2,7 +2,10 @@
 	import NestedGeometricHeader from './NestedGeometricHeader.svelte';
 	import RangeControl from '$lib/RangeControl.svelte';
 	import Separator from '$lib/Separator.svelte';
-	import { type RenderConfig } from '$lib/utils/render/config';
+	import {
+		RenderConfigSchema,
+		type RenderConfig
+	} from '$lib/utils/render/config';
 	import VectorInputControl from '$lib/VectorInputControl.svelte';
 	import { Card, Heading } from 'flowbite-svelte';
 	import { ChevronDownOutline, ChevronUpOutline } from 'flowbite-svelte-icons';
@@ -14,18 +17,30 @@
 		type GeometricBox,
 		type GeometricList,
 		type GeometricInstanceRotate,
-		type GeometricParallelogram
+		type GeometricParallelogram,
+		normalizeGeometricInstanceRotate
 	} from '$lib/utils/render/geometric';
+	import type {
+		FormPath,
+		FormPathArrays,
+		FormPathLeaves,
+		SuperForm
+	} from 'sveltekit-superforms';
+	import { z } from 'zod';
+	import TextArrayInputControl from '$lib/TextArrayInputControl.svelte';
+
+	const schema = RenderConfigSchema;
 
 	type Props = {
-		geometric: string | GeometricData;
+		superform: SuperForm<z.infer<typeof schema>>;
+		geometricName: string;
 	};
 
-	const { geometric }: Props = $props();
+	const { superform, geometricName }: Props = $props();
 
 	const renderConfig = getContext<RenderConfig>('renderConfig');
 
-	const geometricData = getGeometricData(renderConfig, geometric);
+	const { data: geometricData } = getGeometricData(renderConfig, geometricName);
 
 	let isExpanded = $state(false);
 	function handleToggleExpandCard() {
@@ -33,22 +48,22 @@
 	}
 </script>
 
-{#snippet controlsSubGeometric(data: string | GeometricData)}
-	{@const geometricData = getGeometricData(renderConfig, data)}
-
-	<NestedGeometricHeader {data} />
-	{@render controlsGeometric(geometricData)}
+{#snippet controlsSubGeometric(name: string)}
+	<NestedGeometricHeader geometricName={name} />
+	{@render controlsGeometric(name)}
 {/snippet}
 
-{#snippet controlsGeometric(data: GeometricData)}
+{#snippet controlsGeometric(name: string)}
+	{@const { data } = getGeometricData(renderConfig, name)}
+
 	{#if data.type === 'box'}
-		{@render controlsGeometricBox(data)}
+		{@render controlsGeometricBox(name)}
 	{:else if data.type === 'list'}
-		{@render controlsGeometricList(data)}
+		{@render controlsGeometricList(name)}
 	{:else if data.type === 'rotate_x' || data.type === 'rotate_y' || data.type === 'rotate_z'}
-		{@render controlsGeometricRotate(data)}
+		{@render controlsGeometricRotate(name)}
 	{:else if data.type === 'parallelogram'}
-		{@render controlsGeometricParallelogram(data)}
+		{@render controlsGeometricParallelogram(name)}
 	{:else}
 		<Heading tag="h6" class="text-sm"
 			>Unknown geometric! (or not yet implemented...)</Heading
@@ -56,66 +71,111 @@
 	{/if}
 {/snippet}
 
-{#snippet controlsGeometricBox(data: GeometricBox)}
-	<VectorInputControl
+{#snippet controlsGeometricBox(name: string)}
+	<TextArrayInputControl
+		{superform}
+		field={`geometrics.${name}.a` as FormPathArrays<z.infer<typeof schema>>}
 		label="Corner 1"
-		bind:value={data.a}
-		valueLabel={['X', 'Y', 'Z']}
+		valueLabels={['x', 'y', 'z']}
+		type="number"
 	/>
-	<VectorInputControl
+	<TextArrayInputControl
+		{superform}
+		field={`geometrics.${name}.b` as FormPathArrays<z.infer<typeof schema>>}
 		label="Corner 2"
-		bind:value={data.b}
-		valueLabel={['X', 'Y', 'Z']}
+		valueLabels={['x', 'y', 'z']}
+		type="number"
 	/>
 {/snippet}
 
-{#snippet controlsGeometricList(data: GeometricList)}
-	{#each data.geometrics as subGeometric, index}
+{#snippet controlsGeometricList(name: string)}
+	{@const { data } = getGeometricData(renderConfig, name)}
+	{#each (data as GeometricList).geometrics as subName, index}
 		{#if index > 0}
 			<Separator />
 		{/if}
-		{@render controlsSubGeometric(subGeometric)}
+		{@render controlsSubGeometric(subName)}
 	{/each}
 {/snippet}
 
-{#snippet controlsGeometricRotate(data: GeometricInstanceRotate)}
-	{#if 'degrees' in data}
+{#snippet controlsGeometricRotate(name: string)}
+	{@const { data } = getGeometricData(renderConfig, name)}
+	{@const rotateData = data as GeometricInstanceRotate}
+	{#if 'degrees' in rotateData}
 		<RangeControl
+			{superform}
+			field={`geometrics.${name}.degrees` as FormPathLeaves<
+				z.infer<typeof schema>,
+				number
+			>}
+			label="Degrees of Rotation"
+			min={0.0}
+			max={360.0}
+			step={1.0}
+		/>
+		<!-- <RangeControl
 			label="Degrees of Rotation"
 			bind:value={data.degrees}
 			min={0.0}
 			max={360.0}
 			step={1.0}
-		/>
+		/> -->
 	{:else}
 		<RangeControl
+			{superform}
+			field={`geometrics.${name}.radians` as FormPathLeaves<
+				z.infer<typeof schema>,
+				number
+			>}
+			label="Radians of Rotation"
+			min={0.0}
+			max={2 * Math.PI}
+			step={0.01}
+		/>
+		<!-- <RangeControl
 			label="Radians of Rotation"
 			bind:value={data.radians}
 			min={0.0}
 			max={2 * Math.PI}
 			step={0.01}
-		/>
+		/> -->
 	{/if}
 	<Separator />
-	{@render controlsSubGeometric(data.geometric)}
+	{@render controlsSubGeometric(rotateData.geometric)}
 {/snippet}
 
-{#snippet controlsGeometricParallelogram(data: GeometricParallelogram)}
-	<VectorInputControl
+{#snippet controlsGeometricParallelogram(name: string)}
+	{@const { data } = getGeometricData(renderConfig, name)}
+	{@const parallelogramData = data as GeometricParallelogram}
+	<TextArrayInputControl
+		{superform}
+		field={`geometrics.${name}.lower_left` as FormPathArrays<
+			z.infer<typeof schema>
+		>}
 		label="Lower Left"
-		bind:value={data.lower_left}
-		valueLabel={['X', 'Y', 'Z']}
+		valueLabels={['x', 'y', 'z']}
+		type="number"
 	/>
-	<VectorInputControl bind:value={data.u} valueLabel={['X', 'Y', 'Z']}>
+	<TextArrayInputControl
+		{superform}
+		field={`geometrics.${name}.u` as FormPathArrays<z.infer<typeof schema>>}
+		valueLabels={['x', 'y', 'z']}
+		type="number"
+	>
 		{#snippet label()}
 			<em>u</em> Vector
 		{/snippet}
-	</VectorInputControl>
-	<VectorInputControl bind:value={data.v} valueLabel={['X', 'Y', 'Z']}>
+	</TextArrayInputControl>
+	<TextArrayInputControl
+		{superform}
+		field={`geometrics.${name}.v` as FormPathArrays<z.infer<typeof schema>>}
+		valueLabels={['x', 'y', 'z']}
+		type="number"
+	>
 		{#snippet label()}
 			<em>v</em> Vector
 		{/snippet}
-	</VectorInputControl>
+	</TextArrayInputControl>
 {/snippet}
 
 <Card class="flex max-w-full flex-col !bg-zinc-800 !text-zinc-200">
@@ -123,9 +183,9 @@
 		class="flex items-center justify-between p-4 pr-2"
 		onclick={() => handleToggleExpandCard()}
 	>
-		{#if typeof geometric === 'string'}
+		{#if typeof geometricName === 'string'}
 			<Heading tag="h2" class="text-xl font-bold">
-				{geometric}
+				{geometricName}
 			</Heading>
 		{:else}
 			<Heading tag="h2" class="text-xl font-light italic">inline</Heading>
@@ -146,7 +206,7 @@
 			<Separator />
 			<div class="flex flex-col gap-2 p-4">
 				<!-- controls -->
-				{@render controlsGeometric(geometricData)}
+				{@render controlsGeometric(geometricName)}
 			</div>
 		</div>
 	{/if}

@@ -6,7 +6,7 @@ import type {
 	GeometricTriangle,
 	GeometricParallelogram
 } from '$lib/utils/render/geometric';
-import type { FormPathLeaves, SuperForm } from 'sveltekit-superforms';
+import type { FormPath, FormPathLeaves, SuperForm } from 'sveltekit-superforms';
 import * as THREE from 'three';
 import type z from 'zod';
 
@@ -120,46 +120,103 @@ export function syncronizeRenderConfig(
 	renderConfig: RenderConfig
 ) {
 	return async (form: z.infer<typeof RenderConfigSchema>) => {
-		// function to simplify checking a field error
-		async function isValid(path: string): Promise<boolean> {
-			return (
-				(await superform.validate(
-					path as FormPathLeaves<z.infer<typeof RenderConfigSchema>>
-				)) === undefined
-			);
-		}
+		console.log('updating!');
 
-		function isRecord(value: unknown): value is Record<string, unknown> {
-			return typeof value === 'object' && value !== null;
-		}
+		await updateFields(superform, form, renderConfig);
 
-		async function updateFields(
-			formParent: Record<string, unknown>,
-			configParent: Record<string, unknown>,
-			parentPath?: string
-		): Promise<void> {
-			for (const path of Object.keys(formParent)) {
-				const field = formParent[path];
-				const configField = configParent[path];
-				const fieldPath = parentPath ? `${parentPath}.${path}` : path;
-				// if this is an object, it's a nested field
-				// so we need to recurse
-				if (isRecord(field) && isRecord(configField)) {
-					await updateFields(field, configField, fieldPath);
-					continue;
-				}
-
-				// otherwise, we can check the field directly
-				const fieldIsValid = await isValid(
-					fieldPath as FormPathLeaves<z.infer<typeof RenderConfigSchema>>
-				);
-
-				if (fieldIsValid) {
-					configParent[path] = field;
-				}
-			}
-		}
-
-		await updateFields(form, renderConfig);
+		console.log('done!');
 	};
+}
+
+export async function fieldIsValid(
+	superform: SuperForm<z.infer<typeof RenderConfigSchema>>,
+	path: string
+): Promise<boolean> {
+	return (
+		(await superform.validate(
+			path as FormPathLeaves<z.infer<typeof RenderConfigSchema>>
+		)) === undefined
+	);
+}
+
+export async function updateFields(
+	superform: SuperForm<z.infer<typeof RenderConfigSchema>>,
+	formParent: Record<string, unknown>,
+	configParent: Record<string, unknown>,
+	parentPath?: string
+): Promise<void> {
+	function isRecord(value: unknown): value is Record<string, unknown> {
+		return typeof value === 'object' && value !== null;
+	}
+
+	// console.log('updating fields for:', parentPath);
+	for (const path of Object.keys(formParent)) {
+		// console.log('   checking:', path);
+		const field = formParent[path];
+		const configField = configParent[path];
+		const fieldPath = parentPath ? `${parentPath}.${path}` : path;
+		// if this is an object, it's a nested field
+		// so we need to recurse
+		if (isRecord(field) && isRecord(configField)) {
+			await updateFields(superform, field, configField, fieldPath);
+			continue;
+		}
+
+		// otherwise, we can check the field directly
+		const isValid = await fieldIsValid(
+			superform,
+			fieldPath as FormPathLeaves<z.infer<typeof RenderConfigSchema>>
+		);
+
+		if (isValid) {
+			configParent[path] = field;
+		}
+	}
+}
+
+export async function updateFieldIfValid(
+	superform: SuperForm<z.infer<typeof RenderConfigSchema>>,
+	config: RenderConfig,
+	path: FormPath<z.infer<typeof RenderConfigSchema>>,
+	newValue: unknown
+): Promise<boolean> {
+	const isValid = await fieldIsValid(
+		superform,
+		path as FormPathLeaves<z.infer<typeof RenderConfigSchema>>
+	);
+
+	if (isValid) {
+		updateField(config, path, newValue);
+		return true;
+	}
+
+	return false;
+}
+
+export function updateField(
+	config: RenderConfig,
+	path: FormPath<z.infer<typeof RenderConfigSchema>>,
+	newValue: unknown
+) {
+	// parse the path into segments
+	const segments = path.split(/\.|\[|\]/).filter(Boolean);
+
+	// start at the root of the config object
+	let current: Record<string, unknown> = config;
+
+	// traverse to the second-to-last segment
+	for (let i = 0; i < segments.length - 1; i++) {
+		if (typeof current !== 'object' && !Array.isArray(current)) {
+			console.warn('Invalid config type:', typeof current);
+		}
+		const segment = segments[i];
+
+		current = current[segment] as Record<string, unknown>;
+	}
+
+	// set the value at the final segment
+	const lastSegment = segments[segments.length - 1];
+	current[lastSegment] = newValue;
+
+	// console.log(`Updated ${path} to:`, newValue);
 }

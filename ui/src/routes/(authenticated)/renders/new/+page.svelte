@@ -13,7 +13,12 @@
 	import { superForm } from 'sveltekit-superforms';
 	import type { PageProps } from './$types';
 	import { RenderConfigSchema } from '$lib/utils/render/config';
-	import { syncronizeRenderConfig } from './utils';
+	import {
+		syncronizeRenderConfig,
+		updateFieldIfValid,
+		updateFields
+	} from './utils';
+	import type { GeometricBox } from '$lib/utils/render/geometric';
 
 	const { data }: PageProps = $props();
 
@@ -54,12 +59,15 @@
 	const superform = superForm(data.form, {
 		SPA: true,
 		dataType: 'json',
-		validationMethod: 'oninput',
-		validators: zod(schema)
+		validationMethod: 'auto',
+		validators: zod(schema),
+		onChange: (event) => {
+			event.paths.forEach((path) => {
+				updateFieldIfValid(superform, renderConfig, path, event.get(path));
+			});
+		}
 	});
-	const { form, enhance } = superform;
-
-	form.subscribe(syncronizeRenderConfig(superform, renderConfig));
+	const { enhance } = superform;
 
 	const token = auth.validToken;
 

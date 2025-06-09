@@ -9,14 +9,15 @@
 	} from '$lib/utils/render/geometric';
 
 	type Props = {
-		data: string | GeometricData;
+		geometricName: string;
 	};
 
-	const { data }: Props = $props();
+	const { geometricName }: Props = $props();
 
 	const renderConfig = getContext<RenderConfig>('renderConfig');
 
-	const { type: geometricType } = getGeometricData(renderConfig, data);
+	const { data } = getGeometricData(renderConfig, geometricName);
+	const { type: geometricType } = data;
 </script>
 
 <div class="flex justify-between">
@@ -24,11 +25,14 @@
 		>Contained Geometric</Heading
 	>
 	<div class="flex gap-2">
-		{#if typeof data === 'string'}
+		<Heading tag="h3" class="text-lg font-light not-italic">
+			{geometricName}
+		</Heading>
+		<!-- {#if typeof data === 'string'}
 			<Heading tag="h3" class="text-lg font-light not-italic">{data}</Heading>
 		{:else}
 			<Heading tag="h3" class="text-lg font-light italic">inline</Heading>
-		{/if}
+		{/if} -->
 		<Separator vertical />
 		<Heading tag="h3" class="text-lg font-light italic">{geometricType}</Heading
 		>

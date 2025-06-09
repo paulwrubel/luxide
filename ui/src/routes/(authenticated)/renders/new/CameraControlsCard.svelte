@@ -31,9 +31,6 @@
 	const { data: cameraData, path } = $derived(
 		getCameraData(renderConfig, camera)
 	);
-
-	// $inspect(cameraData);
-	// $inspect(path);
 </script>
 
 {#snippet controlsCamera(data: CameraData)}
@@ -69,26 +66,21 @@
 		valueLabels={['x', 'y', 'z']}
 		type="number"
 	/>
-	<!-- <VectorInputControl
-		label="Target"
-		bind:value={data.target_location}
-		valueLabel={['x', 'y', 'z']}
-	/> -->
-	<!-- <VectorInputControl
-		label="View Up"
-		bind:value={data.view_up}
-		valueLabel={['x', 'y', 'z']}
-	/> -->
-	<!-- <RangeControl
+	<RangeControl
+		{superform}
+		field={`${path}.defocus_angle_degrees` as FormPathLeaves<
+			z.infer<typeof schema>,
+			number
+		>}
 		label="Defocus Angle (degrees)"
-		bind:value={data.defocus_angle_degrees}
 		min={0.0}
+		max={180.0}
 		step={1.0}
 	>
 		{#snippet labelPrefix()}
 			<WarningIconUnaffectedPreview />
 		{/snippet}
-	</RangeControl> -->
+	</RangeControl>
 	<!-- <RangeControl label="Focus Distance" bind:value={data.focus_distance} /> -->
 {/snippet}
 

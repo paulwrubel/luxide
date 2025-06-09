@@ -1,4 +1,5 @@
 import { degreesToRadians, radiansToDegrees } from '../math';
+import { z } from 'zod';
 
 export function isNonNullObject(x: unknown): x is Record<string, unknown> {
 	return typeof x === 'object' && x !== null;
@@ -28,8 +29,17 @@ export function capitalize(str: string): string {
 }
 
 // Angle
+export const AngleDegreesSchema = z.object({
+	degrees: z.number()
+});
 
-export type Angle = { degrees: number } | { radians: number };
+export const AngleRadiansSchema = z.object({
+	radians: z.number()
+});
+
+export const AngleSchema = z.union([AngleDegreesSchema, AngleRadiansSchema]);
+
+export type Angle = z.infer<typeof AngleSchema>;
 
 export function toRadians(angle: Angle): number {
 	if ('degrees' in angle) {

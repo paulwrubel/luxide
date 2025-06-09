@@ -4,10 +4,15 @@ import {
 	type NormalizedCameraData,
 	type RawCameraData
 } from './camera';
-import type { NormalizedGeometricData, RawGeometricData } from './geometric';
+import {
+	GeometricDataSchema,
+	type NormalizedGeometricData,
+	type RawGeometricData
+} from './geometric';
 import type { NormalizedMaterialData, RawMaterialData } from './material';
 import { RenderParametersSchema, type RenderParameters } from './parameters';
 import {
+	SceneDataSchema,
 	type NormalizedSceneData,
 	type RawSceneData,
 	type SceneData
@@ -19,7 +24,11 @@ export const RenderConfigSchema = z.object({
 	name: z.string().nonempty(),
 	parameters: RenderParametersSchema,
 	active_scene: z.string().nonempty(),
-	cameras: z.record(z.string(), CameraDataSchema)
+	scenes: z.record(z.string(), SceneDataSchema),
+	cameras: z.record(z.string(), CameraDataSchema),
+	geometrics: z.record(z.string(), GeometricDataSchema)
+	// materials: z.record(z.string(), MaterialDataSchema),
+	// textures: z.record(z.string(), TextureDataSchema)
 });
 
 export type RenderConfig = NormalizedRenderConfig;

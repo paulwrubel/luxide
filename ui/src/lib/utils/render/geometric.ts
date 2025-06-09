@@ -1,4 +1,5 @@
-import type { RenderConfig } from './config';
+import type { FormPath } from 'sveltekit-superforms';
+import type { RenderConfig, RenderConfigSchema } from './config';
 import { normalizeMaterialData, type RawMaterialData } from './material';
 import { normalizeTextureData, type RawTextureData } from './texture';
 import {
@@ -7,6 +8,7 @@ import {
 	isTypedObject,
 	type Angle
 } from './utils';
+import { z } from 'zod';
 
 // geometric types
 export type GeometricData = NormalizedGeometricData;
@@ -97,20 +99,54 @@ export function isComposite(
 	);
 }
 
+export type GeometricDataResult = {
+	data: GeometricData;
+	source: 'reference' | 'inline';
+	name?: string;
+	path: FormPath<z.infer<typeof RenderConfigSchema>>;
+};
+
 export function getGeometricData(
 	config: RenderConfig,
-	nameOrData: string | GeometricData
-): GeometricData {
+	nameOrData: string | GeometricData,
+	parentPath?: FormPath<z.infer<typeof RenderConfigSchema>>
+): GeometricDataResult {
 	if (isGeometricData(nameOrData)) {
-		return nameOrData;
+		const path = parentPath
+			? (`${parentPath}.geometric` as FormPath<
+					z.infer<typeof RenderConfigSchema>
+				>)
+			: (`geometric` as FormPath<z.infer<typeof RenderConfigSchema>>);
+
+		return {
+			data: nameOrData,
+			source: 'inline',
+			path: path
+		};
 	}
 
 	const geometric = config.geometrics?.[nameOrData];
 	if (!geometric) {
 		throw new Error(`Geometric ${nameOrData} not found`);
 	}
-	return geometric;
+
+	return {
+		data: geometric,
+		source: 'reference',
+		name: nameOrData,
+		path: `geometrics.${nameOrData}` as FormPath<
+			z.infer<typeof RenderConfigSchema>
+		>
+	};
 }
+
+export const GeometricBoxSchema = z.object({
+	type: z.literal('box'),
+	a: z.tuple([z.number(), z.number(), z.number()]),
+	b: z.tuple([z.number(), z.number(), z.number()]),
+	is_culled: z.boolean().optional(),
+	material: z.string().nonempty()
+});
 
 export type GeometricBox = NormalizedGeometricBox;
 
@@ -151,10 +187,13 @@ export type RawGeometricBox = {
 	material: string | RawMaterialData;
 };
 
+export const GeometricListSchema = z.object({
+	type: z.literal('list'),
+	use_bvh: z.boolean().optional(),
+	geometrics: z.array(z.string().nonempty())
+});
+
 export type GeometricList = NormalizedGeometricList;
-export type NormalizedGeometricList = Omit<RawGeometricList, 'geometrics'> & {
-	geometrics: string[];
-};
 
 export function normalizeGeometricList(
 	config: RenderConfig,
@@ -183,11 +222,25 @@ export function normalizeGeometricList(
 	return geometric as NormalizedGeometricList;
 }
 
+export type NormalizedGeometricList = Omit<RawGeometricList, 'geometrics'> & {
+	geometrics: string[];
+};
+
 export type RawGeometricList = {
 	type: 'list';
 	use_bvh?: boolean;
 	geometrics: (string | RawGeometricData)[];
 };
+
+export const GeometricObjModelSchema = z.object({
+	type: z.literal('obj_model'),
+	filename: z.string(),
+	origin: z.tuple([z.number(), z.number(), z.number()]).optional(),
+	scale: z.number().optional(),
+	recalculate_normals: z.boolean().optional(),
+	use_bvh: z.boolean().optional(),
+	material: z.string().nonempty()
+});
 
 export type GeometricObjModel = NormalizedGeometricObjModel;
 
@@ -233,6 +286,27 @@ export type RawGeometricObjModel = {
 	material: string | RawMaterialData;
 };
 
+export const GeometricInstanceRotateXSchema = z.object({
+	type: z.literal('rotate_x'),
+	geometric: z.string().nonempty(),
+	degrees: z.number().optional(),
+	radians: z.number().optional()
+});
+
+export const GeometricInstanceRotateYSchema = z.object({
+	type: z.literal('rotate_y'),
+	geometric: z.string().nonempty(),
+	degrees: z.number().optional(),
+	radians: z.number().optional()
+});
+
+export const GeometricInstanceRotateZSchema = z.object({
+	type: z.literal('rotate_z'),
+	geometric: z.string().nonempty(),
+	degrees: z.number().optional(),
+	radians: z.number().optional()
+});
+
 export type GeometricInstanceRotate = NormalizedGeometricInstanceRotate;
 
 export function normalizeGeometricInstanceRotate(
@@ -273,6 +347,12 @@ export type RawGeometricInstanceRotate = {
 	around?: [number, number, number];
 } & Angle;
 
+export const GeometricInstanceTranslateSchema = z.object({
+	type: z.literal('translate'),
+	geometric: z.string().nonempty(),
+	translation: z.tuple([z.number(), z.number(), z.number()])
+});
+
 export type GeometricInstanceTranslate = NormalizedGeometricInstanceTranslate;
 
 export function normalizeGeometricInstanceTranslate(
@@ -312,6 +392,15 @@ export type RawGeometricInstanceTranslate = {
 	geometric: string | RawGeometricData;
 	translation: [number, number, number];
 };
+
+export const GeometricParallelogramSchema = z.object({
+	type: z.literal('parallelogram'),
+	lower_left: z.tuple([z.number(), z.number(), z.number()]),
+	u: z.tuple([z.number(), z.number(), z.number()]),
+	v: z.tuple([z.number(), z.number(), z.number()]),
+	is_culled: z.boolean().optional(),
+	material: z.string().nonempty()
+});
 
 export type GeometricParallelogram = NormalizedGeometricParallelogram;
 
@@ -356,6 +445,13 @@ export type RawGeometricParallelogram = {
 	material: string | RawMaterialData;
 };
 
+export const GeometricSphereSchema = z.object({
+	type: z.literal('sphere'),
+	center: z.tuple([z.number(), z.number(), z.number()]),
+	radius: z.number().min(0),
+	material: z.string().nonempty()
+});
+
 export type GeometricSphere = NormalizedGeometricSphere;
 
 export function normalizeGeometricSphere(
@@ -393,6 +489,18 @@ export type RawGeometricSphere = {
 	radius: number;
 	material: string | RawMaterialData;
 };
+
+export const GeometricTriangleSchema = z.object({
+	type: z.literal('triangle'),
+	a: z.tuple([z.number(), z.number(), z.number()]),
+	b: z.tuple([z.number(), z.number(), z.number()]),
+	c: z.tuple([z.number(), z.number(), z.number()]),
+	a_normal: z.tuple([z.number(), z.number(), z.number()]).optional(),
+	b_normal: z.tuple([z.number(), z.number(), z.number()]).optional(),
+	c_normal: z.tuple([z.number(), z.number(), z.number()]).optional(),
+	is_culled: z.boolean().optional(),
+	material: z.string().nonempty()
+});
 
 export type GeometricTriangle = NormalizedGeometricTriangle;
 
@@ -439,6 +547,13 @@ export type RawGeometricTriangle = {
 	is_culled?: boolean;
 	material: string | RawMaterialData;
 };
+
+export const GeometricConstantVolumeSchema = z.object({
+	type: z.literal('constant_volume'),
+	geometric: z.string().nonempty(),
+	density: z.number().min(0),
+	reflectance_texture: z.string().nonempty()
+});
 
 export type GeometricConstantVolume = NormalizedGeometricConstantVolume;
 
@@ -497,3 +612,17 @@ export type RawGeometricConstantVolume = {
 	density: number;
 	reflectance_texture: string | RawTextureData;
 };
+
+export const GeometricDataSchema = z.discriminatedUnion('type', [
+	GeometricBoxSchema,
+	GeometricListSchema,
+	GeometricObjModelSchema,
+	GeometricInstanceRotateXSchema,
+	GeometricInstanceRotateYSchema,
+	GeometricInstanceRotateZSchema,
+	GeometricInstanceTranslateSchema,
+	GeometricParallelogramSchema,
+	GeometricSphereSchema,
+	GeometricTriangleSchema,
+	GeometricConstantVolumeSchema
+]);

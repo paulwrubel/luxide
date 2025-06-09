@@ -8,8 +8,10 @@ import type z from 'zod';
 export const load: PageLoad = async () => {
 	const schema = RenderConfigSchema;
 
+	const defaults = getDefaultRenderConfig() as z.infer<typeof schema>;
 	const form = await superValidate(zod(schema), {
-		defaults: getDefaultRenderConfig() as z.infer<typeof schema>,
+		defaults,
+		errors: false,
 		strict: true
 	});
 
