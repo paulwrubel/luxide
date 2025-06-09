@@ -1,4 +1,16 @@
 services:
+  luxide:
+    depends_on:
+      - postgres
+    build: 
+      context: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./luxide.json:/app/luxide.json
+      - ./luxide.secret.json:/app/luxide.secret.json
+      - ./jwt-key-public.pem:/app/jwt-key-public.pem
+      - ./jwt-key-private.pem:/app/jwt-key-private.pem
   postgres:
     image: postgres
     ports:

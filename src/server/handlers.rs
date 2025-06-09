@@ -13,6 +13,9 @@ pub use delete_render::*;
 mod get_all_renders;
 pub use get_all_renders::*;
 
+mod get_current_user_info;
+pub use get_current_user_info::*;
+
 mod get_render_checkpoint_image;
 pub use get_render_checkpoint_image::*;
 
@@ -24,6 +27,9 @@ pub use get_render_stats::*;
 
 mod get_render;
 pub use get_render::*;
+
+mod not_found;
+pub use not_found::*;
 
 mod pause_render;
 pub use pause_render::*;

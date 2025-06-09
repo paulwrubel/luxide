@@ -7,6 +7,7 @@ use crate::tracing::GithubID;
 pub struct APIConfig {
     pub address: String,
     pub port: u16,
+    pub public_url: Option<String>,
 
     pub render_storage: RenderStorageConfig,
     pub user_storage: UserStorageConfig,

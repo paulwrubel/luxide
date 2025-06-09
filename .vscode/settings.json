@@ -1,0 +1,9 @@
+{
+    "prettier.configPath": "./ui/.prettierrc",
+    "eslint.lintTask.options": "./ui",
+    "eslint.format.enable": true,
+    "editor.formatOnSave": true,
+    "files.associations": {
+        "*.css": "tailwindcss"
+    }
+}

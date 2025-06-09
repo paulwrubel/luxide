@@ -9,6 +9,7 @@ use crate::{
 #[derive(Clone, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum RenderFormat {
+    Precise,
     Full,
     Light,
     Minimal,
@@ -71,6 +72,7 @@ impl From<RenderState> for FormattedRenderState {
 #[derive(Clone, Serialize)]
 #[serde(untagged)]
 pub enum FormattedRender {
+    Precise(Render),
     Full(FormattedRenderFull),
     Light(FormattedRenderLight),
     Minimal(FormattedRenderMinimal),
@@ -79,6 +81,7 @@ pub enum FormattedRender {
 impl From<(RenderFormat, Render)> for FormattedRender {
     fn from((format, render): (RenderFormat, Render)) -> Self {
         match (format, render) {
+            (RenderFormat::Precise, r) => FormattedRender::Precise(r),
             (RenderFormat::Full, r) => FormattedRender::Full(FormattedRenderFull::from(r)),
             (RenderFormat::Light, r) => FormattedRender::Light(FormattedRenderLight::from(r)),
             (RenderFormat::Minimal, r) => FormattedRender::Minimal(FormattedRenderMinimal::from(r)),
