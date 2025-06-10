@@ -30,7 +30,11 @@ build: build-api-cli
 
 [group('build')]
 build-ui:
-    cd ui && npm run build
+    cd ui \
+    && [ -s "$NVM_DIR/nvm.sh" ] \
+    && . "$NVM_DIR/nvm.sh" \
+    && nvm use || echo "nvm not installed, using system node" \
+    && npm run build
 
 [group('build')]
 build-api-cli: build-ui run-postgres
