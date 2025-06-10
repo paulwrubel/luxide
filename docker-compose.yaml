@@ -11,6 +11,7 @@ services:
       - ./luxide.secret.json:/app/luxide.secret.json
       - ./jwt-key-public.pem:/app/jwt-key-public.pem
       - ./jwt-key-private.pem:/app/jwt-key-private.pem
+
   postgres:
     image: postgres
     ports:
