@@ -1,4 +1,4 @@
-name: Build and Push Docker Image
+name: ci
 
 on:
   push:
@@ -16,7 +16,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build-and-push:
+  build-and-publish-image:
     runs-on: ubuntu-latest
     permissions:
       contents: read
