@@ -11,6 +11,7 @@
 	import { getReferencedMaterialNames } from '$lib/utils/render/geometric';
 	import MaterialControlsCard from './MaterialControlsCard.svelte';
 	import { getReferencedTextureNames } from '$lib/utils/render/material';
+	import TextureControlsCard from './TextureControlsCard.svelte';
 
 	const schema = RenderConfigSchema;
 
@@ -75,7 +76,7 @@
 		<TabItem title="Textures">
 			<div class="flex flex-col items-center gap-4">
 				{#each textureNames as textureName (textureName)}
-					<!-- <TextureControlsCard {superform} {textureName} /> -->
+					<TextureControlsCard {superform} {textureName} />
 				{/each}
 			</div>
 		</TabItem>

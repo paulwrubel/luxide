@@ -34,19 +34,32 @@ export function isTextureData(data: unknown): data is TextureData {
 	);
 }
 
+export type TextureDataResult = {
+	data: TextureData;
+	source: 'reference' | 'inline';
+	name?: string;
+};
+
 export function getTextureData(
 	config: RenderConfig,
 	nameOrData: string | TextureData
-): TextureData {
+): TextureDataResult {
 	if (isTextureData(nameOrData)) {
-		return nameOrData;
+		return {
+			data: nameOrData,
+			source: 'inline'
+		};
 	}
 
 	const texture = config.textures?.[nameOrData];
 	if (!texture) {
 		throw new Error(`Texture ${nameOrData} not found`);
 	}
-	return texture;
+	return {
+		data: texture,
+		source: 'reference',
+		name: nameOrData
+	};
 }
 
 export const TextureCheckerSchema = z.object({

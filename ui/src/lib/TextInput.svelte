@@ -17,6 +17,7 @@
 		type: 'text' | 'number';
 		valueLabel: string;
 		extraIsErrored?: boolean;
+		unenforcedStep?: number;
 	};
 
 	const {
@@ -26,12 +27,24 @@
 		onchange,
 		type = 'text',
 		valueLabel,
-		extraIsErrored
+		extraIsErrored,
+		unenforcedStep
 	}: Props = $props();
 
 	const { value, errors, constraints } = $derived(
 		formFieldProxy(superform, field)
 	);
+
+	const step = $derived(
+		unenforcedStep ??
+			$constraints?.step ??
+			(type === 'number' ? 'any' : undefined)
+	);
+
+	const modifiedConstraints = $derived({
+		...$constraints,
+		step: step
+	});
 </script>
 
 <Label class={`mb-0 flex w-full flex-col`}>
@@ -47,7 +60,7 @@
 				bind:value={$value}
 				{oninput}
 				{onchange}
-				{...$constraints}
+				{...modifiedConstraints}
 				{...props}
 			/>
 		{/snippet}
