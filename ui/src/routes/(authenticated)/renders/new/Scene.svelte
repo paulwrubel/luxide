@@ -204,7 +204,7 @@
 				config,
 				geometricData.material
 			);
-			const emittanceTextureData = getTextureData(
+			const { data: emittanceTextureData } = getTextureData(
 				config,
 				materialData.emittance_texture
 			);
@@ -235,11 +235,11 @@
 	function getMaterials(data: string | MaterialData): THREE.Material[] {
 		const { data: materialData } = getMaterialData(config, data);
 
-		const reflectanceTextureData = getTextureData(
+		const { data: reflectanceTextureData } = getTextureData(
 			config,
 			materialData.reflectance_texture
 		);
-		const emittanceTextureData = getTextureData(
+		const { data: emittanceTextureData } = getTextureData(
 			config,
 			materialData.emittance_texture
 		);

@@ -23,6 +23,7 @@
 		labelPrefix?: Snippet;
 		labelSuffix?: Snippet;
 		valueLabels: string[];
+		unenforcedStep?: number;
 	};
 
 	const {
@@ -34,7 +35,8 @@
 		allowWrappingLabel,
 		labelPrefix,
 		labelSuffix,
-		valueLabels
+		valueLabels,
+		unenforcedStep
 	}: Props = $props();
 
 	const {
@@ -78,6 +80,7 @@
 						{type}
 						valueLabel={valueLabels[i]}
 						extraIsErrored={$arrayErrors && $arrayErrors.length > 0}
+						{unenforcedStep}
 					/>
 					{#if $valueErrors[i] && $valueErrors[i].length > 0}
 						<Helper color="red">{$valueErrors[i].join(', ')}</Helper>
