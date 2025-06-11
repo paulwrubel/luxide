@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Label, Range, Select } from 'flowbite-svelte';
-	import { type Snippet } from 'svelte';
+	import { Label, Select } from 'flowbite-svelte';
+	import { onDestroy, type Snippet } from 'svelte';
 	import { formFieldProxy } from 'sveltekit-superforms';
 	import type { SuperForm } from 'sveltekit-superforms';
 	import { RenderConfigSchema } from './utils/render/config';
@@ -25,11 +25,8 @@
 
 	const { superform, field, label, labelPrefix, labelSuffix, items }: Props =
 		$props();
-	const { form } = $derived(superform);
 
-	const { value } = $derived(formFieldProxy(superform, field));
-
-	$inspect($value);
+	let { value } = $derived(formFieldProxy(superform, field));
 </script>
 
 <Label class="mb-2 flex flex-col gap-1.5">
@@ -45,5 +42,5 @@
 		</span>
 		<span>{$value}</span>
 	</span>
-	<Select bind:value={$value} {items} required />
+	<Select bind:value={$value} {items} placeholder="" />
 </Label>

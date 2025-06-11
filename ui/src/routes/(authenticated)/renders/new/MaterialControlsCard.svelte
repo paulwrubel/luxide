@@ -33,9 +33,6 @@
 	function handleToggleExpandCard() {
 		isExpanded = !isExpanded;
 	}
-
-	const { form } = $derived(superform);
-	$inspect($form);
 </script>
 
 {#snippet controlsMaterial(name: string)}

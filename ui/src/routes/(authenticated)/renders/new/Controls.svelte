@@ -60,21 +60,21 @@
 		</TabItem>
 		<TabItem title="Geometrics">
 			<div class="flex flex-col items-center gap-4">
-				{#each geometricNames as geometricName}
+				{#each geometricNames as geometricName (geometricName)}
 					<GeometricControlsCard {superform} {geometricName} />
 				{/each}
 			</div>
 		</TabItem>
 		<TabItem title="Materials">
 			<div class="flex flex-col items-center gap-4">
-				{#each materialNames as materialName}
+				{#each materialNames as materialName (materialName)}
 					<MaterialControlsCard {superform} {materialName} />
 				{/each}
 			</div>
 		</TabItem>
 		<TabItem title="Textures">
 			<div class="flex flex-col items-center gap-4">
-				{#each textureNames as textureName}
+				{#each textureNames as textureName (textureName)}
 					<!-- <TextureControlsCard {superform} {textureName} /> -->
 				{/each}
 			</div>

@@ -61,9 +61,9 @@
 		dataType: 'json',
 		validationMethod: 'auto',
 		validators: zod(schema),
+		resetForm: false,
 		onChange: (event) => {
 			event.paths.forEach((path) => {
-				console.log('processing onChange in superform call for path:', path);
 				updateFieldIfValid(superform, renderConfig, path, event.get(path));
 			});
 		}
