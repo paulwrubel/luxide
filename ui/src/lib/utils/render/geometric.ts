@@ -1,5 +1,9 @@
 import type { FormPath } from 'sveltekit-superforms';
-import type { RenderConfig, RenderConfigSchema } from './config';
+import type {
+	NormalizedRenderConfig,
+	RenderConfig,
+	RenderConfigSchema
+} from './config';
 import { normalizeMaterialData, type RawMaterialData } from './material';
 import { normalizeTextureData, type RawTextureData } from './texture';
 import {
@@ -97,6 +101,39 @@ export function isComposite(
 		data.type === 'rotate_z' ||
 		data.type === 'translate'
 	);
+}
+
+export function getReferencedMaterialNames(
+	config: NormalizedRenderConfig,
+	geometricName: string
+): string[] {
+	const { data } = getGeometricData(config, geometricName);
+	const materials: string[] = [];
+	switch (data.type) {
+		case 'box':
+		case 'obj_model':
+		case 'parallelogram':
+		case 'sphere':
+		case 'triangle':
+			materials.push(data.material);
+			break;
+		case 'list':
+			materials.push(
+				...data.geometrics.flatMap((geometricName) =>
+					getReferencedMaterialNames(config, geometricName)
+				)
+			);
+			break;
+		case 'rotate_x':
+		case 'rotate_y':
+		case 'rotate_z':
+		case 'translate':
+		case 'constant_volume':
+			materials.push(...getReferencedMaterialNames(config, data.geometric));
+			break;
+	}
+
+	return [...new Set(materials)];
 }
 
 export type GeometricDataResult = {

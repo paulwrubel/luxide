@@ -6,22 +6,16 @@
 		RenderConfigSchema,
 		type RenderConfig
 	} from '$lib/utils/render/config';
-	import VectorInputControl from '$lib/VectorInputControl.svelte';
 	import { Card, Heading } from 'flowbite-svelte';
 	import { ChevronDownOutline, ChevronUpOutline } from 'flowbite-svelte-icons';
 	import { slide } from 'svelte/transition';
 	import { getContext } from 'svelte';
 	import {
-		type GeometricData,
 		getGeometricData,
-		type GeometricBox,
 		type GeometricList,
-		type GeometricInstanceRotate,
-		type GeometricParallelogram,
-		normalizeGeometricInstanceRotate
+		type GeometricInstanceRotate
 	} from '$lib/utils/render/geometric';
 	import type {
-		FormPath,
 		FormPathArrays,
 		FormPathLeaves,
 		SuperForm
@@ -66,7 +60,7 @@
 		{@render controlsGeometricParallelogram(name)}
 	{:else}
 		<Heading tag="h6" class="text-sm"
-			>Unknown geometric! (or not yet implemented...)</Heading
+			>Unknown or unimplemented geometric: {data.type}</Heading
 		>
 	{/if}
 {/snippet}
@@ -113,13 +107,6 @@
 			max={360.0}
 			step={1.0}
 		/>
-		<!-- <RangeControl
-			label="Degrees of Rotation"
-			bind:value={data.degrees}
-			min={0.0}
-			max={360.0}
-			step={1.0}
-		/> -->
 	{:else}
 		<RangeControl
 			{superform}
@@ -132,21 +119,12 @@
 			max={2 * Math.PI}
 			step={0.01}
 		/>
-		<!-- <RangeControl
-			label="Radians of Rotation"
-			bind:value={data.radians}
-			min={0.0}
-			max={2 * Math.PI}
-			step={0.01}
-		/> -->
 	{/if}
 	<Separator />
 	{@render controlsSubGeometric(rotateData.geometric)}
 {/snippet}
 
 {#snippet controlsGeometricParallelogram(name: string)}
-	{@const { data } = getGeometricData(renderConfig, name)}
-	{@const parallelogramData = data as GeometricParallelogram}
 	<TextArrayInputControl
 		{superform}
 		field={`geometrics.${name}.lower_left` as FormPathArrays<

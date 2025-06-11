@@ -198,7 +198,10 @@
 			!isComposite(geometricData) &&
 			geometricData.type !== 'constant_volume'
 		) {
-			const materialData = getMaterialData(config, geometricData.material);
+			const { data: materialData } = getMaterialData(
+				config,
+				geometricData.material
+			);
 			const emittanceTextureData = getTextureData(
 				config,
 				materialData.emittance_texture
@@ -228,7 +231,7 @@
 	}
 
 	function getMaterials(data: string | MaterialData): THREE.Material[] {
-		const materialData = getMaterialData(config, data);
+		const { data: materialData } = getMaterialData(config, data);
 
 		const reflectanceTextureData = getTextureData(
 			config,
