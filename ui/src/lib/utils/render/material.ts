@@ -1,6 +1,7 @@
-import type { RenderConfig } from './config';
+import type { NormalizedRenderConfig, RenderConfig } from './config';
 import { normalizeTextureData, type RawTextureData } from './texture';
 import { capitalize, getNextUniqueName, isTypedObject } from './utils';
+import { z } from 'zod';
 
 export type MaterialData = NormalizedMaterialData;
 
@@ -35,20 +36,58 @@ export function isMaterialData(data: unknown): data is MaterialData {
 	);
 }
 
+export function getReferencedTextureNames(
+	config: NormalizedRenderConfig,
+	materialName: string
+): string[] {
+	const { data } = getMaterialData(config, materialName);
+	const materials: string[] = [];
+	switch (data.type) {
+		case 'dielectric':
+		case 'lambertian':
+		case 'specular':
+			materials.push(data.emittance_texture);
+			materials.push(data.reflectance_texture);
+			break;
+	}
+
+	return [...new Set(materials)];
+}
+
+export type MaterialDataResult = {
+	data: MaterialData;
+	source: 'reference' | 'inline';
+	name?: string;
+};
+
 export function getMaterialData(
 	config: RenderConfig,
 	nameOrData: string | MaterialData
-): MaterialData {
+): MaterialDataResult {
 	if (isMaterialData(nameOrData)) {
-		return nameOrData;
+		return {
+			data: nameOrData,
+			source: 'inline'
+		};
 	}
 
 	const material = config.materials?.[nameOrData];
 	if (!material) {
 		throw new Error(`Material ${nameOrData} not found`);
 	}
-	return material;
+	return {
+		data: material,
+		source: 'reference',
+		name: nameOrData
+	};
 }
+
+export const MaterialDielectricSchema = z.object({
+	type: z.literal('dielectric'),
+	reflectance_texture: z.string().nonempty(),
+	emittance_texture: z.string().nonempty(),
+	index_of_refraction: z.number().min(0)
+});
 
 export type MaterialDielectric = NormalizedMaterialDielectric;
 
@@ -108,6 +147,12 @@ export type RawMaterialDielectric = {
 	index_of_refraction: number;
 };
 
+export const MaterialLambertianSchema = z.object({
+	type: z.literal('lambertian'),
+	reflectance_texture: z.string().nonempty(),
+	emittance_texture: z.string().nonempty()
+});
+
 export type MaterialLambertian = NormalizedMaterialLambertian;
 
 export function normalizeMaterialLambertian(
@@ -164,6 +209,13 @@ export type RawMaterialLambertian = {
 	reflectance_texture: string | RawTextureData;
 	emittance_texture: string | RawTextureData;
 };
+
+export const MaterialSpecularSchema = z.object({
+	type: z.literal('specular'),
+	reflectance_texture: z.string().nonempty(),
+	emittance_texture: z.string().nonempty(),
+	roughness: z.number().min(0).max(1)
+});
 
 export type MaterialSpecular = NormalizedMaterialSpecular;
 
@@ -222,3 +274,8 @@ export type RawMaterialSpecular = {
 	emittance_texture: string | RawTextureData;
 	roughness: number;
 };
+export const MaterialDataSchema = z.discriminatedUnion('type', [
+	MaterialDielectricSchema,
+	MaterialLambertianSchema,
+	MaterialSpecularSchema
+]);

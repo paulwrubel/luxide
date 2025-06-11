@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import type { RenderConfig } from './config';
 import { capitalize, getNextUniqueName, isTypedObject } from './utils';
 
@@ -47,6 +48,13 @@ export function getTextureData(
 	}
 	return texture;
 }
+
+export const TextureCheckerSchema = z.object({
+	type: z.literal('checker'),
+	scale: z.number().min(0),
+	even_texture: z.string().nonempty(),
+	odd_texture: z.string().nonempty()
+});
 
 export type TextureChecker = NormalizedTextureChecker;
 
@@ -106,6 +114,12 @@ export type RawTextureChecker = {
 	odd_texture: string | RawTextureData;
 };
 
+export const TextureImageSchema = z.object({
+	type: z.literal('image'),
+	filename: z.string().nonempty(),
+	gamma: z.number().min(0)
+});
+
 export type TextureImage = NormalizedTextureImage;
 export type NormalizedTextureImage = RawTextureImage;
 export type RawTextureImage = {
@@ -114,9 +128,20 @@ export type RawTextureImage = {
 	gamma: number;
 };
 
+export const TextureSolidColorSchema = z.object({
+	type: z.literal('color'),
+	color: z.tuple([z.number().min(0), z.number().min(0), z.number().min(0)])
+});
+
 export type TextureSolidColor = NormalizedTextureSolidColor;
 export type NormalizedTextureSolidColor = RawTextureSolidColor;
 export type RawTextureSolidColor = {
 	type: 'color';
 	color: [number, number, number];
 };
+
+export const TextureDataSchema = z.discriminatedUnion('type', [
+	TextureCheckerSchema,
+	TextureImageSchema,
+	TextureSolidColorSchema
+]);

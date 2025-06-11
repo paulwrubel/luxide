@@ -89,6 +89,7 @@
 				break;
 			}
 			case 'obj_model': {
+				console.warn('.obj model not yet supported');
 				break;
 			}
 			case 'rotate_x': {
@@ -176,6 +177,7 @@
 				break;
 			}
 			case 'constant_volume': {
+				console.warn('Constant volume not yet supported');
 				break;
 			}
 		}
@@ -198,7 +200,10 @@
 			!isComposite(geometricData) &&
 			geometricData.type !== 'constant_volume'
 		) {
-			const materialData = getMaterialData(config, geometricData.material);
+			const { data: materialData } = getMaterialData(
+				config,
+				geometricData.material
+			);
 			const emittanceTextureData = getTextureData(
 				config,
 				materialData.emittance_texture
@@ -228,7 +233,7 @@
 	}
 
 	function getMaterials(data: string | MaterialData): THREE.Material[] {
-		const materialData = getMaterialData(config, data);
+		const { data: materialData } = getMaterialData(config, data);
 
 		const reflectanceTextureData = getTextureData(
 			config,
@@ -247,14 +252,21 @@
 
 		switch (materialData.type) {
 			case 'dielectric': {
+				console.warn('Dielectric material not yet supported');
 				break;
 			}
 			case 'lambertian': {
 				switch (reflectanceTextureData.type) {
 					case 'checker': {
+						console.warn(
+							'Checker texture not yet supported for lambertian material'
+						);
 						break;
 					}
 					case 'image': {
+						console.warn(
+							'Image texture not yet supported for lambertian material'
+						);
 						break;
 					}
 					case 'color': {
@@ -274,9 +286,15 @@
 			case 'specular': {
 				switch (reflectanceTextureData.type) {
 					case 'checker': {
+						console.warn(
+							'Checker texture not yet supported for specular material'
+						);
 						break;
 					}
 					case 'image': {
+						console.warn(
+							'Image texture not yet supported for specular material'
+						);
 						break;
 					}
 					case 'color': {
