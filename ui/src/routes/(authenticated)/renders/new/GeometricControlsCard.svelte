@@ -22,6 +22,7 @@
 	} from 'sveltekit-superforms';
 	import { z } from 'zod';
 	import TextArrayInputControl from '$lib/TextArrayInputControl.svelte';
+	import SelectControl from '$lib/SelectControl.svelte';
 
 	const schema = RenderConfigSchema;
 
@@ -65,6 +66,22 @@
 	{/if}
 {/snippet}
 
+{#snippet controlsMaterialSelect(name: string)}
+	{@const items = Object.keys(renderConfig.materials ?? {}).map((key) => ({
+		name: key,
+		value: key
+	}))}
+	<SelectControl
+		{superform}
+		field={`geometrics.${name}.material` as FormPathLeaves<
+			z.infer<typeof schema>,
+			string
+		>}
+		label="Material"
+		items={[...items]}
+	/>
+{/snippet}
+
 {#snippet controlsGeometricBox(name: string)}
 	<TextArrayInputControl
 		{superform}
@@ -80,6 +97,7 @@
 		valueLabels={['x', 'y', 'z']}
 		type="number"
 	/>
+	{@render controlsMaterialSelect(name)}
 {/snippet}
 
 {#snippet controlsGeometricList(name: string)}
@@ -154,6 +172,7 @@
 			<em>v</em> Vector
 		{/snippet}
 	</TextArrayInputControl>
+	{@render controlsMaterialSelect(name)}
 {/snippet}
 
 <Card class="flex max-w-full flex-col !bg-zinc-800 !text-zinc-200">
