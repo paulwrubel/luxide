@@ -1,5 +1,4 @@
 <script lang="ts">
-	import RangeControl from '$lib/RangeControl.svelte';
 	import Separator from '$lib/Separator.svelte';
 	import {
 		RenderConfigSchema,
@@ -15,7 +14,6 @@
 		SuperForm
 	} from 'sveltekit-superforms';
 	import { z } from 'zod';
-	import { getMaterialData } from '$lib/utils/render/material';
 	import SelectControl from '$lib/SelectControl.svelte';
 	import { getTextureData } from '$lib/utils/render/texture';
 	import TextInputControl from '$lib/TextInputControl.svelte';

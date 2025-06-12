@@ -33,7 +33,6 @@ export async function navigateToAPILogin() {
 
 	const body = (await response.json()) as LoginResponse;
 
-	console.log(body);
 	if (body.redirect_url) {
 		window.location.href = body.redirect_url;
 		return;

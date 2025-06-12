@@ -2,7 +2,7 @@
 	import { type RenderConfig } from '$lib/utils/render/config';
 	import CameraControlsCard from './CameraControlsCard.svelte';
 	import GeometricControlsCard from './GeometricControlsCard.svelte';
-	import { TabItem, Tabs } from 'flowbite-svelte';
+	import { Card, Heading, TabItem, Tabs } from 'flowbite-svelte';
 	import ParametersControlsCard from './ParametersControlsCard.svelte';
 	import { type SuperForm } from 'sveltekit-superforms';
 	import { RenderConfigSchema } from '$lib/utils/render/config';
@@ -12,6 +12,13 @@
 	import MaterialControlsCard from './MaterialControlsCard.svelte';
 	import { getReferencedTextureNames } from '$lib/utils/render/material';
 	import TextureControlsCard from './TextureControlsCard.svelte';
+	import { CirclePlusOutline } from 'flowbite-svelte-icons';
+	import NewTextureSpeedDial from './NewTextureSpeedDial.svelte';
+	import {
+		getTopLevelGeometricNames,
+		getTopLevelMaterialNames,
+		getTopLevelTextureNames
+	} from '$lib/utils/render/utils';
 
 	const schema = RenderConfigSchema;
 
@@ -26,21 +33,35 @@
 		getSceneData(renderConfig, renderConfig.active_scene)
 	);
 
-	const geometricNames = $derived(activeScene.geometrics);
-	const materialNames = $derived([
+	const activeGeometricNames = $derived(activeScene.geometrics);
+	const topLevelGeometricNames = $derived(
+		getTopLevelGeometricNames(renderConfig)
+	);
+	const allGeometricNames = $derived(
+		Object.keys(renderConfig.geometrics ?? {})
+	);
+
+	const activeMaterialNames = $derived([
 		...new Set(
-			geometricNames.flatMap((geometricName) =>
+			activeGeometricNames.flatMap((geometricName) =>
 				getReferencedMaterialNames(renderConfig, geometricName)
 			)
 		)
 	]);
-	const textureNames = $derived([
+	const topLevelMaterialNames = $derived(
+		getTopLevelMaterialNames(renderConfig)
+	);
+	const allMaterialNames = $derived(Object.keys(renderConfig.materials ?? {}));
+
+	const activeTextureNames = $derived([
 		...new Set(
-			materialNames.flatMap((materialName) =>
+			activeMaterialNames.flatMap((materialName) =>
 				getReferencedTextureNames(renderConfig, materialName)
 			)
 		)
 	]);
+	const topLevelTextureNames = $derived(getTopLevelTextureNames(renderConfig));
+	const allTextureNames = $derived(Object.keys(renderConfig.textures ?? {}));
 </script>
 
 <div class="flex flex-col">
@@ -61,23 +82,26 @@
 		</TabItem>
 		<TabItem title="Geometrics">
 			<div class="flex flex-col items-center gap-4">
-				{#each geometricNames as geometricName (geometricName)}
+				{#each topLevelGeometricNames as geometricName (geometricName)}
 					<GeometricControlsCard {superform} {geometricName} />
 				{/each}
 			</div>
 		</TabItem>
 		<TabItem title="Materials">
 			<div class="flex flex-col items-center gap-4">
-				{#each materialNames as materialName (materialName)}
+				{#each topLevelMaterialNames as materialName (materialName)}
 					<MaterialControlsCard {superform} {materialName} />
 				{/each}
 			</div>
 		</TabItem>
 		<TabItem title="Textures">
-			<div class="flex flex-col items-center gap-4">
-				{#each textureNames as textureName (textureName)}
+			<div class="flex flex-col items-stretch gap-4">
+				{#each topLevelTextureNames as textureName (textureName)}
 					<TextureControlsCard {superform} {textureName} />
 				{/each}
+				<div class="flex flex-col-reverse items-end">
+					<NewTextureSpeedDial {superform} />
+				</div>
 			</div>
 		</TabItem>
 	</Tabs>
