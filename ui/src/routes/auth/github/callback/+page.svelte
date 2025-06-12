@@ -11,11 +11,8 @@
 		loading: true
 	});
 
-	console.log('hit the page!');
-
 	// handle the oauth callback
 	async function handleCallback() {
-		console.log('doing the callback!');
 		try {
 			// get code and state from URL params
 			const code = page.url.searchParams.get('code');
@@ -33,7 +30,6 @@
 
 			// get origin from localStorage
 			const origin = localStorage.getItem('ui_origin');
-			console.log(origin);
 
 			// redirect to home page
 			if (origin) {
@@ -44,7 +40,6 @@
 				goto('/');
 			}
 		} catch (e) {
-			console.error('auth error:', e);
 			error = e instanceof Error ? e.message : 'authentication failed';
 		} finally {
 			loading = false;

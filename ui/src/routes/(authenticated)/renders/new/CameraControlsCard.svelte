@@ -6,7 +6,6 @@
 		RenderConfigSchema,
 		type RenderConfig
 	} from '$lib/utils/render/config';
-	import VectorInputControl from '$lib/VectorInputControl.svelte';
 	import { getContext } from 'svelte';
 	import { z } from 'zod';
 	import type {

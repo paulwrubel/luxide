@@ -1,5 +1,52 @@
 import { degreesToRadians, radiansToDegrees } from '../math';
 import { z } from 'zod';
+import type { RenderConfig } from './config';
+
+/* CONFIG HELPER FUNCTIONS */
+
+export function getTopLevelGeometricNames(config: RenderConfig) {
+	return Object.keys(config.geometrics ?? {}).filter(
+		(name) =>
+			!Object.values(config.geometrics ?? {})
+				.flatMap((data) => {
+					switch (data.type) {
+						case 'list':
+							return data.geometrics;
+						case 'rotate_x':
+						case 'rotate_y':
+						case 'rotate_z':
+						case 'translate':
+						case 'constant_volume':
+							return data.geometric;
+						default:
+							return [];
+					}
+				})
+				.includes(name)
+	);
+}
+
+export function getTopLevelMaterialNames(config: RenderConfig) {
+	return Object.keys(config.materials ?? {});
+}
+
+export function getTopLevelTextureNames(config: RenderConfig) {
+	return Object.keys(config.textures ?? {}).filter(
+		(name) =>
+			!Object.values(config.textures ?? {})
+				.flatMap((data) => {
+					switch (data.type) {
+						case 'checker':
+							return [data.even_texture, data.odd_texture];
+						default:
+							return [];
+					}
+				})
+				.includes(name)
+	);
+}
+
+/* GENERAL */
 
 export function isNonNullObject(x: unknown): x is Record<string, unknown> {
 	return typeof x === 'object' && x !== null;
@@ -28,7 +75,8 @@ export function capitalize(str: string): string {
 	return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-// Angle
+/* ANGLE */
+
 export const AngleDegreesSchema = z.object({
 	degrees: z.number()
 });

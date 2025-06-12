@@ -120,11 +120,7 @@ export function syncronizeRenderConfig(
 	renderConfig: RenderConfig
 ) {
 	return async (form: z.infer<typeof RenderConfigSchema>) => {
-		console.log('updating!');
-
 		await updateFields(superform, form, renderConfig);
-
-		console.log('done!');
 	};
 }
 
@@ -149,9 +145,7 @@ export async function updateFields(
 		return typeof value === 'object' && value !== null;
 	}
 
-	// console.log('updating fields for:', parentPath);
 	for (const path of Object.keys(formParent)) {
-		// console.log('   checking:', path);
 		const field = formParent[path];
 		const configField = configParent[path];
 		const fieldPath = parentPath ? `${parentPath}.${path}` : path;
@@ -198,6 +192,8 @@ export function updateField(
 	path: FormPath<z.infer<typeof RenderConfigSchema>>,
 	newValue: unknown
 ) {
+	createSkeletonPath(config, path);
+
 	// parse the path into segments
 	const segments = path.split(/\.|\[|\]/).filter(Boolean);
 
@@ -206,17 +202,67 @@ export function updateField(
 
 	// traverse to the second-to-last segment
 	for (let i = 0; i < segments.length - 1; i++) {
-		if (typeof current !== 'object' && !Array.isArray(current)) {
-			console.warn('Invalid config type:', typeof current);
-		}
 		const segment = segments[i];
-
 		current = current[segment] as Record<string, unknown>;
 	}
 
 	// set the value at the final segment
 	const lastSegment = segments[segments.length - 1];
 	current[lastSegment] = newValue;
+}
 
-	// console.log(`Updated ${path} to:`, newValue);
+function createSkeletonPath(
+	config: RenderConfig,
+	path: FormPath<z.infer<typeof RenderConfigSchema>>
+): void {
+	const segments = path.split('.');
+
+	let current: Record<string, unknown> = config;
+
+	for (let i = 0; i < segments.length; i++) {
+		const segment = segments[i];
+
+		const arrayMatches = segment.match(/^([^[]+)\[(\d+)\]$/);
+		let segmentKey = segment;
+		if (arrayMatches) {
+			segmentKey = arrayMatches[1];
+		}
+
+		// check if there's a value at this segment
+		if (!current[segmentKey]) {
+			// it's supposed to be either an array or an object
+			if (arrayMatches) {
+				const arrayIndex = Number(arrayMatches[2]);
+				// we're sort of gambling that the values in the array should be object types.
+				//
+				// if the values are leaf nodes, they'll
+				// just get overwritten anyways, so it doesn't matter.
+				// the only case this doesn't catch is an "array of arrays"
+				// case, which wouldn't match the above regex, so it'll
+				// just explode at some point.
+				//
+				// If, in the future, I add an "array of arrays" type to the config
+				// and it doesn't work, this is probably why! :D
+				current[segmentKey] = new Array(arrayIndex + 1).fill({});
+
+				current = (current[segmentKey] as Array<Record<string, unknown>>)[
+					arrayIndex
+				];
+			} else {
+				current[segmentKey] = {};
+
+				current = current[segmentKey] as Record<string, unknown>;
+			}
+		} else {
+			const nextNode = current[segmentKey] as
+				| Record<string, unknown>
+				| Array<Record<string, unknown>>;
+
+			if (Array.isArray(nextNode)) {
+				current = nextNode[Number(arrayMatches![2])];
+			} else {
+				current = nextNode;
+			}
+		}
+	}
 }

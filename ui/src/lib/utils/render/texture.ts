@@ -62,6 +62,42 @@ export function getTextureData(
 	};
 }
 
+// function overloads for compile-time type checking
+export function defaultTextureForType(
+	type: 'checker',
+	extra: { even_texture: string; odd_texture: string }
+): TextureChecker;
+export function defaultTextureForType(type: 'image' | 'color'): TextureData;
+// implementation
+export function defaultTextureForType(
+	type: TextureData['type'],
+	extra?: { even_texture: string; odd_texture: string }
+): TextureData {
+	switch (type) {
+		case 'checker':
+			if (!extra) {
+				throw new Error('extra parameter required for checker texture');
+			}
+			return {
+				type: 'checker',
+				scale: 1,
+				even_texture: extra.even_texture,
+				odd_texture: extra.odd_texture
+			};
+		case 'image':
+			return {
+				type: 'image',
+				filename: '',
+				gamma: 1
+			};
+		case 'color':
+			return {
+				type: 'color',
+				color: [1, 1, 1]
+			};
+	}
+}
+
 export const TextureCheckerSchema = z.object({
 	type: z.literal('checker'),
 	scale: z.number().min(0),
