@@ -15,7 +15,7 @@
 		type MaterialData
 	} from '$lib/utils/render/material';
 	import { getSceneData } from '$lib/utils/render/scene';
-	import { getTextureData } from '$lib/utils/render/texture';
+	import { getTextureDataSafe } from '$lib/utils/render/texture';
 	import { toRadians } from '$lib/utils/render/utils';
 
 	const config = getContext<RenderConfig>('renderConfig');
@@ -204,7 +204,7 @@
 				config,
 				geometricData.material
 			);
-			const { data: emittanceTextureData } = getTextureData(
+			const { data: emittanceTextureData } = getTextureDataSafe(
 				config,
 				materialData.emittance_texture
 			);
@@ -235,11 +235,11 @@
 	function getMaterials(data: string | MaterialData): THREE.Material[] {
 		const { data: materialData } = getMaterialData(config, data);
 
-		const { data: reflectanceTextureData } = getTextureData(
+		const { data: reflectanceTextureData } = getTextureDataSafe(
 			config,
 			materialData.reflectance_texture
 		);
-		const { data: emittanceTextureData } = getTextureData(
+		const { data: emittanceTextureData } = getTextureDataSafe(
 			config,
 			materialData.emittance_texture
 		);

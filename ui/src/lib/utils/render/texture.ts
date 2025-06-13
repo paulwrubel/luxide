@@ -36,9 +36,27 @@ export function isTextureData(data: unknown): data is TextureData {
 
 export type TextureDataResult = {
 	data: TextureData;
-	source: 'reference' | 'inline';
+	source: 'reference' | 'inline' | 'default';
 	name?: string;
 };
+
+export function getTextureDataSafe(
+	config: RenderConfig,
+	nameOrData: string | TextureData
+): TextureDataResult {
+	try {
+		return getTextureData(config, nameOrData);
+	} catch (e) {
+		console.warn(
+			`Failed to get texture data (${nameOrData}), using default texture`,
+			e
+		);
+		return {
+			data: defaultTextureForType('color'),
+			source: 'default'
+		};
+	}
+}
 
 export function getTextureData(
 	config: RenderConfig,

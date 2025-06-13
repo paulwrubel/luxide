@@ -4,8 +4,12 @@
 		RenderConfigSchema,
 		type RenderConfig
 	} from '$lib/utils/render/config';
-	import { Card, Heading } from 'flowbite-svelte';
-	import { ChevronDownOutline, ChevronUpOutline } from 'flowbite-svelte-icons';
+	import { Button, Card, Heading } from 'flowbite-svelte';
+	import {
+		ChevronDownOutline,
+		ChevronUpOutline,
+		TrashBinOutline
+	} from 'flowbite-svelte-icons';
 	import { slide } from 'svelte/transition';
 	import { getContext } from 'svelte';
 	import type {
@@ -15,10 +19,14 @@
 	} from 'sveltekit-superforms';
 	import { z } from 'zod';
 	import SelectControl from '$lib/SelectControl.svelte';
-	import { getTextureData } from '$lib/utils/render/texture';
+	import {
+		getTextureData,
+		type TextureChecker
+	} from '$lib/utils/render/texture';
 	import TextInputControl from '$lib/TextInputControl.svelte';
 	import TextArrayInputControl from '$lib/TextArrayInputControl.svelte';
 	import InfoIconAdditionalInfo from '$lib/property-icons/InfoIconAdditionalInfo.svelte';
+	import NestedTextureHeader from './NestedTextureHeader.svelte';
 
 	const schema = RenderConfigSchema;
 
@@ -28,6 +36,7 @@
 	};
 
 	const { superform, textureName }: Props = $props();
+	const { form } = $derived(superform);
 
 	const renderConfig = getContext<RenderConfig>('renderConfig');
 
@@ -35,13 +44,24 @@
 		getTextureData(renderConfig, textureName)
 	);
 
+	function handleDeleteTexture(name: string) {
+		const newTextures = { ...$form.textures };
+		delete newTextures[name];
+		$form.textures = newTextures;
+	}
+
 	let isExpanded = $state(false);
 	function handleToggleExpandCard() {
 		isExpanded = !isExpanded;
 	}
 </script>
 
-{#snippet controlsTexture(name: string)}
+{#snippet controlsSubTexture(name: string)}
+	<NestedTextureHeader textureName={name} />
+	{@render controlsTexture(name, true)}
+{/snippet}
+
+{#snippet controlsTexture(name: string, isSubTexture: boolean)}
 	{@const { data } = getTextureData(renderConfig, name)}
 
 	{#if data.type === 'checker'}
@@ -51,9 +71,24 @@
 	{:else if data.type === 'color'}
 		{@render controlsTextureSolidColor(name)}
 	{/if}
+	{#if !isSubTexture}
+		{@render deleteTextureButton(name)}
+	{/if}
+{/snippet}
+
+{#snippet deleteTextureButton(name: string)}
+	<Button
+		color="red"
+		pill={true}
+		onclick={() => handleDeleteTexture(name)}
+		class="p-2"
+	>
+		<TrashBinOutline class="h-6 w-6" />
+	</Button>
 {/snippet}
 
 {#snippet controlsTextureChecker(name: string)}
+	{@const { data } = getTextureData(renderConfig, name)}
 	<TextInputControl
 		{superform}
 		field={`textures.${name}.scale` as FormPathLeaves<
@@ -64,28 +99,10 @@
 		valueLabel="scale"
 		type="number"
 	/>
-	{@const items = Object.keys(renderConfig.textures ?? {}).map((key) => ({
-		name: key,
-		value: key
-	}))}
-	<SelectControl
-		{superform}
-		field={`textures.${name}.even_texture` as FormPathLeaves<
-			z.infer<typeof schema>,
-			string
-		>}
-		label="Texture 1"
-		items={[...items]}
-	/>
-	<SelectControl
-		{superform}
-		field={`textures.${name}.odd_texture` as FormPathLeaves<
-			z.infer<typeof schema>,
-			string
-		>}
-		label="Texture 2"
-		items={[...items]}
-	/>
+	<Separator />
+	{@render controlsSubTexture((data as TextureChecker).even_texture)}
+	<Separator />
+	{@render controlsSubTexture((data as TextureChecker).odd_texture)}
 {/snippet}
 
 {#snippet controlsTextureImage(name: string)}
@@ -139,9 +156,9 @@
 	{#if isExpanded}
 		<div transition:slide={{ duration: 300 }}>
 			<Separator />
-			<div class="flex flex-col gap-2 p-4">
+			<div class="flex flex-col items-start gap-2 p-4">
 				<!-- controls -->
-				{@render controlsTexture(textureName)}
+				{@render controlsTexture(textureName, false)}
 			</div>
 		</div>
 	{/if}

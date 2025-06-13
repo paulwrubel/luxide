@@ -168,30 +168,47 @@ export async function updateFields(
 	}
 }
 
+export type UpdateFieldIfValidResult = {
+	isValid: boolean;
+	deleted?: boolean;
+};
+
 export async function updateFieldIfValid(
 	superform: SuperForm<z.infer<typeof RenderConfigSchema>>,
 	config: RenderConfig,
 	path: FormPath<z.infer<typeof RenderConfigSchema>>,
 	newValue: unknown
-): Promise<boolean> {
+): Promise<UpdateFieldIfValidResult> {
 	const isValid = await fieldIsValid(
 		superform,
 		path as FormPathLeaves<z.infer<typeof RenderConfigSchema>>
 	);
 
+	let deleted = false;
 	if (isValid) {
-		updateField(config, path, newValue);
-		return true;
+		deleted = updateField(config, path, newValue);
 	}
 
-	return false;
+	return {
+		isValid,
+		deleted
+	};
 }
 
 export function updateField(
 	config: RenderConfig,
 	path: FormPath<z.infer<typeof RenderConfigSchema>>,
 	newValue: unknown
-) {
+): boolean {
+	if (path.endsWith('.type') && newValue === undefined) {
+		const segments = path.split(/\.|\[|\]/).filter(Boolean);
+		const collection = segments[0] as 'geometrics' | 'materials' | 'textures';
+		const name = segments[1];
+
+		delete config[collection]?.[name];
+		return true;
+	}
+
 	createSkeletonPath(config, path);
 
 	// parse the path into segments
@@ -209,6 +226,8 @@ export function updateField(
 	// set the value at the final segment
 	const lastSegment = segments[segments.length - 1];
 	current[lastSegment] = newValue;
+
+	return false;
 }
 
 function createSkeletonPath(
