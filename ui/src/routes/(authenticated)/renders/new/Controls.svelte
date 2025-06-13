@@ -19,6 +19,7 @@
 		getTopLevelMaterialNames,
 		getTopLevelTextureNames
 	} from '$lib/utils/render/utils';
+	import NewMaterialSpeedDial from './NewMaterialSpeedDial.svelte';
 
 	const schema = RenderConfigSchema;
 
@@ -71,27 +72,30 @@
 		contentClass="!bg-zinc-900 border-t-[1px] border-zinc-600 rounded-none mt-0"
 	>
 		<TabItem open title="Parameters">
-			<div class="flex flex-col items-center gap-4">
+			<div class="flex flex-col items-stretch gap-4">
 				<ParametersControlsCard {superform} />
 			</div>
 		</TabItem>
 		<TabItem title="Camera">
-			<div class="flex flex-col items-center gap-4">
+			<div class="flex flex-col items-stretch gap-4">
 				<CameraControlsCard {superform} camera={activeScene.camera} />
 			</div>
 		</TabItem>
 		<TabItem title="Geometrics">
-			<div class="flex flex-col items-center gap-4">
+			<div class="flex flex-col items-stretch gap-4">
 				{#each topLevelGeometricNames as geometricName (geometricName)}
 					<GeometricControlsCard {superform} {geometricName} />
 				{/each}
 			</div>
 		</TabItem>
 		<TabItem title="Materials">
-			<div class="flex flex-col items-center gap-4">
+			<div class="flex flex-col items-stretch gap-4">
 				{#each topLevelMaterialNames as materialName (materialName)}
 					<MaterialControlsCard {superform} {materialName} />
 				{/each}
+				<div class="flex flex-col-reverse items-end">
+					<NewMaterialSpeedDial {superform} />
+				</div>
 			</div>
 		</TabItem>
 		<TabItem title="Textures">

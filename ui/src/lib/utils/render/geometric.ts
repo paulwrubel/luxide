@@ -1,9 +1,4 @@
-import type { FormPath } from 'sveltekit-superforms';
-import type {
-	NormalizedRenderConfig,
-	RenderConfig,
-	RenderConfigSchema
-} from './config';
+import type { NormalizedRenderConfig, RenderConfig } from './config';
 import { normalizeMaterialData, type RawMaterialData } from './material';
 import { normalizeTextureData, type RawTextureData } from './texture';
 import {
@@ -138,27 +133,36 @@ export function getReferencedMaterialNames(
 
 export type GeometricDataResult = {
 	data: GeometricData;
-	source: 'reference' | 'inline';
+	source: 'reference' | 'inline' | 'default';
 	name?: string;
-	path: FormPath<z.infer<typeof RenderConfigSchema>>;
 };
+
+export function getGeometricDataSafe(
+	config: RenderConfig,
+	nameOrData: string | GeometricData
+): GeometricDataResult {
+	try {
+		return getGeometricData(config, nameOrData);
+	} catch (e) {
+		console.warn(
+			`Failed to get geometric data (${nameOrData}), using default geometric`,
+			e
+		);
+		return {
+			data: defaultGeometricForType('sphere'),
+			source: 'default'
+		};
+	}
+}
 
 export function getGeometricData(
 	config: RenderConfig,
-	nameOrData: string | GeometricData,
-	parentPath?: FormPath<z.infer<typeof RenderConfigSchema>>
+	nameOrData: string | GeometricData
 ): GeometricDataResult {
 	if (isGeometricData(nameOrData)) {
-		const path = parentPath
-			? (`${parentPath}.geometric` as FormPath<
-					z.infer<typeof RenderConfigSchema>
-				>)
-			: (`geometric` as FormPath<z.infer<typeof RenderConfigSchema>>);
-
 		return {
 			data: nameOrData,
-			source: 'inline',
-			path: path
+			source: 'inline'
 		};
 	}
 
@@ -170,11 +174,95 @@ export function getGeometricData(
 	return {
 		data: geometric,
 		source: 'reference',
-		name: nameOrData,
-		path: `geometrics.${nameOrData}` as FormPath<
-			z.infer<typeof RenderConfigSchema>
-		>
+		name: nameOrData
 	};
+}
+
+// implementation
+export function defaultGeometricForType(
+	type: GeometricData['type']
+): GeometricData {
+	switch (type) {
+		case 'box':
+			return {
+				type: 'box',
+				a: [0, 0, 0],
+				b: [0, 0, 0],
+				material: ''
+			};
+		case 'list':
+			return {
+				type: 'list',
+				geometrics: []
+			};
+		case 'obj_model':
+			return {
+				type: 'obj_model',
+				filename: '',
+				origin: [0, 0, 0],
+				scale: 1,
+				recalculate_normals: false,
+				use_bvh: true,
+				material: ''
+			};
+		case 'rotate_x':
+			return {
+				type: 'rotate_x',
+				geometric: '',
+				degrees: 0,
+				around: [0, 0, 0]
+			};
+		case 'rotate_y':
+			return {
+				type: 'rotate_y',
+				geometric: '',
+				degrees: 0,
+				around: [0, 0, 0]
+			};
+		case 'rotate_z':
+			return {
+				type: 'rotate_z',
+				geometric: '',
+				degrees: 0,
+				around: [0, 0, 0]
+			};
+		case 'translate':
+			return {
+				type: 'translate',
+				geometric: '',
+				translation: [0, 0, 0]
+			};
+		case 'parallelogram':
+			return {
+				type: 'parallelogram',
+				lower_left: [0, 0, 0],
+				u: [0, 0, 0],
+				v: [0, 0, 0],
+				material: ''
+			};
+		case 'sphere':
+			return {
+				type: 'sphere',
+				center: [0, 0, 0],
+				radius: 1,
+				material: ''
+			};
+		case 'triangle':
+			return {
+				type: 'triangle',
+				a: [0, 0, 0],
+				b: [0, 0, 0],
+				c: [0, 0, 0],
+				material: ''
+			};
+		case 'constant_volume':
+			return {
+				type: 'constant_volume',
+				density: 1,
+				geometric: '',
+				reflectance_texture: ''
+			};
+	}
 }
 
 export const GeometricBoxSchema = z.object({

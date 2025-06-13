@@ -86,6 +86,7 @@ export function defaultTextureForType(
 	extra: { even_texture: string; odd_texture: string }
 ): TextureChecker;
 export function defaultTextureForType(type: 'image' | 'color'): TextureData;
+
 // implementation
 export function defaultTextureForType(
 	type: TextureData['type'],

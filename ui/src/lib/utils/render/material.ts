@@ -56,9 +56,27 @@ export function getReferencedTextureNames(
 
 export type MaterialDataResult = {
 	data: MaterialData;
-	source: 'reference' | 'inline';
+	source: 'reference' | 'inline' | 'default';
 	name?: string;
 };
+
+export function getMaterialDataSafe(
+	config: RenderConfig,
+	nameOrData: string | MaterialData
+): MaterialDataResult {
+	try {
+		return getMaterialData(config, nameOrData);
+	} catch (e) {
+		console.warn(
+			`Failed to get material data (${nameOrData}), using default material`,
+			e
+		);
+		return {
+			data: defaultMaterialForType('lambertian'),
+			source: 'default'
+		};
+	}
+}
 
 export function getMaterialData(
 	config: RenderConfig,
@@ -80,6 +98,34 @@ export function getMaterialData(
 		source: 'reference',
 		name: nameOrData
 	};
+}
+
+// implementation
+export function defaultMaterialForType(
+	type: MaterialData['type']
+): MaterialData {
+	switch (type) {
+		case 'dielectric':
+			return {
+				type: 'dielectric',
+				reflectance_texture: '',
+				emittance_texture: '',
+				index_of_refraction: 1
+			};
+		case 'lambertian':
+			return {
+				type: 'lambertian',
+				reflectance_texture: '',
+				emittance_texture: ''
+			};
+		case 'specular':
+			return {
+				type: 'specular',
+				reflectance_texture: '',
+				emittance_texture: '',
+				roughness: 1
+			};
+	}
 }
 
 export const MaterialDielectricSchema = z.object({
