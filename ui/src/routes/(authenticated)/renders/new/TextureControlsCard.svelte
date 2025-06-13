@@ -45,11 +45,9 @@
 	);
 
 	function handleDeleteTexture(name: string) {
-		console.log('deleting texture', name);
 		const newTextures = { ...$form.textures };
 		delete newTextures[name];
 		$form.textures = newTextures;
-		console.log($form.textures);
 	}
 
 	let isExpanded = $state(false);

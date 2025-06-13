@@ -206,11 +206,9 @@ export function updateField(
 		const name = segments[1];
 
 		delete config[collection]?.[name];
-		console.log('deleted', path);
 		return true;
 	}
 
-	console.log('updating field', path, newValue);
 	createSkeletonPath(config, path);
 
 	// parse the path into segments

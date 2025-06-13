@@ -73,7 +73,6 @@
 
 				// if something was deleted, then don't bother updating the form
 				if (deleted) {
-					console.log('deleted', path, 'exiting early!');
 					return;
 				}
 			}
