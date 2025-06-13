@@ -1,10 +1,7 @@
 <script lang="ts">
 	import RangeControl from '$lib/RangeControl.svelte';
 	import Separator from '$lib/Separator.svelte';
-	import {
-		RenderConfigSchema,
-		type RenderConfig
-	} from '$lib/utils/render/config';
+	import { RenderConfigSchema } from '$lib/utils/render/config';
 	import { Button, Card, Heading } from 'flowbite-svelte';
 	import {
 		ChevronDownOutline,
@@ -17,6 +14,7 @@
 	import { z } from 'zod';
 	import { getMaterialData } from '$lib/utils/render/material';
 	import SelectControl from '$lib/SelectControl.svelte';
+	import { fixReferences, type RenderConfigContext } from './utils';
 
 	const schema = RenderConfigSchema;
 
@@ -28,16 +26,18 @@
 	const { superform, materialName }: Props = $props();
 	const { form } = $derived(superform);
 
-	const renderConfig = getContext<RenderConfig>('renderConfig');
+	const renderConfigContext = getContext<RenderConfigContext>('renderConfig');
 
 	const { data: materialData } = $derived(
-		getMaterialData(renderConfig, materialName)
+		getMaterialData(renderConfigContext.get(), materialName)
 	);
 
 	function handleDeleteMaterial(name: string) {
-		const newMaterials = { ...$form.materials };
-		delete newMaterials[name];
-		$form.materials = newMaterials;
+		let newForm = { ...$form };
+		delete newForm.materials[name];
+
+		newForm = fixReferences(newForm);
+		$form = newForm;
 	}
 
 	let isExpanded = $state(false);
@@ -47,7 +47,7 @@
 </script>
 
 {#snippet controlsMaterial(name: string)}
-	{@const { data } = getMaterialData(renderConfig, name)}
+	{@const { data } = getMaterialData(renderConfigContext.get(), name)}
 
 	{#if data.type === 'dielectric'}
 		{@render controlsMaterialDielectric(name)}
@@ -71,10 +71,12 @@
 {/snippet}
 
 {#snippet controlsTextureSelects(name: string)}
-	{@const items = Object.keys(renderConfig.textures ?? {}).map((key) => ({
-		name: key,
-		value: key
-	}))}
+	{@const items = Object.keys(renderConfigContext.get().textures ?? {}).map(
+		(key) => ({
+			name: key,
+			value: key
+		})
+	)}
 	<SelectControl
 		{superform}
 		field={`materials.${name}.reflectance_texture` as FormPathLeaves<

@@ -4,6 +4,10 @@ import type { RenderConfig } from './config';
 
 /* CONFIG HELPER FUNCTIONS */
 
+export function removeDefaults(array: string[]) {
+	return array.filter((item) => !item.startsWith('__'));
+}
+
 export function getTopLevelGeometricNames(config: RenderConfig) {
 	return Object.keys(config.geometrics ?? {}).filter(
 		(name) =>

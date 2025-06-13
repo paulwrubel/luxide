@@ -10,6 +10,11 @@ import type { FormPath, FormPathLeaves, SuperForm } from 'sveltekit-superforms';
 import * as THREE from 'three';
 import type z from 'zod';
 
+export type RenderConfigContext = {
+	get: () => RenderConfig;
+	set: (newConfig: RenderConfig) => void;
+};
+
 export function createTriangleMesh(
 	geometricData: GeometricTriangle
 ): THREE.Mesh {
@@ -113,6 +118,67 @@ export function createParallelogramMesh(
 
 	// create and return mesh
 	return mesh;
+}
+
+export function fixReferences(
+	form: z.infer<typeof RenderConfigSchema>
+): z.infer<typeof RenderConfigSchema> {
+	const newForm = { ...form };
+
+	for (const texture of Object.values(newForm.textures)) {
+		switch (texture.type) {
+			case 'checker':
+				if (!Object.keys(newForm.textures).includes(texture.even_texture)) {
+					texture.even_texture = '__white';
+				}
+				if (!Object.keys(newForm.textures).includes(texture.odd_texture)) {
+					texture.odd_texture = '__black';
+				}
+				break;
+		}
+	}
+
+	for (const material of Object.values(newForm.materials)) {
+		switch (material.type) {
+			case 'dielectric':
+			case 'lambertian':
+			case 'specular':
+				if (
+					!Object.keys(newForm.textures).includes(material.reflectance_texture)
+				) {
+					material.reflectance_texture = '__white';
+				}
+				if (
+					!Object.keys(newForm.textures).includes(material.emittance_texture)
+				) {
+					material.emittance_texture = '__black';
+				}
+				break;
+		}
+	}
+
+	for (const geometric of Object.values(newForm.geometrics)) {
+		switch (geometric.type) {
+			case 'box':
+			case 'obj_model':
+			case 'parallelogram':
+			case 'sphere':
+			case 'triangle':
+				if (!Object.keys(newForm.materials).includes(geometric.material)) {
+					geometric.material = '__lambertian_white';
+				}
+				break;
+			case 'constant_volume':
+				if (
+					!Object.keys(newForm.textures).includes(geometric.reflectance_texture)
+				) {
+					geometric.reflectance_texture = '__white';
+				}
+				break;
+		}
+	}
+
+	return newForm;
 }
 
 export function syncronizeRenderConfig(

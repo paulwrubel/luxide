@@ -131,6 +131,59 @@ export function getReferencedMaterialNames(
 	return [...new Set(materials)];
 }
 
+export function getCenterPoint(
+	config: NormalizedRenderConfig,
+	data: GeometricData
+): [number, number, number] {
+	switch (data.type) {
+		case 'box':
+			return [
+				(data.a[0] + data.b[0]) / 2,
+				(data.a[1] + data.b[1]) / 2,
+				(data.a[2] + data.b[2]) / 2
+			];
+		case 'list': {
+			const points = data.geometrics.map((geometricName) => {
+				const { data: subData } = getGeometricDataSafe(config, geometricName);
+				return getCenterPoint(config, subData);
+			});
+
+			return points.reduce(
+				(acc, point) => [
+					(acc[0] + point[0]) / 2,
+					(acc[1] + point[1]) / 2,
+					(acc[2] + point[2]) / 2
+				],
+				[0, 0, 0]
+			);
+		}
+		case 'obj_model':
+			return data.origin ?? [0, 0, 0];
+		case 'rotate_x':
+		case 'rotate_y':
+		case 'rotate_z':
+		case 'translate':
+		case 'constant_volume': {
+			const { data: subData } = getGeometricDataSafe(config, data.geometric);
+			return getCenterPoint(config, subData);
+		}
+		case 'parallelogram':
+			return [
+				data.lower_left[0] + (data.u[0] + data.v[0]) / 2,
+				data.lower_left[1] + (data.u[1] + data.v[1]) / 2,
+				data.lower_left[2] + (data.u[2] + data.v[2]) / 2
+			];
+		case 'sphere':
+			return data.center;
+		case 'triangle':
+			return [
+				(data.a[0] + data.b[0] + data.c[0]) / 3,
+				(data.a[1] + data.b[1] + data.c[1]) / 3,
+				(data.a[2] + data.b[2] + data.c[2]) / 3
+			];
+	}
+}
+
 export type GeometricDataResult = {
 	data: GeometricData;
 	source: 'reference' | 'inline' | 'default';
@@ -149,7 +202,7 @@ export function getGeometricDataSafe(
 			e
 		);
 		return {
-			data: defaultGeometricForType('sphere'),
+			data: defaultGeometricForType('box'),
 			source: 'default'
 		};
 	}
@@ -178,58 +231,71 @@ export function getGeometricData(
 	};
 }
 
+// function overloads for compile-time type checking
+export function defaultGeometricForType(
+	type: 'obj_model',
+	options: { filename: string }
+): GeometricObjModel;
+export function defaultGeometricForType(
+	type: Exclude<GeometricData['type'], 'obj_model'>
+): GeometricData;
+
 // implementation
 export function defaultGeometricForType(
-	type: GeometricData['type']
+	type: GeometricData['type'],
+	options?: { filename: string }
 ): GeometricData {
 	switch (type) {
 		case 'box':
 			return {
 				type: 'box',
-				a: [0, 0, 0],
-				b: [0, 0, 0],
-				material: ''
+				a: [-0.5, 0, 0.5],
+				b: [0.5, 1.0, -0.5],
+				material: '__lambertian_white'
 			};
 		case 'list':
 			return {
 				type: 'list',
-				geometrics: []
+				geometrics: ['__unit_box']
 			};
 		case 'obj_model':
+			if (!options || options.filename.length === 0) {
+				throw new Error('filename option required for obj_model');
+			}
 			return {
 				type: 'obj_model',
-				filename: '',
+				filename: options.filename,
 				origin: [0, 0, 0],
 				scale: 1,
 				recalculate_normals: false,
 				use_bvh: true,
-				material: ''
+				material: '__lambertian_white'
 			};
 		case 'rotate_x':
 			return {
 				type: 'rotate_x',
-				geometric: '',
+				geometric: '__unit_box',
 				degrees: 0,
 				around: [0, 0, 0]
 			};
 		case 'rotate_y':
 			return {
 				type: 'rotate_y',
-				geometric: '',
+				geometric: '__unit_box',
 				degrees: 0,
 				around: [0, 0, 0]
 			};
 		case 'rotate_z':
 			return {
 				type: 'rotate_z',
-				geometric: '',
+				geometric: '__unit_box',
 				degrees: 0,
 				around: [0, 0, 0]
 			};
 		case 'translate':
 			return {
 				type: 'translate',
-				geometric: '',
+				geometric: '__unit_box',
 				translation: [0, 0, 0]
 			};
 		case 'parallelogram':
@@ -238,14 +304,14 @@ export function defaultGeometricForType(
 				lower_left: [0, 0, 0],
 				u: [0, 0, 0],
 				v: [0, 0, 0],
-				material: ''
+				material: '__lambertian_white'
 			};
 		case 'sphere':
 			return {
 				type: 'sphere',
 				center: [0, 0, 0],
 				radius: 1,
-				material: ''
+				material: '__lambertian_white'
 			};
 		case 'triangle':
 			return {
@@ -253,14 +319,14 @@ export function defaultGeometricForType(
 				a: [0, 0, 0],
 				b: [0, 0, 0],
 				c: [0, 0, 0],
-				material: ''
+				material: '__lambertian_white'
 			};
 		case 'constant_volume':
 			return {
 				type: 'constant_volume',
 				density: 1,
-				geometric: '',
-				reflectance_texture: ''
+				geometric: '__unit_box',
+				reflectance_texture: '__white'
 			};
 	}
 }

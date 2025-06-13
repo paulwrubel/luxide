@@ -4,10 +4,6 @@
 		defaultMaterialForType,
 		type MaterialData
 	} from '$lib/utils/render/material';
-	import {
-		defaultTextureForType,
-		type TextureData
-	} from '$lib/utils/render/texture';
 	import { capitalize, getNextUniqueName } from '$lib/utils/render/utils';
 	import {
 		Listgroup,
@@ -17,11 +13,7 @@
 		Tooltip
 	} from 'flowbite-svelte';
 	import { PlusOutline } from 'flowbite-svelte-icons';
-	import {
-		fieldProxy,
-		formFieldProxy,
-		type SuperForm
-	} from 'sveltekit-superforms';
+	import { type SuperForm } from 'sveltekit-superforms';
 	import { z } from 'zod';
 
 	const schema = RenderConfigSchema;
@@ -30,16 +22,18 @@
 	};
 
 	const { superform }: Props = $props();
-
-	const materials = fieldProxy(superform, 'materials');
+	const { form } = $derived(superform);
 
 	function handleNewMaterial(
 		type: Exclude<MaterialData['type'], 'dielectric'>
 	) {
 		const newMaterials = defaultMaterialForType(type);
-		const nextName = getNextUniqueName($materials, `New ${capitalize(type)}`);
+		const nextName = getNextUniqueName(
+			$form.materials,
+			`New ${capitalize(type)}`
+		);
 
-		$materials[nextName] = newMaterials;
+		$form.materials[nextName] = newMaterials;
 	}
 </script>
 

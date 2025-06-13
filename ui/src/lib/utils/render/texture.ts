@@ -82,31 +82,33 @@ export function getTextureData(
 
 // function overloads for compile-time type checking
 export function defaultTextureForType(
-	type: 'checker',
-	extra: { even_texture: string; odd_texture: string }
-): TextureChecker;
-export function defaultTextureForType(type: 'image' | 'color'): TextureData;
+	type: 'image',
+	options: { filename: string }
+): TextureImage;
+export function defaultTextureForType(
+	type: Exclude<TextureData['type'], 'image'>
+): TextureData;
 
 // implementation
 export function defaultTextureForType(
 	type: TextureData['type'],
-	extra?: { even_texture: string; odd_texture: string }
+	options?: { filename: string }
 ): TextureData {
 	switch (type) {
 		case 'checker':
-			if (!extra) {
-				throw new Error('extra parameter required for checker texture');
-			}
 			return {
 				type: 'checker',
 				scale: 1,
-				even_texture: extra.even_texture,
-				odd_texture: extra.odd_texture
+				even_texture: '__white',
+				odd_texture: '__black'
 			};
 		case 'image':
+			if (!options || options.filename.length === 0) {
+				throw new Error('filename option required for image texture');
+			}
 			return {
 				type: 'image',
-				filename: '',
+				filename: options.filename,
 				gamma: 1
 			};
 		case 'color':

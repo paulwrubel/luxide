@@ -100,7 +100,6 @@ export function getMaterialData(
 	};
 }
 
-// implementation
 export function defaultMaterialForType(
 	type: MaterialData['type']
 ): MaterialData {
@@ -108,21 +107,21 @@ export function defaultMaterialForType(
 		case 'dielectric':
 			return {
 				type: 'dielectric',
-				reflectance_texture: '',
-				emittance_texture: '',
+				reflectance_texture: '__white',
+				emittance_texture: '__black',
 				index_of_refraction: 1
 			};
 		case 'lambertian':
 			return {
 				type: 'lambertian',
-				reflectance_texture: '',
-				emittance_texture: ''
+				reflectance_texture: '__white',
+				emittance_texture: '__black'
 			};
 		case 'specular':
 			return {
 				type: 'specular',
-				reflectance_texture: '',
-				emittance_texture: '',
+				reflectance_texture: '__white',
+				emittance_texture: '__black',
 				roughness: 1
 			};
 	}

@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { Heading } from 'flowbite-svelte';
 	import Separator from '$lib/Separator.svelte';
-	import { type RenderConfig } from '$lib/utils/render/config';
 	import { getContext } from 'svelte';
 	import { getTextureData } from '$lib/utils/render/texture';
+	import type { RenderConfigContext } from './utils';
 
 	type Props = {
 		textureName: string;
@@ -11,10 +11,12 @@
 
 	const { textureName }: Props = $props();
 
-	const renderConfig = getContext<RenderConfig>('renderConfig');
+	const renderConfigContext = getContext<RenderConfigContext>('renderConfig');
 
-	const { data } = getTextureData(renderConfig, textureName);
-	const { type: textureType } = data;
+	const { data } = $derived(
+		getTextureData(renderConfigContext.get(), textureName)
+	);
+	const { type: textureType } = $derived(data);
 </script>
 
 <div class="flex justify-between">

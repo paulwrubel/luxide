@@ -12,21 +12,24 @@
 	import { zod } from 'sveltekit-superforms/adapters';
 	import { superForm } from 'sveltekit-superforms';
 	import type { PageProps } from './$types';
-	import { RenderConfigSchema } from '$lib/utils/render/config';
 	import {
-		syncronizeRenderConfig,
-		updateFieldIfValid,
-		updateFields
-	} from './utils';
-	import type { GeometricBox } from '$lib/utils/render/geometric';
+		RenderConfigSchema,
+		type RenderConfig
+	} from '$lib/utils/render/config';
+	import { updateFieldIfValid, type RenderConfigContext } from './utils';
 
 	const { data }: PageProps = $props();
 
 	const user = auth.validUser;
 
 	// store state
-	const renderConfig = $state(getDefaultRenderConfig());
-	setContext('renderConfig', renderConfig);
+	let renderConfig = $state(getDefaultRenderConfig());
+	setContext<RenderConfigContext>('renderConfig', {
+		get: () => renderConfig,
+		set: (newConfig: RenderConfig) => {
+			renderConfig = newConfig;
+		}
+	});
 
 	const schema = RenderConfigSchema.refine(
 		({ parameters }) => {
@@ -63,10 +66,11 @@
 		validators: zod(schema),
 		resetForm: false,
 		onChange: async (event) => {
+			const updatedRenderConfig = { ...renderConfig };
 			for (const path of event.paths) {
 				const { deleted } = await updateFieldIfValid(
 					superform,
-					renderConfig,
+					updatedRenderConfig,
 					path,
 					event.get(path)
 				);
@@ -76,6 +80,7 @@
 					return;
 				}
 			}
+			renderConfig = updatedRenderConfig;
 		}
 	});
 	const { enhance } = superform;

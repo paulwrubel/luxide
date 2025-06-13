@@ -13,11 +13,7 @@
 		Tooltip
 	} from 'flowbite-svelte';
 	import { PlusOutline } from 'flowbite-svelte-icons';
-	import {
-		fieldProxy,
-		formFieldProxy,
-		type SuperForm
-	} from 'sveltekit-superforms';
+	import { type SuperForm } from 'sveltekit-superforms';
 	import { z } from 'zod';
 
 	const schema = RenderConfigSchema;
@@ -26,16 +22,18 @@
 	};
 
 	const { superform }: Props = $props();
-
-	const textures = fieldProxy(superform, 'textures');
+	const { form } = $derived(superform);
 
 	function handleNewTexture(
 		type: Exclude<TextureData['type'], 'checker' | 'image'>
 	) {
 		const newTexture = defaultTextureForType(type);
-		const nextName = getNextUniqueName($textures, `New ${capitalize(type)}`);
+		const nextName = getNextUniqueName(
+			$form.textures,
+			`New ${capitalize(type)}`
+		);
 
-		$textures[nextName] = newTexture;
+		$form.textures[nextName] = newTexture;
 	}
 </script>
 

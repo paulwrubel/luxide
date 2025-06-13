@@ -27,15 +27,3 @@ export const RenderParametersSchema = z
 	});
 
 export type RenderParameters = z.infer<typeof RenderParametersSchema>;
-
-// render parameters
-// export type RenderParameters = {
-// 	image_dimensions: [number, number];
-// 	tile_dimensions: [number, number];
-// 	gamma_correction: number;
-// 	samples_per_checkpoint: number;
-// 	total_checkpoints: number;
-// 	saved_checkpoint_limit?: number;
-// 	max_bounces: number;
-// 	use_scaling_truncation: boolean;
-// };

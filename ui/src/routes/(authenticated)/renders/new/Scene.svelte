@@ -1,13 +1,15 @@
 <script lang="ts">
-	import { type RenderConfig } from '$lib/utils/render/config';
 	import { T } from '@threlte/core';
 	import { getContext } from 'svelte';
 	import * as THREE from 'three';
-	import { createParallelogramMesh, createTriangleMesh } from './utils';
+	import {
+		createParallelogramMesh,
+		createTriangleMesh,
+		type RenderConfigContext
+	} from './utils';
 	import { getCameraData } from '$lib/utils/render/camera';
 	import {
-		type GeometricData,
-		getGeometricData,
+		getGeometricDataSafe,
 		isComposite
 	} from '$lib/utils/render/geometric';
 	import {
@@ -17,11 +19,19 @@
 	import { getSceneData } from '$lib/utils/render/scene';
 	import { getTextureDataSafe } from '$lib/utils/render/texture';
 	import { toRadians } from '$lib/utils/render/utils';
+	import { getCenterPoint } from '$lib/utils/render/geometric';
 
-	const config = getContext<RenderConfig>('renderConfig');
+	const renderConfigContext = getContext<RenderConfigContext>('renderConfig');
 
-	const activeScene = $derived(getSceneData(config, config.active_scene));
-	const { data: camera } = $derived(getCameraData(config, activeScene.camera));
+	const activeScene = $derived(
+		getSceneData(
+			renderConfigContext.get(),
+			renderConfigContext.get().active_scene
+		)
+	);
+	const { data: camera } = $derived(
+		getCameraData(renderConfigContext.get(), activeScene.camera)
+	);
 
 	const threeCam = $derived.by<THREE.PerspectiveCamera>(() => {
 		const cam = new THREE.PerspectiveCamera();
@@ -37,34 +47,35 @@
 		const [targetX, targetY, targetZ] = camera.target_location;
 		cam.lookAt(targetX, targetY, targetZ);
 
-		// cam.focus = camera.focus_distance;
-
 		return cam;
 	});
 
 	function getGeometricMeshesAndLights(
-		data: string | GeometricData
+		geometricName: string
 	): (THREE.Mesh | THREE.Light)[] {
-		const { data: geometricData } = getGeometricData(config, data);
+		const { data } = getGeometricDataSafe(
+			renderConfigContext.get(),
+			geometricName
+		);
 
 		const meshes: (THREE.Mesh | THREE.Light)[] = [];
 
-		switch (geometricData.type) {
+		switch (data.type) {
 			case 'box': {
 				const mesh = new THREE.Mesh();
 
-				const width = Math.abs(geometricData.a[0] - geometricData.b[0]);
-				const height = Math.abs(geometricData.a[1] - geometricData.b[1]);
-				const depth = Math.abs(geometricData.a[2] - geometricData.b[2]);
+				const width = Math.abs(data.a[0] - data.b[0]);
+				const height = Math.abs(data.a[1] - data.b[1]);
+				const depth = Math.abs(data.a[2] - data.b[2]);
 
 				const position = [
-					(geometricData.a[0] + geometricData.b[0]) / 2,
-					(geometricData.a[1] + geometricData.b[1]) / 2,
-					(geometricData.a[2] + geometricData.b[2]) / 2
+					(data.a[0] + data.b[0]) / 2,
+					(data.a[1] + data.b[1]) / 2,
+					(data.a[2] + data.b[2]) / 2
 				];
 
 				mesh.geometry = new THREE.BoxGeometry(width, height, depth);
-				const materials = getMaterials(geometricData.material);
+				const materials = getMaterials(data.material);
 				if (materials.length === 1) {
 					mesh.material = materials[0];
 				} else if (materials.length > 1) {
@@ -78,13 +89,9 @@
 			}
 			case 'list': {
 				meshes.push(
-					...geometricData.geometrics
-						.map((elementData) =>
-							getGeometricMeshesAndLights(
-								getGeometricData(config, elementData).data
-							)
-						)
-						.flat()
+					...data.geometrics.flatMap((subName) =>
+						getGeometricMeshesAndLights(subName)
+					)
 				);
 				break;
 			}
@@ -93,43 +100,43 @@
 				break;
 			}
 			case 'rotate_x': {
-				const subMeshes = getGeometricMeshesAndLights(geometricData.geometric);
+				const subMeshes = getGeometricMeshesAndLights(data.geometric);
 
 				subMeshes.forEach((subMesh) => {
-					subMesh.rotation.x += toRadians(geometricData);
+					subMesh.rotation.x += toRadians(data);
 				});
 
 				meshes.push(...subMeshes);
 				break;
 			}
 			case 'rotate_y': {
-				const subMeshes = getGeometricMeshesAndLights(geometricData.geometric);
+				const subMeshes = getGeometricMeshesAndLights(data.geometric);
 
 				subMeshes.forEach((subMesh) => {
-					subMesh.rotation.y += toRadians(geometricData);
+					subMesh.rotation.y += toRadians(data);
 				});
 
 				meshes.push(...subMeshes);
 				break;
 			}
 			case 'rotate_z': {
-				const subMeshes = getGeometricMeshesAndLights(geometricData.geometric);
+				const subMeshes = getGeometricMeshesAndLights(data.geometric);
 
 				subMeshes.forEach((subMesh) => {
-					subMesh.rotation.z += toRadians(geometricData);
+					subMesh.rotation.z += toRadians(data);
 				});
 
 				meshes.push(...subMeshes);
 				break;
 			}
 			case 'translate': {
-				const subMeshes = getGeometricMeshesAndLights(geometricData.geometric);
+				const subMeshes = getGeometricMeshesAndLights(data.geometric);
 
 				subMeshes.forEach((subMesh) => {
 					subMesh.position.set(
-						subMesh.position.x + geometricData.translation[0],
-						subMesh.position.y + geometricData.translation[1],
-						subMesh.position.z + geometricData.translation[2]
+						subMesh.position.x + data.translation[0],
+						subMesh.position.y + data.translation[1],
+						subMesh.position.z + data.translation[2]
 					);
 				});
 
@@ -137,9 +144,9 @@
 				break;
 			}
 			case 'parallelogram': {
-				const mesh = createParallelogramMesh(geometricData);
+				const mesh = createParallelogramMesh(data);
 
-				const materials = getMaterials(geometricData.material);
+				const materials = getMaterials(data.material);
 				if (materials.length === 1) {
 					mesh.material = materials[0];
 				} else if (materials.length > 1) {
@@ -152,8 +159,8 @@
 			case 'sphere': {
 				const mesh = new THREE.Mesh();
 
-				mesh.geometry = new THREE.SphereGeometry(geometricData.radius);
-				const materials = getMaterials(geometricData.material);
+				mesh.geometry = new THREE.SphereGeometry(data.radius);
+				const materials = getMaterials(data.material);
 				if (materials.length === 1) {
 					mesh.material = materials[0];
 				} else if (materials.length > 1) {
@@ -164,9 +171,9 @@
 				break;
 			}
 			case 'triangle': {
-				const mesh = createTriangleMesh(geometricData);
+				const mesh = createTriangleMesh(data);
 
-				const materials = getMaterials(geometricData.material);
+				const materials = getMaterials(data.material);
 				if (materials.length === 1) {
 					mesh.material = materials[0];
 				} else if (materials.length > 1) {
@@ -182,7 +189,10 @@
 			}
 		}
 
-		meshes.push(...getLightSources(data));
+		const lightSources = getLightSources(geometricName);
+		if (lightSources.length > 0) {
+			meshes.push(...lightSources);
+		}
 
 		meshes.forEach((mesh) => {
 			mesh.castShadow = true;
@@ -192,8 +202,11 @@
 		return meshes;
 	}
 
-	function getLightSources(geometric: string | GeometricData): THREE.Light[] {
-		const { data: geometricData } = getGeometricData(config, geometric);
+	function getLightSources(geometricName: string): THREE.Light[] {
+		const { data: geometricData } = getGeometricDataSafe(
+			renderConfigContext.get(),
+			geometricName
+		);
 
 		const lightSources: THREE.Light[] = [];
 		if (
@@ -201,23 +214,28 @@
 			geometricData.type !== 'constant_volume'
 		) {
 			const { data: materialData } = getMaterialDataSafe(
-				config,
+				renderConfigContext.get(),
 				geometricData.material
 			);
 			const { data: emittanceTextureData } = getTextureDataSafe(
-				config,
+				renderConfigContext.get(),
 				materialData.emittance_texture
 			);
 			const emissiveColor =
-				emittanceTextureData.type === 'color'
+				emittanceTextureData.type === 'color' &&
+				emittanceTextureData.color.reduce((a, b) => a + b, 0) > 0
 					? emittanceTextureData.color
 					: undefined;
 
 			if (emissiveColor !== undefined) {
 				const pointLight = new THREE.PointLight();
 
-				pointLight.position.set(0.5, 0.99, -0.5);
-				pointLight.intensity = 0.1;
+				const [centerX, centerY, centerZ] = getCenterPoint(
+					renderConfigContext.get(),
+					geometricData
+				);
+				pointLight.position.set(centerX, centerY, centerZ);
+				pointLight.intensity = emissiveColor.reduce((a, b) => a + b, 0) / 3;
 				pointLight.color = new THREE.Color(...emissiveColor);
 
 				lightSources.push(pointLight);
@@ -233,20 +251,27 @@
 	}
 
 	function getMaterials(data: string | MaterialData): THREE.Material[] {
-		const { data: materialData } = getMaterialDataSafe(config, data);
+		const { data: materialData } = getMaterialDataSafe(
+			renderConfigContext.get(),
+			data
+		);
 
 		const { data: reflectanceTextureData } = getTextureDataSafe(
-			config,
+			renderConfigContext.get(),
 			materialData.reflectance_texture
 		);
 		const { data: emittanceTextureData } = getTextureDataSafe(
-			config,
+			renderConfigContext.get(),
 			materialData.emittance_texture
 		);
 		const emissiveColor =
-			emittanceTextureData.type === 'color'
+			emittanceTextureData.type === 'color' &&
+			emittanceTextureData.color.reduce((a, b) => a + b, 0) > 0
 				? emittanceTextureData.color
 				: undefined;
+		const emissive = emissiveColor
+			? new THREE.Color(...emissiveColor)
+			: undefined;
 
 		const materials: THREE.Material[] = [];
 
@@ -271,11 +296,13 @@
 					}
 					case 'color': {
 						const material = new THREE.MeshLambertMaterial({
-							color: new THREE.Color(...reflectanceTextureData.color),
-							emissive: emissiveColor
-								? new THREE.Color(...emissiveColor)
-								: undefined
+							color: new THREE.Color(...reflectanceTextureData.color)
 						});
+
+						if (emissive) {
+							material.emissive = emissive;
+							material.shadowSide = THREE.FrontSide;
+						}
 
 						materials.push(material);
 						break;
@@ -322,8 +349,8 @@
 <T is={threeCam} makeDefault />
 <T.AmbientLight intensity={0.05} />
 
-{#each activeScene.geometrics as geometric}
-	{#each getGeometricMeshesAndLights(geometric) as meshOrLight}
+{#each activeScene.geometrics as geometric (geometric)}
+	{#each getGeometricMeshesAndLights(geometric) as meshOrLight (meshOrLight)}
 		<T is={meshOrLight} />
 	{/each}
 {/each}

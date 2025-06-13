@@ -6,12 +6,12 @@
 	import TextInputControl from '$lib/TextInputControl.svelte';
 	import TextArrayInputControl from '$lib/TextArrayInputControl.svelte';
 	import ToggleControl from '$lib/ToggleControl.svelte';
-	import { type RenderConfig } from '$lib/utils/render/config';
 	import { Tooltip } from 'flowbite-svelte';
 	import { getContext } from 'svelte';
 	import { type SuperForm } from 'sveltekit-superforms';
 	import { RenderConfigSchema } from '$lib/utils/render/config';
 	import { z } from 'zod';
+	import type { RenderConfigContext } from './utils';
 
 	const schema = RenderConfigSchema;
 	type Props = {
@@ -23,8 +23,8 @@
 
 	let user = auth.validUser;
 
-	const renderConfig = getContext<RenderConfig>('renderConfig');
-	const parameters = $derived(renderConfig.parameters);
+	const renderConfigContext = getContext<RenderConfigContext>('renderConfig');
+	const parameters = $derived(renderConfigContext.get().parameters);
 	const savedCheckpointLimit = $derived(parameters.saved_checkpoint_limit ?? 1);
 
 	// svelte-ignore state_referenced_locally
