@@ -66,7 +66,15 @@
 		validators: zod(schema),
 		resetForm: false,
 		onChange: async (event) => {
-			const updatedRenderConfig = { ...renderConfig };
+			// this type assertion is necessary because there's a small
+			// amount of type information lost when using structuredClone
+			// such as the distinction between number tuples and number arrays
+			//
+			// it pretty much should probably work fine I think, I'm 60% sure
+			const updatedRenderConfig = structuredClone(
+				$state.snapshot(renderConfig)
+			) as RenderConfig;
+
 			for (const path of event.paths) {
 				const { deleted } = await updateFieldIfValid(
 					superform,
@@ -75,9 +83,10 @@
 					event.get(path)
 				);
 
-				// if something was deleted, then don't bother updating the form
+				// if something was deleted, then don't
+				// bother updating the rest of the form
 				if (deleted) {
-					return;
+					break;
 				}
 			}
 			renderConfig = updatedRenderConfig;

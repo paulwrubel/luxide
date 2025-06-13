@@ -84,14 +84,16 @@
 {/snippet}
 
 {#snippet deleteGeometricButton(name: string)}
-	<Button
-		color="red"
-		pill={true}
-		onclick={() => handleDeleteGeometric(name)}
-		class="p-2"
-	>
-		<TrashBinOutline class="h-6 w-6" />
-	</Button>
+	<div class="flex w-full justify-end">
+		<Button
+			color="red"
+			pill={true}
+			onclick={() => handleDeleteGeometric(name)}
+			class="p-2"
+		>
+			<TrashBinOutline class="h-6 w-6" />
+		</Button>
+	</div>
 {/snippet}
 
 {#snippet controlsMaterialSelect(name: string)}
@@ -231,7 +233,7 @@
 	{#if isExpanded}
 		<div transition:slide={{ duration: 300 }}>
 			<Separator />
-			<div class="flex flex-col items-start gap-2 p-4">
+			<div class="flex w-full flex-col gap-2 p-4">
 				<!-- controls -->
 				{@render controlsGeometric(geometricName, false)}
 			</div>

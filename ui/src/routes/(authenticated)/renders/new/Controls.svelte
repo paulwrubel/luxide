@@ -63,7 +63,7 @@
 				{#each activeGeometricNames as geometricName (geometricName)}
 					<GeometricControlsCard {superform} {geometricName} />
 				{/each}
-				<div class="flex flex-col-reverse items-end">
+				<div class="flex w-full justify-end">
 					<NewGeometricSpeedDial {superform} />
 				</div>
 			</div>
@@ -73,7 +73,7 @@
 				{#each topLevelMaterialNames as materialName (materialName)}
 					<MaterialControlsCard {superform} {materialName} />
 				{/each}
-				<div class="flex flex-col-reverse items-end">
+				<div class="flex w-full justify-end">
 					<NewMaterialSpeedDial {superform} />
 				</div>
 			</div>
@@ -83,7 +83,7 @@
 				{#each topLevelTextureNames as textureName (textureName)}
 					<TextureControlsCard {superform} {textureName} />
 				{/each}
-				<div class="flex flex-col-reverse items-end">
+				<div class="flex w-full justify-end">
 					<NewTextureSpeedDial {superform} />
 				</div>
 			</div>
