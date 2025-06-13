@@ -201,7 +201,7 @@
 	{#if isExpanded}
 		<div transition:slide={{ duration: 300 }}>
 			<Separator />
-			<div class="flex flex-col gap-2 p-4">
+			<div class="flex flex-col items-start gap-2 p-4">
 				<!-- controls -->
 				{@render controlsGeometric(geometricName)}
 			</div>

@@ -56,9 +56,27 @@ export function getReferencedTextureNames(
 
 export type MaterialDataResult = {
 	data: MaterialData;
-	source: 'reference' | 'inline';
+	source: 'reference' | 'inline' | 'default';
 	name?: string;
 };
+
+export function getMaterialDataSafe(
+	config: RenderConfig,
+	nameOrData: string | MaterialData
+): MaterialDataResult {
+	try {
+		return getMaterialData(config, nameOrData);
+	} catch (e) {
+		console.warn(
+			`Failed to get material data (${nameOrData}), using default material`,
+			e
+		);
+		return {
+			data: defaultMaterialForType('lambertian'),
+			source: 'default'
+		};
+	}
+}
 
 export function getMaterialData(
 	config: RenderConfig,
@@ -81,13 +99,6 @@ export function getMaterialData(
 		name: nameOrData
 	};
 }
-
-// function overloads for compile-time type checking
-// export function defaultMaterialForType(
-// 	type: 'checker',
-// 	extra: { even_texture: string; odd_texture: string }
-// ): TextureChecker;
-// export function defaultTextureForType(type: 'image' | 'color'): TextureData;
 
 // implementation
 export function defaultMaterialForType(

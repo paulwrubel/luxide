@@ -72,12 +72,12 @@
 		contentClass="!bg-zinc-900 border-t-[1px] border-zinc-600 rounded-none mt-0"
 	>
 		<TabItem open title="Parameters">
-			<div class="flex flex-col items-center gap-4">
+			<div class="flex flex-col items-stretch gap-4">
 				<ParametersControlsCard {superform} />
 			</div>
 		</TabItem>
 		<TabItem title="Camera">
-			<div class="flex flex-col items-center gap-4">
+			<div class="flex flex-col items-stretch gap-4">
 				<CameraControlsCard {superform} camera={activeScene.camera} />
 			</div>
 		</TabItem>

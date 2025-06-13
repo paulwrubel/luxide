@@ -5,8 +5,12 @@
 		RenderConfigSchema,
 		type RenderConfig
 	} from '$lib/utils/render/config';
-	import { Card, Heading } from 'flowbite-svelte';
-	import { ChevronDownOutline, ChevronUpOutline } from 'flowbite-svelte-icons';
+	import { Button, Card, Heading } from 'flowbite-svelte';
+	import {
+		ChevronDownOutline,
+		ChevronUpOutline,
+		TrashBinOutline
+	} from 'flowbite-svelte-icons';
 	import { slide } from 'svelte/transition';
 	import { getContext } from 'svelte';
 	import type { FormPathLeaves, SuperForm } from 'sveltekit-superforms';
@@ -22,12 +26,19 @@
 	};
 
 	const { superform, materialName }: Props = $props();
+	const { form } = $derived(superform);
 
 	const renderConfig = getContext<RenderConfig>('renderConfig');
 
 	const { data: materialData } = $derived(
 		getMaterialData(renderConfig, materialName)
 	);
+
+	function handleDeleteMaterial(name: string) {
+		const newMaterials = { ...$form.materials };
+		delete newMaterials[name];
+		$form.materials = newMaterials;
+	}
 
 	let isExpanded = $state(false);
 	function handleToggleExpandCard() {
@@ -45,6 +56,18 @@
 	{:else if data.type === 'specular'}
 		{@render controlsMaterialSpecular(name)}
 	{/if}
+	{@render deleteMaterialButton(name)}
+{/snippet}
+
+{#snippet deleteMaterialButton(name: string)}
+	<Button
+		color="red"
+		pill={true}
+		onclick={() => handleDeleteMaterial(name)}
+		class="p-2"
+	>
+		<TrashBinOutline class="h-6 w-6" />
+	</Button>
 {/snippet}
 
 {#snippet controlsTextureSelects(name: string)}
@@ -132,7 +155,7 @@
 	{#if isExpanded}
 		<div transition:slide={{ duration: 300 }}>
 			<Separator />
-			<div class="flex flex-col gap-2 p-4">
+			<div class="flex flex-col items-start gap-2 p-4">
 				<!-- controls -->
 				{@render controlsMaterial(materialName)}
 			</div>

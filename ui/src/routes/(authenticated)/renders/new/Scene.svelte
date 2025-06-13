@@ -11,7 +11,7 @@
 		isComposite
 	} from '$lib/utils/render/geometric';
 	import {
-		getMaterialData,
+		getMaterialDataSafe,
 		type MaterialData
 	} from '$lib/utils/render/material';
 	import { getSceneData } from '$lib/utils/render/scene';
@@ -200,7 +200,7 @@
 			!isComposite(geometricData) &&
 			geometricData.type !== 'constant_volume'
 		) {
-			const { data: materialData } = getMaterialData(
+			const { data: materialData } = getMaterialDataSafe(
 				config,
 				geometricData.material
 			);
@@ -233,7 +233,7 @@
 	}
 
 	function getMaterials(data: string | MaterialData): THREE.Material[] {
-		const { data: materialData } = getMaterialData(config, data);
+		const { data: materialData } = getMaterialDataSafe(config, data);
 
 		const { data: reflectanceTextureData } = getTextureDataSafe(
 			config,
