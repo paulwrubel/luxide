@@ -82,6 +82,41 @@ export function getMaterialData(
 	};
 }
 
+// function overloads for compile-time type checking
+// export function defaultMaterialForType(
+// 	type: 'checker',
+// 	extra: { even_texture: string; odd_texture: string }
+// ): TextureChecker;
+// export function defaultTextureForType(type: 'image' | 'color'): TextureData;
+
+// implementation
+export function defaultMaterialForType(
+	type: MaterialData['type']
+): MaterialData {
+	switch (type) {
+		case 'dielectric':
+			return {
+				type: 'dielectric',
+				reflectance_texture: '',
+				emittance_texture: '',
+				index_of_refraction: 1
+			};
+		case 'lambertian':
+			return {
+				type: 'lambertian',
+				reflectance_texture: '',
+				emittance_texture: ''
+			};
+		case 'specular':
+			return {
+				type: 'specular',
+				reflectance_texture: '',
+				emittance_texture: '',
+				roughness: 1
+			};
+	}
+}
+
 export const MaterialDielectricSchema = z.object({
 	type: z.literal('dielectric'),
 	reflectance_texture: z.string().nonempty(),
