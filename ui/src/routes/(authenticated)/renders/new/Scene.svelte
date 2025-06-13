@@ -296,11 +296,13 @@
 					}
 					case 'color': {
 						const material = new THREE.MeshLambertMaterial({
-							color: new THREE.Color(...reflectanceTextureData.color),
-							emissive,
-
-							shadowSide: emissive ? THREE.FrontSide : undefined
+							color: new THREE.Color(...reflectanceTextureData.color)
 						});
+
+						if (emissive) {
+							material.emissive = emissive;
+							material.shadowSide = THREE.FrontSide;
+						}
 
 						materials.push(material);
 						break;
