@@ -27,6 +27,10 @@
 		$props();
 
 	let { value } = $derived(formFieldProxy(superform, field));
+
+	const valueLabel = items.map((item) => item.value).includes($value as string)
+		? $value
+		: '__MISSING__';
 </script>
 
 <Label class="mb-2 flex flex-col gap-1.5">
@@ -40,7 +44,7 @@
 				{@render labelSuffix()}
 			{/if}
 		</span>
-		<span>{$value}</span>
+		<span>{valueLabel}</span>
 	</span>
 	<Select bind:value={$value} {items} placeholder="" />
 </Label>

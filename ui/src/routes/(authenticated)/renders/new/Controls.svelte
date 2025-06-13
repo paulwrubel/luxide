@@ -61,6 +61,8 @@
 		)
 	]);
 	const topLevelTextureNames = $derived(getTopLevelTextureNames(renderConfig));
+	$inspect(topLevelTextureNames);
+	$inspect(renderConfig.textures);
 	const allTextureNames = $derived(Object.keys(renderConfig.textures ?? {}));
 </script>
 

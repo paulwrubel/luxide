@@ -62,10 +62,21 @@
 		validationMethod: 'auto',
 		validators: zod(schema),
 		resetForm: false,
-		onChange: (event) => {
-			event.paths.forEach((path) => {
-				updateFieldIfValid(superform, renderConfig, path, event.get(path));
-			});
+		onChange: async (event) => {
+			for (const path of event.paths) {
+				const { deleted } = await updateFieldIfValid(
+					superform,
+					renderConfig,
+					path,
+					event.get(path)
+				);
+
+				// if something was deleted, then don't bother updating the form
+				if (deleted) {
+					console.log('deleted', path, 'exiting early!');
+					return;
+				}
+			}
 		}
 	});
 	const { enhance } = superform;
