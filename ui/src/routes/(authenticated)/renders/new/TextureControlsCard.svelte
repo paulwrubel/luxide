@@ -1,9 +1,6 @@
 <script lang="ts">
 	import Separator from '$lib/Separator.svelte';
-	import {
-		RenderConfigSchema,
-		type RenderConfig
-	} from '$lib/utils/render/config';
+	import { RenderConfigSchema } from '$lib/utils/render/config';
 	import { Button, Card, Heading } from 'flowbite-svelte';
 	import {
 		ChevronDownOutline,
@@ -18,7 +15,6 @@
 		SuperForm
 	} from 'sveltekit-superforms';
 	import { z } from 'zod';
-	import SelectControl from '$lib/SelectControl.svelte';
 	import {
 		getTextureData,
 		type TextureChecker
@@ -27,6 +23,7 @@
 	import TextArrayInputControl from '$lib/TextArrayInputControl.svelte';
 	import InfoIconAdditionalInfo from '$lib/property-icons/InfoIconAdditionalInfo.svelte';
 	import NestedTextureHeader from './NestedTextureHeader.svelte';
+	import { fixReferences, type RenderConfigContext } from './utils';
 
 	const schema = RenderConfigSchema;
 
@@ -38,16 +35,18 @@
 	const { superform, textureName }: Props = $props();
 	const { form } = $derived(superform);
 
-	const renderConfig = getContext<RenderConfig>('renderConfig');
+	const renderConfigContext = getContext<RenderConfigContext>('renderConfig');
 
 	const { data: textureData } = $derived(
-		getTextureData(renderConfig, textureName)
+		getTextureData(renderConfigContext.get(), textureName)
 	);
 
 	function handleDeleteTexture(name: string) {
-		const newTextures = { ...$form.textures };
-		delete newTextures[name];
-		$form.textures = newTextures;
+		let newForm = { ...$form };
+		delete newForm.textures[name];
+
+		newForm = fixReferences(newForm);
+		$form = newForm;
 	}
 
 	let isExpanded = $state(false);
@@ -62,7 +61,7 @@
 {/snippet}
 
 {#snippet controlsTexture(name: string, isSubTexture: boolean)}
-	{@const { data } = getTextureData(renderConfig, name)}
+	{@const { data } = getTextureData(renderConfigContext.get(), name)}
 
 	{#if data.type === 'checker'}
 		{@render controlsTextureChecker(name)}
@@ -88,7 +87,7 @@
 {/snippet}
 
 {#snippet controlsTextureChecker(name: string)}
-	{@const { data } = getTextureData(renderConfig, name)}
+	{@const { data } = getTextureData(renderConfigContext.get(), name)}
 	<TextInputControl
 		{superform}
 		field={`textures.${name}.scale` as FormPathLeaves<

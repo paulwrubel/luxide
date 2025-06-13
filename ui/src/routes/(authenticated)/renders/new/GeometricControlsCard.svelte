@@ -2,18 +2,20 @@
 	import NestedGeometricHeader from './NestedGeometricHeader.svelte';
 	import RangeControl from '$lib/RangeControl.svelte';
 	import Separator from '$lib/Separator.svelte';
+	import { RenderConfigSchema } from '$lib/utils/render/config';
+	import { Button, Card, Heading } from 'flowbite-svelte';
 	import {
-		RenderConfigSchema,
-		type RenderConfig
-	} from '$lib/utils/render/config';
-	import { Card, Heading } from 'flowbite-svelte';
-	import { ChevronDownOutline, ChevronUpOutline } from 'flowbite-svelte-icons';
+		ChevronDownOutline,
+		ChevronUpOutline,
+		TrashBinOutline
+	} from 'flowbite-svelte-icons';
 	import { slide } from 'svelte/transition';
 	import { getContext } from 'svelte';
 	import {
 		getGeometricData,
 		type GeometricList,
-		type GeometricInstanceRotate
+		type GeometricInstanceRotate,
+		getGeometricDataSafe
 	} from '$lib/utils/render/geometric';
 	import type {
 		FormPathArrays,
@@ -23,6 +25,7 @@
 	import { z } from 'zod';
 	import TextArrayInputControl from '$lib/TextArrayInputControl.svelte';
 	import SelectControl from '$lib/SelectControl.svelte';
+	import { fixReferences, type RenderConfigContext } from './utils';
 
 	const schema = RenderConfigSchema;
 
@@ -32,10 +35,21 @@
 	};
 
 	const { superform, geometricName }: Props = $props();
+	const { form } = $derived(superform);
 
-	const renderConfig = getContext<RenderConfig>('renderConfig');
+	const renderConfigContext = getContext<RenderConfigContext>('renderConfig');
 
-	const { data: geometricData } = getGeometricData(renderConfig, geometricName);
+	const { data: geometricData } = $derived(
+		getGeometricDataSafe(renderConfigContext.get(), geometricName)
+	);
+
+	function handleDeleteGeometric(name: string) {
+		let newForm = { ...$form };
+		delete newForm.geometrics[name];
+
+		newForm = fixReferences(newForm);
+		$form = newForm;
+	}
 
 	let isExpanded = $state(false);
 	function handleToggleExpandCard() {
@@ -45,11 +59,11 @@
 
 {#snippet controlsSubGeometric(name: string)}
 	<NestedGeometricHeader geometricName={name} />
-	{@render controlsGeometric(name)}
+	{@render controlsGeometric(name, true)}
 {/snippet}
 
-{#snippet controlsGeometric(name: string)}
-	{@const { data } = getGeometricData(renderConfig, name)}
+{#snippet controlsGeometric(name: string, isSubGeometric: boolean)}
+	{@const { data } = getGeometricData(renderConfigContext.get(), name)}
 
 	{#if data.type === 'box'}
 		{@render controlsGeometricBox(name)}
@@ -64,13 +78,29 @@
 			>Unknown or unimplemented geometric: {data.type}</Heading
 		>
 	{/if}
+	{#if !isSubGeometric}
+		{@render deleteGeometricButton(name)}
+	{/if}
+{/snippet}
+
+{#snippet deleteGeometricButton(name: string)}
+	<Button
+		color="red"
+		pill={true}
+		onclick={() => handleDeleteGeometric(name)}
+		class="p-2"
+	>
+		<TrashBinOutline class="h-6 w-6" />
+	</Button>
 {/snippet}
 
 {#snippet controlsMaterialSelect(name: string)}
-	{@const items = Object.keys(renderConfig.materials ?? {}).map((key) => ({
-		name: key,
-		value: key
-	}))}
+	{@const items = Object.keys(renderConfigContext.get().materials ?? {}).map(
+		(key) => ({
+			name: key,
+			value: key
+		})
+	)}
 	<SelectControl
 		{superform}
 		field={`geometrics.${name}.material` as FormPathLeaves<
@@ -101,7 +131,7 @@
 {/snippet}
 
 {#snippet controlsGeometricList(name: string)}
-	{@const { data } = getGeometricData(renderConfig, name)}
+	{@const { data } = getGeometricData(renderConfigContext.get(), name)}
 	{#each (data as GeometricList).geometrics as subName, index}
 		{#if index > 0}
 			<Separator />
@@ -111,7 +141,7 @@
 {/snippet}
 
 {#snippet controlsGeometricRotate(name: string)}
-	{@const { data } = getGeometricData(renderConfig, name)}
+	{@const { data } = getGeometricData(renderConfigContext.get(), name)}
 	{@const rotateData = data as GeometricInstanceRotate}
 	{#if 'degrees' in rotateData}
 		<RangeControl
@@ -203,7 +233,7 @@
 			<Separator />
 			<div class="flex flex-col items-start gap-2 p-4">
 				<!-- controls -->
-				{@render controlsGeometric(geometricName)}
+				{@render controlsGeometric(geometricName, false)}
 			</div>
 		</div>
 	{/if}

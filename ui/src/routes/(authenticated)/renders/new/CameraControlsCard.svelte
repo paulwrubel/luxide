@@ -2,10 +2,7 @@
 	import ControlsCard from '$lib/ControlsCard.svelte';
 	import WarningIconUnaffectedPreview from '$lib/property-icons/WarningIconUnaffectedPreview.svelte';
 	import RangeControl from '$lib/RangeControl.svelte';
-	import {
-		RenderConfigSchema,
-		type RenderConfig
-	} from '$lib/utils/render/config';
+	import { RenderConfigSchema } from '$lib/utils/render/config';
 	import { getContext } from 'svelte';
 	import { z } from 'zod';
 	import type {
@@ -15,6 +12,7 @@
 	} from 'sveltekit-superforms';
 	import { type CameraData, getCameraData } from '$lib/utils/render/camera';
 	import TextArrayInputControl from '$lib/TextArrayInputControl.svelte';
+	import type { RenderConfigContext } from './utils';
 
 	const schema = RenderConfigSchema;
 
@@ -25,10 +23,10 @@
 
 	const { superform, camera }: Props = $props();
 
-	const renderConfig = getContext<RenderConfig>('renderConfig');
+	const renderConfigContext = getContext<RenderConfigContext>('renderConfig');
 
 	const { data: cameraData, path } = $derived(
-		getCameraData(renderConfig, camera)
+		getCameraData(renderConfigContext.get(), camera)
 	);
 </script>
 

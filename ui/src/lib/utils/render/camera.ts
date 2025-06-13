@@ -3,30 +3,14 @@ import type { RenderConfig, RenderConfigSchema } from './config';
 import { isNonNullObject } from './utils';
 import type { FormPath } from 'sveltekit-superforms';
 
-// export const CAMERA_SCHEMA_DEFAULTS: CameraData = {
-// 	vertical_field_of_view_degrees: 40.0,
-// 	eye_location: [0.0, 0.0, 10.0],
-// 	target_location: [0.0, 0.0, 0.0],
-// 	view_up: [0.0, 0.0, 0.0],
-// 	defocus_angle_degrees: 0.0,
-// 	focus_distance: 'eye_to_target'
-// };
-
 export const CameraDataSchema = z.object({
 	vertical_field_of_view_degrees: z.number().min(0).max(180),
-	// .default(CAMERA_SCHEMA_DEFAULTS.vertical_field_of_view_degrees),
 	eye_location: z.tuple([z.number(), z.number(), z.number()]),
-	// .default(CAMERA_SCHEMA_DEFAULTS.eye_location),
 	target_location: z.tuple([z.number(), z.number(), z.number()]),
-	// .default(CAMERA_SCHEMA_DEFAULTS.target_location),
 	view_up: z.tuple([z.number(), z.number(), z.number()]),
-	// .default(CAMERA_SCHEMA_DEFAULTS.view_up),
 	defocus_angle_degrees: z.number().min(0).max(180),
-	// .default(CAMERA_SCHEMA_DEFAULTS.defocus_angle_degrees),
 	focus_distance: z.union([z.literal('eye_to_target'), z.number().min(0)])
-	// .default(CAMERA_SCHEMA_DEFAULTS.focus_distance)
 });
-// .default(CAMERA_SCHEMA_DEFAULTS);
 
 export type CameraData = NormalizedCameraData;
 

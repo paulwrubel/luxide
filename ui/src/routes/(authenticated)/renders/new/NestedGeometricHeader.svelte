@@ -1,12 +1,9 @@
 <script lang="ts">
 	import { Heading } from 'flowbite-svelte';
 	import Separator from '$lib/Separator.svelte';
-	import { type RenderConfig } from '$lib/utils/render/config';
 	import { getContext } from 'svelte';
-	import {
-		type GeometricData,
-		getGeometricData
-	} from '$lib/utils/render/geometric';
+	import { getGeometricData } from '$lib/utils/render/geometric';
+	import type { RenderConfigContext } from './utils';
 
 	type Props = {
 		geometricName: string;
@@ -14,16 +11,18 @@
 
 	const { geometricName }: Props = $props();
 
-	const renderConfig = getContext<RenderConfig>('renderConfig');
+	const renderConfigContext = getContext<RenderConfigContext>('renderConfig');
 
-	const { data } = getGeometricData(renderConfig, geometricName);
-	const { type: geometricType } = data;
+	const { data } = $derived(
+		getGeometricData(renderConfigContext.get(), geometricName)
+	);
+	const { type: geometricType } = $derived(data);
 </script>
 
 <div class="flex justify-between">
-	<Heading tag="h2" class="text-lg font-bold italic"
-		>Contained Geometric</Heading
-	>
+	<Heading tag="h2" class="text-lg font-bold italic">
+		Contained Geometric
+	</Heading>
 	<div class="flex gap-2">
 		<Heading tag="h3" class="text-lg font-light not-italic">
 			{geometricName}

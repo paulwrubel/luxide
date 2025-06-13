@@ -5,15 +5,14 @@ import { normalizeGeometricData, type RawGeometricData } from './geometric';
 import { capitalize, getNextUniqueName, isNonNullObject } from './utils';
 
 export const SceneDataSchema = z.object({
-	// geometrics: z.array(z.union([z.string(), GeometricDataSchema])),
-	// use_bvh: z.boolean().optional(),
-	camera: z.string().nonempty()
-	// camera: CameraDataSchema
-	// background_color: z.tuple([
-	// 	z.number().min(0).max(1),
-	// 	z.number().min(0).max(1),
-	// 	z.number().min(0).max(1)
-	// ])
+	geometrics: z.array(z.string().nonempty()),
+	use_bvh: z.boolean(),
+	camera: z.string().nonempty(),
+	background_color: z.tuple([
+		z.number().min(0),
+		z.number().min(0),
+		z.number().min(0)
+	])
 });
 
 export type SceneData = NormalizedSceneData;
