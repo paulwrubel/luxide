@@ -120,14 +120,30 @@ export function createParallelogramMesh(
 	return mesh;
 }
 
+export type RenameOptions = {
+	oldName: string;
+	newName: string;
+	resourceType: 'texture' | 'material' | 'geometric';
+};
+
 export function fixReferences(
-	form: z.infer<typeof RenderConfigSchema>
+	form: z.infer<typeof RenderConfigSchema>,
+	renameOptions?: RenameOptions
 ): z.infer<typeof RenderConfigSchema> {
 	const newForm = { ...form };
 
 	for (const texture of Object.values(newForm.textures)) {
 		switch (texture.type) {
 			case 'checker':
+				if (renameOptions?.resourceType === 'texture') {
+					if (renameOptions?.oldName === texture.even_texture) {
+						texture.even_texture = renameOptions.newName;
+					}
+					if (renameOptions?.oldName === texture.odd_texture) {
+						texture.odd_texture = renameOptions.newName;
+					}
+				}
+
 				if (!Object.keys(newForm.textures).includes(texture.even_texture)) {
 					texture.even_texture = '__white';
 				}
@@ -143,6 +159,15 @@ export function fixReferences(
 			case 'dielectric':
 			case 'lambertian':
 			case 'specular':
+				if (renameOptions?.resourceType === 'texture') {
+					if (renameOptions?.oldName === material.reflectance_texture) {
+						material.reflectance_texture = renameOptions.newName;
+					}
+					if (renameOptions?.oldName === material.emittance_texture) {
+						material.emittance_texture = renameOptions.newName;
+					}
+				}
+
 				if (
 					!Object.keys(newForm.textures).includes(material.reflectance_texture)
 				) {
@@ -164,11 +189,23 @@ export function fixReferences(
 			case 'parallelogram':
 			case 'sphere':
 			case 'triangle':
+				if (renameOptions?.resourceType === 'material') {
+					if (renameOptions?.oldName === geometric.material) {
+						geometric.material = renameOptions.newName;
+					}
+				}
+
 				if (!Object.keys(newForm.materials).includes(geometric.material)) {
 					geometric.material = '__lambertian_white';
 				}
 				break;
 			case 'constant_volume':
+				if (renameOptions?.resourceType === 'texture') {
+					if (renameOptions?.oldName === geometric.reflectance_texture) {
+						geometric.reflectance_texture = renameOptions.newName;
+					}
+				}
+
 				if (
 					!Object.keys(newForm.textures).includes(geometric.reflectance_texture)
 				) {
@@ -176,6 +213,20 @@ export function fixReferences(
 				}
 				break;
 		}
+	}
+
+	const activeSceneName = newForm.active_scene;
+	const activeScene = newForm.scenes[activeSceneName];
+	if (
+		renameOptions?.resourceType === 'geometric' &&
+		activeScene.geometrics.includes(renameOptions.oldName)
+	) {
+		activeScene.geometrics = activeScene.geometrics.map((geomName) => {
+			if (geomName === renameOptions.oldName) {
+				return renameOptions.newName;
+			}
+			return geomName;
+		});
 	}
 
 	return newForm;
@@ -236,7 +287,7 @@ export async function updateFields(
 
 export type UpdateFieldIfValidResult = {
 	isValid: boolean;
-	deleted?: boolean;
+	updateResult: UpdateFieldResult;
 };
 
 export async function updateFieldIfValid(
@@ -250,29 +301,35 @@ export async function updateFieldIfValid(
 		path as FormPathLeaves<z.infer<typeof RenderConfigSchema>>
 	);
 
-	let deleted = false;
+	let updateResult: UpdateFieldResult = {};
 	if (isValid) {
-		deleted = updateField(config, path, newValue);
+		updateResult = updateField(config, path, newValue);
 	}
 
 	return {
 		isValid,
-		deleted
+		updateResult
 	};
 }
+
+export type UpdateFieldResult = {
+	deleted?: string;
+};
 
 export function updateField(
 	config: RenderConfig,
 	path: FormPath<z.infer<typeof RenderConfigSchema>>,
 	newValue: unknown
-): boolean {
+): UpdateFieldResult {
 	if (path.endsWith('.type') && newValue === undefined) {
 		const segments = path.split(/\.|\[|\]/).filter(Boolean);
 		const collection = segments[0] as 'geometrics' | 'materials' | 'textures';
 		const name = segments[1];
 
 		delete config[collection]?.[name];
-		return true;
+		return {
+			deleted: name
+		};
 	}
 
 	createSkeletonPath(config, path);
@@ -293,7 +350,7 @@ export function updateField(
 	const lastSegment = segments[segments.length - 1];
 	current[lastSegment] = newValue;
 
-	return false;
+	return {};
 }
 
 function createSkeletonPath(

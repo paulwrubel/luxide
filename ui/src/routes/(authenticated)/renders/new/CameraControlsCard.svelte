@@ -18,15 +18,15 @@
 
 	type Props = {
 		superform: SuperForm<z.infer<typeof schema>>;
-		camera: string;
+		cameraName: string;
 	};
 
-	const { superform, camera }: Props = $props();
+	const { superform, cameraName }: Props = $props();
 
 	const renderConfigContext = getContext<RenderConfigContext>('renderConfig');
 
 	const { data: cameraData, path } = $derived(
-		getCameraData(renderConfigContext.get(), camera)
+		getCameraData(renderConfigContext.get(), cameraName)
 	);
 </script>
 
@@ -81,11 +81,7 @@
 	<!-- <RangeControl label="Focus Distance" bind:value={data.focus_distance} /> -->
 {/snippet}
 
-<ControlsCard
-	startExpanded
-	leftLabel={typeof camera === 'string' ? camera : 'inline'}
-	leftLabelStyle={typeof camera === 'string' ? 'bold' : 'light'}
->
+<ControlsCard startExpanded leftLabel={cameraName} leftLabelStyle="bold">
 	<div class="flex flex-col gap-2 p-4">
 		<!-- controls -->
 		{@render controlsCamera(cameraData)}

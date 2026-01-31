@@ -138,13 +138,9 @@
 		class="flex items-center justify-between p-4 pr-2"
 		onclick={() => handleToggleExpandCard()}
 	>
-		{#if typeof materialName === 'string'}
-			<Heading tag="h2" class="text-xl font-bold">
-				{materialName}
-			</Heading>
-		{:else}
-			<Heading tag="h2" class="text-xl font-light italic">inline</Heading>
-		{/if}
+		<Heading tag="h2" class="text-xl font-bold">
+			{materialName}
+		</Heading>
 		<div class="flex flex-row">
 			<Heading tag="h3" class="text-lg font-light italic">
 				{materialData.type}

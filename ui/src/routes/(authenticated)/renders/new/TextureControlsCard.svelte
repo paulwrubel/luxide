@@ -1,10 +1,12 @@
 <script lang="ts">
 	import Separator from '$lib/Separator.svelte';
 	import { RenderConfigSchema } from '$lib/utils/render/config';
-	import { Button, Card, Heading } from 'flowbite-svelte';
+	import { Button, Card, Heading, Input } from 'flowbite-svelte';
 	import {
+		CheckOutline,
 		ChevronDownOutline,
 		ChevronUpOutline,
+		PenOutline,
 		TrashBinOutline
 	} from 'flowbite-svelte-icons';
 	import { slide } from 'svelte/transition';
@@ -42,7 +44,7 @@
 	);
 
 	function handleDeleteTexture(name: string) {
-		let newForm = { ...$form };
+		let newForm = structuredClone($form) as z.infer<typeof schema>;
 		delete newForm.textures[name];
 
 		newForm = fixReferences(newForm);
@@ -52,6 +54,23 @@
 	let isExpanded = $state(false);
 	function handleToggleExpandCard() {
 		isExpanded = !isExpanded;
+	}
+
+	let isEditingName = $state(false);
+	let newTextureName = $state(textureName);
+
+	function handleUpdateName() {
+		let newForm = structuredClone($form) as z.infer<typeof schema>;
+		newForm.textures[newTextureName] = newForm.textures[textureName];
+		delete newForm.textures[textureName];
+
+		newForm = fixReferences(newForm, {
+			oldName: textureName,
+			newName: newTextureName,
+			resourceType: 'texture'
+		});
+
+		$form = newForm;
 	}
 </script>
 
@@ -136,14 +155,53 @@
 		class="flex items-center justify-between p-4 pr-2"
 		onclick={() => handleToggleExpandCard()}
 	>
-		{#if typeof textureName === 'string'}
-			<Heading tag="h2" class="text-xl font-bold">
-				{textureName}
-			</Heading>
-		{:else}
-			<Heading tag="h2" class="text-xl font-light italic">inline</Heading>
-		{/if}
-		<div class="flex flex-row">
+		<div class="flex items-baseline gap-2">
+			{#if isEditingName}
+				<Input
+					bind:value={newTextureName}
+					onclick={(e) => {
+						e.stopPropagation();
+					}}
+					onkeydown={(e) => {
+						if (e.key === 'Enter') {
+							e.stopPropagation();
+							isEditingName = false;
+							handleUpdateName();
+						}
+					}}
+				/>
+				<Button
+					color="secondary"
+					pill
+					outline
+					onclick={(e) => {
+						e.stopPropagation();
+						isEditingName = false;
+						handleUpdateName();
+					}}
+					class="border-none p-2"
+				>
+					<CheckOutline size="sm" />
+				</Button>
+			{:else}
+				<Heading tag="h2" class="text-xl font-bold">
+					{textureName}
+				</Heading>
+				<Button
+					color="secondary"
+					pill
+					outline
+					onclick={(e) => {
+						e.stopPropagation();
+						isEditingName = true;
+					}}
+					class="border-none p-2"
+				>
+					<PenOutline size="sm" />
+				</Button>
+			{/if}
+		</div>
+		<div class="flex">
 			<Heading tag="h3" class="text-lg font-light italic">
 				{textureData.type}
 			</Heading>

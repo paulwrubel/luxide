@@ -66,6 +66,7 @@
 		validators: zod(schema),
 		resetForm: false,
 		onChange: async (event) => {
+			const debug = false;
 			// this type assertion is necessary because there's a small
 			// amount of type information lost when using structuredClone
 			// such as the distinction between number tuples and number arrays
@@ -75,8 +76,31 @@
 				$state.snapshot(renderConfig)
 			) as RenderConfig;
 
+			if (debug) {
+				console.log('...processing changes for PATHS: ', event.paths);
+			}
+			const deletedResources: string[] = [];
 			for (const path of event.paths) {
-				const { deleted } = await updateFieldIfValid(
+				const segments = path.split('.');
+				if (deletedResources.includes(segments[1])) {
+					if (debug) {
+						console.log(
+							'detected update for deleted resource',
+							segments[1],
+							'... skipping'
+						);
+					}
+					continue;
+				}
+				if (debug) {
+					console.log(
+						'...processing update for path:',
+						path,
+						'value:',
+						event.get(path)
+					);
+				}
+				const { updateResult } = await updateFieldIfValid(
 					superform,
 					updatedRenderConfig,
 					path,
@@ -85,9 +109,15 @@
 
 				// if something was deleted, then don't
 				// bother updating the rest of the form
-				if (deleted) {
-					break;
+				if (updateResult.deleted) {
+					deletedResources.push(updateResult.deleted);
+					if (debug) {
+						console.log('marking', updateResult.deleted, 'as deleted');
+					}
 				}
+			}
+			if (debug) {
+				console.log('Submitting updates!');
 			}
 			renderConfig = updatedRenderConfig;
 		}

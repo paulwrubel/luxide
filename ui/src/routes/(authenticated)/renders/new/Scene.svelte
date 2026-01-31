@@ -29,6 +29,7 @@
 			renderConfigContext.get().active_scene
 		)
 	);
+
 	const { data: camera } = $derived(
 		getCameraData(renderConfigContext.get(), activeScene.camera)
 	);
@@ -250,10 +251,10 @@
 		return lightSources;
 	}
 
-	function getMaterials(data: string | MaterialData): THREE.Material[] {
+	function getMaterials(materialName: string): THREE.Material[] {
 		const { data: materialData } = getMaterialDataSafe(
 			renderConfigContext.get(),
-			data
+			materialName
 		);
 
 		const { data: reflectanceTextureData } = getTextureDataSafe(

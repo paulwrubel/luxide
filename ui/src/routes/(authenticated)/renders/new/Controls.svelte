@@ -55,7 +55,7 @@
 		</TabItem>
 		<TabItem title="Camera">
 			<div class="flex flex-col items-stretch gap-4">
-				<CameraControlsCard {superform} camera={activeScene.camera} />
+				<CameraControlsCard {superform} cameraName={activeScene.camera} />
 			</div>
 		</TabItem>
 		<TabItem title="Geometrics">

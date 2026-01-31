@@ -212,13 +212,9 @@
 		class="flex items-center justify-between p-4 pr-2"
 		onclick={() => handleToggleExpandCard()}
 	>
-		{#if typeof geometricName === 'string'}
-			<Heading tag="h2" class="text-xl font-bold">
-				{geometricName}
-			</Heading>
-		{:else}
-			<Heading tag="h2" class="text-xl font-light italic">inline</Heading>
-		{/if}
+		<Heading tag="h2" class="text-xl font-bold">
+			{geometricName}
+		</Heading>
 		<div class="flex flex-row">
 			<Heading tag="h3" class="text-lg font-light italic">
 				{geometricData.type}
