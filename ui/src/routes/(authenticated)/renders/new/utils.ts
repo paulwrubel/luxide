@@ -178,6 +178,34 @@ export function fixReferences(
 		}
 	}
 
+	// fix dangling geometric child references in composite geometrics
+	for (const geometric of Object.values(newForm.geometrics)) {
+		switch (geometric.type) {
+			case 'rotate_x':
+			case 'rotate_y':
+			case 'rotate_z':
+			case 'translate':
+			case 'constant_volume':
+				if (!Object.keys(newForm.geometrics).includes(geometric.geometric)) {
+					geometric.geometric = '__unit_box';
+				}
+				break;
+			case 'list':
+				geometric.geometrics = geometric.geometrics.filter((name: string) =>
+					Object.keys(newForm.geometrics).includes(name)
+				);
+				break;
+		}
+	}
+
+	// remove deleted geometric names from the active scene's geometric list
+	const activeScene = newForm.scenes[newForm.active_scene];
+	if (activeScene) {
+		activeScene.geometrics = activeScene.geometrics.filter((name: string) =>
+			Object.keys(newForm.geometrics).includes(name)
+		);
+	}
+
 	return newForm;
 }
 

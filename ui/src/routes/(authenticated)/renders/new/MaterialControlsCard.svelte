@@ -33,11 +33,15 @@
 	);
 
 	function handleDeleteMaterial(name: string) {
-		let newForm = { ...$form };
+		let newForm = structuredClone($form);
 		delete newForm.materials[name];
 
 		newForm = fixReferences(newForm);
 		$form = newForm;
+
+		const newRenderConfig = structuredClone(renderConfigContext.get());
+		delete newRenderConfig.materials[name];
+		renderConfigContext.set(newRenderConfig);
 	}
 
 	let isExpanded = $state(false);

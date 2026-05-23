@@ -44,11 +44,15 @@
 	);
 
 	function handleDeleteGeometric(name: string) {
-		let newForm = { ...$form };
+		let newForm = structuredClone($form);
 		delete newForm.geometrics[name];
 
 		newForm = fixReferences(newForm);
 		$form = newForm;
+
+		const newRenderConfig = structuredClone(renderConfigContext.get());
+		delete newRenderConfig.geometrics[name];
+		renderConfigContext.set(newRenderConfig);
 	}
 
 	let isExpanded = $state(false);
