@@ -131,12 +131,12 @@ export default function ParametersControlsCard({
               transition={{ duration: 0.3, ease: 'easeInOut' }}
               className="overflow-hidden"
             >
-              <div>
+              <div className="py-2">
                 <TextInputControl
                   form={form}
                   oninput={(e) => {
                     setSavedCheckpointLimitLocal(
-                      Number((e as React.FormEvent<HTMLInputElement>).currentTarget.value)
+                      Number((e as React.ChangeEvent<HTMLInputElement>).currentTarget.value)
                     );
                   }}
                   onchange={(e) => {

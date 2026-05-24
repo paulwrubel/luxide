@@ -15,12 +15,11 @@ function PlusIcon({ className }: { className?: string }) {
   );
 }
 
-type GeometricType = GeometricData['type'];
+type GeometricType = Exclude<GeometricData['type'], 'obj_model'>;
 
-const GEOMETRIC_TYPES: { type: GeometricType; label: string; disabled?: boolean; tooltip?: string }[] = [
+const GEOMETRIC_TYPES: { type: GeometricType; label: string }[] = [
   { type: 'box', label: 'Box' },
   { type: 'list', label: 'List' },
-  { type: 'obj_model', label: '.obj Model', disabled: true, tooltip: '.obj models are not yet implemented' },
   { type: 'rotate_x', label: 'Rotate X' },
   { type: 'rotate_y', label: 'Rotate Y' },
   { type: 'rotate_z', label: 'Rotate Z' },
@@ -29,7 +28,7 @@ const GEOMETRIC_TYPES: { type: GeometricType; label: string; disabled?: boolean;
   { type: 'sphere', label: 'Sphere' },
   { type: 'triangle', label: 'Triangle' },
   { type: 'constant_volume', label: 'Constant Volume' },
-].filter((g) => g.type !== 'obj_model' || g.label === '.obj Model');
+];
 
 interface NewGeometricSpeedDialProps {
   form: RenderForm;
@@ -39,7 +38,7 @@ export default function NewGeometricSpeedDial({ form }: NewGeometricSpeedDialPro
   const formValues = useStore(form.store, (state) => state.values);
 
   function handleNewGeometric(type: GeometricType) {
-    const newGeometric = defaultGeometricForType(type as any);
+    const newGeometric = defaultGeometricForType(type);
     const nextName = getNextUniqueName(
       formValues.geometrics ?? {},
       `New ${capitalize(type)}`
@@ -54,12 +53,12 @@ export default function NewGeometricSpeedDial({ form }: NewGeometricSpeedDialPro
       ...formValues.scenes,
       [formValues.active_scene]: {
         ...activeSceneData,
-        geometrics: [...(activeSceneData?.geometrics ?? []), nextName],
+        geometrics: [...activeSceneData.geometrics, nextName],
       },
     };
 
-    (form as any).setFieldValue('geometrics', newGeometrics);
-    (form as any).setFieldValue('scenes', newScenes);
+    form.setFieldValue('geometrics', newGeometrics);
+    form.setFieldValue('scenes', newScenes);
   }
 
   return (
@@ -73,9 +72,8 @@ export default function NewGeometricSpeedDial({ form }: NewGeometricSpeedDialPro
         <DropdownItem
           key={item.label}
           onClick={() => {
-            if (!item.disabled) handleNewGeometric(item.type);
+            handleNewGeometric(item.type);
           }}
-          disabled={item.disabled}
         >
           <div className="flex items-center gap-2">
             <PlusIcon className="h-4 w-4" />
