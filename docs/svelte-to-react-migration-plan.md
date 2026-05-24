@@ -43,7 +43,7 @@ ui/
 │   │   │       ├── templates.ts
 │   │   │       └── utils.ts
 │   │   └── *.svelte                 ← shared components
-│   └── routes/
+│   └── views/
 │       ├── +layout.svelte / .ts
 │       ├── +page.svelte
 │       ├── login/+page.svelte
@@ -65,7 +65,7 @@ ui/
 ```
 ui-react/
 ├── src/
-│   ├── utils/
+│   ├── utils/                       ← framework-agnostic utilities
 │   │   ├── auth.tsx                 ← React context for auth
 │   │   ├── api.ts                   ← carried over unchanged
 │   │   ├── math.ts
@@ -94,8 +94,7 @@ ui-react/
 │   │       ├── WarningIconInaccuratePreview.tsx
 │   │       ├── WarningIconAdvancedProperty.tsx
 │   │       └── InfoIconAdditionalInfo.tsx
-│   ├── routes/                      ← React Router routes
-│   │   ├── root.tsx
+│   ├── views/                       ← page-level route components
 │   │   ├── home.tsx
 │   │   ├── login.tsx
 │   │   ├── auth-callback.tsx
@@ -116,7 +115,6 @@ ui-react/
 │   │       ├── NestedTextureHeader.tsx
 │   │       └── Scene.tsx            ← @react-three/fiber
 │   ├── hooks/                       ← TanStack Query hooks
-│   │   ├── useAuth.ts
 │   │   ├── useRenders.ts
 │   │   ├── useRender.ts
 │   │   └── useCheckpointImage.ts
@@ -253,20 +251,20 @@ Create all directories matching the target architecture above.
 
 ### 1.1 Copy framework-agnostic files
 
-Copy these files verbatim from `ui/src/lib/` to `ui-react/src/lib/`:
+Copy these files verbatim from `ui/src/lib/` to `ui-react/src/utils/`:
 
 ```
-ui/src/lib/utils/api.ts          → ui-react/src/lib/api.ts
-ui/src/lib/utils/math.ts         → ui-react/src/lib/math.ts
-ui/src/lib/utils/render/config.ts    → ui-react/src/lib/render/config.ts
-ui/src/lib/utils/render/camera.ts    → ui-react/src/lib/render/camera.ts
-ui/src/lib/utils/render/geometric.ts → ui-react/src/lib/render/geometric.ts
-ui/src/lib/utils/render/material.ts  → ui-react/src/lib/render/material.ts
-ui/src/lib/utils/render/parameters.ts → ui-react/src/lib/render/parameters.ts
-ui/src/lib/utils/render/scene.ts     → ui-react/src/lib/render/scene.ts
-ui/src/lib/utils/render/texture.ts   → ui-react/src/lib/render/texture.ts
-ui/src/lib/utils/render/templates.ts → ui-react/src/lib/render/templates.ts
-ui/src/lib/utils/render/utils.ts     → ui-react/src/lib/render/utils.ts
+ui/src/lib/utils/api.ts          → ui-react/src/utils/api.ts
+ui/src/lib/utils/math.ts         → ui-react/src/utils/math.ts
+ui/src/lib/utils/render/config.ts    → ui-react/src/utils/render/config.ts
+ui/src/lib/utils/render/camera.ts    → ui-react/src/utils/render/camera.ts
+ui/src/lib/utils/render/geometric.ts → ui-react/src/utils/render/geometric.ts
+ui/src/lib/utils/render/material.ts  → ui-react/src/utils/render/material.ts
+ui/src/lib/utils/render/parameters.ts → ui-react/src/utils/render/parameters.ts
+ui/src/lib/utils/render/scene.ts     → ui-react/src/utils/render/scene.ts
+ui/src/lib/utils/render/texture.ts   → ui-react/src/utils/render/texture.ts
+ui/src/lib/utils/render/templates.ts → ui-react/src/utils/render/templates.ts
+ui/src/lib/utils/render/utils.ts     → ui-react/src/utils/render/utils.ts
 ```
 
 ### 1.2 Fix imports
@@ -302,7 +300,7 @@ Add to `tsconfig.json`:
 
 ### 2.1 Auth Context
 
-**File:** `src/lib/auth.tsx`
+**File:** `src/utils/auth.tsx`
 
 Convert `ui/src/lib/state/auth.svelte.ts` to a React Context + hook.
 
@@ -315,10 +313,10 @@ Svelte runes → React equivalents:
 
 The `.svelte.ts` module pattern becomes:
 ```typescript
-// src/lib/auth.tsx
+// src/utils/auth.tsx
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { User } from './api';
-import { fetchUserInfo } from './api';
+import { fetchUserInfo } from '../utils/api';
 
 interface AuthContextType {
   token: string | undefined;
@@ -486,14 +484,14 @@ Each is a simple component returning a flowbite-react icon equivalent. They shar
 ```typescript
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider } from './lib/auth';
+import { AuthProvider } from './utils/auth';
 import Layout from './components/Layout';
-import HomePage from './routes/home';
-import LoginPage from './routes/login';
-import AuthCallbackPage from './routes/auth-callback';
-import RendersPage from './routes/renders';
-import RenderDetailPage from './routes/render-detail';
-import NewRenderPage from './routes/new-render';
+import HomePage from './views/home';
+import LoginPage from './views/login';
+import AuthCallbackPage from './views/auth-callback';
+import RendersPage from './views/renders';
+import RenderDetailPage from './views/render-detail';
+import NewRenderPage from './views/new-render';
 
 const queryClient = new QueryClient();
 
@@ -541,13 +539,13 @@ Routes `/renders`, `/renders/:id`, `/renders/new` use this layout.
 
 ### 3.4 Login Page
 
-**File:** `src/routes/login.tsx`
+**File:** `src/views/login.tsx`
 
 Simple page with a "Login with GitHub" button. Calls `navigateToAPILogin()` from `api.ts`.
 
 ### 3.5 Auth Callback Page
 
-**File:** `src/routes/auth-callback.tsx`
+**File:** `src/views/auth-callback.tsx`
 
 Handles the OAuth callback:
 - Reads `code` and `state` from URL search params
@@ -574,8 +572,8 @@ Create custom hooks for each API call, wrapping `@tanstack/react-query`:
 
 ```typescript
 import { useQuery } from '@tanstack/react-query';
-import { getAllRenders } from '../lib/api';
-import { useAuth } from '../lib/auth';
+import { getAllRenders } from '../utils/api';
+import { useAuth } from '../utils/auth';
 
 export function useRenders() {
   const { validToken } = useAuth();
@@ -593,8 +591,8 @@ export function useRenders() {
 
 ```typescript
 import { useQuery } from '@tanstack/react-query';
-import { getRender } from '../lib/api';
-import { useAuth } from '../lib/auth';
+import { getRender } from '../utils/api';
+import { useAuth } from '../utils/auth';
 
 export function useRender(renderId: number) {
   const { validToken } = useAuth();
@@ -612,8 +610,8 @@ export function useRender(renderId: number) {
 
 ```typescript
 import { useQuery } from '@tanstack/react-query';
-import { getLatestCheckpointImage } from '../lib/api';
-import { useAuth } from '../lib/auth';
+import { getLatestCheckpointImage } from '../utils/api';
+import { useAuth } from '../utils/auth';
 
 export function useCheckpointImage(renderId: number) {
   const { validToken } = useAuth();
@@ -634,8 +632,8 @@ Create mutation hooks for write operations (in `src/hooks/useRenderMutations.ts`
 
 ```typescript
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { postRender, pauseRender, resumeRender, deleteRender } from '../lib/api';
-import { useAuth } from '../lib/auth';
+import { postRender, pauseRender, resumeRender, deleteRender } from '../utils/api';
+import { useAuth } from '../utils/auth';
 
 export function useCreateRender() {
   const { validToken } = useAuth();
@@ -661,7 +659,7 @@ export function useCreateRender() {
 
 ### 5.1 Home Page
 
-**File:** `src/routes/home.tsx`
+**File:** `src/views/home.tsx`
 
 Equivalent of `+page.svelte`:
 - Shows user info if authenticated
@@ -670,7 +668,7 @@ Equivalent of `+page.svelte`:
 
 ### 5.2 Renders List Page
 
-**File:** `src/routes/renders.tsx`
+**File:** `src/views/renders.tsx`
 
 Equivalent of `renders/+page.svelte`:
 - Uses `useRenders()` hook
@@ -680,7 +678,7 @@ Equivalent of `renders/+page.svelte`:
 
 ### 5.3 Render Detail Page
 
-**File:** `src/routes/render-detail.tsx`
+**File:** `src/views/render-detail.tsx`
 
 Equivalent of `renders/[id]/+page.svelte`:
 - Uses `useRender(id)` and `useCheckpointImage(id)` hooks
@@ -690,7 +688,7 @@ Equivalent of `renders/[id]/+page.svelte`:
 
 ### 5.4 New Render Page — THE BIG ONE
 
-**File:** `src/routes/new-render/index.tsx`
+**File:** `src/views/new-render/index.tsx`
 
 This is the most complex page. Here's the detailed breakdown:
 
@@ -699,8 +697,8 @@ This is the most complex page. Here's the detailed breakdown:
 ```typescript
 import { useForm } from '@tanstack/react-form';
 import { zodValidator } from '@tanstack/zod-form-adapter';
-import { RenderConfigSchema, type RenderConfig } from '../../lib/render/config';
-import { getDefaultRenderConfig } from '../../lib/render/templates';
+import { RenderConfigSchema, type RenderConfig } from '../../utils/render/config';
+import { getDefaultRenderConfig } from '../../utils/render/templates';
 
 const form = useForm({
   defaultValues: getDefaultRenderConfig() as RenderConfig,
@@ -738,7 +736,7 @@ Replace Svelte's `bind:clientWidth` / `bind:clientHeight` with a `useResizeObser
 
 #### 5.4.4 Controls (Tabbed Sidebar)
 
-**File:** `src/routes/new-render/Controls.tsx`
+**File:** `src/views/new-render/Controls.tsx`
 
 Equivalent of `new/Controls.svelte`:
 - Uses flowbite-react `Tabs` component
@@ -818,7 +816,7 @@ When a geometric/material/texture is deleted:
 
 ## Phase 6: 3D Scene Preview (R3F)
 
-**File:** `src/routes/new-render/Scene.tsx`
+**File:** `src/views/new-render/Scene.tsx`
 
 This is the largest single rewrite. The Svelte version (`new/Scene.svelte`, 356 lines) uses Threlte's `<T>` component to render Three.js objects. In R3F, you use declarative JSX.
 
@@ -1005,6 +1003,45 @@ Alternatively, use `<Canvas style={{ width: '100%', height: '100%' }}>` and R3F 
 
 ## Phase 7: Polish & Switchover
 
+### 7.0 Static Compilation for Rust Embedding
+
+The Rust backend embeds the UI build output at compile time using the `include_dir!` macro:
+
+```rust
+// src/server/router.rs:15
+static UI_BUILD_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/ui/build");
+```
+
+This means the entire `ui/build/` directory is baked into the Rust binary. The fallback handler (line 49) serves `index.html` for any unmatched path, enabling SPA client-side routing.
+
+**Two options for the React build output:**
+
+| Option | Approach | Rust Changes |
+|---|---|---|
+| **A: Build to `ui/build/` (Recommended)** | Configure Vite to output to `../ui/build` | None — Rust stays unchanged |
+| B: Update Rust path | Keep default `dist/` output, change `include_dir!` path | Change to `ui-react/dist` |
+
+**Option A implementation:**
+
+```typescript
+// vite.config.ts
+export default defineConfig({
+  build: {
+    outDir: '../ui/build',
+    emptyOutDir: true,
+  },
+  // ...
+});
+```
+
+This keeps the Rust server completely unchanged — it continues to embed `ui/build/` regardless of whether Svelte or React produced it.
+
+**Development workflow:**
+- Vite dev server runs on `localhost:5173`
+- CORS in `router.rs` line 68 already allows `localhost:5173` origins
+- API calls to `/api/v1/*` are proxied by Vite (dev) or same-origin (prod)
+- No changes to the Rust backend needed at any stage
+
 ### 7.1 Build Configuration
 
 - Verify `vite build` produces output compatible with the Rust server's static file serving
@@ -1018,9 +1055,31 @@ Alternatively, use `<Canvas style={{ width: '100%', height: '100%' }}>` and R3F 
 
 ### 7.3 Prod API URL
 
-Currently `getAPIURL()` in `api.ts` replaces the port to `:8080`. In production, the Rust server serves both API and static files from the same port. The React app needs to handle this:
-- In dev: proxy `/api` to `localhost:8080` (Vite proxy config)
-- In production: same-origin API calls (no port replacement needed if served from same origin)
+The `getAPIURL()` function in `api.ts` currently replaces the port to `:8080` for dev. Since the Rust server serves both the API and static UI from the same port in production:
+
+- **Dev**: Vite proxy handles `/api` → `localhost:8080` (configured in `vite.config.ts`)
+- **Prod**: Same-origin API calls — the UI and API are served from the same Rust binary, so no port replacement is needed.
+
+Update `getBaseURL()` / `getAPIURL()` to detect the environment:
+
+```typescript
+function getBaseURL(): string {
+  return window.location.origin;
+}
+
+function getAPIURL(): string {
+  // In production, API and UI are served from the same origin
+  // In dev, Vite proxies /api to the Rust backend
+  if (import.meta.env.DEV) {
+    // Vite dev proxy handles this — return same origin
+    return `${getBaseURL()}/api/v1`;
+  }
+  // Production: same origin
+  return `${getBaseURL()}/api/v1`;
+}
+```
+
+Note: This is simpler than the current Svelte code because Vite's proxy handles the port remapping transparently — the browser calls `/api/v1/*` on `localhost:5173` and Vite forwards to `localhost:8080`. In production, both are on the same port.
 
 ### 7.4 Tailwind Theme Alignment
 
@@ -1063,23 +1122,23 @@ Manual smoke tests:
 
 | Svelte Source                        | React Target                   | Notes                              |
 | ------------------------------------ | ------------------------------ | ---------------------------------- |
-| `src/lib/utils/api.ts`               | `src/lib/api.ts`               | Update `getAPIURL()` for prod mode |
-| `src/lib/utils/math.ts`              | `src/lib/math.ts`              | No changes                         |
-| `src/lib/utils/render/config.ts`     | `src/lib/render/config.ts`     | No changes                         |
-| `src/lib/utils/render/camera.ts`     | `src/lib/render/camera.ts`     | No changes                         |
-| `src/lib/utils/render/geometric.ts`  | `src/lib/render/geometric.ts`  | No changes                         |
-| `src/lib/utils/render/material.ts`   | `src/lib/render/material.ts`   | No changes                         |
-| `src/lib/utils/render/parameters.ts` | `src/lib/render/parameters.ts` | No changes                         |
-| `src/lib/utils/render/scene.ts`      | `src/lib/render/scene.ts`      | No changes                         |
-| `src/lib/utils/render/texture.ts`    | `src/lib/render/texture.ts`    | No changes                         |
-| `src/lib/utils/render/templates.ts`  | `src/lib/render/templates.ts`  | No changes                         |
-| `src/lib/utils/render/utils.ts`      | `src/lib/render/utils.ts`      | No changes                         |
+| `src/lib/utils/api.ts`               | `src/utils/api.ts`               | Update `getAPIURL()` for prod mode |
+| `src/lib/utils/math.ts`              | `src/utils/math.ts`              | No changes                         |
+| `src/lib/utils/render/config.ts`     | `src/utils/render/config.ts`     | No changes                         |
+| `src/lib/utils/render/camera.ts`     | `src/utils/render/camera.ts`     | No changes                         |
+| `src/lib/utils/render/geometric.ts`  | `src/utils/render/geometric.ts`  | No changes                         |
+| `src/lib/utils/render/material.ts`   | `src/utils/render/material.ts`   | No changes                         |
+| `src/lib/utils/render/parameters.ts` | `src/utils/render/parameters.ts` | No changes                         |
+| `src/lib/utils/render/scene.ts`      | `src/utils/render/scene.ts`      | No changes                         |
+| `src/lib/utils/render/texture.ts`    | `src/utils/render/texture.ts`    | No changes                         |
+| `src/lib/utils/render/templates.ts`  | `src/utils/render/templates.ts`  | No changes                         |
+| `src/lib/utils/render/utils.ts`      | `src/utils/render/utils.ts`      | No changes                         |
 
 ### Rewrites (by priority)
 
 | Priority | Svelte Source                               | React Target                                   | Complexity |
 | -------- | ------------------------------------------- | ---------------------------------------------- | ---------- |
-| P0       | `state/auth.svelte.ts`                      | `lib/auth.tsx`                                 | Medium     |
+| P0       | `state/auth.svelte.ts`                      | `utils/auth.tsx`                                 | Medium     |
 | P0       | `src/app.d.ts`                              | (scaffolded by Vite)                           | Trivial    |
 | P1       | `Separator.svelte`                          | `components/Separator.tsx`                     | Trivial    |
 | P1       | `ControlsCard.svelte`                       | `components/ControlsCard.tsx`                  | Low        |
@@ -1093,32 +1152,32 @@ Manual smoke tests:
 | P1       | `TextInput.svelte`                          | (use flowbite-react TextInput)                 | Trivial    |
 | P1       | 4× property icon `.svelte`                  | `components/icons/*.tsx`                       | Trivial    |
 | P2       | `+layout.svelte`                            | `components/Layout.tsx`                        | Medium     |
-| P2       | `+page.svelte` (home)                       | `routes/home.tsx`                              | Low        |
-| P2       | `login/+page.svelte`                        | `routes/login.tsx`                             | Low        |
-| P2       | `auth/github/callback/+page.svelte`         | `routes/auth-callback.tsx`                     | Low        |
-| P2       | `renders/+page.svelte`                      | `routes/renders.tsx`                           | Low        |
-| P2       | `renders/RenderPreviewCard.svelte`          | `routes/RenderPreviewCard.tsx`                 | Low        |
-| P2       | `renders/NewRenderCard.svelte`              | `routes/NewRenderCard.tsx`                     | Low        |
+| P2       | `+page.svelte` (home)                       | `views/home.tsx`                              | Low        |
+| P2       | `login/+page.svelte`                        | `views/login.tsx`                             | Low        |
+| P2       | `auth/github/callback/+page.svelte`         | `views/auth-callback.tsx`                     | Low        |
+| P2       | `renders/+page.svelte`                      | `views/renders.tsx`                           | Low        |
+| P2       | `renders/RenderPreviewCard.svelte`          | `views/RenderPreviewCard.tsx`                 | Low        |
+| P2       | `renders/NewRenderCard.svelte`              | `views/NewRenderCard.tsx`                     | Low        |
 | P2       | `UserInfo.svelte`                           | `components/UserInfo.tsx`                      | Low        |
 | P2       | `LoginButton.svelte`                        | `components/LoginButton.tsx`                   | Low        |
-| P3       | `renders/[id]/+page.svelte`                 | `routes/render-detail.tsx`                     | Medium     |
-| P3       | `renders/[id]/DisplayRender.svelte`         | `routes/DisplayRender.tsx`                     | Low        |
-| P3       | `renders/[id]/Controls.svelte`              | `routes/RenderControls.tsx`                    | Low        |
-| P4       | `renders/new/+page.svelte`                  | `routes/new-render/index.tsx`                  | HIGH       |
+| P3       | `renders/[id]/+page.svelte`                 | `views/render-detail.tsx`                     | Medium     |
+| P3       | `renders/[id]/DisplayRender.svelte`         | `views/DisplayRender.tsx`                     | Low        |
+| P3       | `renders/[id]/Controls.svelte`              | `views/RenderControls.tsx`                    | Low        |
+| P4       | `renders/new/+page.svelte`                  | `views/new-render/index.tsx`                  | HIGH       |
 | P4       | `renders/new/+page.ts`                      | (inline in index.tsx — TanStack Form init)     | HIGH       |
 | P4       | `renders/new/utils.ts`                      | **ELIMINATED** (TanStack Form handles this)    | N/A        |
-| P4       | `renders/new/Controls.svelte`               | `routes/new-render/Controls.tsx`               | Medium     |
-| P4       | `renders/new/CameraControlsCard.svelte`     | `routes/new-render/CameraControlsCard.tsx`     | Low        |
-| P4       | `renders/new/ParametersControlsCard.svelte` | `routes/new-render/ParametersControlsCard.tsx` | Low        |
-| P4       | `renders/new/GeometricControlsCard.svelte`  | `routes/new-render/GeometricControlsCard.tsx`  | Medium     |
-| P4       | `renders/new/MaterialControlsCard.svelte`   | `routes/new-render/MaterialControlsCard.tsx`   | Medium     |
-| P4       | `renders/new/TextureControlsCard.svelte`    | `routes/new-render/TextureControlsCard.tsx`    | Medium     |
-| P4       | `renders/new/NestedGeometricHeader.svelte`  | `routes/new-render/NestedGeometricHeader.tsx`  | Low        |
-| P4       | `renders/new/NestedTextureHeader.svelte`    | `routes/new-render/NestedTextureHeader.tsx`    | Low        |
-| P4       | `renders/new/NewGeometricSpeedDial.svelte`  | `routes/new-render/NewGeometricSpeedDial.tsx`  | Low        |
-| P4       | `renders/new/NewMaterialSpeedDial.svelte`   | `routes/new-render/NewMaterialSpeedDial.tsx`   | Low        |
-| P4       | `renders/new/NewTextureSpeedDial.svelte`    | `routes/new-render/NewTextureSpeedDial.tsx`    | Low        |
-| P5       | `renders/new/Scene.svelte`                  | `routes/new-render/Scene.tsx`                  | HIGH       |
+| P4       | `renders/new/Controls.svelte`               | `views/new-render/Controls.tsx`               | Medium     |
+| P4       | `renders/new/CameraControlsCard.svelte`     | `views/new-render/CameraControlsCard.tsx`     | Low        |
+| P4       | `renders/new/ParametersControlsCard.svelte` | `views/new-render/ParametersControlsCard.tsx` | Low        |
+| P4       | `renders/new/GeometricControlsCard.svelte`  | `views/new-render/GeometricControlsCard.tsx`  | Medium     |
+| P4       | `renders/new/MaterialControlsCard.svelte`   | `views/new-render/MaterialControlsCard.tsx`   | Medium     |
+| P4       | `renders/new/TextureControlsCard.svelte`    | `views/new-render/TextureControlsCard.tsx`    | Medium     |
+| P4       | `renders/new/NestedGeometricHeader.svelte`  | `views/new-render/NestedGeometricHeader.tsx`  | Low        |
+| P4       | `renders/new/NestedTextureHeader.svelte`    | `views/new-render/NestedTextureHeader.tsx`    | Low        |
+| P4       | `renders/new/NewGeometricSpeedDial.svelte`  | `views/new-render/NewGeometricSpeedDial.tsx`  | Low        |
+| P4       | `renders/new/NewMaterialSpeedDial.svelte`   | `views/new-render/NewMaterialSpeedDial.tsx`   | Low        |
+| P4       | `renders/new/NewTextureSpeedDial.svelte`    | `views/new-render/NewTextureSpeedDial.tsx`    | Low        |
+| P5       | `renders/new/Scene.svelte`                  | `views/new-render/Scene.tsx`                  | HIGH       |
 
 ### Key Simplification: The Superforms Elimination
 
