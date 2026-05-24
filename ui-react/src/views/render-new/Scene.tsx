@@ -4,14 +4,14 @@ import { useStore } from '@tanstack/react-form';
 import * as THREE from 'three';
 import GeometricRenderer from './GeometricRenderer';
 import { getSceneData } from '../../utils/render/scene';
-import { getCameraData } from '../../utils/render/camera';
-import type { RenderConfig } from '../../utils/render/config';
+import { getCameraData, type RawCameraData } from '../../utils/render/camera';
+import type { RenderForm } from '../../hooks/useRenderForm';
 
 interface SceneProps {
-  form: any;
+  form: RenderForm;
 }
 
-function CameraUpdater({ cameraData }: { cameraData: any }) {
+function CameraUpdater({ cameraData }: { cameraData: RawCameraData }) {
   const { camera } = useThree();
   const needsUpdate = useRef(true);
 
@@ -50,8 +50,8 @@ function CameraUpdater({ cameraData }: { cameraData: any }) {
 export default function Scene({ form }: SceneProps) {
   const renderConfig = useStore(
     form.store,
-    (state: any) => state.values
-  ) as RenderConfig;
+    (state) => state.values
+  );
   const activeScene = getSceneData(renderConfig, renderConfig.active_scene);
   const { data: cameraData } = getCameraData(renderConfig, activeScene.camera);
 

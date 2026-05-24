@@ -4,7 +4,7 @@ import {
   type TextureData,
 } from '../../utils/render/texture';
 import { capitalize, getNextUniqueName } from '../../utils/render/utils';
-import type { RenderConfig } from '../../utils/render/config';
+import type { RenderForm } from '../../hooks/useRenderForm';
 import { useStore } from '@tanstack/react-form';
 
 function PlusIcon({ className }: { className?: string }) {
@@ -18,11 +18,11 @@ function PlusIcon({ className }: { className?: string }) {
 type TextureType = Exclude<TextureData['type'], 'checker' | 'image'>;
 
 interface NewTextureSpeedDialProps {
-  form: any;
+  form: RenderForm;
 }
 
 export default function NewTextureSpeedDial({ form }: NewTextureSpeedDialProps) {
-  const formValues = useStore(form.store, (state: any) => state.values) as RenderConfig;
+  const formValues = useStore(form.store, (state) => state.values);
 
   function handleNewTexture(type: TextureType) {
     const newTexture = defaultTextureForType(type as any);
@@ -31,7 +31,7 @@ export default function NewTextureSpeedDial({ form }: NewTextureSpeedDialProps) 
       `New ${capitalize(type)}`
     );
 
-    form.setFieldValue('textures', {
+    (form as any).setFieldValue('textures', {
       ...formValues.textures,
       [nextName]: newTexture,
     });

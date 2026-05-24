@@ -4,7 +4,7 @@ import {
   type GeometricData,
 } from '../../utils/render/geometric';
 import { capitalize, getNextUniqueName } from '../../utils/render/utils';
-import type { RenderConfig } from '../../utils/render/config';
+import type { RenderForm } from '../../hooks/useRenderForm';
 import { useStore } from '@tanstack/react-form';
 
 function PlusIcon({ className }: { className?: string }) {
@@ -15,12 +15,12 @@ function PlusIcon({ className }: { className?: string }) {
   );
 }
 
-type GeometricType = Exclude<GeometricData['type'], 'obj_model'>;
+type GeometricType = GeometricData['type'];
 
 const GEOMETRIC_TYPES: { type: GeometricType; label: string; disabled?: boolean; tooltip?: string }[] = [
   { type: 'box', label: 'Box' },
   { type: 'list', label: 'List' },
-  { type: 'obj_model' as any, label: '.obj Model', disabled: true, tooltip: '.obj models are not yet implemented' },
+  { type: 'obj_model', label: '.obj Model', disabled: true, tooltip: '.obj models are not yet implemented' },
   { type: 'rotate_x', label: 'Rotate X' },
   { type: 'rotate_y', label: 'Rotate Y' },
   { type: 'rotate_z', label: 'Rotate Z' },
@@ -29,14 +29,14 @@ const GEOMETRIC_TYPES: { type: GeometricType; label: string; disabled?: boolean;
   { type: 'sphere', label: 'Sphere' },
   { type: 'triangle', label: 'Triangle' },
   { type: 'constant_volume', label: 'Constant Volume' },
-].filter((g) => g.type !== 'obj_model' || g.label === '.obj Model') as any;
+].filter((g) => g.type !== 'obj_model' || g.label === '.obj Model');
 
 interface NewGeometricSpeedDialProps {
-  form: any;
+  form: RenderForm;
 }
 
 export default function NewGeometricSpeedDial({ form }: NewGeometricSpeedDialProps) {
-  const formValues = useStore(form.store, (state: any) => state.values) as RenderConfig;
+  const formValues = useStore(form.store, (state) => state.values);
 
   function handleNewGeometric(type: GeometricType) {
     const newGeometric = defaultGeometricForType(type as any);
@@ -58,8 +58,8 @@ export default function NewGeometricSpeedDial({ form }: NewGeometricSpeedDialPro
       },
     };
 
-    form.setFieldValue('geometrics', newGeometrics);
-    form.setFieldValue('scenes', newScenes);
+    (form as any).setFieldValue('geometrics', newGeometrics);
+    (form as any).setFieldValue('scenes', newScenes);
   }
 
   return (

@@ -1,8 +1,9 @@
 import { Label, TextInput, HelperText } from 'flowbite-react';
 import type { ChangeEvent, FormEvent } from 'react';
 
+
 interface FormTextInputProps {
-  form: any; // TanStack Form instance
+  form: any;
   field: string;
   type?: 'text' | 'number';
   valueLabel: string;

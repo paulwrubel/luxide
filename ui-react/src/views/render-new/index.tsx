@@ -1,17 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm, useStore } from '@tanstack/react-form';
+import { useStore } from '@tanstack/react-form';
 import { Sidebar, SidebarItems, SidebarItemGroup, Spinner, Button } from 'flowbite-react';
 import Separator from '../../components/Separator';
 import Controls from './Controls';
 import Scene from './Scene';
 import { useAuth } from '../../utils/auth';
 import { postRender } from '../../utils/api';
-import {
-  RenderConfigSchema,
-  type RenderConfig,
-} from '../../utils/render/config';
-import { getDefaultRenderConfig } from '../../utils/render/templates';
+import { useRenderForm } from '../../hooks/useRenderForm';
 
 export default function NewRenderPage() {
   const navigate = useNavigate();
@@ -37,57 +33,12 @@ export default function NewRenderPage() {
   }, []);
 
   // TanStack Form
-  const form = useForm({
-    defaultValues: getDefaultRenderConfig() as RenderConfig,
-    validators: {
-      onChange: ({ value }) => {
-        const result = RenderConfigSchema.refine(
-          ({ parameters }) => {
-            if ((user?.max_render_pixel_count ?? null) !== null) {
-              const [x, y] = parameters.image_dimensions;
-              return x * y <= (user?.max_render_pixel_count ?? Infinity);
-            }
-            return true;
-          },
-          {
-            message: 'Image dimensions are too large',
-            path: ['parameters', 'image_dimensions'],
-          }
-        ).refine(
-          ({ parameters }) => {
-            if ((user?.max_checkpoints_per_render ?? null) !== null) {
-              return (
-                parameters.saved_checkpoint_limit !== undefined &&
-                parameters.saved_checkpoint_limit <=
-                  (user?.max_checkpoints_per_render ?? Infinity)
-              );
-            }
-            return true;
-          },
-          {
-            message: 'Saved checkpoint limit is too large',
-            path: ['parameters', 'saved_checkpoint_limit'],
-          }
-        ).safeParse(value);
 
-        if (!result.success) {
-          return result.error.issues
-            .map((issue) =>
-              issue.path.length > 0
-                ? `${issue.path.join('.')}: ${issue.message}`
-                : issue.message,
-            )
-            .join(', ');
-        }
-        return undefined;
-      },
-    },
-  });
-
+  const form = useRenderForm({ user: user! });
   // Canvas sizing: maintain aspect ratio in container
-  const imageDimensions = useStore(form.store, (state: any) => state.values.parameters.image_dimensions);
+  const imageDimensions = useStore(form.store, (state) => state.values.parameters.image_dimensions);
   const aspectRatio = imageDimensions[0] / imageDimensions[1];
-  const formValuesForSubmit = useStore(form.store, (state: any) => state.values) as RenderConfig;
+  const formValuesForSubmit = useStore(form.store, (state) => state.values);
 
   let canvasWidth = 0;
   let canvasHeight = 0;
@@ -115,12 +66,12 @@ export default function NewRenderPage() {
   return (
     <div className="flex h-full w-full">
       <Sidebar
-        className="w-128 z-10 !bg-zinc-900 [&>div]:!bg-zinc-900"
+        className="w-lg z-10 bg-zinc-900! [&>div]:bg-zinc-900!"
       >
         <SidebarItems>
           <SidebarItemGroup>
             <div className="flex min-h-full flex-col items-stretch gap-2">
-              <Controls form={form as any} />
+              <Controls form={form} />
               <Separator className="mt-auto" />
               <Button
                 onClick={handleCreateRender}
@@ -150,7 +101,7 @@ export default function NewRenderPage() {
           style={{ width: canvasWidth, height: canvasHeight }}
           className="box-border border border-zinc-500"
         >
-          {canvasWidth > 0 && canvasHeight > 0 && <Scene form={form as any} />}
+          {canvasWidth > 0 && canvasHeight > 0 && <Scene form={form} />}
         </div>
       </div>
     </div>

@@ -1,8 +1,9 @@
 import FormTextInput from './FormTextInput';
 import { getGridColumnsTemplateForPercentage } from './utils';
 
+
 interface TextArrayInputControlProps {
-  form: any; // TanStack Form instance
+  form: any;
   field: string;
   type?: 'text' | 'number';
   label: string;

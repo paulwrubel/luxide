@@ -1,7 +1,8 @@
 import { Label, RangeSlider } from 'flowbite-react';
 
+
 interface RangeControlProps {
-  form: any; // TanStack Form instance
+  form: any;
   field: string;
   label: string;
   labelPrefix?: React.ReactNode;

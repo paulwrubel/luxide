@@ -8,18 +8,18 @@ import { Tooltip, ToggleSwitch } from 'flowbite-react';
 import { useAuth } from '../../utils/auth';
 import Separator from '../../components/Separator';
 import { useState, useEffect } from 'react';
-import type { RenderConfig } from '../../utils/render/config';
+import type { RenderForm } from '../../hooks/useRenderForm';
 import { useStore } from '@tanstack/react-form';
 
 interface ParametersControlsCardProps {
-  form: any;
+  form: RenderForm;
 }
 
 export default function ParametersControlsCard({
   form,
 }: ParametersControlsCardProps) {
   const { user } = useAuth();
-  const renderConfig = useStore(form.store, (state: any) => state.values) as RenderConfig;
+  const renderConfig = useStore(form.store, (state) => state.values);
   const parameters = renderConfig.parameters;
   const savedCheckpointLimit = parameters.saved_checkpoint_limit ?? 1;
   const maxCheckpoints = user?.max_checkpoints_per_render ?? null;
@@ -28,7 +28,7 @@ export default function ParametersControlsCard({
     useState(savedCheckpointLimit);
 
   const [isCheckpointLimitEnabled, setIsCheckpointLimitEnabled] = useState(
-    useStore(form.store, (state: any) => state.values.parameters.saved_checkpoint_limit) !== undefined
+    useStore(form.store, (state) => state.values.parameters.saved_checkpoint_limit) !== undefined
   );
 
   // Sync toggle state to form

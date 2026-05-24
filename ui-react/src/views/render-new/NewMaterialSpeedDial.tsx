@@ -4,7 +4,7 @@ import {
   type MaterialData,
 } from '../../utils/render/material';
 import { capitalize, getNextUniqueName } from '../../utils/render/utils';
-import type { RenderConfig } from '../../utils/render/config';
+import type { RenderForm } from '../../hooks/useRenderForm';
 import { useStore } from '@tanstack/react-form';
 
 function PlusIcon({ className }: { className?: string }) {
@@ -18,11 +18,11 @@ function PlusIcon({ className }: { className?: string }) {
 type MaterialType = Exclude<MaterialData['type'], 'dielectric'>;
 
 interface NewMaterialSpeedDialProps {
-  form: any;
+  form: RenderForm;
 }
 
 export default function NewMaterialSpeedDial({ form }: NewMaterialSpeedDialProps) {
-  const formValues = useStore(form.store, (state: any) => state.values) as RenderConfig;
+  const formValues = useStore(form.store, (state) => state.values);
 
   function handleNewMaterial(type: MaterialType) {
     const newMaterial = defaultMaterialForType(type as any);
@@ -31,7 +31,7 @@ export default function NewMaterialSpeedDial({ form }: NewMaterialSpeedDialProps
       `New ${capitalize(type)}`
     );
 
-    form.setFieldValue('materials', {
+    (form as any).setFieldValue('materials', {
       ...formValues.materials,
       [nextName]: newMaterial,
     });

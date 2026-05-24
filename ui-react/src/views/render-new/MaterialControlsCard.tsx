@@ -8,6 +8,7 @@ import SelectControl from './ui/SelectControl';
 import { getMaterialData } from '../../utils/render/material';
 import { fixReferences } from '../../utils/render/utils';
 import type { RenderConfig } from '../../utils/render/config';
+import type { RenderForm } from '../../hooks/useRenderForm';
 import { useStore } from '@tanstack/react-form';
 
 function TrashIcon({ className }: { className?: string }) {
@@ -19,7 +20,7 @@ function TrashIcon({ className }: { className?: string }) {
 }
 
 interface MaterialControlsCardProps {
-  form: any;
+  form: RenderForm;
   materialName: string;
 }
 
@@ -28,7 +29,7 @@ export default function MaterialControlsCard({
   materialName,
 }: MaterialControlsCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const renderConfig = useStore(form.store, (state: any) => state.values) as RenderConfig;
+  const renderConfig = useStore(form.store, (state) => state.values);
 
   const { data: materialData } = getMaterialData(renderConfig, materialName);
 

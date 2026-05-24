@@ -10,6 +10,7 @@ import NestedTextureHeader from './NestedTextureHeader';
 import { getTextureData } from '../../utils/render/texture';
 import { fixReferences } from '../../utils/render/utils';
 import type { RenderConfig } from '../../utils/render/config';
+import type { RenderForm } from '../../hooks/useRenderForm';
 import { useStore } from '@tanstack/react-form';
 
 function TrashIcon({ className }: { className?: string }) {
@@ -21,7 +22,7 @@ function TrashIcon({ className }: { className?: string }) {
 }
 
 interface TextureControlsCardProps {
-  form: any;
+  form: RenderForm;
   textureName: string;
 }
 
@@ -30,7 +31,7 @@ export default function TextureControlsCard({
   textureName,
 }: TextureControlsCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const renderConfig = useStore(form.store, (state: any) => state.values) as RenderConfig;
+  const renderConfig = useStore(form.store, (state) => state.values);
 
   const { data: textureData } = getTextureData(renderConfig, textureName);
 

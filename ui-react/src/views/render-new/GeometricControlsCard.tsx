@@ -11,6 +11,7 @@ import SelectControl from './ui/SelectControl';
 import { getGeometricData, getGeometricDataSafe } from '../../utils/render/geometric';
 import { fixReferences } from '../../utils/render/utils';
 import type { RenderConfig } from '../../utils/render/config';
+import type { RenderForm } from '../../hooks/useRenderForm';
 import { useStore } from '@tanstack/react-form';
 
 function TrashIcon({ className }: { className?: string }) {
@@ -36,7 +37,7 @@ function GeometricMaterialSelect({
   name,
   items,
 }: {
-  form: any;
+  form: RenderForm;
   name: string;
   items: { name: string; value: string }[];
 }) {
@@ -51,7 +52,7 @@ function GeometricMaterialSelect({
 }
 
 interface GeometricControlsCardProps {
-  form: any;
+  form: RenderForm;
   geometricName: string;
 }
 
@@ -60,7 +61,7 @@ export default function GeometricControlsCard({
   geometricName,
 }: GeometricControlsCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const renderConfig = useStore(form.store, (state: any) => state.values) as RenderConfig;
+  const renderConfig = useStore(form.store, (state) => state.values);
 
   const { data: geometricData } = getGeometricDataSafe(renderConfig, geometricName);
 
@@ -173,7 +174,7 @@ export default function GeometricControlsCard({
   }
 
   return (
-    <Card className="flex max-w-full flex-col !bg-zinc-800 !text-zinc-200 [&>div]:!p-0">
+    <Card className="flex max-w-full flex-col bg-zinc-800! text-zinc-200! [&>div]:p-0!">
       <button
         type="button"
         className="flex items-center justify-between p-4 pr-2"

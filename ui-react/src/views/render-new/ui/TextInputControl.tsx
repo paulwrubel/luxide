@@ -2,8 +2,9 @@ import FormTextInput from './FormTextInput';
 import { getGridColumnsTemplateForPercentage } from './utils';
 import type { ChangeEvent, FormEvent } from 'react';
 
+
 interface TextInputControlProps {
-  form: any; // TanStack Form instance
+  form: any;
   field: string;
   oninput?: (e: FormEvent<HTMLInputElement>) => void;
   onchange?: (e: ChangeEvent<HTMLInputElement>) => void;

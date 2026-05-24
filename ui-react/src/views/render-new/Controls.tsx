@@ -14,15 +14,15 @@ import {
   getTopLevelMaterialNames,
   getTopLevelTextureNames,
 } from '../../utils/render/utils';
-import type { RenderConfig } from '../../utils/render/config';
+import type { RenderForm } from '../../hooks/useRenderForm';
 import { useStore } from '@tanstack/react-form';
 
 interface ControlsProps {
-  form: any; // TanStack Form instance
+  form: RenderForm;
 }
 
 export default function Controls({ form }: ControlsProps) {
-  const renderConfig = useStore(form.store, (state: any) => state.values) as RenderConfig;
+  const renderConfig = useStore(form.store, (state) => state.values);
 
   const activeScene = useMemo(
     () => getSceneData(renderConfig, renderConfig.active_scene),
