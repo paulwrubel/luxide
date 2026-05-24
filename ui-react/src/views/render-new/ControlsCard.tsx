@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card } from 'flowbite-react';
 import { ChevronDownIcon, ChevronUpIcon } from 'flowbite-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Separator from './Separator';
+import Separator from '../../components/Separator';
 
 type LabelType = 'bold' | 'light';
 

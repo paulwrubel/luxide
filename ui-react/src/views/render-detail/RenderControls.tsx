@@ -9,9 +9,9 @@ import {
   isRenderStatePaused,
   isRenderStateRunning,
   type Render,
-} from '../utils/api';
+} from '../../utils/api';
 import { Button, Spinner, TextInput, Label } from 'flowbite-react';
-import { useAuth } from '../utils/auth';
+import { useAuth } from '../../utils/auth';
 
 interface RenderControlsProps {
   render: Render;

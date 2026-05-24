@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Sidebar, SidebarItems, SidebarItemGroup, Spinner } from 'flowbite-react';
-import { useAuth } from '../utils/auth';
-import { useRender } from '../hooks/useRender';
-import { useCheckpointImage } from '../hooks/useCheckpointImage';
-import RenderControls from '../components/RenderControls';
-import RenderDisplay from '../components/RenderDisplay';
+import { useAuth } from '../../utils/auth';
+import { useRender } from '../../hooks/useRender';
+import { useCheckpointImage } from '../../hooks/useCheckpointImage';
+import RenderControls from './RenderControls';
+import RenderDisplay from './RenderDisplay';
 
 export default function RenderDetailPage() {
   const { id } = useParams<{ id: string }>();

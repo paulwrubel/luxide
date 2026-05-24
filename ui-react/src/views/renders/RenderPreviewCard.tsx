@@ -1,7 +1,7 @@
-import { Card, Spinner } from 'flowbite-react';
+import { Card, Progress, Spinner } from 'flowbite-react';
 import { Link } from 'react-router-dom';
-import type { Render } from '../utils/api';
-import { useCheckpointImage } from '../hooks/useCheckpointImage';
+import { isRenderStateRunning, isRenderStatePausing, type Render } from '../../utils/api';
+import { useCheckpointImage } from '../../hooks/useCheckpointImage';
 
 interface RenderPreviewCardProps {
   render: Render;
@@ -10,6 +10,15 @@ interface RenderPreviewCardProps {
 export default function RenderPreviewCard({ render }: RenderPreviewCardProps) {
   const checkpointImageQuery = useCheckpointImage(render.id);
   const renderSize = render.config.parameters.image_dimensions;
+  const state = render.state;
+  const running = isRenderStateRunning(state);
+  const pausing = isRenderStatePausing(state);
+  const showProgress = running || pausing;
+  const progress = running
+    ? state.running.progress_info.progress
+    : pausing
+      ? state.pausing.progress_info.progress
+      : 0;
 
   return (
     <Link to={`/renders/${render.id}`}>
@@ -45,6 +54,17 @@ export default function RenderPreviewCard({ render }: RenderPreviewCardProps) {
           </div>
         )}
       >
+        {showProgress && (
+          <div>
+            <Progress
+              progress={Math.round(progress * 100)}
+              color={running ? 'blue' : 'yellow'}
+              size="sm"
+              theme={{ base: "rounded-none", bar: "rounded-none" }}
+              className="[&>div]:transition-[width] [&>div]:duration-500"
+            />
+          </div>
+        )}
         <div className="flex items-center justify-between p-3">
           <h5 className="text-lg font-semibold">{render.id}</h5>
           <code className="text-sm font-light italic">{render.config.name}</code>

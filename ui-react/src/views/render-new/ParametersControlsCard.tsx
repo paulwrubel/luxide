@@ -1,8 +1,8 @@
-import ControlsCard from '../../components/ControlsCard';
-import WarningIconAdvancedProperty from '../../components/icons/WarningIconAdvancedProperty';
-import TextInputControl from '../../components/ui/TextInputControl';
-import TextArrayInputControl from '../../components/ui/TextArrayInputControl';
-import ToggleControl from '../../components/ui/ToggleControl';
+import ControlsCard from './ControlsCard';
+import WarningIconAdvancedProperty from './icons/WarningIconAdvancedProperty';
+import TextInputControl from './ui/TextInputControl';
+import TextArrayInputControl from './ui/TextArrayInputControl';
+import ToggleControl from './ui/ToggleControl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tooltip, ToggleSwitch } from 'flowbite-react';
 import { useAuth } from '../../utils/auth';

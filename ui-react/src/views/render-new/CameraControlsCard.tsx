@@ -1,7 +1,7 @@
-import ControlsCard from '../../components/ControlsCard';
-import WarningIconUnaffectedPreview from '../../components/icons/WarningIconUnaffectedPreview';
-import RangeControl from '../../components/ui/RangeControl';
-import TextArrayInputControl from '../../components/ui/TextArrayInputControl';
+import ControlsCard from './ControlsCard';
+import WarningIconUnaffectedPreview from './icons/WarningIconUnaffectedPreview';
+import RangeControl from './ui/RangeControl';
+import TextArrayInputControl from './ui/TextArrayInputControl';
 import { getCameraData } from '../../utils/render/camera';
 import type { RenderConfig } from '../../utils/render/config';
 import { useStore } from '@tanstack/react-form';

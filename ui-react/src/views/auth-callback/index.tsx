@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
-import { fetchAuthTokenGitHub } from '../utils/api';
-import { useAuth } from '../utils/auth';
+import { fetchAuthTokenGitHub } from '../../utils/api';
+import { useAuth } from '../../utils/auth';
 
 export default function AuthCallbackPage() {
   const [searchParams] = useSearchParams();

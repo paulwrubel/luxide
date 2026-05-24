@@ -1,8 +1,8 @@
 import { Spinner, Alert } from 'flowbite-react';
-import { useAuth } from '../utils/auth';
-import { useRenders } from '../hooks/useRenders';
-import RenderPreviewCard from '../components/RenderPreviewCard';
-import NewRenderCard from '../components/NewRenderCard';
+import { useAuth } from '../../utils/auth';
+import { useRenders } from '../../hooks/useRenders';
+import RenderPreviewCard from './RenderPreviewCard';
+import NewRenderCard from './NewRenderCard';
 
 export default function RendersPage() {
   const { user } = useAuth();

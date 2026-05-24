@@ -5,7 +5,7 @@ import {
   isRenderStatePausing,
   isRenderStateRunning,
   type Render,
-} from '../utils/api';
+} from '../../utils/api';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { Progress, Spinner } from 'flowbite-react';
 

@@ -3,9 +3,11 @@ import { Card, Button } from 'flowbite-react';
 import { ChevronDownIcon, ChevronUpIcon } from 'flowbite-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Separator from '../../components/Separator';
-import RangeControl from '../../components/ui/RangeControl';
-import SelectControl from '../../components/ui/SelectControl';
-import { getMaterialData } from '../../utils/render/material';
+import TextInputControl from './ui/TextInputControl';
+import TextArrayInputControl from './ui/TextArrayInputControl';
+import InfoIconAdditionalInfo from './icons/InfoIconAdditionalInfo';
+import NestedTextureHeader from './NestedTextureHeader';
+import { getTextureData } from '../../utils/render/texture';
 import { fixReferences } from '../../utils/render/utils';
 import type { RenderConfig } from '../../utils/render/config';
 import { useStore } from '@tanstack/react-form';
@@ -18,98 +20,87 @@ function TrashIcon({ className }: { className?: string }) {
   );
 }
 
-interface MaterialControlsCardProps {
+interface TextureControlsCardProps {
   form: any;
-  materialName: string;
+  textureName: string;
 }
 
-export default function MaterialControlsCard({
+export default function TextureControlsCard({
   form,
-  materialName,
-}: MaterialControlsCardProps) {
+  textureName,
+}: TextureControlsCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const renderConfig = useStore(form.store, (state: any) => state.values) as RenderConfig;
 
-  const { data: materialData } = getMaterialData(renderConfig, materialName);
+  const { data: textureData } = getTextureData(renderConfig, textureName);
 
-  function handleDeleteMaterial(name: string) {
-    const newMaterials = { ...renderConfig.materials };
-    delete newMaterials[name];
+  function handleDeleteTexture(name: string) {
+    const newTextures = { ...renderConfig.textures };
+    delete newTextures[name];
 
     const newConfig: RenderConfig = {
       ...renderConfig,
-      materials: newMaterials,
+      textures: newTextures,
     };
 
     const fixed = fixReferences(newConfig);
-    form.setFieldValue('geometrics', fixed.geometrics);
-    form.setFieldValue('materials', fixed.materials);
-    form.setFieldValue('scenes', fixed.scenes);
     form.setFieldValue('textures', fixed.textures);
+    form.setFieldValue('materials', fixed.materials);
+    form.setFieldValue('geometrics', fixed.geometrics);
+    form.setFieldValue('scenes', fixed.scenes);
   }
 
-  // Texture select items
-  const textureItems = Object.keys(renderConfig.textures ?? {}).map((key) => ({
-    name: key,
-    value: key,
-  }));
-
-  function TextureSelects({ name }: { name: string }) {
+  function SubTexture({ name }: { name: string }) {
     return (
       <>
-        <SelectControl
-          form={form}
-          field={`materials.${name}.reflectance_texture`}
-          label="Reflectance Texture"
-          items={textureItems}
-        />
-        <SelectControl
-          form={form}
-          field={`materials.${name}.emittance_texture`}
-          label="Emittance Texture"
-          items={textureItems}
-        />
+        <NestedTextureHeader textureName={name} renderConfig={renderConfig} />
+        {renderControls(name)}
       </>
     );
   }
 
   function renderControls(name: string) {
-    const { data } = getMaterialData(renderConfig, name);
+    const { data } = getTextureData(renderConfig, name);
 
-    switch (data.type) {
-      case 'dielectric':
-        return (
+    return (
+      <>
+        {data.type === 'checker' && (
           <>
-            <RangeControl
+            <TextInputControl
               form={form}
-              field={`materials.${name}.index_of_refraction`}
-              label="Index of Refraction"
-              min={1.0}
-              max={10.0}
-              step={0.01}
+              field={`textures.${name}.scale`}
+              label="Scale"
+              valueLabel="scale"
+              type="number"
             />
-            <TextureSelects name={name} />
+            <Separator />
+            <SubTexture name={(data as any).even_texture} />
+            <Separator />
+            <SubTexture name={(data as any).odd_texture} />
           </>
-        );
-      case 'lambertian':
-        return <TextureSelects name={name} />;
-      case 'specular':
-        return (
-          <>
-            <RangeControl
-              form={form}
-              field={`materials.${name}.roughness`}
-              label="Roughness"
-              min={0.0}
-              max={1.0}
-              step={0.01}
-            />
-            <TextureSelects name={name} />
-          </>
-        );
-      default:
-        return null;
-    }
+        )}
+        {data.type === 'image' && <p className="text-sm text-zinc-500">Image texture — TODO</p>}
+        {data.type === 'color' && (
+          <TextArrayInputControl
+            form={form}
+            field={`textures.${name}.color`}
+            label="Color"
+            valueLabels={['red', 'green', 'blue']}
+            type="number"
+            unenforcedStep={0.01}
+            labelSuffix={
+              <InfoIconAdditionalInfo
+                info={[
+                  'Color values are typically between 0 and 1. For example, pure white would be [1, 1, 1].',
+                  'Values can be set outside of this range, and will be affected by the "Use Scaling Truncation" parameter.',
+                  'In the case of emissive textures, these values linearly correspond to the intensity of the emitted light.',
+                ]}
+              />
+            }
+          />
+        )}
+      </>
+    );
   }
 
   return (
@@ -119,9 +110,9 @@ export default function MaterialControlsCard({
         className="flex items-center justify-between p-4 pr-2"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <h2 className="text-xl font-bold">{materialName}</h2>
+        <h2 className="text-xl font-bold">{textureName}</h2>
         <div className="flex flex-row items-center gap-2">
-          <h3 className="text-lg font-light italic">{materialData.type}</h3>
+          <h3 className="text-lg font-light italic">{textureData.type}</h3>
           {isExpanded ? (
             <ChevronUpIcon className="h-8 w-auto" />
           ) : (
@@ -140,11 +131,11 @@ export default function MaterialControlsCard({
           >
             <Separator />
             <div className="flex flex-col gap-2 p-4">
-              {renderControls(materialName)}
+              {renderControls(textureName)}
               <div className="flex w-full justify-end">
                 <Button
                   color="red"
-                  onClick={() => handleDeleteMaterial(materialName)}
+                  onClick={() => handleDeleteTexture(textureName)}
                   size="sm"
                 >
                   <TrashIcon className="h-5 w-5" />
