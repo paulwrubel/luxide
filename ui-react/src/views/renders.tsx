@@ -5,16 +5,16 @@ import RenderPreviewCard from '../components/RenderPreviewCard';
 import NewRenderCard from '../components/NewRenderCard';
 
 export default function RendersPage() {
-  const { validUser } = useAuth();
+  const { user } = useAuth();
   const allRendersQuery = useRenders();
 
   const canCreateNewRender =
-    validUser.max_renders === null ||
+    (user?.max_renders ?? null) === null ||
     (allRendersQuery.data !== undefined &&
-      allRendersQuery.data.length < validUser.max_renders);
+      allRendersQuery.data.length < (user?.max_renders ?? Infinity));
 
   return (
-    <div className="flex w-full flex-col p-12">
+    <div className="flex w-full flex-col p-12 overflow-y-auto">
       {allRendersQuery.isPending && (
         <div className="flex w-full justify-center py-8">
           <Spinner size="xl" color="info" />

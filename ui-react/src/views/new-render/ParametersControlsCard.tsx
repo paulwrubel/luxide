@@ -1,13 +1,15 @@
 import ControlsCard from '../../components/ControlsCard';
-import OptionalControlUnbound from '../../components/ui/OptionalControlUnbound';
 import WarningIconAdvancedProperty from '../../components/icons/WarningIconAdvancedProperty';
 import TextInputControl from '../../components/ui/TextInputControl';
 import TextArrayInputControl from '../../components/ui/TextArrayInputControl';
 import ToggleControl from '../../components/ui/ToggleControl';
-import { Tooltip } from 'flowbite-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Tooltip, ToggleSwitch } from 'flowbite-react';
 import { useAuth } from '../../utils/auth';
-import { useState } from 'react';
+import Separator from '../../components/Separator';
+import { useState, useEffect } from 'react';
 import type { RenderConfig } from '../../utils/render/config';
+import { useStore } from '@tanstack/react-form';
 
 interface ParametersControlsCardProps {
   form: any;
@@ -16,17 +18,26 @@ interface ParametersControlsCardProps {
 export default function ParametersControlsCard({
   form,
 }: ParametersControlsCardProps) {
-  const { validUser } = useAuth();
-  const renderConfig = form.state.values as RenderConfig;
+  const { user } = useAuth();
+  const renderConfig = useStore(form.store, (state: any) => state.values) as RenderConfig;
   const parameters = renderConfig.parameters;
   const savedCheckpointLimit = parameters.saved_checkpoint_limit ?? 1;
-  const maxCheckpoints = validUser.max_checkpoints_per_render;
+  const maxCheckpoints = user?.max_checkpoints_per_render ?? null;
 
   const [savedCheckpointLimitLocal, setSavedCheckpointLimitLocal] =
     useState(savedCheckpointLimit);
 
-  const isCheckpointLimitEnabled =
-    form.state.values.parameters.saved_checkpoint_limit !== undefined;
+  const [isCheckpointLimitEnabled, setIsCheckpointLimitEnabled] = useState(
+    useStore(form.store, (state: any) => state.values.parameters.saved_checkpoint_limit) !== undefined
+  );
+
+  // Sync toggle state to form
+  useEffect(() => {
+    form.setFieldValue(
+      'parameters.saved_checkpoint_limit',
+      isCheckpointLimitEnabled ? savedCheckpointLimitLocal : undefined
+    );
+  }, [isCheckpointLimitEnabled]);
 
   return (
     <ControlsCard leftLabel="parameters" leftLabelStyle="light" startExpanded>
@@ -84,40 +95,67 @@ export default function ParametersControlsCard({
           type="number"
         />
 
-        <OptionalControlUnbound
-          label="Enforce Checkpoint Limit?"
-          checked={isCheckpointLimitEnabled}
-          oninput={(e) => {
-            form.setFieldValue(
-              'parameters.saved_checkpoint_limit',
-              (e as unknown as React.ChangeEvent<HTMLInputElement>).target.checked
-                ? savedCheckpointLimitLocal
-                : undefined
-            );
-          }}
-          disabled={maxCheckpoints !== null}
-          labelSuffix={<WarningIconAdvancedProperty />}
-        >
-          <TextInputControl
-            form={form}
-            oninput={(e) => {
-              setSavedCheckpointLimitLocal(
-                Number((e as React.FormEvent<HTMLInputElement>).currentTarget.value)
-              );
-            }}
-            onchange={(e) => {
-              setSavedCheckpointLimitLocal(
-                Number((e as React.ChangeEvent<HTMLInputElement>).currentTarget.value)
-              );
-            }}
-            field="parameters.saved_checkpoint_limit"
-            label="Saved Checkpoint Limit"
-            labelSpacePercentage={70}
-            valueLabel="checkpoints"
-            type="number"
-            labelSuffix={<WarningIconAdvancedProperty />}
+        <div className="h-px">
+          <AnimatePresence>
+            {isCheckpointLimitEnabled && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Separator />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+        <div className="flex w-full items-center justify-between py-2">
+          <h6 className="overflow-hidden font-normal">
+            <span className="flex items-center gap-2">
+              Enforce Checkpoint Limit?
+              <WarningIconAdvancedProperty />
+            </span>
+          </h6>
+          <ToggleSwitch
+            checked={isCheckpointLimitEnabled}
+            onChange={setIsCheckpointLimitEnabled}
+            disabled={maxCheckpoints !== null}
           />
-        </OptionalControlUnbound>
+        </div>
+        <AnimatePresence initial={false}>
+          {isCheckpointLimitEnabled && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              className="overflow-hidden"
+            >
+              <div>
+                <TextInputControl
+                  form={form}
+                  oninput={(e) => {
+                    setSavedCheckpointLimitLocal(
+                      Number((e as React.FormEvent<HTMLInputElement>).currentTarget.value)
+                    );
+                  }}
+                  onchange={(e) => {
+                    setSavedCheckpointLimitLocal(
+                      Number((e as React.ChangeEvent<HTMLInputElement>).currentTarget.value)
+                    );
+                  }}
+                  field="parameters.saved_checkpoint_limit"
+                  label="Saved Checkpoint Limit"
+                  labelSpacePercentage={70}
+                  valueLabel="checkpoints"
+                  type="number"
+                  labelSuffix={<WarningIconAdvancedProperty />}
+                />
+              </div>
+              <Separator />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {maxCheckpoints !== null && (
           <Tooltip

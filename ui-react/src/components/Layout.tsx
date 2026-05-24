@@ -1,10 +1,10 @@
 import { Outlet, Link } from 'react-router-dom';
-import { Navbar, Button, Avatar, Dropdown, DropdownItem, Spinner } from 'flowbite-react';
+import { Button, Avatar, Dropdown, DropdownItem, Spinner } from 'flowbite-react';
 import { useAuth } from '../utils/auth';
 import { navigateToAPILogin } from '../utils/api';
 
 export default function Layout() {
-  const { isAuthenticated, user, validUser, clearToken } = useAuth();
+  const { isAuthenticated, user, clearToken } = useAuth();
 
   function handleLogout() {
     clearToken();
@@ -12,18 +12,18 @@ export default function Layout() {
   }
 
   return (
-    <main className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
-      <div className="flex min-h-screen w-full flex-col">
+    <main className="h-screen bg-zinc-950 text-zinc-200 flex flex-col overflow-hidden">
+      <div className="flex flex-col w-full h-full">
         {/* App bar */}
-        <Navbar
-          fluid
-          className="flex h-16 items-center border-b border-zinc-800 bg-zinc-900"
-        >
-          <Link to="/" className="self-center whitespace-nowrap text-xl font-semibold text-white">
+        <nav className="flex h-16 items-center justify-between border-b border-zinc-800 bg-zinc-900 px-4">
+          <Link
+            to="/"
+            className="self-center whitespace-nowrap text-xl font-semibold text-white"
+          >
             Luxide
           </Link>
 
-          <div className="flex md:order-2">
+          <div className="flex items-center">
             {isAuthenticated ? (
               <div className="relative">
                 {user === undefined ? (
@@ -36,13 +36,13 @@ export default function Layout() {
                     label={
                       <div className="flex items-center gap-2">
                         <Avatar
-                          img={validUser.avatar_url}
+                          img={user.avatar_url}
                           alt="User avatar"
                           size="sm"
                           rounded
                         />
                         <span className="text-sm font-medium text-white">
-                          {validUser.username}
+                          {user.username}
                         </span>
                       </div>
                     }
@@ -60,15 +60,15 @@ export default function Layout() {
                 )}
               </div>
             ) : (
-              <Button color="primary" onClick={navigateToAPILogin}>
+              <Button color="default" onClick={navigateToAPILogin}>
                 Log In
               </Button>
             )}
           </div>
-        </Navbar>
+        </nav>
 
         {/* Main content */}
-        <div className="flex flex-1 flex-col">
+        <div className="flex flex-1 flex-col overflow-hidden">
           <Outlet />
         </div>
       </div>

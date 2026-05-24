@@ -72,7 +72,7 @@ export default function RenderControls({ render }: RenderControlsProps) {
       </Label>
 
       <Button
-        color="primary"
+        color="default"
         outline
         onClick={handleUpdateCheckpoints}
         disabled={
@@ -95,7 +95,7 @@ export default function RenderControls({ render }: RenderControlsProps) {
 
       <div className="flex justify-evenly gap-2">
         <Button
-          color={isPaused || isPausing ? 'primary' : 'warning'}
+          color={isPaused || isPausing ? 'default' : 'yellow'}
           outline
           onClick={handlePauseOrResume}
           disabled={
@@ -115,7 +115,7 @@ export default function RenderControls({ render }: RenderControlsProps) {
         </Button>
 
         <Button
-          color="failure"
+          color="red"
           onClick={handleDelete}
           disabled={isPausing || isRunning}
         >

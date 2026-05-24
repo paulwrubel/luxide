@@ -5,6 +5,7 @@ import {
 } from '../../utils/render/geometric';
 import { capitalize, getNextUniqueName } from '../../utils/render/utils';
 import type { RenderConfig } from '../../utils/render/config';
+import { useStore } from '@tanstack/react-form';
 
 function PlusIcon({ className }: { className?: string }) {
   return (
@@ -35,8 +36,7 @@ interface NewGeometricSpeedDialProps {
 }
 
 export default function NewGeometricSpeedDial({ form }: NewGeometricSpeedDialProps) {
-  // We need form.state.values to access current state
-  const formValues = form.state.values as RenderConfig;
+  const formValues = useStore(form.store, (state: any) => state.values) as RenderConfig;
 
   function handleNewGeometric(type: GeometricType) {
     const newGeometric = defaultGeometricForType(type as any);

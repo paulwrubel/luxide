@@ -5,6 +5,7 @@ import {
 } from '../../utils/render/material';
 import { capitalize, getNextUniqueName } from '../../utils/render/utils';
 import type { RenderConfig } from '../../utils/render/config';
+import { useStore } from '@tanstack/react-form';
 
 function PlusIcon({ className }: { className?: string }) {
   return (
@@ -21,7 +22,7 @@ interface NewMaterialSpeedDialProps {
 }
 
 export default function NewMaterialSpeedDial({ form }: NewMaterialSpeedDialProps) {
-  const formValues = form.state.values as RenderConfig;
+  const formValues = useStore(form.store, (state: any) => state.values) as RenderConfig;
 
   function handleNewMaterial(type: MaterialType) {
     const newMaterial = defaultMaterialForType(type as any);

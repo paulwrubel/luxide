@@ -16,8 +16,10 @@
     "@tanstack/react-query": "^5.100.14",
     "@tanstack/zod-form-adapter": "^0.42.1",
     "flowbite-react": "^0.12.17",
+    "framer-motion": "^12.40.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
+    "react-icons": "^5.6.0",
     "react-router-dom": "^7.15.1",
     "three": "^0.184.0",
     "zod": "^3.25.76"

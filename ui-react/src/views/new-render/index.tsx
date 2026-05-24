@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm } from '@tanstack/react-form';
+import { useForm, useStore } from '@tanstack/react-form';
 import { Sidebar, SidebarItems, SidebarItemGroup, Spinner, Button } from 'flowbite-react';
 import Separator from '../../components/Separator';
 import Controls from './Controls';
@@ -15,7 +15,7 @@ import { getDefaultRenderConfig } from '../../utils/render/templates';
 
 export default function NewRenderPage() {
   const navigate = useNavigate();
-  const { validUser, validToken } = useAuth();
+  const { user, token } = useAuth();
   const [isCreatingRender, setIsCreatingRender] = useState(false);
 
   // Canvas container sizing
@@ -43,9 +43,9 @@ export default function NewRenderPage() {
       onChange: ({ value }) => {
         const result = RenderConfigSchema.refine(
           ({ parameters }) => {
-            if (validUser.max_render_pixel_count !== null) {
+            if ((user?.max_render_pixel_count ?? null) !== null) {
               const [x, y] = parameters.image_dimensions;
-              return x * y <= validUser.max_render_pixel_count;
+              return x * y <= (user?.max_render_pixel_count ?? Infinity);
             }
             return true;
           },
@@ -55,11 +55,11 @@ export default function NewRenderPage() {
           }
         ).refine(
           ({ parameters }) => {
-            if (validUser.max_checkpoints_per_render !== null) {
+            if ((user?.max_checkpoints_per_render ?? null) !== null) {
               return (
                 parameters.saved_checkpoint_limit !== undefined &&
                 parameters.saved_checkpoint_limit <=
-                  validUser.max_checkpoints_per_render
+                  (user?.max_checkpoints_per_render ?? Infinity)
               );
             }
             return true;
@@ -85,9 +85,9 @@ export default function NewRenderPage() {
   });
 
   // Canvas sizing: maintain aspect ratio in container
-  const aspectRatio =
-    form.state.values.parameters.image_dimensions[0] /
-    form.state.values.parameters.image_dimensions[1];
+  const imageDimensions = useStore(form.store, (state: any) => state.values.parameters.image_dimensions);
+  const aspectRatio = imageDimensions[0] / imageDimensions[1];
+  const formValuesForSubmit = useStore(form.store, (state: any) => state.values) as RenderConfig;
 
   let canvasWidth = 0;
   let canvasHeight = 0;
@@ -105,7 +105,7 @@ export default function NewRenderPage() {
   async function handleCreateRender() {
     setIsCreatingRender(true);
     try {
-      const response = await postRender(validToken, form.state.values as RenderConfig);
+      const response = await postRender(token!, formValuesForSubmit);
       navigate(`/renders/${response.id}`);
     } catch {
       setIsCreatingRender(false);
@@ -113,9 +113,9 @@ export default function NewRenderPage() {
   }
 
   return (
-    <div className="flex h-full max-h-[calc(100vh-4rem)] w-full flex-1">
+    <div className="flex h-full w-full">
       <Sidebar
-        className="w-128 z-10 !bg-zinc-900"
+        className="w-128 z-10 !bg-zinc-900 [&>div]:!bg-zinc-900"
       >
         <SidebarItems>
           <SidebarItemGroup>
@@ -125,7 +125,7 @@ export default function NewRenderPage() {
               <Button
                 onClick={handleCreateRender}
                 disabled={isCreatingRender}
-                color="primary"
+                color="default"
               >
                 {isCreatingRender ? (
                   <span className="flex items-center justify-center gap-2">

@@ -46,6 +46,41 @@ export default function RenderDisplay({
   );
 }
 
+interface ProgressStateProps {
+  progress: number;
+  color: 'blue' | 'yellow';
+  label: string;
+  checkpoint: number;
+  totalCheckpoints: number;
+}
+
+function ProgressState({
+  progress,
+  color,
+  label,
+  checkpoint,
+  totalCheckpoints,
+}: ProgressStateProps) {
+  return (
+    <>
+      <div className="w-full px-32">
+        <Progress
+          progress={Math.round(progress * 100)}
+          color={color}
+          size="lg"
+          labelProgress
+          progressLabelPosition="inside"
+          className="[&>div]:transition-[width] [&>div]:duration-500 [&>div]:ease-in-out"
+        />
+
+      </div>
+      <p>
+        {label} at checkpoint {checkpoint} / {totalCheckpoints}
+      </p>
+    </>
+  );
+}
+
 interface StateDisplayProps {
   state: Render['state'];
   totalCheckpoints: number;
@@ -57,23 +92,14 @@ function StateDisplay({ state, totalCheckpoints }: StateDisplayProps) {
   }
 
   if (isRenderStateRunning(state)) {
-    const progress = state.running.progress_info.progress;
     return (
-      <>
-        <div className="w-full px-32">
-          <Progress
-            progress={Math.round(progress * 100)}
-            color="blue"
-            size="lg"
-            labelProgress
-            labelText
-          />
-        </div>
-        <p>
-          Running to checkpoint {state.running.checkpoint_iteration} /{' '}
-          {totalCheckpoints}
-        </p>
-      </>
+      <ProgressState
+        progress={state.running.progress_info.progress}
+        color="blue"
+        label="Running to"
+        checkpoint={state.running.checkpoint_iteration}
+        totalCheckpoints={totalCheckpoints}
+      />
     );
   }
 
@@ -87,23 +113,14 @@ function StateDisplay({ state, totalCheckpoints }: StateDisplayProps) {
   }
 
   if (isRenderStatePausing(state)) {
-    const progress = state.pausing.progress_info.progress;
     return (
-      <>
-        <div className="w-full px-32">
-          <Progress
-            progress={Math.round(progress * 100)}
-            color="yellow"
-            size="lg"
-            labelProgress
-            labelText
-          />
-        </div>
-        <p>
-          Pausing at checkpoint {state.pausing.checkpoint_iteration} /{' '}
-          {totalCheckpoints}
-        </p>
-      </>
+      <ProgressState
+        progress={state.pausing.progress_info.progress}
+        color="yellow"
+        label="Pausing"
+        checkpoint={state.pausing.checkpoint_iteration}
+        totalCheckpoints={totalCheckpoints}
+      />
     );
   }
 

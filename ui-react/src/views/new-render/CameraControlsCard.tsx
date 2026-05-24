@@ -4,6 +4,7 @@ import RangeControl from '../../components/ui/RangeControl';
 import TextArrayInputControl from '../../components/ui/TextArrayInputControl';
 import { getCameraData } from '../../utils/render/camera';
 import type { RenderConfig } from '../../utils/render/config';
+import { useStore } from '@tanstack/react-form';
 
 interface CameraControlsCardProps {
   form: any;
@@ -14,7 +15,7 @@ export default function CameraControlsCard({
   form,
   camera,
 }: CameraControlsCardProps) {
-  const renderConfig = form.state.values as RenderConfig;
+  const renderConfig = useStore(form.store, (state: any) => state.values) as RenderConfig;
   const { path } = getCameraData(renderConfig, camera);
 
   return (

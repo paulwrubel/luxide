@@ -15,13 +15,14 @@ import {
   getTopLevelTextureNames,
 } from '../../utils/render/utils';
 import type { RenderConfig } from '../../utils/render/config';
+import { useStore } from '@tanstack/react-form';
 
 interface ControlsProps {
   form: any; // TanStack Form instance
 }
 
 export default function Controls({ form }: ControlsProps) {
-  const renderConfig = form.state.values as RenderConfig;
+  const renderConfig = useStore(form.store, (state: any) => state.values) as RenderConfig;
 
   const activeScene = useMemo(
     () => getSceneData(renderConfig, renderConfig.active_scene),
@@ -44,7 +45,7 @@ export default function Controls({ form }: ControlsProps) {
   );
 
   return (
-    <Tabs variant="pills" className="flex flex-col">
+    <Tabs variant="pills" className="[&_[aria-selected=true]]:!bg-gray-800 [&_[aria-selected=true]]:!text-white [&_[role=tablist]]:flex-nowrap [&_[role=tabpanel]]:border-t [&_[role=tabpanel]]:border-zinc-600">
       <TabItem title="Parameters">
         <div className="flex flex-col items-stretch gap-4 p-2">
           <ParametersControlsCard form={form} />

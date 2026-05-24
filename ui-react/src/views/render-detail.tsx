@@ -26,12 +26,12 @@ export default function RenderDetailPage() {
   }, [imageURLQuery.data]);
 
   return (
-    <div className="flex h-full w-full flex-1">
+    <div className="flex h-full w-full">
       <Sidebar
-        className="w-82 z-10 !bg-zinc-900"
+        className="w-82 z-10 !bg-zinc-900 h-full [&>div]:!bg-zinc-900"
       >
-        <SidebarItems>
-          <SidebarItemGroup>
+        <SidebarItems className="h-full">
+          <SidebarItemGroup className="flex h-full flex-col">
             {renderQuery.isSuccess && (
               <RenderControls render={renderQuery.data} />
             )}

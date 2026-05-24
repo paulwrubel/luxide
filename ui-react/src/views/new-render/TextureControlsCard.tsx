@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Card, Button } from 'flowbite-react';
 import { ChevronDownIcon, ChevronUpIcon } from 'flowbite-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Separator from '../../components/Separator';
 import TextInputControl from '../../components/ui/TextInputControl';
 import TextArrayInputControl from '../../components/ui/TextArrayInputControl';
@@ -9,6 +10,7 @@ import NestedTextureHeader from './NestedTextureHeader';
 import { getTextureData } from '../../utils/render/texture';
 import { fixReferences } from '../../utils/render/utils';
 import type { RenderConfig } from '../../utils/render/config';
+import { useStore } from '@tanstack/react-form';
 
 function TrashIcon({ className }: { className?: string }) {
   return (
@@ -28,7 +30,7 @@ export default function TextureControlsCard({
   textureName,
 }: TextureControlsCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const renderConfig = form.state.values as RenderConfig;
+  const renderConfig = useStore(form.store, (state: any) => state.values) as RenderConfig;
 
   const { data: textureData } = getTextureData(renderConfig, textureName);
 
@@ -102,7 +104,7 @@ export default function TextureControlsCard({
   }
 
   return (
-    <Card className="flex max-w-full flex-col !bg-zinc-800 !text-zinc-200">
+    <Card className="flex max-w-full flex-col !bg-zinc-800 !text-zinc-200 [&>div]:!p-0">
       <button
         type="button"
         className="flex items-center justify-between p-4 pr-2"
@@ -118,23 +120,31 @@ export default function TextureControlsCard({
           )}
         </div>
       </button>
-      {isExpanded && (
-        <div>
-          <Separator />
-          <div className="flex flex-col gap-2 p-4">
-            {renderControls(textureName)}
-            <div className="flex w-full justify-end">
-              <Button
-                color="failure"
-                onClick={() => handleDeleteTexture(textureName)}
-                size="sm"
-              >
-                <TrashIcon className="h-5 w-5" />
-              </Button>
+      <AnimatePresence initial={false}>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            className="overflow-hidden"
+          >
+            <Separator />
+            <div className="flex flex-col gap-2 p-4">
+              {renderControls(textureName)}
+              <div className="flex w-full justify-end">
+                <Button
+                  color="red"
+                  onClick={() => handleDeleteTexture(textureName)}
+                  size="sm"
+                >
+                  <TrashIcon className="h-5 w-5" />
+                </Button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Card>
   );
 }

@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { ThemeProvider } from 'flowbite-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './utils/auth';
 import Layout from './components/Layout';
@@ -20,29 +21,31 @@ const queryClient = new QueryClient({
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            {/* Public layout: navbar + pages */}
             <Route element={<Layout />}>
+              {/* Public routes */}
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route
                 path="/auth/github/callback"
                 element={<AuthCallbackPage />}
               />
-            </Route>
 
-            {/* Authenticated layout: renders pages with auth guard */}
-            <Route element={<AuthenticatedLayout />}>
-              <Route path="/renders" element={<RendersPage />} />
-              <Route path="/renders/:id" element={<RenderDetailPage />} />
-              <Route path="/renders/new" element={<NewRenderPage />} />
+              {/* Authenticated routes — nested inside Layout for dark bg + navbar */}
+              <Route element={<AuthenticatedLayout />}>
+                <Route path="/renders" element={<RendersPage />} />
+                <Route path="/renders/:id" element={<RenderDetailPage />} />
+                <Route path="/renders/new" element={<NewRenderPage />} />
+              </Route>
             </Route>
           </Routes>
         </BrowserRouter>
       </AuthProvider>
     </QueryClientProvider>
+    </ThemeProvider>
   );
 }

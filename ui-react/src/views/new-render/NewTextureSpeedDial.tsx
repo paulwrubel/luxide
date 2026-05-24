@@ -5,6 +5,7 @@ import {
 } from '../../utils/render/texture';
 import { capitalize, getNextUniqueName } from '../../utils/render/utils';
 import type { RenderConfig } from '../../utils/render/config';
+import { useStore } from '@tanstack/react-form';
 
 function PlusIcon({ className }: { className?: string }) {
   return (
@@ -21,7 +22,7 @@ interface NewTextureSpeedDialProps {
 }
 
 export default function NewTextureSpeedDial({ form }: NewTextureSpeedDialProps) {
-  const formValues = form.state.values as RenderConfig;
+  const formValues = useStore(form.store, (state: any) => state.values) as RenderConfig;
 
   function handleNewTexture(type: TextureType) {
     const newTexture = defaultTextureForType(type as any);
