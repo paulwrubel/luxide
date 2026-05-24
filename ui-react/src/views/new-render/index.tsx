@@ -5,6 +5,7 @@ import { zodValidator } from '@tanstack/zod-form-adapter';
 import { Sidebar, Spinner, Button } from 'flowbite-react';
 import Separator from '../../components/Separator';
 import Controls from './Controls';
+import Scene from './Scene';
 import { useAuth } from '../../utils/auth';
 import { postRender } from '../../utils/api';
 import {
@@ -139,9 +140,7 @@ export default function NewRenderPage() {
           style={{ width: canvasWidth, height: canvasHeight }}
           className="box-border border border-zinc-500"
         >
-          <div className="flex h-full w-full items-center justify-center bg-zinc-900 text-zinc-500 text-sm">
-            3D Preview (Phase 6)
-          </div>
+          {canvasWidth > 0 && canvasHeight > 0 && <Scene form={form as any} />}
         </div>
       </div>
     </div>
