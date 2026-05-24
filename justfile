@@ -2,7 +2,7 @@ binary_name_api := 'luxide-api'
 binary_name_cli := 'luxide-cli'
 
 default:
-    @just --list --justfile {{justfile()}}
+    @just --list --justfile {{ justfile() }}
 
 alias run := run-docker
 [group('run')]
@@ -14,11 +14,11 @@ run-ui: run-docker setup-ui-env
 
 [group('run')]
 run-local: build-api run-postgres
-    ./target/release/{{binary_name_api}}
+    ./target/release/{{ binary_name_api }}
 
 [group('run')]
 run-cli: build-cli
-    ./target/release/{{binary_name_cli}}
+    ./target/release/{{ binary_name_cli }}
 
 [group('run')]
 run-postgres:
@@ -38,11 +38,11 @@ build-api-cli: build-ui run-postgres
 
 [group('build')]
 build-api: build-ui run-postgres
-    cargo build --release --bin {{binary_name_api}}
+    cargo build --release --bin {{ binary_name_api }}
 
 [group('build')]
 build-cli:
-    cargo build --release --bin {{binary_name_cli}}
+    cargo build --release --bin {{ binary_name_cli }}
 
 [group('misc')]
 clean:
@@ -62,6 +62,3 @@ setup-ui-env:
 generate-jwt-keypair-pem:
     openssl genpkey -algorithm RSA -out jwt-key-private.pem -pkeyopt rsa_keygen_bits:2048
     openssl rsa -in jwt-key-private.pem -pubout -out jwt-key-public.pem
-
-
-
