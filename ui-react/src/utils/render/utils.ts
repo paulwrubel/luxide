@@ -114,29 +114,33 @@ export function toDegrees(angle: Angle): number {
  */
 export function fixReferences(config: RenderConfig): RenderConfig {
 	const newConfig = { ...config };
+	const textures = newConfig.textures ?? {};
+	const materials = newConfig.materials ?? {};
+	const geometrics = newConfig.geometrics ?? {};
+	const scenes = newConfig.scenes ?? {};
 
 	// Fix texture references: checker sub-textures
-	for (const texture of Object.values(newConfig.textures)) {
+	for (const texture of Object.values(textures)) {
 		if (texture.type === 'checker') {
-			if (!Object.keys(newConfig.textures).includes(texture.even_texture)) {
+			if (!Object.keys(textures).includes(texture.even_texture)) {
 				texture.even_texture = '__white';
 			}
-			if (!Object.keys(newConfig.textures).includes(texture.odd_texture)) {
+			if (!Object.keys(textures).includes(texture.odd_texture)) {
 				texture.odd_texture = '__black';
 			}
 		}
 	}
 
 	// Fix material references: texture refs in materials
-	for (const material of Object.values(newConfig.materials)) {
+	for (const material of Object.values(materials)) {
 		switch (material.type) {
 			case 'dielectric':
 			case 'lambertian':
 			case 'specular':
-				if (!Object.keys(newConfig.textures).includes(material.reflectance_texture)) {
+				if (!Object.keys(textures).includes(material.reflectance_texture)) {
 					material.reflectance_texture = '__white';
 				}
-				if (!Object.keys(newConfig.textures).includes(material.emittance_texture)) {
+				if (!Object.keys(textures).includes(material.emittance_texture)) {
 					material.emittance_texture = '__black';
 				}
 				break;
@@ -144,19 +148,19 @@ export function fixReferences(config: RenderConfig): RenderConfig {
 	}
 
 	// Fix geometric references: material/texture refs in geometrics
-	for (const geometric of Object.values(newConfig.geometrics)) {
+	for (const geometric of Object.values(geometrics)) {
 		switch (geometric.type) {
 			case 'box':
 			case 'obj_model':
 			case 'parallelogram':
 			case 'sphere':
 			case 'triangle':
-				if (!Object.keys(newConfig.materials).includes(geometric.material)) {
+				if (!Object.keys(materials).includes(geometric.material)) {
 					geometric.material = '__lambertian_white';
 				}
 				break;
 			case 'constant_volume':
-				if (!Object.keys(newConfig.textures).includes(geometric.reflectance_texture)) {
+				if (!Object.keys(textures).includes(geometric.reflectance_texture)) {
 					geometric.reflectance_texture = '__white';
 				}
 				break;
@@ -164,30 +168,30 @@ export function fixReferences(config: RenderConfig): RenderConfig {
 	}
 
 	// Fix dangling geometric child references in composite geometrics
-	for (const geometric of Object.values(newConfig.geometrics)) {
+	for (const geometric of Object.values(geometrics)) {
 		switch (geometric.type) {
 			case 'rotate_x':
 			case 'rotate_y':
 			case 'rotate_z':
 			case 'translate':
 			case 'constant_volume':
-				if (!Object.keys(newConfig.geometrics).includes(geometric.geometric)) {
+				if (!Object.keys(geometrics).includes(geometric.geometric)) {
 					geometric.geometric = '__unit_box';
 				}
 				break;
 			case 'list':
 				geometric.geometrics = geometric.geometrics.filter((name: string) =>
-					Object.keys(newConfig.geometrics).includes(name)
+					Object.keys(geometrics).includes(name)
 				);
 				break;
 		}
 	}
 
 	// Remove deleted geometric names from the active scene's geometric list
-	const activeScene = newConfig.scenes[newConfig.active_scene];
+	const activeScene = scenes[newConfig.active_scene];
 	if (activeScene) {
 		activeScene.geometrics = activeScene.geometrics.filter((name: string) =>
-			Object.keys(newConfig.geometrics).includes(name)
+			Object.keys(geometrics).includes(name)
 		);
 	}
 

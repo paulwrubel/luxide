@@ -1,4 +1,4 @@
-import { Dropdown } from 'flowbite-react';
+import { Dropdown, DropdownItem } from 'flowbite-react';
 import {
   defaultMaterialForType,
   type MaterialData,
@@ -26,7 +26,7 @@ export default function NewMaterialSpeedDial({ form }: NewMaterialSpeedDialProps
   function handleNewMaterial(type: MaterialType) {
     const newMaterial = defaultMaterialForType(type as any);
     const nextName = getNextUniqueName(
-      formValues.materials,
+      formValues.materials ?? {},
       `New ${capitalize(type)}`
     );
 
@@ -43,24 +43,24 @@ export default function NewMaterialSpeedDial({ form }: NewMaterialSpeedDialProps
       color="light"
       size="sm"
     >
-      <Dropdown.Item disabled>
+      <DropdownItem disabled>
         <div className="flex items-center gap-2">
           <PlusIcon className="h-4 w-4" />
           Dielectric Material
         </div>
-      </Dropdown.Item>
-      <Dropdown.Item onClick={() => handleNewMaterial('lambertian')}>
+      </DropdownItem>
+      <DropdownItem onClick={() => handleNewMaterial('lambertian')}>
         <div className="flex items-center gap-2">
           <PlusIcon className="h-4 w-4" />
           Lambertian Material
         </div>
-      </Dropdown.Item>
-      <Dropdown.Item onClick={() => handleNewMaterial('specular')}>
+      </DropdownItem>
+      <DropdownItem onClick={() => handleNewMaterial('specular')}>
         <div className="flex items-center gap-2">
           <PlusIcon className="h-4 w-4" />
           Specular Material
         </div>
-      </Dropdown.Item>
+      </DropdownItem>
     </Dropdown>
   );
 }

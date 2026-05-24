@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from '@tanstack/react-form';
-import { zodValidator } from '@tanstack/zod-form-adapter';
-import { Sidebar, Spinner, Button } from 'flowbite-react';
+import { Sidebar, SidebarItems, SidebarItemGroup, Spinner, Button } from 'flowbite-react';
 import Separator from '../../components/Separator';
 import Controls from './Controls';
 import Scene from './Scene';
@@ -40,36 +39,48 @@ export default function NewRenderPage() {
   // TanStack Form
   const form = useForm({
     defaultValues: getDefaultRenderConfig() as RenderConfig,
-    validatorAdapter: zodValidator(),
     validators: {
-      onChange: RenderConfigSchema.refine(
-        ({ parameters }) => {
-          if (validUser.max_render_pixel_count !== null) {
-            const [x, y] = parameters.image_dimensions;
-            return x * y <= validUser.max_render_pixel_count;
+      onChange: ({ value }) => {
+        const result = RenderConfigSchema.refine(
+          ({ parameters }) => {
+            if (validUser.max_render_pixel_count !== null) {
+              const [x, y] = parameters.image_dimensions;
+              return x * y <= validUser.max_render_pixel_count;
+            }
+            return true;
+          },
+          {
+            message: 'Image dimensions are too large',
+            path: ['parameters', 'image_dimensions'],
           }
-          return true;
-        },
-        {
-          message: 'Image dimensions are too large',
-          path: ['parameters', 'image_dimensions'],
-        }
-      ).refine(
-        ({ parameters }) => {
-          if (validUser.max_checkpoints_per_render !== null) {
-            return (
-              parameters.saved_checkpoint_limit !== undefined &&
-              parameters.saved_checkpoint_limit <=
-                validUser.max_checkpoints_per_render
-            );
+        ).refine(
+          ({ parameters }) => {
+            if (validUser.max_checkpoints_per_render !== null) {
+              return (
+                parameters.saved_checkpoint_limit !== undefined &&
+                parameters.saved_checkpoint_limit <=
+                  validUser.max_checkpoints_per_render
+              );
+            }
+            return true;
+          },
+          {
+            message: 'Saved checkpoint limit is too large',
+            path: ['parameters', 'saved_checkpoint_limit'],
           }
-          return true;
-        },
-        {
-          message: 'Saved checkpoint limit is too large',
-          path: ['parameters', 'saved_checkpoint_limit'],
+        ).safeParse(value);
+
+        if (!result.success) {
+          return result.error.issues
+            .map((issue) =>
+              issue.path.length > 0
+                ? `${issue.path.join('.')}: ${issue.message}`
+                : issue.message,
+            )
+            .join(', ');
         }
-      ),
+        return undefined;
+      },
     },
   });
 
@@ -105,10 +116,9 @@ export default function NewRenderPage() {
     <div className="flex h-full max-h-[calc(100vh-4rem)] w-full flex-1">
       <Sidebar
         className="w-128 z-10 !bg-zinc-900"
-        collapsed={false}
       >
-        <Sidebar.Items>
-          <Sidebar.ItemGroup>
+        <SidebarItems>
+          <SidebarItemGroup>
             <div className="flex min-h-full flex-col items-stretch gap-2">
               <Controls form={form as any} />
               <Separator className="mt-auto" />
@@ -127,8 +137,8 @@ export default function NewRenderPage() {
                 )}
               </Button>
             </div>
-          </Sidebar.ItemGroup>
-        </Sidebar.Items>
+          </SidebarItemGroup>
+        </SidebarItems>
       </Sidebar>
 
       {/* 3D scene canvas placeholder — replaced by Phase 6 */}

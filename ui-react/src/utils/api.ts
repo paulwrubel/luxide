@@ -1,15 +1,10 @@
 import type { RawRenderConfig, RenderConfig } from './render/config';
 
-function getBaseURL(): string {
-	return window.location.origin;
-}
-
 function getAPIURL(): string {
-	const baseURL = getBaseURL();
-	// replace the port in the browser, if any, with the API port
-	const baseAPIURL = baseURL.replace(/:\d{4}$/, ':8080');
-
-	return `${baseAPIURL}/api/v1`;
+	// In production, UI and API are served from the same origin (Rust embeds both).
+	// In dev, Vite proxies /api → localhost:8080 transparently.
+	// No port replacement needed in either case.
+	return `${window.location.origin}/api/v1`;
 }
 
 export type LoginResponse = {

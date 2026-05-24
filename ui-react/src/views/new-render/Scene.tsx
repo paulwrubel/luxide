@@ -22,7 +22,6 @@ function SceneCamera({ cameraData }: { cameraData: any }) {
   return (
     <perspectiveCamera
       ref={cameraRef}
-      makeDefault
       fov={cameraData.vertical_field_of_view_degrees}
       position={cameraData.eye_location}
       up={cameraData.view_up}

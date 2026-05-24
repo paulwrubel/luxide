@@ -1,4 +1,4 @@
-import { Dropdown } from 'flowbite-react';
+import { Dropdown, DropdownItem } from 'flowbite-react';
 import {
   defaultGeometricForType,
   type GeometricData,
@@ -41,22 +41,20 @@ export default function NewGeometricSpeedDial({ form }: NewGeometricSpeedDialPro
   function handleNewGeometric(type: GeometricType) {
     const newGeometric = defaultGeometricForType(type as any);
     const nextName = getNextUniqueName(
-      formValues.geometrics,
+      formValues.geometrics ?? {},
       `New ${capitalize(type)}`
     );
 
     const newGeometrics = {
-      ...formValues.geometrics,
+      ...(formValues.geometrics ?? {}),
       [nextName]: newGeometric,
     };
+    const activeSceneData = formValues.scenes?.[formValues.active_scene];
     const newScenes = {
       ...formValues.scenes,
       [formValues.active_scene]: {
-        ...formValues.scenes[formValues.active_scene],
-        geometrics: [
-          ...formValues.scenes[formValues.active_scene].geometrics,
-          nextName,
-        ],
+        ...activeSceneData,
+        geometrics: [...(activeSceneData?.geometrics ?? []), nextName],
       },
     };
 
@@ -72,7 +70,7 @@ export default function NewGeometricSpeedDial({ form }: NewGeometricSpeedDialPro
       size="sm"
     >
       {GEOMETRIC_TYPES.map((item) => (
-        <Dropdown.Item
+        <DropdownItem
           key={item.label}
           onClick={() => {
             if (!item.disabled) handleNewGeometric(item.type);
@@ -83,7 +81,7 @@ export default function NewGeometricSpeedDial({ form }: NewGeometricSpeedDialPro
             <PlusIcon className="h-4 w-4" />
             {item.label}
           </div>
-        </Dropdown.Item>
+        </DropdownItem>
       ))}
     </Dropdown>
   );

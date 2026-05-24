@@ -1,4 +1,4 @@
-import { Dropdown } from 'flowbite-react';
+import { Dropdown, DropdownItem } from 'flowbite-react';
 import {
   defaultTextureForType,
   type TextureData,
@@ -26,7 +26,7 @@ export default function NewTextureSpeedDial({ form }: NewTextureSpeedDialProps) 
   function handleNewTexture(type: TextureType) {
     const newTexture = defaultTextureForType(type as any);
     const nextName = getNextUniqueName(
-      formValues.textures,
+      formValues.textures ?? {},
       `New ${capitalize(type)}`
     );
 
@@ -43,24 +43,24 @@ export default function NewTextureSpeedDial({ form }: NewTextureSpeedDialProps) 
       color="light"
       size="sm"
     >
-      <Dropdown.Item disabled>
+      <DropdownItem disabled>
         <div className="flex items-center gap-2">
           <PlusIcon className="h-4 w-4" />
           Checker Texture
         </div>
-      </Dropdown.Item>
-      <Dropdown.Item disabled>
+      </DropdownItem>
+      <DropdownItem disabled>
         <div className="flex items-center gap-2">
           <PlusIcon className="h-4 w-4" />
           Image Texture
         </div>
-      </Dropdown.Item>
-      <Dropdown.Item onClick={() => handleNewTexture('color')}>
+      </DropdownItem>
+      <DropdownItem onClick={() => handleNewTexture('color')}>
         <div className="flex items-center gap-2">
           <PlusIcon className="h-4 w-4" />
           Color Texture
         </div>
-      </Dropdown.Item>
+      </DropdownItem>
     </Dropdown>
   );
 }

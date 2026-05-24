@@ -4,6 +4,7 @@ import { ChevronDownIcon, ChevronUpIcon } from 'flowbite-react';
 import Separator from '../../components/Separator';
 import NestedGeometricHeader from './NestedGeometricHeader';
 import TextArrayInputControl from '../../components/ui/TextArrayInputControl';
+import TextInputControl from '../../components/ui/TextInputControl';
 import RangeControl from '../../components/ui/RangeControl';
 import SelectControl from '../../components/ui/SelectControl';
 import { getGeometricData, getGeometricDataSafe } from '../../utils/render/geometric';
@@ -84,7 +85,7 @@ export default function GeometricControlsCard({
   }));
 
   // Controls for a specific geometric type
-  function renderControls(name: string) {
+  function renderControls(name: string): React.ReactNode {
     const { data } = getGeometricData(renderConfig, name);
 
     switch (data.type) {

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Tabs } from 'flowbite-react';
+import { Tabs, TabItem } from 'flowbite-react';
 import CameraControlsCard from './CameraControlsCard';
 import ParametersControlsCard from './ParametersControlsCard';
 import GeometricControlsCard from './GeometricControlsCard';
@@ -45,22 +45,22 @@ export default function Controls({ form }: ControlsProps) {
 
   return (
     <Tabs variant="pills" className="flex flex-col">
-      <Tabs.Item title="Parameters">
+      <TabItem title="Parameters">
         <div className="flex flex-col items-stretch gap-4 p-2">
           <ParametersControlsCard form={form} />
         </div>
-      </Tabs.Item>
+      </TabItem>
 
-      <Tabs.Item title="Camera">
+      <TabItem title="Camera">
         <div className="flex flex-col items-stretch gap-4 p-2">
           <CameraControlsCard
             form={form}
             camera={activeScene.camera}
           />
         </div>
-      </Tabs.Item>
+      </TabItem>
 
-      <Tabs.Item title="Geometrics">
+      <TabItem title="Geometrics">
         <div className="flex flex-col items-stretch gap-4 p-2">
           {activeGeometricNames.map((geoName) => (
             <GeometricControlsCard
@@ -73,9 +73,9 @@ export default function Controls({ form }: ControlsProps) {
             <NewGeometricSpeedDial form={form} />
           </div>
         </div>
-      </Tabs.Item>
+      </TabItem>
 
-      <Tabs.Item title="Materials">
+      <TabItem title="Materials">
         <div className="flex flex-col items-stretch gap-4 p-2">
           {topLevelMaterialNames.map((matName) => (
             <MaterialControlsCard
@@ -88,9 +88,9 @@ export default function Controls({ form }: ControlsProps) {
             <NewMaterialSpeedDial form={form} />
           </div>
         </div>
-      </Tabs.Item>
+      </TabItem>
 
-      <Tabs.Item title="Textures">
+      <TabItem title="Textures">
         <div className="flex flex-col items-stretch gap-4 p-2">
           {topLevelTextureNames.map((texName) => (
             <TextureControlsCard
@@ -103,7 +103,7 @@ export default function Controls({ form }: ControlsProps) {
             <NewTextureSpeedDial form={form} />
           </div>
         </div>
-      </Tabs.Item>
+      </TabItem>
     </Tabs>
   );
 }
