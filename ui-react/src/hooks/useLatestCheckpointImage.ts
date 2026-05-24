@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getLatestCheckpointImage } from '../utils/api';
 import { useAuth } from '../utils/auth';
 
-export function useCheckpointImage(renderId: number) {
+export function useLatestCheckpointImage(renderId: number) {
 	const { validToken } = useAuth();
 
 	return useQuery({

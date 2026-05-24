@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Sidebar, SidebarItems, SidebarItemGroup, Spinner } from 'flowbite-react';
 import { useAuth } from '../../utils/auth';
 import { useRender } from '../../hooks/useRender';
-import { useCheckpointImage } from '../../hooks/useCheckpointImage';
+import { useLatestCheckpointImage } from '../../hooks/useLatestCheckpointImage';
 import RenderControls from './RenderControls';
 import RenderDisplay from './RenderDisplay';
 
@@ -13,7 +13,7 @@ export default function RenderDetailPage() {
   useAuth(); // ensures authenticated context
 
   const renderQuery = useRender(renderId);
-  const imageURLQuery = useCheckpointImage(renderId);
+  const imageURLQuery = useLatestCheckpointImage(renderId);
 
   // cleanup object URL on unmount
   useEffect(() => {

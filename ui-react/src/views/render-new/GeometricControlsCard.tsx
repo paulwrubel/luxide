@@ -102,7 +102,7 @@ export default function GeometricControlsCard({
       case 'list':
         return (
           <>
-            {(data as any).geometrics.map((subName: string, i: number) => (
+            {data.geometrics.map((subName: string, i: number) => (
               <div key={subName}>
                 {i > 0 && <Separator />}
                 <NestedGeometricHeader geometricName={subName} renderConfig={renderConfig} />
@@ -114,7 +114,7 @@ export default function GeometricControlsCard({
       case 'rotate_x':
       case 'rotate_y':
       case 'rotate_z': {
-        const rotateData = data as any;
+        const rotateData = data;
         const hasDegrees = 'degrees' in rotateData;
         return (
           <>
@@ -133,7 +133,7 @@ export default function GeometricControlsCard({
         );
       }
       case 'translate': {
-        const transData = data as any;
+        const transData = data;
         return (
           <>
             <NestedGeometricHeader geometricName={transData.geometric} renderConfig={renderConfig} />

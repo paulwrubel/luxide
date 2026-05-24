@@ -74,9 +74,9 @@ export default function TextureControlsCard({
               type="number"
             />
             <Separator />
-            <SubTexture name={(data as any).even_texture} />
+            <SubTexture name={data.even_texture} />
             <Separator />
-            <SubTexture name={(data as any).odd_texture} />
+            <SubTexture name={data.odd_texture} />
           </>
         )}
         {data.type === 'image' && <p className="text-sm text-zinc-500">Image texture — TODO</p>}

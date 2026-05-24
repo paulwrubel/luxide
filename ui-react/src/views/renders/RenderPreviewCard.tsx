@@ -1,14 +1,14 @@
 import { Card, Progress, Spinner } from 'flowbite-react';
 import { Link } from 'react-router-dom';
 import { isRenderStateRunning, isRenderStatePausing, type Render } from '../../utils/api';
-import { useCheckpointImage } from '../../hooks/useCheckpointImage';
+import { useLatestCheckpointImage } from '../../hooks/useLatestCheckpointImage';
 
 interface RenderPreviewCardProps {
   render: Render;
 }
 
 export default function RenderPreviewCard({ render }: RenderPreviewCardProps) {
-  const checkpointImageQuery = useCheckpointImage(render.id);
+  const checkpointImageQuery = useLatestCheckpointImage(render.id);
   const renderSize = render.config.parameters.image_dimensions;
   const state = render.state;
   const running = isRenderStateRunning(state);
