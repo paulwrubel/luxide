@@ -1,5 +1,5 @@
 import { Outlet, Link } from 'react-router-dom';
-import { Navbar, NavbarBrand, Button, Avatar, Dropdown, Spinner } from 'flowbite-react';
+import { Navbar, Button, Avatar, Dropdown, DropdownItem, Spinner } from 'flowbite-react';
 import { useAuth } from '../utils/auth';
 import { navigateToAPILogin } from '../utils/api';
 
@@ -19,11 +19,9 @@ export default function Layout() {
           fluid
           className="flex h-16 items-center border-b border-zinc-800 bg-zinc-900"
         >
-          <NavbarBrand as={Link} to="/">
-            <span className="self-center whitespace-nowrap text-xl font-semibold text-white">
-              Luxide
-            </span>
-          </NavbarBrand>
+          <Link to="/" className="self-center whitespace-nowrap text-xl font-semibold text-white">
+            Luxide
+          </Link>
 
           <div className="flex md:order-2">
             {isAuthenticated ? (
@@ -52,12 +50,12 @@ export default function Layout() {
                     inline
                     className="z-10"
                   >
-                    <Dropdown.Item
+                    <DropdownItem
                       onClick={handleLogout}
                       className="!bg-primary-600 hover:!bg-primary-700 !text-white"
                     >
                       Log Out
-                    </Dropdown.Item>
+                    </DropdownItem>
                   </Dropdown>
                 )}
               </div>

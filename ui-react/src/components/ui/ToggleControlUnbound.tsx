@@ -17,31 +17,29 @@ export default function ToggleControlUnbound({
   oninput,
   onchange,
   label,
-  allowWrappingLabel,
   labelPrefix,
   labelSuffix,
   disabled,
 }: ToggleControlUnboundProps) {
+  const displayLabel = [labelPrefix, label, labelSuffix]
+    .filter(Boolean)
+    .join(' ');
+
   return (
     <div className="flex max-w-full flex-col">
       <ToggleSwitch
         checked={checked}
-        onChange={(e) => {
-          onchange?.(e);
-          oninput?.(e as unknown as FormEvent<HTMLInputElement>);
+        onChange={(checked) => {
+          // The native onchange/oninput callbacks expect events, but
+          // ToggleSwitch only gives us boolean. Create synthetic events.
+          const syntheticEvent = {
+            target: { checked },
+          } as ChangeEvent<HTMLInputElement>;
+          onchange?.(syntheticEvent);
+          oninput?.(syntheticEvent as unknown as FormEvent<HTMLInputElement>);
         }}
         disabled={disabled}
-        label={
-          <h6 className="overflow-hidden font-normal">
-            <span
-              className={`flex items-center gap-2 ${allowWrappingLabel ? 'whitespace-normal' : 'whitespace-nowrap'}`}
-            >
-              {labelPrefix}
-              {label}
-              {labelSuffix}
-            </span>
-          </h6>
-        }
+        label={displayLabel}
       />
     </div>
   );

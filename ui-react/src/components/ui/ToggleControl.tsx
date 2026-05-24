@@ -14,30 +14,23 @@ export default function ToggleControl({
   form,
   field,
   label,
-  allowWrappingLabel,
   labelPrefix,
   labelSuffix,
   disabled,
 }: ToggleControlProps) {
+  const displayLabel = [labelPrefix, label, labelSuffix]
+    .filter(Boolean)
+    .join(' ');
+
   return (
     <div className="flex max-w-full flex-col">
       <form.Field name={field}>
         {(f: any) => (
           <ToggleSwitch
             checked={f.state.value}
-            onChange={(e) => f.handleChange(e.target.checked)}
+            onChange={(checked) => f.handleChange(checked)}
             disabled={disabled}
-            label={
-              <h6 className="overflow-hidden font-normal">
-                <span
-              className={`flex items-center gap-2 ${allowWrappingLabel ? 'whitespace-normal' : 'whitespace-nowrap'}`}
-                >
-                  {labelPrefix}
-                  {label}
-                  {labelSuffix}
-                </span>
-              </h6>
-            }
+            label={displayLabel}
           />
         )}
       </form.Field>

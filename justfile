@@ -10,7 +10,7 @@ run-docker: build-api
     docker compose up -d --build
 
 run-ui: run-docker setup-ui-env
-    cd ui && npm run dev
+    cd ui-react && npm run dev
 
 [group('run')]
 run-local: build-api run-postgres
@@ -30,7 +30,7 @@ build: build-api-cli
 
 [group('build')]
 build-ui: setup-ui-env
-    cd ui && npm run build
+    cd ui-react && npm run build
 
 [group('build')]
 build-api-cli: build-ui run-postgres
@@ -52,11 +52,9 @@ clean:
 
 [group('misc')]
 setup-ui-env:
-    cd ui \
-    && [ -s "$NVM_DIR/nvm.sh" ] \
-    && . "$NVM_DIR/nvm.sh" \
-    && nvm use || echo "nvm not installed, using system node" \
-    && npm install
+    cd ui-react \
+    && ( [ -n "${NVM_DIR:-}" ] && [ -s "${NVM_DIR:-}/nvm.sh" ] && . "${NVM_DIR:-}/nvm.sh" && nvm use || echo "nvm not installed, using system node" ) \
+    ; npm install
 
 [group('misc')]
 generate-jwt-keypair-pem:

@@ -13,16 +13,19 @@ interface InfoIconAdditionalInfoProps {
 }
 
 export default function InfoIconAdditionalInfo({ info }: InfoIconAdditionalInfoProps) {
-  const items = Array.isArray(info) ? info : [info];
+  const infoStrings = Array.isArray(info) ? info : [info];
   return (
-    <>
+    <Tooltip
+      content={
+        <div>
+          <h6 className="font-bold">Additional Info</h6>
+          {infoStrings.map((str, i) => (
+            <p key={i}>{str}</p>
+          ))}
+        </div>
+      }
+    >
       <InfoCircleIcon />
-      <Tooltip>
-        <h6>Additional Info</h6>
-        {items.map((text, index) => (
-          <p key={index}>{text}</p>
-        ))}
-      </Tooltip>
-    </>
+    </Tooltip>
   );
 }

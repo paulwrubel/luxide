@@ -1,11 +1,56 @@
+import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { Sidebar, Spinner } from 'flowbite-react';
+import { useAuth } from '../utils/auth';
+import { useRender } from '../hooks/useRender';
+import { useCheckpointImage } from '../hooks/useCheckpointImage';
+import RenderControls from '../components/RenderControls';
+import RenderDisplay from '../components/RenderDisplay';
 
 export default function RenderDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const renderId = Number(id);
+  useAuth(); // ensures authenticated context
+
+  const renderQuery = useRender(renderId);
+  const imageURLQuery = useCheckpointImage(renderId);
+
+  // cleanup object URL on unmount
+  useEffect(() => {
+    return () => {
+      const url = imageURLQuery.data;
+      if (url) {
+        URL.revokeObjectURL(url);
+      }
+    };
+  }, [imageURLQuery.data]);
+
   return (
-    <div className="flex-1 p-8 text-zinc-200">
-      <h1 className="text-2xl font-bold">Render {id}</h1>
-      <p className="mt-2 text-zinc-400">Coming in Phase 5</p>
+    <div className="flex h-full w-full flex-1">
+      <Sidebar
+        className="w-82 z-10 !bg-zinc-900"
+        collapsed={false}
+      >
+        <Sidebar.Items>
+          <Sidebar.ItemGroup>
+            {renderQuery.isSuccess && (
+              <RenderControls render={renderQuery.data} />
+            )}
+          </Sidebar.ItemGroup>
+        </Sidebar.Items>
+      </Sidebar>
+
+      <div className="h-full min-w-0 flex-1 self-center">
+        {renderQuery.isPending && (
+          <div className="flex justify-center p-8">
+            <Spinner size="xl" color="info" />
+          </div>
+        )}
+        <RenderDisplay
+          renderQuery={renderQuery}
+          imageURLQuery={imageURLQuery}
+        />
+      </div>
     </div>
   );
 }

@@ -10,13 +10,16 @@ function InfoCircleIcon({ className }: { className?: string }) {
 
 export default function WarningIconAdvancedProperty() {
   return (
-    <>
+    <Tooltip
+      content={
+        <div>
+          <h6 className="font-bold">Warning: Advanced Property</h6>
+          <p>This property is advanced and may not be visible in the preview.</p>
+          <p>It is recommended to leave this property at its default value.</p>
+        </div>
+      }
+    >
       <InfoCircleIcon className="text-amber-400" />
-      <Tooltip>
-        <h6>Warning: Advanced Property</h6>
-        <p>This property is advanced and may not be visible in the preview.</p>
-        <p>It is recommended to leave this property at its default value.</p>
-      </Tooltip>
-    </>
+    </Tooltip>
   );
 }

@@ -10,13 +10,16 @@ function InfoCircleIcon({ className }: { className?: string }) {
 
 export default function WarningIconUnaffectedPreview() {
   return (
-    <>
+    <Tooltip
+      content={
+        <div>
+          <h6 className="font-bold">Warning: Unaffected Preview</h6>
+          <p>Editing this property will not affect the preview.</p>
+          <p>You will only be able to see this property's effects by creating a render.</p>
+        </div>
+      }
+    >
       <InfoCircleIcon className="text-amber-400" />
-      <Tooltip>
-        <h6>Warning: Unaffected Preview</h6>
-        <p>Editing this property will not affect the preview.</p>
-        <p>You will only be able to see this property's effects by creating a render.</p>
-      </Tooltip>
-    </>
+    </Tooltip>
   );
 }
