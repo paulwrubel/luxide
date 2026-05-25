@@ -11,7 +11,9 @@ import { useRenderForm } from '../../hooks/useRenderForm';
 
 export function NewRenderPage() {
   const navigate = useNavigate();
-  const { user, token } = useAuth();
+  const { user, mustGetToken } = useAuth();
+  const token = mustGetToken();
+
   const [isCreatingRender, setIsCreatingRender] = useState(false);
 
   // Canvas container sizing
@@ -32,9 +34,8 @@ export function NewRenderPage() {
     return () => observer.disconnect();
   }, []);
 
-  // TanStack Form
+  const form = useRenderForm({ user });
 
-  const form = useRenderForm({ user: user! });
   // Canvas sizing: maintain aspect ratio in container
   const imageDimensions = useStore(form.store, (state) => state.values.parameters.image_dimensions);
   const aspectRatio = imageDimensions[0] / imageDimensions[1];
@@ -42,7 +43,7 @@ export function NewRenderPage() {
 
   let canvasWidth = 0;
   let canvasHeight = 0;
-  if (containerWidth && containerHeight) {
+  if (containerWidth > 0 && containerHeight > 0) {
     const containerAspectRatio = containerWidth / containerHeight;
     if (containerAspectRatio > aspectRatio) {
       canvasHeight = containerHeight;
@@ -56,7 +57,7 @@ export function NewRenderPage() {
   async function handleCreateRender() {
     setIsCreatingRender(true);
     try {
-      const response = await postRender(token!, formValuesForSubmit);
+      const response = await postRender(token, formValuesForSubmit);
       navigate(`/renders/${response.id}`);
     } catch {
       setIsCreatingRender(false);
@@ -74,7 +75,7 @@ export function NewRenderPage() {
               <Button onClick={handleCreateRender} disabled={isCreatingRender} color="default">
                 {isCreatingRender ? (
                   <span className="flex items-center justify-center gap-2">
-                    <Spinner size="sm" />
+                    <Spinner size="sm" color="info" />
                     Creating...
                   </span>
                 ) : (
