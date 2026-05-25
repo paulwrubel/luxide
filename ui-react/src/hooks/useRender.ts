@@ -1,13 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
 import { getRender } from '../utils/api';
-import { useAuth } from '../utils/auth';
+import { useAuth } from '../providers/auth';
 
-export function useRender(renderId: number) {
-  const { validToken } = useAuth();
+export type UseRenderOptions = {
+  renderID: number;
+};
+
+export function useRender(options: UseRenderOptions) {
+  const { renderID } = options;
+  const { token } = useAuth();
 
   return useQuery({
-    queryKey: ['render', renderId, validToken],
-    queryFn: () => getRender(validToken, renderId),
+    queryKey: ['render', renderID, token],
+    queryFn: () => getRender(token, renderID),
     refetchInterval: 1000,
   });
 }

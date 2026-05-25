@@ -8,7 +8,7 @@ interface RenderPreviewCardProps {
 }
 
 export default function RenderPreviewCard({ render }: RenderPreviewCardProps) {
-  const checkpointImageQuery = useLatestCheckpointImage(render.id);
+  const checkpointImageQuery = useLatestCheckpointImage({ renderID: render.id });
   const renderSize = render.config.parameters.image_dimensions;
   const state = render.state;
   const running = isRenderStateRunning(state);

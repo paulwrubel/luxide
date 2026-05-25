@@ -11,7 +11,7 @@ import {
   type Render,
 } from '../../utils/api';
 import { Button, Spinner, TextInput, Label } from 'flowbite-react';
-import { useAuth } from '../../utils/auth';
+import { useAuth } from '../../providers/auth';
 
 interface RenderControlsProps {
   render: Render;
@@ -21,7 +21,7 @@ export default function RenderControls({ render }: RenderControlsProps) {
   const { id } = useParams<{ id: string }>();
   const renderId = Number(id);
   const navigate = useNavigate();
-  const { validToken } = useAuth();
+  const { token } = useAuth();
 
   const [isPausingOrResuming, setIsPausingOrResuming] = useState(false);
   const [newCheckpointLimit, setNewCheckpointLimit] = useState<number>(
@@ -36,21 +36,21 @@ export default function RenderControls({ render }: RenderControlsProps) {
   async function handlePauseOrResume() {
     setIsPausingOrResuming(true);
     if (isPaused || isPausing) {
-      await resumeRender(validToken, renderId);
+      await resumeRender(token, renderId);
     } else if (isRunning) {
-      await pauseRender(validToken, renderId);
+      await pauseRender(token, renderId);
     }
     setIsPausingOrResuming(false);
   }
 
   async function handleUpdateCheckpoints() {
     setIsUpdatingCheckpoints(true);
-    await updateRenderTotalCheckpoints(validToken, renderId, newCheckpointLimit);
+    await updateRenderTotalCheckpoints(token, renderId, newCheckpointLimit);
     setIsUpdatingCheckpoints(false);
   }
 
   async function handleDelete() {
-    await deleteRender(validToken, renderId);
+    await deleteRender(token, renderId);
     navigate('/renders');
   }
 

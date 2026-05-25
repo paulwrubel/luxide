@@ -1,5 +1,5 @@
 import { Spinner, Alert } from 'flowbite-react';
-import { useAuth } from '../../utils/auth';
+import { useAuth } from '../../providers/auth';
 import { useRenders } from '../../hooks/useRenders';
 import RenderPreviewCard from './RenderPreviewCard';
 import NewRenderCard from './NewRenderCard';

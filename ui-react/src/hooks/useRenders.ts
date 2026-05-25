@@ -1,13 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 import { getAllRenders } from '../utils/api';
-import { useAuth } from '../utils/auth';
+import { useAuth } from '../providers/auth';
 
 export function useRenders() {
-  const { validToken } = useAuth();
+  const { token } = useAuth();
+
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
 
   return useQuery({
-    queryKey: ['renders', validToken],
-    queryFn: () => getAllRenders(validToken),
+    queryKey: ['renders', token],
+    queryFn: () => getAllRenders(token),
     refetchInterval: 1000,
   });
 }

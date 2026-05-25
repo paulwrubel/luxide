@@ -1,9 +1,11 @@
-interface SeparatorProps {
+export type SeparatorProps = {
   vertical?: boolean;
   className?: string;
-}
+};
 
-export default function Separator({ vertical, className }: SeparatorProps) {
+export function Separator(props: SeparatorProps) {
+  const { vertical, className } = props;
+
   if (vertical) {
     return <div className={`my-0.5 border-r border-zinc-600 ${className ?? ''}`} />;
   }

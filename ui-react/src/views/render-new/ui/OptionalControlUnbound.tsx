@@ -1,5 +1,5 @@
 import ToggleControlUnbound from './ToggleControlUnbound';
-import Separator from '../../../components/Separator';
+import { Separator } from '../../../components/Separator';
 import type { ChangeEvent, FormEvent } from 'react';
 
 interface OptionalControlUnboundProps {

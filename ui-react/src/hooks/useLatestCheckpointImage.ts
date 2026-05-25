@@ -1,14 +1,20 @@
 import { useQuery } from '@tanstack/react-query';
 import { getLatestCheckpointImage } from '../utils/api';
-import { useAuth } from '../utils/auth';
+import { useAuth } from '../providers/auth';
 
-export function useLatestCheckpointImage(renderId: number) {
-  const { validToken } = useAuth();
+export type UseLatestCheckpointImageOptions = {
+  renderID: number;
+};
+
+export function useLatestCheckpointImage(options: UseLatestCheckpointImageOptions) {
+  const { renderID } = options;
+
+  const { token } = useAuth();
 
   return useQuery({
-    queryKey: ['checkpointImage', renderId, validToken],
+    queryKey: ['checkpointImage', renderID, token],
     queryFn: async () => {
-      const blob = await getLatestCheckpointImage(validToken, renderId);
+      const blob = await getLatestCheckpointImage(token, renderID);
       return URL.createObjectURL(blob);
     },
     refetchInterval: 1000,

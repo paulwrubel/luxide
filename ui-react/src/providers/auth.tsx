@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { User } from './api';
-import { fetchUserInfo } from './api';
+import type { User } from '../utils/api';
+import { fetchUserInfo } from '../utils/api';
 
 interface AuthContextType {
   token: string | undefined;
@@ -8,8 +8,6 @@ interface AuthContextType {
   isAuthenticated: boolean;
   setToken: (token: string) => void;
   clearToken: () => void;
-  validToken: string;
-  validUser: User;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -20,7 +18,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
   const [user, setUser] = useState<User | undefined>(undefined);
 
-  const clearTokenFn = useCallback(() => {
+  const clearToken = useCallback(() => {
     localStorage?.removeItem('auth_token');
     setTokenState(undefined);
     setUser(undefined);
@@ -34,13 +32,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         })
         .catch((e: unknown) => {
           if (e instanceof Error && e.message === 'Unauthorized') {
-            clearTokenFn();
+            clearToken();
           } else {
             setUser(undefined);
           }
         });
     }
-  }, [token, user, clearTokenFn]);
+  }, [token, user, clearToken]);
 
   const setToken = useCallback((newToken: string) => {
     localStorage?.setItem('auth_token', newToken);
@@ -49,29 +47,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value: AuthContextType = {
-    get token() {
-      return token;
-    },
-    get user() {
-      return user;
-    },
-    get isAuthenticated() {
-      return !!token;
-    },
+    token,
+    user,
+    isAuthenticated: !!token,
     setToken,
-    clearToken: clearTokenFn,
-    get validToken() {
-      if (!token) {
-        throw new Error('Not authenticated');
-      }
-      return token;
-    },
-    get validUser() {
-      if (!user) {
-        throw new Error('Not authenticated');
-      }
-      return user;
-    },
+    clearToken,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

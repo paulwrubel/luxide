@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, Button } from 'flowbite-react';
 import { ChevronDownIcon, ChevronUpIcon } from 'flowbite-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Separator from '../../components/Separator';
+import { Separator } from '../../components/Separator';
 import RangeControl from './ui/RangeControl';
 import SelectControl from './ui/SelectControl';
 import { getMaterialData } from '../../utils/render/material';

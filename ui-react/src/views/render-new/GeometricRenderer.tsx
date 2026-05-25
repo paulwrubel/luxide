@@ -1,6 +1,6 @@
 import { getGeometricDataSafe } from '../../utils/render/geometric';
 import { toRadians } from '../../utils/render/utils';
-import { createParallelogramMesh, createTriangleMesh } from '../../utils/render/three-helpers';
+import { createParallelogramMesh, createTriangleMesh } from '../../utils/three';
 import MaterialResolver from './MaterialResolver';
 import type { RenderConfig } from '../../utils/render/config';
 

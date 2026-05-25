@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { GeometricTriangle, GeometricParallelogram } from './geometric';
+import type { GeometricTriangle, GeometricParallelogram } from './render/geometric';
 
 /**
  * Creates a mesh representing a triangle with custom vertices.

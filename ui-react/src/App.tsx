@@ -1,10 +1,10 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from 'flowbite-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider } from './utils/auth';
-import Layout from './components/Layout';
+import { AuthProvider } from './providers/auth';
+import { Layout } from './components/Layout';
 import { AuthenticatedRouteLayout } from './components/AuthenticatedRouteLayout';
-import HomePage from './views/home';
+import { HomePage } from './views/home';
 import LoginPage from './views/login';
 import { AuthCallbackPage } from './views/auth-callback';
 import RendersPage from './views/renders';

@@ -1,4 +1,4 @@
-import Separator from '../../components/Separator';
+import { Separator } from '../../components/Separator';
 import { getGeometricData } from '../../utils/render/geometric';
 import type { RenderConfig } from '../../utils/render/config';
 

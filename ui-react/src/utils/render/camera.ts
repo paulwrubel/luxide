@@ -2,7 +2,6 @@ import { z } from 'zod';
 import type { RenderConfig } from './config';
 import { isNonNullObject } from './utils';
 // FormPath is a branded string type for schema field paths.
-// Replaced from sveltekit-superforms — functionally equivalent to string here.
 type FormPath = string;
 
 export const CameraDataSchema = z.object({

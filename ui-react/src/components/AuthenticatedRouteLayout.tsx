@@ -1,5 +1,5 @@
 import { Outlet, Navigate } from 'react-router-dom';
-import { useAuth } from '../utils/auth';
+import { useAuth } from '../providers/auth';
 
 /**
  * layout component guarding authenticated routes.
