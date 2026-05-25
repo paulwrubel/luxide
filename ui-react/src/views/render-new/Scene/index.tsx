@@ -1,4 +1,4 @@
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { useRef, useEffect } from 'react';
 import { useStore } from '@tanstack/react-form';
 import * as THREE from 'three';
@@ -12,15 +12,16 @@ interface SceneProps {
 }
 
 function CameraUpdater({ cameraData }: { cameraData: RawCameraData }) {
-  const { camera } = useThree();
   const needsUpdate = useRef(true);
 
   useEffect(() => {
     needsUpdate.current = true;
   }, [cameraData]);
 
-  useFrame(() => {
+  useFrame((state) => {
     if (!needsUpdate.current) return;
+
+    const { camera } = state;
     if (!('isPerspectiveCamera' in camera)) return;
 
     (camera as THREE.PerspectiveCamera).fov = cameraData.vertical_field_of_view_degrees;

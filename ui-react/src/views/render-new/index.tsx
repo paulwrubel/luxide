@@ -64,9 +64,16 @@ export function NewRenderPage() {
     }
   }
 
+  const sidebarTheme = {
+    root: {
+      base: 'bg-zinc-900 dark:bg-zinc-900',
+      inner: 'bg-zinc-900 dark:bg-zinc-900',
+    },
+  };
+
   return (
     <div className="flex h-full w-full">
-      <Sidebar className="z-10 w-lg bg-zinc-900! [&>div]:bg-zinc-900!">
+      <Sidebar theme={sidebarTheme} className="z-10 w-lg">
         <SidebarItems>
           <SidebarItemGroup>
             <div className="flex min-h-full flex-col items-stretch gap-2">
