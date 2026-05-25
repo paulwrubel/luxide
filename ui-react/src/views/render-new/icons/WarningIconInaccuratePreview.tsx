@@ -7,8 +7,13 @@ export default function WarningIconInaccuratePreview() {
       content={
         <div>
           <h6 className="font-bold">Warning: Inaccurate Preview</h6>
-          <p>The effect that this property has on the preview may not reflect the rendered result.</p>
-          <p>You may only be able to see this property's full effects accurately by creating a render.</p>
+          <p>
+            The effect that this property has on the preview may not reflect the rendered result.
+          </p>
+          <p>
+            You may only be able to see this property's full effects accurately by creating a
+            render.
+          </p>
         </div>
       }
     >

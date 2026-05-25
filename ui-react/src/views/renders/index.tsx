@@ -14,7 +14,7 @@ export default function RendersPage() {
       allRendersQuery.data.length < (user?.max_renders ?? Infinity));
 
   return (
-    <div className="flex w-full flex-col p-12 overflow-y-auto">
+    <div className="flex w-full flex-col overflow-y-auto p-12">
       {allRendersQuery.isPending && (
         <div className="flex w-full justify-center py-8">
           <Spinner size="xl" color="info" />

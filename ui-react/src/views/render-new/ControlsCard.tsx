@@ -39,11 +39,7 @@ export default function ControlsCard({
         onClick={() => setIsExpanded(!isExpanded)}
         type="button"
       >
-        {leftLabel ? (
-          <LabelText text={leftLabel} type={leftLabelStyle} />
-        ) : (
-          <span />
-        )}
+        {leftLabel ? <LabelText text={leftLabel} type={leftLabelStyle} /> : <span />}
         <div className="flex flex-row">
           {rightLabel && <LabelText text={rightLabel} type={rightLabelStyle} />}
           {isExpanded ? (

@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { fetchAuthTokenGitHub } from '../../utils/api';
 import { useAuth } from '../../utils/auth';
 
-export default function AuthCallbackPage() {
+export function AuthCallbackPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { setToken } = useAuth();
@@ -32,9 +32,7 @@ export default function AuthCallbackPage() {
           navigate('/', { replace: true });
         }
       } catch (e) {
-        setErrorMessage(
-          e instanceof Error ? e.message : 'authentication failed'
-        );
+        setErrorMessage(e instanceof Error ? e.message : 'authentication failed');
         setStatus('error');
       }
     }
@@ -46,7 +44,7 @@ export default function AuthCallbackPage() {
     <div className="flex min-h-screen items-center justify-center">
       {status === 'loading' && (
         <div className="text-center">
-          <div className="mb-4 mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-gray-900" />
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-gray-900" />
           <p className="text-lg">Completing authentication...</p>
         </div>
       )}
@@ -55,10 +53,7 @@ export default function AuthCallbackPage() {
         <div className="text-center text-red-600">
           <p className="mb-4 text-lg">Authentication failed</p>
           <p className="text-sm">{errorMessage}</p>
-          <Link
-            to="/"
-            className="mt-4 inline-block text-blue-600 hover:underline"
-          >
+          <Link to="/" className="mt-4 inline-block text-blue-600 hover:underline">
             Return to home
           </Link>
         </div>

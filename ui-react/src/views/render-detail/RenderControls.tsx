@@ -25,7 +25,7 @@ export default function RenderControls({ render }: RenderControlsProps) {
 
   const [isPausingOrResuming, setIsPausingOrResuming] = useState(false);
   const [newCheckpointLimit, setNewCheckpointLimit] = useState<number>(
-    render.config.parameters.total_checkpoints
+    render.config.parameters.total_checkpoints,
   );
   const [isUpdatingCheckpoints, setIsUpdatingCheckpoints] = useState(false);
 
@@ -45,11 +45,7 @@ export default function RenderControls({ render }: RenderControlsProps) {
 
   async function handleUpdateCheckpoints() {
     setIsUpdatingCheckpoints(true);
-    await updateRenderTotalCheckpoints(
-      validToken,
-      renderId,
-      newCheckpointLimit
-    );
+    await updateRenderTotalCheckpoints(validToken, renderId, newCheckpointLimit);
     setIsUpdatingCheckpoints(false);
   }
 
@@ -98,9 +94,7 @@ export default function RenderControls({ render }: RenderControlsProps) {
           color={isPaused || isPausing ? 'default' : 'yellow'}
           outline
           onClick={handlePauseOrResume}
-          disabled={
-            isPausingOrResuming || !(isPaused || isPausing || isRunning)
-          }
+          disabled={isPausingOrResuming || !(isPaused || isPausing || isRunning)}
         >
           {isPausingOrResuming ? (
             <span className="flex items-center justify-center">
@@ -114,11 +108,7 @@ export default function RenderControls({ render }: RenderControlsProps) {
           )}
         </Button>
 
-        <Button
-          color="red"
-          onClick={handleDelete}
-          disabled={isPausing || isRunning}
-        >
+        <Button color="red" onClick={handleDelete} disabled={isPausing || isRunning}>
           Delete Render
         </Button>
       </div>

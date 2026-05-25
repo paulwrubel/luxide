@@ -14,18 +14,13 @@ interface RenderDisplayProps {
   imageURLQuery: UseQueryResult<string, Error>;
 }
 
-export default function RenderDisplay({
-  renderQuery,
-  imageURLQuery,
-}: RenderDisplayProps) {
+export default function RenderDisplay({ renderQuery, imageURLQuery }: RenderDisplayProps) {
   return (
     <div className="flex h-full flex-1 flex-col items-center justify-center gap-2 px-8">
       {/* checkpoint image */}
       {imageURLQuery.isPending && <p>Loading...</p>}
       {imageURLQuery.isError && <p>Error loading render!!</p>}
-      {imageURLQuery.isSuccess && (
-        <img alt="Render" src={imageURLQuery.data} />
-      )}
+      {imageURLQuery.isSuccess && <img alt="Render" src={imageURLQuery.data} />}
 
       {/* render state */}
       {renderQuery.isPending && (
@@ -37,9 +32,7 @@ export default function RenderDisplay({
       {renderQuery.isSuccess && (
         <StateDisplay
           state={renderQuery.data.state}
-          totalCheckpoints={
-            renderQuery.data.config.parameters.total_checkpoints
-          }
+          totalCheckpoints={renderQuery.data.config.parameters.total_checkpoints}
         />
       )}
     </div>
@@ -72,7 +65,6 @@ function ProgressState({
           progressLabelPosition="inside"
           className="[&>div]:transition-[width] [&>div]:duration-500 [&>div]:ease-in-out"
         />
-
       </div>
       <p>
         {label} at checkpoint {checkpoint} / {totalCheckpoints}
@@ -106,8 +98,7 @@ function StateDisplay({ state, totalCheckpoints }: StateDisplayProps) {
   if (isRenderStateFinishedCheckpointIteration(state)) {
     return (
       <p>
-        Finished checkpoint {state.finished_checkpoint_iteration} /{' '}
-        {totalCheckpoints}
+        Finished checkpoint {state.finished_checkpoint_iteration} / {totalCheckpoints}
       </p>
     );
   }

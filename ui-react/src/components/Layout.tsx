@@ -12,14 +12,11 @@ export default function Layout() {
   }
 
   return (
-    <main className="h-screen bg-zinc-950 text-zinc-200 flex flex-col overflow-hidden">
-      <div className="flex flex-col w-full h-full">
+    <main className="flex h-screen flex-col overflow-hidden bg-zinc-950 text-zinc-200">
+      <div className="flex h-full w-full flex-col">
         {/* App bar */}
         <nav className="flex h-16 items-center justify-between border-b border-zinc-800 bg-zinc-900 px-4">
-          <Link
-            to="/"
-            className="self-center whitespace-nowrap text-xl font-semibold text-white"
-          >
+          <Link to="/" className="self-center text-xl font-semibold whitespace-nowrap text-white">
             Luxide
           </Link>
 
@@ -35,15 +32,8 @@ export default function Layout() {
                   <Dropdown
                     label={
                       <div className="flex items-center gap-2">
-                        <Avatar
-                          img={user.avatar_url}
-                          alt="User avatar"
-                          size="sm"
-                          rounded
-                        />
-                        <span className="text-sm font-medium text-white">
-                          {user.username}
-                        </span>
+                        <Avatar img={user.avatar_url} alt="User avatar" size="sm" rounded />
+                        <span className="text-sm font-medium text-white">{user.username}</span>
                       </div>
                     }
                     arrowIcon={false}

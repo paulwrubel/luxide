@@ -1,7 +1,6 @@
 import FormTextInput from './FormTextInput';
 import { getGridColumnsTemplateForPercentage } from './utils';
 
-
 interface TextArrayInputControlProps {
   form: any;
   field: string;

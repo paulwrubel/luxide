@@ -1,6 +1,5 @@
 import { ToggleSwitch } from 'flowbite-react';
 
-
 interface ToggleControlProps {
   form: any;
   field: string;

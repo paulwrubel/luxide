@@ -23,22 +23,17 @@ function CameraUpdater({ cameraData }: { cameraData: RawCameraData }) {
     if (!needsUpdate.current) return;
     if (!('isPerspectiveCamera' in camera)) return;
 
-    (camera as THREE.PerspectiveCamera).fov =
-      cameraData.vertical_field_of_view_degrees;
+    (camera as THREE.PerspectiveCamera).fov = cameraData.vertical_field_of_view_degrees;
     camera.position.set(
       cameraData.eye_location[0],
       cameraData.eye_location[1],
-      cameraData.eye_location[2]
+      cameraData.eye_location[2],
     );
-    camera.up.set(
-      cameraData.view_up[0],
-      cameraData.view_up[1],
-      cameraData.view_up[2]
-    );
+    camera.up.set(cameraData.view_up[0], cameraData.view_up[1], cameraData.view_up[2]);
     camera.lookAt(
       cameraData.target_location[0],
       cameraData.target_location[1],
-      cameraData.target_location[2]
+      cameraData.target_location[2],
     );
     (camera as THREE.PerspectiveCamera).updateProjectionMatrix();
     needsUpdate.current = false;
@@ -48,10 +43,7 @@ function CameraUpdater({ cameraData }: { cameraData: RawCameraData }) {
 }
 
 export default function Scene({ form }: SceneProps) {
-  const renderConfig = useStore(
-    form.store,
-    (state) => state.values
-  );
+  const renderConfig = useStore(form.store, (state) => state.values);
   const activeScene = getSceneData(renderConfig, renderConfig.active_scene);
   const { data: cameraData } = getCameraData(renderConfig, activeScene.camera);
 
@@ -60,11 +52,7 @@ export default function Scene({ form }: SceneProps) {
       <CameraUpdater cameraData={cameraData} />
       <ambientLight intensity={0.05} />
       {activeScene.geometrics.map((geoName: string) => (
-        <GeometricRenderer
-          key={geoName}
-          config={renderConfig}
-          name={geoName}
-        />
+        <GeometricRenderer key={geoName} config={renderConfig} name={geoName} />
       ))}
     </Canvas>
   );

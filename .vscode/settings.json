@@ -1,9 +1,21 @@
 {
-    "prettier.configPath": "./ui/.prettierrc",
-    "eslint.lintTask.options": "./ui",
-    "eslint.format.enable": true,
+    "eslint.workingDirectories": [
+        "./ui-react"
+    ],
+    "eslint.useFlatConfig": true,
     "editor.formatOnSave": true,
+    "prettier.configPath": "./ui-react/.prettierrc",
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "always"
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescriptreact]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
     "files.associations": {
         "*.css": "tailwindcss"
-    }
+    },
+    "typescript.tsdk": "./ui-react/node_modules/typescript/lib"
 }

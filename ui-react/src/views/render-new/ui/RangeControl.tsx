@@ -1,6 +1,5 @@
 import { Label, RangeSlider } from 'flowbite-react';
 
-
 interface RangeControlProps {
   form: any;
   field: string;

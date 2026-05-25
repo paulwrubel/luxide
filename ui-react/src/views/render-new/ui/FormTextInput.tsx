@@ -1,7 +1,6 @@
 import { Label, TextInput, HelperText } from 'flowbite-react';
 import type { ChangeEvent, FormEvent } from 'react';
 
-
 interface FormTextInputProps {
   form: any;
   field: string;
@@ -27,18 +26,14 @@ export default function FormTextInput({
     <form.Field name={field}>
       {(f: any) => {
         const errors = f.state.meta.errors as string[] | undefined;
-        const hasErrors =
-          (Array.isArray(errors) && errors.length > 0) || extraIsErrored;
+        const hasErrors = (Array.isArray(errors) && errors.length > 0) || extraIsErrored;
 
         // Determine step: unenforcedStep overrides everything
-        const stepValue =
-          unenforcedStep ?? (type === 'number' ? undefined : undefined);
+        const stepValue = unenforcedStep ?? (type === 'number' ? undefined : undefined);
 
         return (
           <Label className="mb-0 flex w-full flex-col">
-            <span className="flex-1 overflow-hidden text-ellipsis px-2">
-              {valueLabel}
-            </span>
+            <span className="flex-1 overflow-hidden px-2 text-ellipsis">{valueLabel}</span>
             <TextInput
               name={field}
               type={type}
@@ -48,7 +43,7 @@ export default function FormTextInput({
                 f.handleChange(
                   type === 'number' && e.target.value !== ''
                     ? Number(e.target.value)
-                    : e.target.value
+                    : e.target.value,
                 );
                 onchange?.(e);
               }}

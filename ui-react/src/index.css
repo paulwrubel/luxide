@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@source "../node_modules/flowbite-react";
+@import 'tailwindcss';
+@source '../node_modules/flowbite-react';
 @variant dark (&:where(.dark, .dark *));
 
 @theme {
@@ -37,7 +37,7 @@
     color: var(--color-zinc-200);
   }
   button,
-  [role="button"] {
+  [role='button'] {
     cursor: pointer;
   }
   button:disabled {

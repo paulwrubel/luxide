@@ -1,6 +1,5 @@
 import { Label, Select } from 'flowbite-react';
 
-
 interface SelectItem {
   name: string;
   value: string;
@@ -41,10 +40,7 @@ export default function SelectControl({
               </span>
               <span>{valueLabel}</span>
             </span>
-            <Select
-              value={currentValue}
-              onChange={(e) => f.handleChange(e.target.value)}
-            >
+            <Select value={currentValue} onChange={(e) => f.handleChange(e.target.value)}>
               <option value="" disabled>
                 &nbsp;
               </option>

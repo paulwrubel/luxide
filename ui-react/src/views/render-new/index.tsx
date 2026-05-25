@@ -65,19 +65,13 @@ export default function NewRenderPage() {
 
   return (
     <div className="flex h-full w-full">
-      <Sidebar
-        className="w-lg z-10 bg-zinc-900! [&>div]:bg-zinc-900!"
-      >
+      <Sidebar className="z-10 w-lg bg-zinc-900! [&>div]:bg-zinc-900!">
         <SidebarItems>
           <SidebarItemGroup>
             <div className="flex min-h-full flex-col items-stretch gap-2">
               <Controls form={form} />
               <Separator className="mt-auto" />
-              <Button
-                onClick={handleCreateRender}
-                disabled={isCreatingRender}
-                color="default"
-              >
+              <Button onClick={handleCreateRender} disabled={isCreatingRender} color="default">
                 {isCreatingRender ? (
                   <span className="flex items-center justify-center gap-2">
                     <Spinner size="sm" />
@@ -93,10 +87,7 @@ export default function NewRenderPage() {
       </Sidebar>
 
       {/* 3D scene canvas placeholder — replaced by Phase 6 */}
-      <div
-        ref={containerRef}
-        className="m-8 flex flex-1 items-center justify-center"
-      >
+      <div ref={containerRef} className="m-8 flex flex-1 items-center justify-center">
         <div
           style={{ width: canvasWidth, height: canvasHeight }}
           className="box-border border border-zinc-500"

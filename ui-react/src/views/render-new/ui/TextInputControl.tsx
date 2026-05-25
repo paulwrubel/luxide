@@ -2,7 +2,6 @@ import FormTextInput from './FormTextInput';
 import { getGridColumnsTemplateForPercentage } from './utils';
 import type { ChangeEvent, FormEvent } from 'react';
 
-
 interface TextInputControlProps {
   form: any;
   field: string;

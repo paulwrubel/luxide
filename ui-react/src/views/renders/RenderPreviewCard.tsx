@@ -23,16 +23,15 @@ export default function RenderPreviewCard({ render }: RenderPreviewCardProps) {
   return (
     <Link to={`/renders/${render.id}`}>
       <Card
-        className="!bg-zinc-800 !text-zinc-200 hover:!bg-zinc-700"
+        className="bg-zinc-800! text-zinc-200! hover:bg-zinc-700!"
         theme={{
           root: {
-            base: "border-none",
-            children: "p-0"
-          }
+            base: 'border-none',
+            children: 'p-0',
+          },
         }}
         renderImage={() => (
-          <div
-          >
+          <div>
             {checkpointImageQuery.isPending && (
               <div className="flex flex-col items-center justify-center">
                 <Spinner size="xl" color="info" />
@@ -46,10 +45,7 @@ export default function RenderPreviewCard({ render }: RenderPreviewCardProps) {
               />
             )}
             {checkpointImageQuery.isSuccess && (
-              <img
-                src={checkpointImageQuery.data}
-                alt="Render Preview"
-              />
+              <img src={checkpointImageQuery.data} alt="Render Preview" />
             )}
           </div>
         )}
@@ -60,7 +56,7 @@ export default function RenderPreviewCard({ render }: RenderPreviewCardProps) {
               progress={Math.round(progress * 100)}
               color={running ? 'blue' : 'yellow'}
               size="sm"
-              theme={{ base: "rounded-none", bar: "rounded-none" }}
+              theme={{ base: 'rounded-none', bar: 'rounded-none' }}
               className="[&>div]:transition-[width] [&>div]:duration-500"
             />
           </div>

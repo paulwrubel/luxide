@@ -1,15 +1,18 @@
 import { Dropdown, DropdownItem } from 'flowbite-react';
-import {
-  defaultTextureForType,
-  type TextureData,
-} from '../../utils/render/texture';
+import { defaultTextureForType, type TextureData } from '../../utils/render/texture';
 import { capitalize, getNextUniqueName } from '../../utils/render/utils';
 import type { RenderForm } from '../../hooks/useRenderForm';
 import { useStore } from '@tanstack/react-form';
 
 function PlusIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+    >
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
     </svg>
   );
@@ -25,25 +28,17 @@ export default function NewTextureSpeedDial({ form }: NewTextureSpeedDialProps) 
   const formValues = useStore(form.store, (state) => state.values);
 
   function handleNewTexture(type: TextureType) {
-    const newTexture = defaultTextureForType(type as any);
-    const nextName = getNextUniqueName(
-      formValues.textures ?? {},
-      `New ${capitalize(type)}`
-    );
+    const newTexture = defaultTextureForType(type);
+    const nextName = getNextUniqueName(formValues.textures ?? {}, `New ${capitalize(type)}`);
 
-    (form as any).setFieldValue('textures', {
+    form.setFieldValue('textures', {
       ...formValues.textures,
       [nextName]: newTexture,
     });
   }
 
   return (
-    <Dropdown
-      label={<PlusIcon className="h-6 w-6" />}
-      arrowIcon={false}
-      color="light"
-      size="sm"
-    >
+    <Dropdown label={<PlusIcon className="h-6 w-6" />} arrowIcon={false} color="light" size="sm">
       <DropdownItem disabled>
         <div className="flex items-center gap-2">
           <PlusIcon className="h-4 w-4" />

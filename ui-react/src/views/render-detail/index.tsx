@@ -27,14 +27,10 @@ export default function RenderDetailPage() {
 
   return (
     <div className="flex h-full w-full">
-      <Sidebar
-        className="w-82 z-10 !bg-zinc-900 h-full [&>div]:!bg-zinc-900"
-      >
+      <Sidebar className="z-10 h-full w-82 !bg-zinc-900 [&>div]:!bg-zinc-900">
         <SidebarItems className="h-full">
           <SidebarItemGroup className="flex h-full flex-col">
-            {renderQuery.isSuccess && (
-              <RenderControls render={renderQuery.data} />
-            )}
+            {renderQuery.isSuccess && <RenderControls render={renderQuery.data} />}
           </SidebarItemGroup>
         </SidebarItems>
       </Sidebar>
@@ -45,10 +41,7 @@ export default function RenderDetailPage() {
             <Spinner size="xl" color="info" />
           </div>
         )}
-        <RenderDisplay
-          renderQuery={renderQuery}
-          imageURLQuery={imageURLQuery}
-        />
+        <RenderDisplay renderQuery={renderQuery} imageURLQuery={imageURLQuery} />
       </div>
     </div>
   );

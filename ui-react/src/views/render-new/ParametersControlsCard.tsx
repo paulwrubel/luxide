@@ -15,39 +15,31 @@ interface ParametersControlsCardProps {
   form: RenderForm;
 }
 
-export default function ParametersControlsCard({
-  form,
-}: ParametersControlsCardProps) {
+export default function ParametersControlsCard({ form }: ParametersControlsCardProps) {
   const { user } = useAuth();
   const renderConfig = useStore(form.store, (state) => state.values);
   const parameters = renderConfig.parameters;
   const savedCheckpointLimit = parameters.saved_checkpoint_limit ?? 1;
   const maxCheckpoints = user?.max_checkpoints_per_render ?? null;
 
-  const [savedCheckpointLimitLocal, setSavedCheckpointLimitLocal] =
-    useState(savedCheckpointLimit);
+  const [savedCheckpointLimitLocal, setSavedCheckpointLimitLocal] = useState(savedCheckpointLimit);
 
   const [isCheckpointLimitEnabled, setIsCheckpointLimitEnabled] = useState(
-    useStore(form.store, (state) => state.values.parameters.saved_checkpoint_limit) !== undefined
+    useStore(form.store, (state) => state.values.parameters.saved_checkpoint_limit) !== undefined,
   );
 
   // Sync toggle state to form
   useEffect(() => {
     form.setFieldValue(
       'parameters.saved_checkpoint_limit',
-      isCheckpointLimitEnabled ? savedCheckpointLimitLocal : undefined
+      isCheckpointLimitEnabled ? savedCheckpointLimitLocal : undefined,
     );
   }, [isCheckpointLimitEnabled]);
 
   return (
     <ControlsCard leftLabel="parameters" leftLabelStyle="light" startExpanded>
       <div className="flex flex-col gap-2 p-4">
-        <TextInputControl
-          form={form}
-          field="name"
-          label="Name"
-          valueLabel="name"
-        />
+        <TextInputControl form={form} field="name" label="Name" valueLabel="name" />
 
         <TextArrayInputControl
           form={form}
@@ -136,12 +128,12 @@ export default function ParametersControlsCard({
                   form={form}
                   oninput={(e) => {
                     setSavedCheckpointLimitLocal(
-                      Number((e as React.ChangeEvent<HTMLInputElement>).currentTarget.value)
+                      Number((e as React.ChangeEvent<HTMLInputElement>).currentTarget.value),
                     );
                   }}
                   onchange={(e) => {
                     setSavedCheckpointLimitLocal(
-                      Number((e as React.ChangeEvent<HTMLInputElement>).currentTarget.value)
+                      Number((e as React.ChangeEvent<HTMLInputElement>).currentTarget.value),
                     );
                   }}
                   field="parameters.saved_checkpoint_limit"
@@ -161,9 +153,7 @@ export default function ParametersControlsCard({
           <Tooltip
             content={`As a non-admin user, you are limited to ${maxCheckpoints} checkpoints saved per render.`}
           >
-            <span className="text-sm text-zinc-400">
-              ⓘ Checkpoint limit enforced
-            </span>
+            <span className="text-sm text-zinc-400">ⓘ Checkpoint limit enforced</span>
           </Tooltip>
         )}
 

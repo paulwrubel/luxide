@@ -16,8 +16,18 @@ import { useStore } from '@tanstack/react-form';
 
 function TrashIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+      />
     </svg>
   );
 }
@@ -56,10 +66,7 @@ interface GeometricControlsCardProps {
   geometricName: string;
 }
 
-export default function GeometricControlsCard({
-  form,
-  geometricName,
-}: GeometricControlsCardProps) {
+export default function GeometricControlsCard({ form, geometricName }: GeometricControlsCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const renderConfig = useStore(form.store, (state) => state.values);
 
@@ -95,8 +102,20 @@ export default function GeometricControlsCard({
       case 'box':
         return (
           <>
-            <TextArrayInputControl form={form} field={`geometrics.${name}.a`} label="Corner 1" valueLabels={['x', 'y', 'z']} type="number" />
-            <TextArrayInputControl form={form} field={`geometrics.${name}.b`} label="Corner 2" valueLabels={['x', 'y', 'z']} type="number" />
+            <TextArrayInputControl
+              form={form}
+              field={`geometrics.${name}.a`}
+              label="Corner 1"
+              valueLabels={['x', 'y', 'z']}
+              type="number"
+            />
+            <TextArrayInputControl
+              form={form}
+              field={`geometrics.${name}.b`}
+              label="Corner 2"
+              valueLabels={['x', 'y', 'z']}
+              type="number"
+            />
             <GeometricMaterialSelect form={form} name={name} items={materialItems} />
           </>
         );
@@ -128,7 +147,10 @@ export default function GeometricControlsCard({
               step={hasDegrees ? 1.0 : 0.01}
             />
             <Separator />
-            <NestedGeometricHeader geometricName={rotateData.geometric} renderConfig={renderConfig} />
+            <NestedGeometricHeader
+              geometricName={rotateData.geometric}
+              renderConfig={renderConfig}
+            />
             {renderControls(rotateData.geometric)}
           </>
         );
@@ -137,7 +159,10 @@ export default function GeometricControlsCard({
         const transData = data;
         return (
           <>
-            <NestedGeometricHeader geometricName={transData.geometric} renderConfig={renderConfig} />
+            <NestedGeometricHeader
+              geometricName={transData.geometric}
+              renderConfig={renderConfig}
+            />
             {renderControls(transData.geometric)}
           </>
         );
@@ -145,26 +170,74 @@ export default function GeometricControlsCard({
       case 'parallelogram':
         return (
           <>
-            <TextArrayInputControl form={form} field={`geometrics.${name}.lower_left`} label="Lower Left" valueLabels={['x', 'y', 'z']} type="number" />
-            <TextArrayInputControl form={form} field={`geometrics.${name}.u`} valueLabels={['x', 'y', 'z']} type="number" label="<em>u</em> Vector" />
-            <TextArrayInputControl form={form} field={`geometrics.${name}.v`} valueLabels={['x', 'y', 'z']} type="number" label="<em>v</em> Vector" />
+            <TextArrayInputControl
+              form={form}
+              field={`geometrics.${name}.lower_left`}
+              label="Lower Left"
+              valueLabels={['x', 'y', 'z']}
+              type="number"
+            />
+            <TextArrayInputControl
+              form={form}
+              field={`geometrics.${name}.u`}
+              valueLabels={['x', 'y', 'z']}
+              type="number"
+              label="<em>u</em> Vector"
+            />
+            <TextArrayInputControl
+              form={form}
+              field={`geometrics.${name}.v`}
+              valueLabels={['x', 'y', 'z']}
+              type="number"
+              label="<em>v</em> Vector"
+            />
             <GeometricMaterialSelect form={form} name={name} items={materialItems} />
           </>
         );
       case 'sphere':
         return (
           <>
-            <TextArrayInputControl form={form} field={`geometrics.${name}.center`} label="Center" valueLabels={['x', 'y', 'z']} type="number" />
-            <TextInputControl form={form} field={`geometrics.${name}.radius`} label="Radius" valueLabel="radius" type="number" />
+            <TextArrayInputControl
+              form={form}
+              field={`geometrics.${name}.center`}
+              label="Center"
+              valueLabels={['x', 'y', 'z']}
+              type="number"
+            />
+            <TextInputControl
+              form={form}
+              field={`geometrics.${name}.radius`}
+              label="Radius"
+              valueLabel="radius"
+              type="number"
+            />
             <GeometricMaterialSelect form={form} name={name} items={materialItems} />
           </>
         );
       case 'triangle':
         return (
           <>
-            <TextArrayInputControl form={form} field={`geometrics.${name}.a`} label="Point A" valueLabels={['x', 'y', 'z']} type="number" />
-            <TextArrayInputControl form={form} field={`geometrics.${name}.b`} label="Point B" valueLabels={['x', 'y', 'z']} type="number" />
-            <TextArrayInputControl form={form} field={`geometrics.${name}.c`} label="Point C" valueLabels={['x', 'y', 'z']} type="number" />
+            <TextArrayInputControl
+              form={form}
+              field={`geometrics.${name}.a`}
+              label="Point A"
+              valueLabels={['x', 'y', 'z']}
+              type="number"
+            />
+            <TextArrayInputControl
+              form={form}
+              field={`geometrics.${name}.b`}
+              label="Point B"
+              valueLabels={['x', 'y', 'z']}
+              type="number"
+            />
+            <TextArrayInputControl
+              form={form}
+              field={`geometrics.${name}.c`}
+              label="Point C"
+              valueLabels={['x', 'y', 'z']}
+              type="number"
+            />
             <GeometricMaterialSelect form={form} name={name} items={materialItems} />
           </>
         );

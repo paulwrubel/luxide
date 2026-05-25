@@ -1,7 +1,7 @@
 import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '../utils/auth';
 
-export default function AuthenticatedLayout() {
+export function AuthenticatedRouteLayout() {
   const { isAuthenticated } = useAuth();
 
   if (!isAuthenticated) {

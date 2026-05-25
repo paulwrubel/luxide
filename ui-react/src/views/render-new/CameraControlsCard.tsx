@@ -11,10 +11,7 @@ interface CameraControlsCardProps {
   camera: string;
 }
 
-export default function CameraControlsCard({
-  form,
-  camera,
-}: CameraControlsCardProps) {
+export default function CameraControlsCard({ form, camera }: CameraControlsCardProps) {
   const renderConfig = useStore(form.store, (state) => state.values);
   const { path } = getCameraData(renderConfig, camera);
 

@@ -1,15 +1,19 @@
 import { Dropdown, DropdownItem } from 'flowbite-react';
-import {
-  defaultGeometricForType,
-  type GeometricData,
-} from '../../utils/render/geometric';
+import { defaultGeometricForType, type GeometricData } from '../../utils/render/geometric';
 import { capitalize, getNextUniqueName } from '../../utils/render/utils';
 import type { RenderForm } from '../../hooks/useRenderForm';
 import { useStore } from '@tanstack/react-form';
+import type { NormalizedSceneData } from '../../utils/render/scene';
 
 function PlusIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+    >
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
     </svg>
   );
@@ -39,16 +43,13 @@ export default function NewGeometricSpeedDial({ form }: NewGeometricSpeedDialPro
 
   function handleNewGeometric(type: GeometricType) {
     const newGeometric = defaultGeometricForType(type);
-    const nextName = getNextUniqueName(
-      formValues.geometrics ?? {},
-      `New ${capitalize(type)}`
-    );
+    const nextName = getNextUniqueName(formValues.geometrics ?? {}, `New ${capitalize(type)}`);
 
     const newGeometrics = {
       ...(formValues.geometrics ?? {}),
       [nextName]: newGeometric,
     };
-    const activeSceneData = formValues.scenes?.[formValues.active_scene];
+    const activeSceneData = formValues.scenes?.[formValues.active_scene] as NormalizedSceneData;
     const newScenes = {
       ...formValues.scenes,
       [formValues.active_scene]: {
@@ -62,12 +63,7 @@ export default function NewGeometricSpeedDial({ form }: NewGeometricSpeedDialPro
   }
 
   return (
-    <Dropdown
-      label={<PlusIcon className="h-6 w-6" />}
-      arrowIcon={false}
-      color="light"
-      size="sm"
-    >
+    <Dropdown label={<PlusIcon className="h-6 w-6" />} arrowIcon={false} color="light" size="sm">
       {GEOMETRIC_TYPES.map((item) => (
         <DropdownItem
           key={item.label}

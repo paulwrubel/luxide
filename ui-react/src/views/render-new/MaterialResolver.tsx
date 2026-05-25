@@ -18,24 +18,17 @@ export default function MaterialResolver({
   geometricName,
 }: MaterialResolverProps) {
   const { data: materialData } = getMaterialDataSafe(config, materialRef);
-  const { data: reflectanceTexture } = getTextureDataSafe(
-    config,
-    materialData.reflectance_texture
-  );
-  const { data: emittanceTexture } = getTextureDataSafe(
-    config,
-    materialData.emittance_texture
-  );
+  const { data: reflectanceTexture } = getTextureDataSafe(config, materialData.reflectance_texture);
+  const { data: emittanceTexture } = getTextureDataSafe(config, materialData.emittance_texture);
 
   const emissiveColor =
-    emittanceTexture.type === 'color' &&
-    emittanceTexture.color.reduce((a, b) => a + b, 0) > 0
+    emittanceTexture.type === 'color' && emittanceTexture.color.reduce((a, b) => a + b, 0) > 0
       ? emittanceTexture.color
       : undefined;
 
   const emissive = useMemo(
     () => (emissiveColor ? new THREE.Color(...emissiveColor) : undefined),
-    [emissiveColor]
+    [emissiveColor],
   );
 
   // Build material
@@ -56,7 +49,9 @@ export default function MaterialResolver({
         return mat;
       }
       if (reflectanceTexture.type === 'checker' || reflectanceTexture.type === 'image') {
-        console.warn(`${reflectanceTexture.type} texture not yet supported for lambertian material`);
+        console.warn(
+          `${reflectanceTexture.type} texture not yet supported for lambertian material`,
+        );
         // Fallback: white material
         return new THREE.MeshLambertMaterial({ color: new THREE.Color(1, 1, 1) });
       }

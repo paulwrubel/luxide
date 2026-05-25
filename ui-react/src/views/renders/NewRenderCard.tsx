@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 export default function NewRenderCard() {
   return (
     <Link to="/renders/new">
-      <Card className="h-[264px] border-2 border-dashed !border-zinc-50 !bg-zinc-950 !text-zinc-200 hover:!bg-zinc-900 [&>div]:!p-0">
+      <Card className="h-66 border-2 border-dashed border-zinc-50! bg-zinc-950! !text-zinc-200 hover:!bg-zinc-900 [&>div]:!p-0">
         <div className="flex h-full w-full items-center justify-center gap-2">
           <PlusCircleIcon />
           <h2 className="text-lg font-normal italic">New Render</h2>
@@ -16,13 +16,7 @@ export default function NewRenderCard() {
 
 function PlusCircleIcon() {
   return (
-    <svg
-      className="h-8 w-8"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
+    <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
