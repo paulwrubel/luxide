@@ -3,9 +3,9 @@ import { useRef, useEffect } from 'react';
 import { useStore } from '@tanstack/react-form';
 import * as THREE from 'three';
 import { GeometricRenderer } from './GeometricRenderer';
-import { getSceneData } from '../../utils/render/scene';
-import { getCameraData, type RawCameraData } from '../../utils/render/camera';
-import type { RenderForm } from '../../hooks/useRenderForm';
+import { getSceneData } from '../../../utils/render/scene';
+import { getCameraData, type RawCameraData } from '../../../utils/render/camera';
+import type { RenderForm } from '../../../hooks/useRenderForm';
 
 interface SceneProps {
   form: RenderForm;

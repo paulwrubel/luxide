@@ -1,7 +1,7 @@
 import { Dropdown, DropdownItem } from 'flowbite-react';
-import { defaultMaterialForType, type MaterialData } from '../../utils/render/material';
-import { capitalize, getNextUniqueName } from '../../utils/render/utils';
-import type { RenderForm } from '../../hooks/useRenderForm';
+import { defaultTextureForType, type TextureData } from '../../../utils/render/texture';
+import { capitalize, getNextUniqueName } from '../../../utils/render/utils';
+import type { RenderForm } from '../../../hooks/useRenderForm';
 import { useStore } from '@tanstack/react-form';
 
 function PlusIcon({ className }: { className?: string }) {
@@ -18,24 +18,24 @@ function PlusIcon({ className }: { className?: string }) {
   );
 }
 
-type MaterialType = Exclude<MaterialData['type'], 'dielectric'>;
+type TextureType = Exclude<TextureData['type'], 'checker' | 'image'>;
 
-interface NewMaterialSpeedDialProps {
+interface NewTextureSpeedDialProps {
   form: RenderForm;
 }
 
-export function NewMaterialSpeedDial(props: NewMaterialSpeedDialProps) {
+export function NewTextureSpeedDial(props: NewTextureSpeedDialProps) {
   const { form } = props;
 
   const formValues = useStore(form.store, (state) => state.values);
 
-  function handleNewMaterial(type: MaterialType) {
-    const newMaterial = defaultMaterialForType(type);
-    const nextName = getNextUniqueName(formValues.materials ?? {}, `New ${capitalize(type)}`);
+  function handleNewTexture(type: TextureType) {
+    const newTexture = defaultTextureForType(type);
+    const nextName = getNextUniqueName(formValues.textures ?? {}, `New ${capitalize(type)}`);
 
-    form.setFieldValue('materials', {
-      ...formValues.materials,
-      [nextName]: newMaterial,
+    form.setFieldValue('textures', {
+      ...formValues.textures,
+      [nextName]: newTexture,
     });
   }
 
@@ -44,19 +44,19 @@ export function NewMaterialSpeedDial(props: NewMaterialSpeedDialProps) {
       <DropdownItem disabled>
         <div className="flex items-center gap-2">
           <PlusIcon className="h-4 w-4" />
-          Dielectric Material
+          Checker Texture
         </div>
       </DropdownItem>
-      <DropdownItem onClick={() => handleNewMaterial('lambertian')}>
+      <DropdownItem disabled>
         <div className="flex items-center gap-2">
           <PlusIcon className="h-4 w-4" />
-          Lambertian Material
+          Image Texture
         </div>
       </DropdownItem>
-      <DropdownItem onClick={() => handleNewMaterial('specular')}>
+      <DropdownItem onClick={() => handleNewTexture('color')}>
         <div className="flex items-center gap-2">
           <PlusIcon className="h-4 w-4" />
-          Specular Material
+          Color Texture
         </div>
       </DropdownItem>
     </Dropdown>

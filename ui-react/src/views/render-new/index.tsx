@@ -86,7 +86,6 @@ export function NewRenderPage() {
         </SidebarItems>
       </Sidebar>
 
-      {/* 3D scene canvas placeholder — replaced by Phase 6 */}
       <div ref={containerRef} className="m-8 flex flex-1 items-center justify-center">
         <div
           style={{ width: canvasWidth, height: canvasHeight }}

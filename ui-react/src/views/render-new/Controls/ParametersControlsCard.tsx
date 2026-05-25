@@ -1,14 +1,14 @@
 import { ControlsCard } from './ControlsCard';
-import { WarningIconAdvancedProperty } from './icons/WarningIconAdvancedProperty';
-import { TextInputControl } from './ui/TextInputControl';
-import { TextArrayInputControl } from './ui/TextArrayInputControl';
-import { ToggleControl } from './ui/ToggleControl';
+import { WarningIconAdvancedProperty } from '../icons/WarningIconAdvancedProperty';
+import { TextInputControl } from '../ui/TextInputControl';
+import { TextArrayInputControl } from '../ui/TextArrayInputControl';
+import { ToggleControl } from '../ui/ToggleControl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tooltip, ToggleSwitch } from 'flowbite-react';
-import { useAuth } from '../../providers/auth';
-import { Separator } from '../../components/Separator';
+import { useAuth } from '../../../providers/auth';
+import { Separator } from '../../../components/Separator';
 import { useState, useEffect } from 'react';
-import type { RenderForm } from '../../hooks/useRenderForm';
+import type { RenderForm } from '../../../hooks/useRenderForm';
 import { useStore } from '@tanstack/react-form';
 
 interface ParametersControlsCardProps {
