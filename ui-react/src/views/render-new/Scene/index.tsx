@@ -1,4 +1,5 @@
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas } from '@react-three/fiber';
+import { PerspectiveCamera } from '@react-three/drei';
 import { useRef, useEffect } from 'react';
 import { useStore } from '@tanstack/react-form';
 import * as THREE from 'three';
@@ -12,35 +13,26 @@ interface SceneProps {
 }
 
 function CameraUpdater({ cameraData }: { cameraData: RawCameraData }) {
-  const needsUpdate = useRef(true);
+  const cameraRef = useRef<THREE.PerspectiveCamera>(null);
 
+  // imperative: lookAt is a method, not a reactive prop
   useEffect(() => {
-    needsUpdate.current = true;
-  }, [cameraData]);
-
-  useFrame((state) => {
-    if (!needsUpdate.current) return;
-
-    const { camera } = state;
-    if (!('isPerspectiveCamera' in camera)) return;
-
-    (camera as THREE.PerspectiveCamera).fov = cameraData.vertical_field_of_view_degrees;
-    camera.position.set(
-      cameraData.eye_location[0],
-      cameraData.eye_location[1],
-      cameraData.eye_location[2],
-    );
-    camera.up.set(cameraData.view_up[0], cameraData.view_up[1], cameraData.view_up[2]);
-    camera.lookAt(
+    cameraRef.current?.lookAt(
       cameraData.target_location[0],
       cameraData.target_location[1],
       cameraData.target_location[2],
     );
-    (camera as THREE.PerspectiveCamera).updateProjectionMatrix();
-    needsUpdate.current = false;
-  });
+  }, [cameraData]);
 
-  return null;
+  return (
+    <PerspectiveCamera
+      ref={cameraRef}
+      makeDefault
+      fov={cameraData.vertical_field_of_view_degrees}
+      position={cameraData.eye_location}
+      up={cameraData.view_up}
+    />
+  );
 }
 
 export function Scene(props: SceneProps) {
