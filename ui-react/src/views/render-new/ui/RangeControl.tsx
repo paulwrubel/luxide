@@ -11,16 +11,9 @@ interface RangeControlProps {
   step?: number;
 }
 
-export default function RangeControl({
-  form,
-  field,
-  label,
-  labelPrefix,
-  labelSuffix,
-  min,
-  max,
-  step,
-}: RangeControlProps) {
+export function RangeControl(props: RangeControlProps) {
+  const { form, field, label, labelPrefix, labelSuffix, min, max, step } = props;
+
   return (
     <form.Field name={field}>
       {(f: any) => (

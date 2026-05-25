@@ -1,4 +1,4 @@
-import FormTextInput from './FormTextInput';
+import { FormTextInput } from './FormTextInput';
 import { getGridColumnsTemplateForPercentage } from './utils';
 import type { ChangeEvent, FormEvent } from 'react';
 
@@ -16,19 +16,21 @@ interface TextInputControlProps {
   valueLabel: string;
 }
 
-export default function TextInputControl({
-  form,
-  field,
-  oninput,
-  onchange,
-  type = 'text',
-  label,
-  labelSpacePercentage = 40,
-  allowWrappingLabel,
-  labelPrefix,
-  labelSuffix,
-  valueLabel,
-}: TextInputControlProps) {
+export function TextInputControl(props: TextInputControlProps) {
+  const {
+    form,
+    field,
+    oninput,
+    onchange,
+    type = 'text',
+    label,
+    labelSpacePercentage = 40,
+    allowWrappingLabel,
+    labelPrefix,
+    labelSuffix,
+    valueLabel,
+  } = props;
+
   const gridStr = getGridColumnsTemplateForPercentage(labelSpacePercentage);
 
   return (

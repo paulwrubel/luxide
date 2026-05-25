@@ -24,7 +24,9 @@ interface NewMaterialSpeedDialProps {
   form: RenderForm;
 }
 
-export default function NewMaterialSpeedDial({ form }: NewMaterialSpeedDialProps) {
+export function NewMaterialSpeedDial(props: NewMaterialSpeedDialProps) {
+  const { form } = props;
+
   const formValues = useStore(form.store, (state) => state.values);
 
   function handleNewMaterial(type: MaterialType) {

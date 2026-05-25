@@ -9,7 +9,7 @@ import { LoginPage } from './views/login';
 import { AuthCallbackPage } from './views/auth-callback';
 import RendersPage from './views/renders';
 import { RenderDetailPage } from './views/render-detail';
-import NewRenderPage from './views/render-new';
+import { NewRenderPage } from './views/render-new';
 
 const queryClient = new QueryClient({
   defaultOptions: {

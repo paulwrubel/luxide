@@ -5,7 +5,9 @@ interface InfoIconAdditionalInfoProps {
   info: string | string[];
 }
 
-export default function InfoIconAdditionalInfo({ info }: InfoIconAdditionalInfoProps) {
+export function InfoIconAdditionalInfo(props: InfoIconAdditionalInfoProps) {
+  const { info } = props;
+
   const infoStrings = Array.isArray(info) ? info : [info];
   return (
     <Tooltip

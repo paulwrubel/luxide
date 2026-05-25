@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useStore } from '@tanstack/react-form';
 import { Sidebar, SidebarItems, SidebarItemGroup, Spinner, Button } from 'flowbite-react';
 import { Separator } from '../../components/Separator';
-import Controls from './Controls';
-import Scene from './Scene';
+import { Controls } from './Controls';
+import { Scene } from './Scene';
 import { useAuth } from '../../providers/auth';
 import { postRender } from '../../utils/api';
 import { useRenderForm } from '../../hooks/useRenderForm';
 
-export default function NewRenderPage() {
+export function NewRenderPage() {
   const navigate = useNavigate();
   const { user, token } = useAuth();
   const [isCreatingRender, setIsCreatingRender] = useState(false);

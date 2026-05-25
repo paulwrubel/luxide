@@ -1,8 +1,8 @@
-import ControlsCard from './ControlsCard';
-import WarningIconAdvancedProperty from './icons/WarningIconAdvancedProperty';
-import TextInputControl from './ui/TextInputControl';
-import TextArrayInputControl from './ui/TextArrayInputControl';
-import ToggleControl from './ui/ToggleControl';
+import { ControlsCard } from './ControlsCard';
+import { WarningIconAdvancedProperty } from './icons/WarningIconAdvancedProperty';
+import { TextInputControl } from './ui/TextInputControl';
+import { TextArrayInputControl } from './ui/TextArrayInputControl';
+import { ToggleControl } from './ui/ToggleControl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tooltip, ToggleSwitch } from 'flowbite-react';
 import { useAuth } from '../../providers/auth';
@@ -15,7 +15,9 @@ interface ParametersControlsCardProps {
   form: RenderForm;
 }
 
-export default function ParametersControlsCard({ form }: ParametersControlsCardProps) {
+export function ParametersControlsCard(props: ParametersControlsCardProps) {
+  const { form } = props;
+
   const { user } = useAuth();
   const renderConfig = useStore(form.store, (state) => state.values);
   const parameters = renderConfig.parameters;

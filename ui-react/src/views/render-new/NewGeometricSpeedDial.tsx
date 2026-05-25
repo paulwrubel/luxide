@@ -38,7 +38,9 @@ interface NewGeometricSpeedDialProps {
   form: RenderForm;
 }
 
-export default function NewGeometricSpeedDial({ form }: NewGeometricSpeedDialProps) {
+export function NewGeometricSpeedDial(props: NewGeometricSpeedDialProps) {
+  const { form } = props;
+
   const formValues = useStore(form.store, (state) => state.values);
 
   function handleNewGeometric(type: GeometricType) {

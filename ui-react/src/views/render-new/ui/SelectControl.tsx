@@ -14,14 +14,9 @@ interface SelectControlProps {
   items: SelectItem[];
 }
 
-export default function SelectControl({
-  form,
-  field,
-  label,
-  labelPrefix,
-  labelSuffix,
-  items,
-}: SelectControlProps) {
+export function SelectControl(props: SelectControlProps) {
+  const { form, field, label, labelPrefix, labelSuffix, items } = props;
+
   return (
     <form.Field name={field}>
       {(f: any) => {

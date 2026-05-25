@@ -1,7 +1,7 @@
 import { Tooltip } from 'flowbite-react';
 import { HiInformationCircle } from 'react-icons/hi2';
 
-export default function WarningIconUnaffectedPreview() {
+export function WarningIconUnaffectedPreview() {
   return (
     <Tooltip
       content={

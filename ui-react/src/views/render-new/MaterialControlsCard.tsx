@@ -3,8 +3,8 @@ import { Card, Button } from 'flowbite-react';
 import { ChevronDownIcon, ChevronUpIcon } from 'flowbite-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Separator } from '../../components/Separator';
-import RangeControl from './ui/RangeControl';
-import SelectControl from './ui/SelectControl';
+import { RangeControl } from './ui/RangeControl';
+import { SelectControl } from './ui/SelectControl';
 import { getMaterialData } from '../../utils/render/material';
 import { fixReferences } from '../../utils/render/utils';
 import type { RenderConfig } from '../../utils/render/config';
@@ -34,7 +34,9 @@ interface MaterialControlsCardProps {
   materialName: string;
 }
 
-export default function MaterialControlsCard({ form, materialName }: MaterialControlsCardProps) {
+export function MaterialControlsCard(props: MaterialControlsCardProps) {
+  const { form, materialName } = props;
+
   const [isExpanded, setIsExpanded] = useState(false);
   const renderConfig = useStore(form.store, (state) => state.values);
 

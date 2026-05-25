@@ -3,11 +3,11 @@ import { Card, Button } from 'flowbite-react';
 import { ChevronDownIcon, ChevronUpIcon } from 'flowbite-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Separator } from '../../components/Separator';
-import NestedGeometricHeader from './NestedGeometricHeader';
-import TextArrayInputControl from './ui/TextArrayInputControl';
-import TextInputControl from './ui/TextInputControl';
-import RangeControl from './ui/RangeControl';
-import SelectControl from './ui/SelectControl';
+import { NestedGeometricHeader } from './NestedGeometricHeader';
+import { TextArrayInputControl } from './ui/TextArrayInputControl';
+import { TextInputControl } from './ui/TextInputControl';
+import { RangeControl } from './ui/RangeControl';
+import { SelectControl } from './ui/SelectControl';
 import { getGeometricData, getGeometricDataSafe } from '../../utils/render/geometric';
 import { fixReferences } from '../../utils/render/utils';
 import type { RenderConfig } from '../../utils/render/config';
@@ -66,7 +66,9 @@ interface GeometricControlsCardProps {
   geometricName: string;
 }
 
-export default function GeometricControlsCard({ form, geometricName }: GeometricControlsCardProps) {
+export function GeometricControlsCard(props: GeometricControlsCardProps) {
+  const { form, geometricName } = props;
+
   const [isExpanded, setIsExpanded] = useState(false);
   const renderConfig = useStore(form.store, (state) => state.values);
 

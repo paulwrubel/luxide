@@ -24,7 +24,9 @@ interface NewTextureSpeedDialProps {
   form: RenderForm;
 }
 
-export default function NewTextureSpeedDial({ form }: NewTextureSpeedDialProps) {
+export function NewTextureSpeedDial(props: NewTextureSpeedDialProps) {
+  const { form } = props;
+
   const formValues = useStore(form.store, (state) => state.values);
 
   function handleNewTexture(type: TextureType) {

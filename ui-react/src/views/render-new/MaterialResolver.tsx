@@ -12,11 +12,9 @@ interface MaterialResolverProps {
   geometricName: string;
 }
 
-export default function MaterialResolver({
-  config,
-  materialRef,
-  geometricName,
-}: MaterialResolverProps) {
+export function MaterialResolver(props: MaterialResolverProps) {
+  const { config, materialRef, geometricName } = props;
+
   const { data: materialData } = getMaterialDataSafe(config, materialRef);
   const { data: reflectanceTexture } = getTextureDataSafe(config, materialData.reflectance_texture);
   const { data: emittanceTexture } = getTextureDataSafe(config, materialData.emittance_texture);

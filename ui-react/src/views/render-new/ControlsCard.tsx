@@ -22,14 +22,16 @@ function LabelText({ text, type }: { text: string; type: LabelType }) {
   return <h2 className="text-xl font-light italic">{text}</h2>;
 }
 
-export default function ControlsCard({
-  children,
-  startExpanded = false,
-  leftLabel,
-  leftLabelStyle = 'bold',
-  rightLabel,
-  rightLabelStyle = 'light',
-}: ControlsCardProps) {
+export function ControlsCard(props: ControlsCardProps) {
+  const {
+    children,
+    startExpanded = false,
+    leftLabel,
+    leftLabelStyle = 'bold',
+    rightLabel,
+    rightLabelStyle = 'light',
+  } = props;
+
   const [isExpanded, setIsExpanded] = useState(startExpanded);
 
   return (

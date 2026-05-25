@@ -10,14 +10,9 @@ interface ToggleControlProps {
   disabled?: boolean;
 }
 
-export default function ToggleControl({
-  form,
-  field,
-  label,
-  labelPrefix,
-  labelSuffix,
-  disabled,
-}: ToggleControlProps) {
+export function ToggleControl(props: ToggleControlProps) {
+  const { form, field, label, labelPrefix, labelSuffix, disabled } = props;
+
   return (
     <div className="flex max-w-full flex-col">
       <form.Field name={field}>

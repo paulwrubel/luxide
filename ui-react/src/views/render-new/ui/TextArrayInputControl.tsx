@@ -1,4 +1,4 @@
-import FormTextInput from './FormTextInput';
+import { FormTextInput } from './FormTextInput';
 import { getGridColumnsTemplateForPercentage } from './utils';
 
 interface TextArrayInputControlProps {
@@ -14,18 +14,20 @@ interface TextArrayInputControlProps {
   unenforcedStep?: number;
 }
 
-export default function TextArrayInputControl({
-  form,
-  field,
-  type = 'text',
-  label,
-  labelSpacePercentage = 40,
-  allowWrappingLabel,
-  labelPrefix,
-  labelSuffix,
-  valueLabels,
-  unenforcedStep,
-}: TextArrayInputControlProps) {
+export function TextArrayInputControl(props: TextArrayInputControlProps) {
+  const {
+    form,
+    field,
+    type = 'text',
+    label,
+    labelSpacePercentage = 40,
+    allowWrappingLabel,
+    labelPrefix,
+    labelSuffix,
+    valueLabels,
+    unenforcedStep,
+  } = props;
+
   const gridStr = getGridColumnsTemplateForPercentage(labelSpacePercentage);
 
   return (

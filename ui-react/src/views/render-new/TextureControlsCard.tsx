@@ -3,10 +3,10 @@ import { Card, Button } from 'flowbite-react';
 import { ChevronDownIcon, ChevronUpIcon } from 'flowbite-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Separator } from '../../components/Separator';
-import TextInputControl from './ui/TextInputControl';
-import TextArrayInputControl from './ui/TextArrayInputControl';
-import InfoIconAdditionalInfo from './icons/InfoIconAdditionalInfo';
-import NestedTextureHeader from './NestedTextureHeader';
+import { TextInputControl } from './ui/TextInputControl';
+import { TextArrayInputControl } from './ui/TextArrayInputControl';
+import { InfoIconAdditionalInfo } from './icons/InfoIconAdditionalInfo';
+import { NestedTextureHeader } from './NestedTextureHeader';
 import { getTextureData } from '../../utils/render/texture';
 import { fixReferences } from '../../utils/render/utils';
 import type { RenderConfig } from '../../utils/render/config';
@@ -36,7 +36,9 @@ interface TextureControlsCardProps {
   textureName: string;
 }
 
-export default function TextureControlsCard({ form, textureName }: TextureControlsCardProps) {
+export function TextureControlsCard(props: TextureControlsCardProps) {
+  const { form, textureName } = props;
+
   const [isExpanded, setIsExpanded] = useState(false);
   const renderConfig = useStore(form.store, (state) => state.values);
 

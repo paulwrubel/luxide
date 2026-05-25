@@ -7,10 +7,12 @@ interface NestedGeometricHeaderProps {
   renderConfig: RenderConfig;
 }
 
-export default function NestedGeometricHeader({
-  geometricName,
-  renderConfig,
-}: NestedGeometricHeaderProps) {
+export function NestedGeometricHeader(props: NestedGeometricHeaderProps) {
+  const {
+    geometricName,
+    renderConfig,
+  } = props;
+
   const { data } = getGeometricData(renderConfig, geometricName);
 
   return (

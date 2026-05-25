@@ -1,13 +1,13 @@
 import { useMemo } from 'react';
 import { Tabs, TabItem } from 'flowbite-react';
-import CameraControlsCard from './CameraControlsCard';
-import ParametersControlsCard from './ParametersControlsCard';
-import GeometricControlsCard from './GeometricControlsCard';
-import MaterialControlsCard from './MaterialControlsCard';
-import TextureControlsCard from './TextureControlsCard';
-import NewGeometricSpeedDial from './NewGeometricSpeedDial';
-import NewMaterialSpeedDial from './NewMaterialSpeedDial';
-import NewTextureSpeedDial from './NewTextureSpeedDial';
+import { CameraControlsCard } from './CameraControlsCard';
+import { ParametersControlsCard } from './ParametersControlsCard';
+import { GeometricControlsCard } from './GeometricControlsCard';
+import { MaterialControlsCard } from './MaterialControlsCard';
+import { TextureControlsCard } from './TextureControlsCard';
+import { NewGeometricSpeedDial } from './NewGeometricSpeedDial';
+import { NewMaterialSpeedDial } from './NewMaterialSpeedDial';
+import { NewTextureSpeedDial } from './NewTextureSpeedDial';
 import { getSceneData } from '../../utils/render/scene';
 import {
   removeDefaults,
@@ -21,7 +21,9 @@ interface ControlsProps {
   form: RenderForm;
 }
 
-export default function Controls({ form }: ControlsProps) {
+export function Controls(props: ControlsProps) {
+  const { form } = props;
+
   const renderConfig = useStore(form.store, (state) => state.values);
 
   const activeScene = useMemo(

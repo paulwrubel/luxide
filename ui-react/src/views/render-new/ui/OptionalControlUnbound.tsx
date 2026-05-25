@@ -1,4 +1,4 @@
-import ToggleControlUnbound from './ToggleControlUnbound';
+import { ToggleControlUnbound } from './ToggleControlUnbound';
 import { Separator } from '../../../components/Separator';
 import type { ChangeEvent, FormEvent } from 'react';
 
@@ -14,17 +14,19 @@ interface OptionalControlUnboundProps {
   children: React.ReactNode;
 }
 
-export default function OptionalControlUnbound({
-  label,
-  allowWrappingLabel,
-  labelPrefix,
-  labelSuffix,
-  checked,
-  oninput,
-  onchange,
-  disabled,
-  children,
-}: OptionalControlUnboundProps) {
+export function OptionalControlUnbound(props: OptionalControlUnboundProps) {
+  const {
+    label,
+    allowWrappingLabel,
+    labelPrefix,
+    labelSuffix,
+    checked,
+    oninput,
+    onchange,
+    disabled,
+    children,
+  } = props;
+
   return (
     <div className="flex max-w-full flex-col">
       <div className="h-px">{checked && <Separator />}</div>

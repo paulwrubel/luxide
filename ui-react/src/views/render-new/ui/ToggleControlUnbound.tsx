@@ -12,15 +12,9 @@ interface ToggleControlUnboundProps {
   disabled?: boolean;
 }
 
-export default function ToggleControlUnbound({
-  checked,
-  oninput,
-  onchange,
-  label,
-  labelPrefix,
-  labelSuffix,
-  disabled,
-}: ToggleControlUnboundProps) {
+export function ToggleControlUnbound(props: ToggleControlUnboundProps) {
+  const { checked, oninput, onchange, label, labelPrefix, labelSuffix, disabled } = props;
+
   return (
     <div className="flex max-w-full flex-col">
       <div className="flex items-center gap-2">

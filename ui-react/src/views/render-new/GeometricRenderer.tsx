@@ -1,7 +1,7 @@
 import { getGeometricDataSafe } from '../../utils/render/geometric';
 import { toRadians } from '../../utils/render/utils';
 import { createParallelogramMesh, createTriangleMesh } from '../../utils/three';
-import MaterialResolver from './MaterialResolver';
+import { MaterialResolver } from './MaterialResolver';
 import type { RenderConfig } from '../../utils/render/config';
 
 interface GeometricRendererProps {
@@ -9,7 +9,9 @@ interface GeometricRendererProps {
   name: string;
 }
 
-export default function GeometricRenderer({ config, name }: GeometricRendererProps) {
+export function GeometricRenderer(props: GeometricRendererProps) {
+  const { config, name } = props;
+
   const { data } = getGeometricDataSafe(config, name);
 
   switch (data.type) {

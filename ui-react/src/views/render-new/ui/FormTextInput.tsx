@@ -12,16 +12,18 @@ interface FormTextInputProps {
   unenforcedStep?: number;
 }
 
-export default function FormTextInput({
-  form,
-  field,
-  type = 'text',
-  valueLabel,
-  oninput,
-  onchange,
-  extraIsErrored,
-  unenforcedStep,
-}: FormTextInputProps) {
+export function FormTextInput(props: FormTextInputProps) {
+  const {
+    form,
+    field,
+    type = 'text',
+    valueLabel,
+    oninput,
+    onchange,
+    extraIsErrored,
+    unenforcedStep,
+  } = props;
+
   return (
     <form.Field name={field}>
       {(f: any) => {

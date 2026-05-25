@@ -7,10 +7,12 @@ interface NestedTextureHeaderProps {
   renderConfig: RenderConfig;
 }
 
-export default function NestedTextureHeader({
-  textureName,
-  renderConfig,
-}: NestedTextureHeaderProps) {
+export function NestedTextureHeader(props: NestedTextureHeaderProps) {
+  const {
+    textureName,
+    renderConfig,
+  } = props;
+
   const { data } = getTextureData(renderConfig, textureName);
 
   return (

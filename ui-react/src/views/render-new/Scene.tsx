@@ -2,7 +2,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useRef, useEffect } from 'react';
 import { useStore } from '@tanstack/react-form';
 import * as THREE from 'three';
-import GeometricRenderer from './GeometricRenderer';
+import { GeometricRenderer } from './GeometricRenderer';
 import { getSceneData } from '../../utils/render/scene';
 import { getCameraData, type RawCameraData } from '../../utils/render/camera';
 import type { RenderForm } from '../../hooks/useRenderForm';
@@ -42,7 +42,9 @@ function CameraUpdater({ cameraData }: { cameraData: RawCameraData }) {
   return null;
 }
 
-export default function Scene({ form }: SceneProps) {
+export function Scene(props: SceneProps) {
+  const { form } = props;
+
   const renderConfig = useStore(form.store, (state) => state.values);
   const activeScene = getSceneData(renderConfig, renderConfig.active_scene);
   const { data: cameraData } = getCameraData(renderConfig, activeScene.camera);
