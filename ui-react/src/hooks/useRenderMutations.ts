@@ -10,12 +10,10 @@ import { useAuth } from '../providers/auth';
 import type { RenderConfig } from '../utils/render/config';
 
 export function useCreateRender() {
-  const { token } = useAuth();
-  const queryClient = useQueryClient();
+  const { mustGetToken } = useAuth();
+  const token = mustGetToken();
 
-  if (!token) {
-    throw new Error('Not authenticated');
-  }
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (config: RenderConfig) => postRender(token, config),
@@ -26,12 +24,10 @@ export function useCreateRender() {
 }
 
 export function usePauseRender() {
-  const { token } = useAuth();
-  const queryClient = useQueryClient();
+  const { mustGetToken } = useAuth();
+  const token = mustGetToken();
 
-  if (!token) {
-    throw new Error('Not authenticated');
-  }
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (renderId: number) => pauseRender(token, renderId),
@@ -43,12 +39,10 @@ export function usePauseRender() {
 }
 
 export function useResumeRender() {
-  const { token } = useAuth();
-  const queryClient = useQueryClient();
+  const { mustGetToken } = useAuth();
+  const token = mustGetToken();
 
-  if (!token) {
-    throw new Error('Not authenticated');
-  }
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (renderId: number) => resumeRender(token, renderId),
@@ -60,12 +54,10 @@ export function useResumeRender() {
 }
 
 export function useDeleteRender() {
-  const { token } = useAuth();
-  const queryClient = useQueryClient();
+  const { mustGetToken } = useAuth();
+  const token = mustGetToken();
 
-  if (!token) {
-    throw new Error('Not authenticated');
-  }
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (renderId: number) => deleteRender(token, renderId),
@@ -76,12 +68,10 @@ export function useDeleteRender() {
 }
 
 export function useUpdateRenderTotalCheckpoints() {
-  const { token } = useAuth();
-  const queryClient = useQueryClient();
+  const { mustGetToken } = useAuth();
+  const token = mustGetToken();
 
-  if (!token) {
-    throw new Error('Not authenticated');
-  }
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({

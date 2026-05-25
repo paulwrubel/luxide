@@ -3,11 +3,8 @@ import { getAllRenders } from '../utils/api';
 import { useAuth } from '../providers/auth';
 
 export function useRenders() {
-  const { token } = useAuth();
-
-  if (!token) {
-    throw new Error('Not authenticated');
-  }
+  const { mustGetToken } = useAuth();
+  const token = mustGetToken();
 
   return useQuery({
     queryKey: ['renders', token],

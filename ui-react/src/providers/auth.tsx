@@ -6,6 +6,7 @@ interface AuthContextType {
   token: string | undefined;
   user: User | undefined;
   isAuthenticated: boolean;
+  mustGetToken: () => string;
   setToken: (token: string) => void;
   clearToken: () => void;
 }
@@ -46,10 +47,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(undefined);
   }, []);
 
+  const mustGetToken = useCallback(() => {
+    if (!token) {
+      throw new Error('Authentication token is required but not available');
+    }
+    return token;
+  }, [token]);
+
   const value: AuthContextType = {
     token,
     user,
     isAuthenticated: !!token,
+    mustGetToken,
     setToken,
     clearToken,
   };

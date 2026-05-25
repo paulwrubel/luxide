@@ -1,16 +1,15 @@
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Sidebar, SidebarItems, SidebarItemGroup, Spinner } from 'flowbite-react';
-import { useAuth } from '../../providers/auth';
 import { useRender } from '../../hooks/useRender';
 import { useLatestCheckpointImage } from '../../hooks/useLatestCheckpointImage';
-import RenderControls from './RenderControls';
-import RenderDisplay from './RenderDisplay';
+import { RenderControls } from './RenderControls';
+import { RenderDisplay } from './RenderDisplay';
 
-export default function RenderDetailPage() {
+/** render detail page showing a single render's progress and controls */
+export function RenderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const renderID = Number(id);
-  useAuth(); // ensures authenticated context
 
   const renderQuery = useRender({ renderID });
   const imageURLQuery = useLatestCheckpointImage({ renderID });
@@ -24,12 +23,21 @@ export default function RenderDetailPage() {
     };
   }, [imageURLQuery.data]);
 
+  const sidebarTheme = {
+    root: {
+      base: 'bg-zinc-900 dark:bg-zinc-900',
+      inner: 'bg-zinc-900 dark:bg-zinc-900',
+    },
+  };
+
   return (
     <div className="flex h-full w-full">
-      <Sidebar className="z-10 h-full w-82 bg-zinc-900! [&>div]:bg-zinc-900!">
+      <Sidebar theme={sidebarTheme} className="z-10 h-full w-82">
         <SidebarItems className="h-full">
           <SidebarItemGroup className="flex h-full flex-col">
-            {renderQuery.isSuccess && <RenderControls render={renderQuery.data} />}
+            {renderQuery.isSuccess && (
+              <RenderControls render={renderQuery.data} renderID={renderID} />
+            )}
           </SidebarItemGroup>
         </SidebarItems>
       </Sidebar>

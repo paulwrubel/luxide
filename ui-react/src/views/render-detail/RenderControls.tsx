@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   pauseRender,
   resumeRender,
@@ -13,15 +13,18 @@ import {
 import { Button, Spinner, TextInput, Label } from 'flowbite-react';
 import { useAuth } from '../../providers/auth';
 
-interface RenderControlsProps {
+export type RenderControlsProps = {
   render: Render;
-}
+  renderID: number;
+};
 
-export default function RenderControls({ render }: RenderControlsProps) {
-  const { id } = useParams<{ id: string }>();
-  const renderId = Number(id);
+/** sidebar controls panel for a single render (checkpoint management, pause/resume, delete) */
+export function RenderControls(props: RenderControlsProps) {
+  const { render, renderID } = props;
+
   const navigate = useNavigate();
-  const { token } = useAuth();
+  const { mustGetToken } = useAuth();
+  const token = mustGetToken();
 
   const [isPausingOrResuming, setIsPausingOrResuming] = useState(false);
   const [newCheckpointLimit, setNewCheckpointLimit] = useState<number>(
@@ -36,21 +39,21 @@ export default function RenderControls({ render }: RenderControlsProps) {
   async function handlePauseOrResume() {
     setIsPausingOrResuming(true);
     if (isPaused || isPausing) {
-      await resumeRender(token, renderId);
+      await resumeRender(token, renderID);
     } else if (isRunning) {
-      await pauseRender(token, renderId);
+      await pauseRender(token, renderID);
     }
     setIsPausingOrResuming(false);
   }
 
   async function handleUpdateCheckpoints() {
     setIsUpdatingCheckpoints(true);
-    await updateRenderTotalCheckpoints(token, renderId, newCheckpointLimit);
+    await updateRenderTotalCheckpoints(token, renderID, newCheckpointLimit);
     setIsUpdatingCheckpoints(false);
   }
 
   async function handleDelete() {
-    await deleteRender(token, renderId);
+    await deleteRender(token, renderID);
     navigate('/renders');
   }
 
