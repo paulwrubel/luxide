@@ -12,7 +12,7 @@ export default function Layout() {
   }
 
   return (
-    <main className="flex h-screen flex-col overflow-hidden bg-zinc-950 text-zinc-200">
+    <main className="flex h-screen flex-col bg-zinc-950 text-zinc-200">
       <div className="flex h-full w-full flex-col">
         {/* App bar */}
         <nav className="flex h-16 items-center justify-between border-b border-zinc-800 bg-zinc-900 px-4">
@@ -32,20 +32,14 @@ export default function Layout() {
                   <Dropdown
                     label={
                       <div className="flex items-center gap-2">
-                        <Avatar img={user.avatar_url} alt="User avatar" size="sm" rounded />
-                        <span className="text-sm font-medium text-white">{user.username}</span>
+                        <Avatar img={user.avatar_url} alt="User avatar" size="sm" />
+                        <span className="text-sm font-medium">{user.username}</span>
                       </div>
                     }
                     arrowIcon={false}
                     inline
-                    className="z-10"
                   >
-                    <DropdownItem
-                      onClick={handleLogout}
-                      className="!bg-primary-600 hover:!bg-primary-700 !text-white"
-                    >
-                      Log Out
-                    </DropdownItem>
+                    <DropdownItem onClick={handleLogout}>Log Out</DropdownItem>
                   </Dropdown>
                 )}
               </div>
