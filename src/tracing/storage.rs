@@ -122,7 +122,7 @@ impl RenderCheckpoint {
         for (x, y, pixel) in image.enumerate_pixels() {
             pixel_data.insert(
                 (x, y),
-                Color::from_gamma_corrected_rgba_u8(&pixel, params.gamma_correction),
+                Color::from_gamma_corrected_rgba_u8(pixel, params.gamma_correction),
             );
         }
         Self {
@@ -409,15 +409,11 @@ impl User {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum Role {
     Admin,
+    #[default]
     User,
-}
-
-impl Default for Role {
-    fn default() -> Self {
-        Self::User
-    }
 }
 
 impl Display for Role {

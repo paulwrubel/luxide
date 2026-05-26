@@ -17,6 +17,12 @@ pub struct Tracer {
     thread_pool: Arc<rayon::ThreadPool>,
 }
 
+impl Default for Tracer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Tracer {
     pub fn new() -> Self {
         Self::from_threads(Threads::AllWithDefault(NonZero::new(24).unwrap()))
@@ -35,8 +41,8 @@ impl Tracer {
         Self { thread_pool }
     }
 
-    pub fn render_to_checkpoint_iteration<'a>(
-        &'a self,
+    pub fn render_to_checkpoint_iteration(
+        &self,
         checkpoint: u32,
         pixel_data: PixelData,
         render_data: &RenderData,
@@ -76,13 +82,8 @@ impl Tracer {
                                 Color::BLACK,
                                 |acc, _| {
                                     let ray = cam.get_ray(x, y);
-                                    let res = acc
-                                        + cam.ray_color(
-                                            ray,
-                                            world.as_ref(),
-                                            parameters.max_bounces,
-                                        );
-                                    res
+
+                                    acc + cam.ray_color(ray, world.as_ref(), parameters.max_bounces)
                                 },
                             );
                             // done with pixel!

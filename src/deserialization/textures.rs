@@ -61,7 +61,7 @@ impl Build<Arc<dyn Texture>> for TextureData {
             }
             Self::Image { filename, gamma } => {
                 let image_texture = Image8Bit::from_filename(filename, *gamma)
-                    .map_err(|err| (format!("Error loading image at \"{}\": {}", filename, err)))?;
+                    .map_err(|err| format!("Error loading image at \"{}\": {}", filename, err))?;
 
                 Ok(Arc::new(image_texture))
             }

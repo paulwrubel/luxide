@@ -30,8 +30,8 @@ impl AABB {
     }
 
     pub fn from_points(points: &[Point]) -> Self {
-        let min_point = Point::min_components_from_list(&points);
-        let max_point = Point::max_components_from_list(&points);
+        let min_point = Point::min_components_from_list(points);
+        let max_point = Point::max_components_from_list(points);
         Self {
             x_interval: Interval::new(min_point.0.x, max_point.0.x),
             y_interval: Interval::new(min_point.0.y, max_point.0.y),
@@ -80,7 +80,7 @@ impl AABB {
     }
 
     pub fn hit(&self, ray: Ray, ray_t: Interval) -> bool {
-        let mut interval = ray_t.clone(); // trivial clone since Interval is Copy
+        let mut interval = ray_t; // trivial clone since Interval is Copy
         for axis in 0..3 {
             let inverse_direction_component = 1.0 / ray.direction[axis];
             let origin_component = ray.origin[axis];

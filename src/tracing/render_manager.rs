@@ -157,7 +157,7 @@ impl RenderManager {
         let storage = Arc::clone(&self.storage);
         let thread_pool = self.global_thread_pool.as_ref().cloned();
 
-        let join_handle = tokio::spawn(async move {
+        tokio::spawn(async move {
             let tracer = match thread_pool {
                 Some(pool) => Tracer::from_thread_pool(pool),
                 None => Tracer::new(),
@@ -168,7 +168,7 @@ impl RenderManager {
                 None => 1,
             };
 
-            match storage
+            if let Err(e) = storage
                 .update_render_state(
                     render.id,
                     RenderState::Running {
@@ -178,13 +178,10 @@ impl RenderManager {
                 )
                 .await
             {
-                Err(e) => {
-                    println!("Failed to update render state: {e}");
-                    // remove from running set on error
-                    running_renders.lock().unwrap().remove(&render.id);
-                    return;
-                }
-                Ok(_) => (),
+                println!("Failed to update render state: {e}");
+                // remove from running set on error
+                running_renders.lock().unwrap().remove(&render.id);
+                return;
             }
 
             let initial_pixel_data = match previous_checkpoint {
@@ -213,19 +210,18 @@ impl RenderManager {
                             (total / 1000).max(1),
                             |progress_info| storage.update_progress(render.id, progress_info),
                         );
-                        while let Some(_) = receiver.recv().await {
+                        while receiver.recv().await.is_some() {
                             progress_tracker.mark().await;
                         }
                     },
                     async move {
                         let new_pixel_data = tokio::task::spawn_blocking(move || {
-                            let data = tracer.render_to_checkpoint_iteration(
+                            tracer.render_to_checkpoint_iteration(
                                 iteration,
                                 initial_pixel_data,
                                 &render_data,
                                 sender,
-                            );
-                            data
+                            )
                         })
                         .await;
 
@@ -239,7 +235,7 @@ impl RenderManager {
             let ended_at = chrono::Utc::now();
 
             println!("Saving pixel_data...");
-            match storage
+            if let Err(e) = storage
                 .create_render_checkpoint(RenderCheckpoint {
                     render_id: render.id,
                     iteration,
@@ -249,13 +245,10 @@ impl RenderManager {
                 })
                 .await
             {
-                Err(e) => {
-                    println!("Failed to create render checkpoint: {e}");
-                    // remove from running set on error
-                    running_renders.lock().unwrap().remove(&render.id);
-                    return;
-                }
-                Ok(_) => (),
+                println!("Failed to create render checkpoint: {e}");
+                // remove from running set on error
+                running_renders.lock().unwrap().remove(&render.id);
+                return;
             }
             println!("Finished saving pixel_data");
 
@@ -299,17 +292,14 @@ impl RenderManager {
                 };
                 println!("    Found earliest checkpoint: {}", earliest_checkpoint);
                 println!("    Deleting checkpoint {}...", earliest_checkpoint);
-                match storage
+                if let Err(e) = storage
                     .delete_render_checkpoint(render.id, earliest_checkpoint)
                     .await
                 {
-                    Err(e) => {
-                        println!("Failed to delete old render checkpoint: {e}");
-                        // remove from running set on error
-                        running_renders.lock().unwrap().remove(&render.id);
-                        return;
-                    }
-                    Ok(_) => (),
+                    println!("Failed to delete old render checkpoint: {e}");
+                    // remove from running set on error
+                    running_renders.lock().unwrap().remove(&render.id);
+                    return;
                 }
                 println!("  Finished deleting old checkpoints");
             }
@@ -376,9 +366,7 @@ impl RenderManager {
                     running_renders.lock().unwrap().remove(&render.id);
                 }
             }
-        });
-
-        join_handle
+        })
     }
 
     pub async fn get_render(
@@ -517,12 +505,12 @@ impl RenderManager {
                 max_elapsed: completed_elapsed_by_checkpoint
                     .iter()
                     .max()
-                    .map(|d| to_std(&d, "max elapsed"))
+                    .map(|d| to_std(d, "max elapsed"))
                     .unwrap_or(Ok(Duration::from_secs(0)))?,
                 min_elapsed: completed_elapsed_by_checkpoint
                     .iter()
                     .min()
-                    .map(|d| to_std(&d, "min elapsed"))
+                    .map(|d| to_std(d, "min elapsed"))
                     .unwrap_or(Ok(Duration::from_secs(0)))?,
             },
         }))
@@ -772,12 +760,10 @@ impl RenderManager {
                     .await
                     .map_err(|e| e.into())
             }
-            _ => {
-                return Err(RenderManagerError::ClientError(
-                    StatusCode::BAD_REQUEST,
-                    format!("Cannot resume render {id} in state {:?}", render.state),
-                ));
-            }
+            _ => Err(RenderManagerError::ClientError(
+                StatusCode::BAD_REQUEST,
+                format!("Cannot resume render {id} in state {:?}", render.state),
+            )),
         }
     }
 

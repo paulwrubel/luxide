@@ -23,7 +23,7 @@ impl Specular {
         Self {
             reflectance_texture,
             emittance_texture,
-            roughness: roughness.min(1.0).max(0.0),
+            roughness: roughness.clamp(0.0, 1.0),
         }
     }
 }

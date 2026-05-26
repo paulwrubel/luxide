@@ -38,18 +38,12 @@ impl Geometric for Constant {
     fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit> {
         // check for first intersection, which may be behind us
         let first_interval = Interval::UNIVERSE;
-        let mut first_hit = match self.geometric.intersect(ray, first_interval) {
-            Some(hit) => hit,
-            None => return None,
-        };
+        let mut first_hit = self.geometric.intersect(ray, first_interval)?;
 
         // check for second intersection, which is just any intersection past the first one.
         // this could still be behind us
         let second_interval = Interval::new(first_hit.t + 0.0001, f64::INFINITY);
-        let mut second_hit = match self.geometric.intersect(ray, second_interval) {
-            Some(hit) => hit,
-            None => return None,
-        };
+        let mut second_hit = self.geometric.intersect(ray, second_interval)?;
 
         // if our first hit is behind us, set it to the minimum we desire
         if first_hit.t < ray_t.minimum {

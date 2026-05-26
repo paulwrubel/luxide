@@ -134,14 +134,14 @@ async fn get_user_by_github_id(
                     "Failed to get user with github id {}: User exists but not found in database",
                     github_id
                 );
-                return Err("Failed to get user with github id".to_string());
+                Err("Failed to get user with github id".to_string())
             }
             Err(e) => {
                 eprintln!(
                     "Failed to get user with github id {}: Error retrieving user from database: {}",
                     github_id, e
                 );
-                return Err("Failed to get user with github id".to_string());
+                Err("Failed to get user with github id".to_string())
             }
         },
         Ok(false) => {
@@ -176,7 +176,7 @@ async fn get_user_by_github_id(
                         "Failed to create user with github id {}: Error creating user in database: {}",
                         github_id, e
                     );
-                    return Err("Failed to create user with github id".to_string());
+                    Err("Failed to create user with github id".to_string())
                 }
             }
         }
@@ -185,7 +185,7 @@ async fn get_user_by_github_id(
                 "Failed to check if user with github id {} exists: Error checking user in database: {}",
                 github_id, e
             );
-            return Err("Failed to check if user with github id exists".to_string());
+            Err("Failed to check if user with github id exists".to_string())
         }
     }
 }

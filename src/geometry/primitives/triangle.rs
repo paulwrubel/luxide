@@ -100,7 +100,7 @@ impl Triangle {
 
         let t_vector = self.a.to(ray.origin);
         let u = inverse_determinant * t_vector.dot(p_vector);
-        if u < 0.0 || u > 1.0 {
+        if !(0.0..=1.0).contains(&u) {
             return None;
         }
 

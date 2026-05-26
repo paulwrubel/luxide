@@ -51,6 +51,10 @@ jsonwebtoken = "9.3.1"
 include_dir = "0.7.4"
 tower-http = { version = "0.6.2", features = ["cors"] }
 
+[features]
+default = ["embed-ui"]
+embed-ui = []
+
 [[bench]]
 name = "aabb"
 harness = false

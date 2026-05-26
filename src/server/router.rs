@@ -5,6 +5,7 @@ use axum::{
     http::Method,
     routing::{delete, get, post, put},
 };
+#[cfg(feature = "embed-ui")]
 use include_dir::{Dir, include_dir};
 use tower_http::cors::CorsLayer;
 
@@ -12,17 +13,23 @@ use crate::config::APIConfig;
 
 use super::{LuxideState, handlers};
 
+#[cfg(feature = "embed-ui")]
 static UI_DIST_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/ui/dist");
 
 pub fn build_router(config: &APIConfig) -> Router<LuxideState> {
-    Router::new()
+    let router = Router::new()
         .nest("/api/v1", build_api_router())
-        .merge(build_ui_router())
-        .layer(get_cors_layer(config))
+        .layer(get_cors_layer(config));
+
+    #[cfg(feature = "embed-ui")]
+    let router = router.merge(build_ui_router());
+
+    router
 }
 
+#[cfg(feature = "embed-ui")]
 fn get_content_type(path: &str) -> &'static str {
-    match path.split('.').last().unwrap_or("") {
+    match path.split('.').next_back().unwrap_or("") {
         "html" => "text/html",
         "js" => "application/javascript",
         "css" => "text/css",
@@ -35,6 +42,7 @@ fn get_content_type(path: &str) -> &'static str {
     }
 }
 
+#[cfg(feature = "embed-ui")]
 fn build_ui_router() -> Router<LuxideState> {
     Router::new().fallback(|req: axum::http::Request<axum::body::Body>| async move {
         let path = req.uri().path().trim_start_matches('/');

@@ -88,10 +88,7 @@ impl Geometric for RotateZAxis {
         local_ray.direction = self.world_to_local_vector(local_ray.direction);
 
         // check intersection in object coordinates
-        let mut rayhit = match self.geometric.intersect(local_ray, ray_t) {
-            Some(rayhit) => rayhit,
-            None => return None,
-        };
+        let mut rayhit = self.geometric.intersect(local_ray, ray_t)?;
 
         // change the ray back to world coordinates
         rayhit.point = self.local_to_world_point(rayhit.point);

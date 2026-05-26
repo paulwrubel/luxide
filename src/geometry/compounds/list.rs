@@ -11,6 +11,12 @@ pub struct List {
     bounding_box: AABB,
 }
 
+impl Default for List {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl List {
     pub fn new() -> Self {
         Self {
