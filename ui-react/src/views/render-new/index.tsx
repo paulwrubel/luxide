@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '@tanstack/react-form';
-import { Sidebar, SidebarItems, SidebarItemGroup, Spinner, Button } from 'flowbite-react';
+import { Sidebar, SidebarItems, SidebarItemGroup, Spinner, Button, type SidebarTheme } from 'flowbite-react';
 import { Separator } from '../../components/Separator';
+import type { DeepPartial } from 'flowbite-react/types';
 import { Controls } from './Controls';
 import { Scene } from './Scene';
 import { useAuth } from '../../providers/auth';
@@ -64,7 +65,7 @@ export function NewRenderPage() {
     }
   }
 
-  const sidebarTheme = {
+  const sidebarTheme: DeepPartial<SidebarTheme> = {
     root: {
       base: 'bg-zinc-900 dark:bg-zinc-900',
       inner: 'bg-zinc-900 dark:bg-zinc-900',

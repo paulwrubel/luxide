@@ -1,4 +1,5 @@
-import { Progress } from 'flowbite-react';
+import { Progress, type ProgressTheme } from 'flowbite-react';
+import type { DeepPartial } from 'flowbite-react/types';
 
 export type ProgressStateProps = {
   progress: number;
@@ -11,9 +12,10 @@ export type ProgressStateProps = {
 export function ProgressState(props: ProgressStateProps) {
   const { progress, color, label, checkpoint, totalCheckpoints } = props;
 
-  const progressTheme = {
+  const progressTheme: DeepPartial<ProgressTheme> = {
     bar: 'transition-[width] duration-500 ease-in-out',
   };
+
   return (
     <>
       <div className="w-full px-32">

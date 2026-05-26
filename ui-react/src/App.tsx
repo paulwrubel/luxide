@@ -7,7 +7,7 @@ import { AuthenticatedRouteLayout } from './components/AuthenticatedRouteLayout'
 import { HomePage } from './views/home';
 import { LoginPage } from './views/login';
 import { AuthCallbackPage } from './views/auth-callback';
-import RendersPage from './views/renders';
+import { RendersPage } from './views/renders';
 import { RenderDetailPage } from './views/render-detail';
 import { NewRenderPage } from './views/render-new';
 

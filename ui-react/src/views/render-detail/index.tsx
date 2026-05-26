@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Sidebar, SidebarItems, SidebarItemGroup, Spinner } from 'flowbite-react';
+import { Sidebar, SidebarItems, SidebarItemGroup, Spinner, type SidebarTheme } from 'flowbite-react';
 import { useRender } from '../../hooks/useRender';
+import type { DeepPartial } from 'flowbite-react/types';
 import { useLatestCheckpointImage } from '../../hooks/useLatestCheckpointImage';
 import { RenderControls } from './RenderControls';
 import { RenderDisplay } from './RenderDisplay';
@@ -23,7 +24,7 @@ export function RenderDetailPage() {
     };
   }, [imageURLQuery.data]);
 
-  const sidebarTheme = {
+  const sidebarTheme: DeepPartial<SidebarTheme> = {
     root: {
       base: 'bg-zinc-900 dark:bg-zinc-900',
       inner: 'bg-zinc-900 dark:bg-zinc-900',

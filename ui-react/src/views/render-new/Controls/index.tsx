@@ -16,7 +16,7 @@ import {
 } from '../../../utils/render/utils';
 import type { RenderForm } from '../../../hooks/useRenderForm';
 import { useStore } from '@tanstack/react-form';
-import type { ThemingProps } from 'flowbite-react/types';
+import type { DeepPartial } from 'flowbite-react/types';
 
 interface ControlsProps {
   form: RenderForm;
@@ -47,7 +47,7 @@ export function Controls(props: ControlsProps) {
     [renderConfig],
   );
 
-  const tabsTheme: ThemingProps<TabsTheme>['theme'] = {
+  const tabsTheme: DeepPartial<TabsTheme> = {
     tablist: {
       variant: {
         pills: 'flex-nowrap space-x-2 text-sm font-medium text-gray-500 dark:text-gray-400',

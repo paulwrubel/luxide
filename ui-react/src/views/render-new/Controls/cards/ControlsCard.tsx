@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Card, Button } from 'flowbite-react';
+import { Card, Button, type CardTheme } from 'flowbite-react';
 import { ChevronDownIcon, ChevronUpIcon } from 'flowbite-react';
+import type { DeepPartial } from 'flowbite-react/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Separator } from '../../../../components/Separator';
 import { HiTrash } from 'react-icons/hi2';
@@ -37,7 +38,7 @@ export function ControlsCard(props: ControlsCardProps) {
 
   const [isExpanded, setIsExpanded] = useState(startExpanded);
 
-  const cardTheme = {
+  const cardTheme: DeepPartial<CardTheme> = {
     root: {
       base: 'bg-zinc-800 dark:bg-zinc-800',
       children: 'p-0',

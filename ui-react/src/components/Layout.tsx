@@ -7,18 +7,11 @@ import {
   Spinner,
   Navbar,
   NavbarBrand,
+  type NavbarTheme,
 } from 'flowbite-react';
 import { useAuth } from '../providers/auth';
 import { navigateToAPILogin } from '../utils/api';
-
-const navbarTheme = {
-  root: {
-    base: 'bg-zinc-900 border-b border-zinc-800 px-4 h-16 dark:bg-zinc-900 dark:border-zinc-800',
-    inner: {
-      base: 'mx-auto flex h-full flex-wrap items-center justify-between',
-    },
-  },
-};
+import type { DeepPartial } from 'flowbite-react/types';
 
 /**
  * root layout shell with nav bar and <Outlet /> content area.
@@ -32,6 +25,15 @@ export function Layout() {
     clearToken();
     window.location.reload();
   }
+
+  const navbarTheme: DeepPartial<NavbarTheme> = {
+    root: {
+      base: 'bg-zinc-900 border-b border-zinc-800 px-4 h-16 dark:bg-zinc-900 dark:border-zinc-800',
+      inner: {
+        base: 'mx-auto flex h-full flex-wrap items-center justify-between',
+      },
+    },
+  };
 
   return (
     <main className="flex h-screen flex-col bg-zinc-950 text-zinc-200">

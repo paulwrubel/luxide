@@ -1,10 +1,10 @@
 import { Spinner, Alert } from 'flowbite-react';
 import { useAuth } from '../../providers/auth';
 import { useRenders } from '../../hooks/useRenders';
-import RenderPreviewCard from './RenderPreviewCard';
-import NewRenderCard from './NewRenderCard';
+import { RenderPreviewCard } from './RenderPreviewCard';
+import { NewRenderCard } from './NewRenderCard';
 
-export default function RendersPage() {
+export function RendersPage() {
   const { user } = useAuth();
   const allRendersQuery = useRenders();
 
@@ -24,7 +24,7 @@ export default function RendersPage() {
 
       {allRendersQuery.isError && (
         <Alert color="failure" className="w-full">
-          <span className="font-medium">Error loading renders</span>
+          <span className="font-medium">Error loading renders: {allRendersQuery.error?.message}</span>
         </Alert>
       )}
 

@@ -1,13 +1,15 @@
-import { Card, Progress, Spinner } from 'flowbite-react';
+import { Card, Progress, Spinner, type CardTheme } from 'flowbite-react';
 import { Link } from 'react-router-dom';
+import type { DeepPartial } from 'flowbite-react/types';
 import { isRenderStateRunning, isRenderStatePausing, type Render } from '../../utils/api';
 import { useLatestCheckpointImage } from '../../hooks/useLatestCheckpointImage';
 
-interface RenderPreviewCardProps {
+export type RenderPreviewCardProps = {
   render: Render;
-}
+};
 
-export default function RenderPreviewCard({ render }: RenderPreviewCardProps) {
+export function RenderPreviewCard(props: RenderPreviewCardProps) {
+  const { render } = props;
   const checkpointImageQuery = useLatestCheckpointImage({ renderID: render.id });
   const renderSize = render.config.parameters.image_dimensions;
   const state = render.state;
@@ -20,16 +22,18 @@ export default function RenderPreviewCard({ render }: RenderPreviewCardProps) {
       ? state.pausing.progress_info.progress
       : 0;
 
+  const cardTheme: DeepPartial<CardTheme> = {
+    root: {
+      base: 'border-none bg-zinc-800 dark:bg-zinc-800',
+      children: 'p-0',
+    },
+  };
+
   return (
     <Link to={`/renders/${render.id}`}>
       <Card
-        className="bg-zinc-800! text-zinc-200! hover:bg-zinc-700!"
-        theme={{
-          root: {
-            base: 'border-none',
-            children: 'p-0',
-          },
-        }}
+        className="text-zinc-200 hover:bg-zinc-700"
+        theme={cardTheme}
         renderImage={() => (
           <div>
             {checkpointImageQuery.isPending && (
@@ -56,14 +60,13 @@ export default function RenderPreviewCard({ render }: RenderPreviewCardProps) {
               progress={Math.round(progress * 100)}
               color={running ? 'blue' : 'yellow'}
               size="sm"
-              theme={{ base: 'rounded-none', bar: 'rounded-none' }}
-              className="[&>div]:transition-[width] [&>div]:duration-500"
+              theme={{ base: 'rounded-none', bar: 'rounded-none transition-[width] duration-500' }}
             />
           </div>
         )}
         <div className="flex items-center justify-between p-3">
-          <h5 className="text-lg font-semibold">{render.id}</h5>
-          <code className="text-sm font-light italic">{render.config.name}</code>
+          <h5 className="text-lg font-semibold">{render.config.name}</h5>
+          <code className="text-sm font-light italic">#{render.id}</code>
         </div>
       </Card>
     </Link>
