@@ -109,7 +109,7 @@ impl AuthManager {
         self.storage
             .get_user(user_id)
             .await
-            .map_err(|e| AuthManagerError::from(e))
+            .map_err(AuthManagerError::from)
     }
 
     pub async fn get_user_by_github_id(
@@ -119,14 +119,14 @@ impl AuthManager {
         self.storage
             .get_user_by_github_id(github_id)
             .await
-            .map_err(|e| AuthManagerError::from(e))
+            .map_err(AuthManagerError::from)
     }
 
     pub async fn user_exists(&self, user_id: UserID) -> Result<bool, AuthManagerError> {
         self.storage
             .user_exists(user_id)
             .await
-            .map_err(|e| AuthManagerError::from(e))
+            .map_err(AuthManagerError::from)
     }
 
     pub async fn user_exists_by_github_id(
@@ -136,35 +136,35 @@ impl AuthManager {
         self.storage
             .user_exists_by_github_id(github_id)
             .await
-            .map_err(|e| AuthManagerError::from(e))
+            .map_err(AuthManagerError::from)
     }
 
     pub async fn create_user(&self, user: User) -> Result<User, AuthManagerError> {
         self.storage
             .create_user(user)
             .await
-            .map_err(|e| AuthManagerError::from(e))
+            .map_err(AuthManagerError::from)
     }
 
     pub async fn update_user(&self, user: User) -> Result<User, AuthManagerError> {
         self.storage
             .update_user(user)
             .await
-            .map_err(|e| AuthManagerError::from(e))
+            .map_err(AuthManagerError::from)
     }
 
     pub async fn delete_user(&self, user_id: UserID) -> Result<(), AuthManagerError> {
         self.storage
             .delete_user(user_id)
             .await
-            .map_err(|e| AuthManagerError::from(e))
+            .map_err(AuthManagerError::from)
     }
 
     pub async fn get_next_user_id(&self) -> Result<UserID, AuthManagerError> {
         self.storage
             .get_next_user_id()
             .await
-            .map_err(|e| AuthManagerError::from(e))
+            .map_err(AuthManagerError::from)
     }
 
     pub async fn generate_new_jwt(&self, user_id: UserID) -> Result<String, AuthManagerError> {

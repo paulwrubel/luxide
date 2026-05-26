@@ -8,18 +8,15 @@ use crate::{
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum RenderFormat {
     Precise,
+    #[default]
     Full,
     Light,
     Minimal,
 }
 
-impl Default for RenderFormat {
-    fn default() -> Self {
-        RenderFormat::Full
-    }
-}
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]

@@ -55,7 +55,7 @@ async fn main() -> Result<(), String> {
                 RenderStorageConfig::Postgres { host, username, db },
                 Some(RenderStorageSecrets::Postgres { password }),
             ) => Arc::new(
-                PostgresStorage::new(&host, &username, &password, &db)
+                PostgresStorage::new(host, username, password, db)
                     .await
                     .map_err(|e| format!("Failed to connect to postgres: {}", e))?,
             ),
@@ -67,7 +67,7 @@ async fn main() -> Result<(), String> {
             UserStorageConfig::Postgres { host, username, db },
             Some(UserStorageSecrets::Postgres { password }),
         ) => Arc::new(
-            PostgresStorage::new(&host, &username, &password, &db)
+            PostgresStorage::new(host, username, password, db)
                 .await
                 .map_err(|e| format!("Failed to connect to postgres: {}", e))?,
         ),

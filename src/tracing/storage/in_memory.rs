@@ -16,6 +16,12 @@ pub struct InMemoryStorage {
     checkpoints: Arc<RwLock<Vec<RenderCheckpoint>>>,
 }
 
+impl Default for InMemoryStorage {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl InMemoryStorage {
     pub fn new() -> Self {
         Self {
@@ -224,7 +230,7 @@ impl RenderStorage for InMemoryStorage {
             .await
             .iter()
             .filter(|c| c.render_id == id)
-            .map(|c| RenderCheckpointMeta::from(c))
+            .map(RenderCheckpointMeta::from)
             .collect())
     }
 

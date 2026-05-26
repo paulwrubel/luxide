@@ -2,6 +2,12 @@ pub struct Synchronizer {
     runtime: tokio::runtime::Runtime,
 }
 
+impl Default for Synchronizer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Synchronizer {
     pub fn new() -> Self {
         Self {

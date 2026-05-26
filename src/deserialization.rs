@@ -131,7 +131,7 @@ impl RenderConfig {
         let active_scene = self.active_scene.build(&builts)?;
 
         Ok(RenderData {
-            parameters: self.parameters.clone(),
+            parameters: self.parameters,
             scene: active_scene,
         })
     }
@@ -152,20 +152,17 @@ fn build_textures(
     // Function to get dependencies from a texture
     let get_dependencies = |texture: &TextureData| {
         let mut deps = Vec::new();
-        match texture {
-            TextureData::Checker {
+        if let TextureData::Checker {
                 even_texture,
                 odd_texture,
                 ..
-            } => {
-                if let TextureRefOrInline::Ref(ref_name) = even_texture {
-                    deps.push(ref_name.clone());
-                }
-                if let TextureRefOrInline::Ref(ref_name) = odd_texture {
-                    deps.push(ref_name.clone());
-                }
+            } = texture {
+            if let TextureRefOrInline::Ref(ref_name) = even_texture {
+                deps.push(ref_name.clone());
             }
-            _ => {}
+            if let TextureRefOrInline::Ref(ref_name) = odd_texture {
+                deps.push(ref_name.clone());
+            }
         }
         deps
     };
@@ -520,15 +517,13 @@ fn get_builtin_geometrics() -> IndexMap<String, GeometricData> {
         },
         prefix_builtin_key("cornell_box_room") => GeometricData::CompoundList {
             use_bvh: Some(true),
-            geometrics: vec![
-                "cornell_box_left_wall",
+            geometrics: ["cornell_box_left_wall",
                 "cornell_box_right_wall",
                 "cornell_box_floor",
                 "cornell_box_ceiling",
                 "cornell_box_ceiling_light",
                 "cornell_box_far_wall",
-                "cornell_box_near_wall",
-            ].iter().map(|g| GeometricRefOrInline::Ref(prefix_builtin_key(g))).collect(),
+                "cornell_box_near_wall"].iter().map(|g| GeometricRefOrInline::Ref(prefix_builtin_key(g))).collect(),
         },
         prefix_builtin_key("cornell_box_far_left_box") => GeometricData::InstanceRotateYAxis {
             geometric: GeometricRefOrInline::Inline(Box::new(GeometricData::CompoundAxisAlignedPBox {
@@ -569,7 +564,7 @@ fn get_builtin_cameras() -> IndexMap<String, CameraData> {
 fn get_builtin_scenes() -> IndexMap<String, SceneData> {
     indexmap! {
         prefix_builtin_key("cornell_box") => SceneData {
-            geometrics: vec![
+            geometrics: [
                 "cornell_box_room",
                 "cornell_box_far_left_box",
                 "cornell_box_near_right_box",

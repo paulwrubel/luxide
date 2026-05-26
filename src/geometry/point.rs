@@ -38,7 +38,7 @@ impl Point {
     }
 
     pub fn min_components_from_list(points: &[Self]) -> Point {
-        if points.len() == 0 {
+        if points.is_empty() {
             panic!("Cannot get min point from empty list");
         }
         points
@@ -47,7 +47,7 @@ impl Point {
     }
 
     pub fn max_components_from_list(points: &[Self]) -> Point {
-        if points.len() == 0 {
+        if points.is_empty() {
             panic!("Cannot get max point from empty list");
         }
         points

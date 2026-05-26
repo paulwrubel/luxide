@@ -44,10 +44,10 @@ fn format_percentage(p: f64) -> String {
     let progress_significand = (p * 10_000.0).round() as u32;
 
     // Determine precision by checking trailing digits
-    let precision = if progress_significand % 100 == 0 {
+    let precision = if progress_significand.is_multiple_of(100) {
         // If last two digits are 00, no decimals needed
         0
-    } else if progress_significand % 10 == 0 {
+    } else if progress_significand.is_multiple_of(10) {
         // If last digit is 0, one decimal needed
         1
     } else {
@@ -120,13 +120,13 @@ where
             start: Instant::now(),
             memory,
             update_interval,
-            update_fn: update_fn,
+            update_fn,
         }
     }
 
     pub async fn mark(&mut self) {
         self.current += 1;
-        if self.current % self.update_interval == 0 || self.current == self.total {
+        if self.current.is_multiple_of(self.update_interval) || self.current == self.total {
             self.push_instant();
             (self.update_fn)(self.get_progress_info()).await;
         }

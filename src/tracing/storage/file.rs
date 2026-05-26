@@ -388,7 +388,7 @@ impl RenderStorage for FileStorage {
                             path.file_name()
                                 .map(|oss| oss.to_str().unwrap_or("???"))
                                 .unwrap_or("???"),
-                            e.to_string()
+                            e
                         )
                     }),
                     None => Err(format!(
@@ -398,7 +398,7 @@ impl RenderStorage for FileStorage {
                             .unwrap_or("???")
                     )),
                 },
-                None => Err(format!("Failed to parse filename: no stem!")),
+                None => Err("Failed to parse filename: no stem!".to_string()),
             };
             let iteration = match iteration {
                 Ok(i) => i,
@@ -428,7 +428,7 @@ impl RenderStorage for FileStorage {
 
         checkpoint_metas
             .collect::<Result<Vec<_>, String>>()
-            .map_err(|e| StorageError::from(e))
+            .map_err(StorageError::from)
     }
 
     async fn render_checkpoint_exists(
@@ -598,7 +598,10 @@ impl RenderStorage for FileStorage {
 
                 Ok::<u64, String>(checkpoint_sizes)
             } else {
-                Err(format!("Checkpoint directory does not exist for render {}", r.id).into())
+                Err(format!(
+                    "Checkpoint directory does not exist for render {}",
+                    r.id
+                ))
             }
         });
 

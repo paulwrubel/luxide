@@ -29,7 +29,7 @@ pub fn build_router(config: &APIConfig) -> Router<LuxideState> {
 
 #[cfg(feature = "embed-ui")]
 fn get_content_type(path: &str) -> &'static str {
-    match path.split('.').last().unwrap_or("") {
+    match path.split('.').next_back().unwrap_or("") {
         "html" => "text/html",
         "js" => "application/javascript",
         "css" => "text/css",

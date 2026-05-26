@@ -39,9 +39,9 @@ impl Geometric for Translate {
 
         self.geometric
             .intersect(local_ray, ray_t)
-            .and_then(|mut rh| {
+            .map(|mut rh| {
                 rh.point.0 = self.local_to_world(rh.point.0);
-                Some(rh)
+                rh
             })
     }
 
