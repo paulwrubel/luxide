@@ -1,8 +1,8 @@
 import { ControlsCard } from './ControlsCard';
 import { WarningIconAdvancedProperty } from '../icons/WarningIconAdvancedProperty';
-import { TextInputControl } from '../form-controls/TextInputControl';
-import { TextArrayInputControl } from '../form-controls/TextArrayInputControl';
-import { ToggleControl } from '../form-controls/ToggleControl';
+import { TextInputControl } from './form-controls/TextInputControl';
+import { TextArrayInputControl } from './form-controls/TextArrayInputControl';
+import { ToggleControl } from './form-controls/ToggleControl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tooltip, ToggleSwitch } from 'flowbite-react';
 import { useAuth } from '../../../../providers/auth';

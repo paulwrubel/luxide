@@ -1,10 +1,10 @@
 import { ToggleSwitch } from 'flowbite-react';
-import type { ChangeEvent, FormEvent } from 'react';
+import type { ChangeEvent, InputEvent } from 'react';
 
 interface ToggleControlUnboundProps {
   checked: boolean;
-  oninput?: (e: FormEvent<HTMLInputElement>) => void;
-  onchange?: (e: ChangeEvent<HTMLInputElement>) => void;
+  onInput?: (e: InputEvent<HTMLInputElement>) => void;
+  onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
   label: string;
   allowWrappingLabel?: boolean;
   labelPrefix?: React.ReactNode;
@@ -13,7 +13,7 @@ interface ToggleControlUnboundProps {
 }
 
 export function ToggleControlUnbound(props: ToggleControlUnboundProps) {
-  const { checked, oninput, onchange, label, labelPrefix, labelSuffix, disabled } = props;
+  const { checked, onInput, onChange, label, labelPrefix, labelSuffix, disabled } = props;
 
   return (
     <div className="flex max-w-full flex-col">
@@ -25,8 +25,8 @@ export function ToggleControlUnbound(props: ToggleControlUnboundProps) {
             const syntheticEvent = {
               target: { checked },
             } as ChangeEvent<HTMLInputElement>;
-            onchange?.(syntheticEvent);
-            oninput?.(syntheticEvent as unknown as FormEvent<HTMLInputElement>);
+            onChange?.(syntheticEvent);
+            onInput?.(syntheticEvent as unknown as InputEvent<HTMLInputElement>);
           }}
           disabled={disabled}
           label={label}

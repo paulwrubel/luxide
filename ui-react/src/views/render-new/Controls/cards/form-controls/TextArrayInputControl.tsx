@@ -1,7 +1,7 @@
 import { FormTextInput } from './FormTextInput';
 import { getGridColumnsTemplateForPercentage } from './utils';
 import type { DeepKeys } from '@tanstack/react-form';
-import type { NormalizedRenderConfig } from '../../../../utils/render/config';
+import type { NormalizedRenderConfig } from '../../../../../utils/render/config';
 
 interface TextArrayInputControlProps {
   form: any;

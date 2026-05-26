@@ -1,6 +1,6 @@
 import { ControlsCard } from '../ControlsCard';
-import { TextInputControl } from '../../form-controls/TextInputControl';
-import { TextArrayInputControl } from '../../form-controls/TextArrayInputControl';
+import { TextInputControl } from '../form-controls/TextInputControl';
+import { TextArrayInputControl } from '../form-controls/TextArrayInputControl';
 import { InfoIconAdditionalInfo } from '../../icons/InfoIconAdditionalInfo';
 import { NestedTextureHeader } from './NestedTextureHeader';
 import { getTextureData } from '../../../../../utils/render/texture';

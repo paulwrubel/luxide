@@ -1,9 +1,9 @@
 import { ControlsCard } from '../ControlsCard';
 import { NestedGeometricHeader } from './NestedGeometricHeader';
-import { TextArrayInputControl } from '../../form-controls/TextArrayInputControl';
-import { TextInputControl } from '../../form-controls/TextInputControl';
-import { RangeControl } from '../../form-controls/RangeControl';
-import { SelectControl } from '../../form-controls/SelectControl';
+import { TextArrayInputControl } from '../form-controls/TextArrayInputControl';
+import { TextInputControl } from '../form-controls/TextInputControl';
+import { RangeControl } from '../form-controls/RangeControl';
+import { SelectControl } from '../form-controls/SelectControl';
 import { getGeometricData, getGeometricDataSafe } from '../../../../../utils/render/geometric';
 import { fixReferences } from '../../../../../utils/render/utils';
 import type { RenderConfig } from '../../../../../utils/render/config';

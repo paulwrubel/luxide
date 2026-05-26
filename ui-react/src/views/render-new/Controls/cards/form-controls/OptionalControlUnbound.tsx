@@ -1,5 +1,5 @@
 import { ToggleControlUnbound } from './ToggleControlUnbound';
-import { Separator } from '../../../../components/Separator';
+import { Separator } from '../../../../../components/Separator';
 import type { ChangeEvent, InputEvent } from 'react';
 
 interface OptionalControlUnboundProps {
@@ -32,8 +32,8 @@ export function OptionalControlUnbound(props: OptionalControlUnboundProps) {
       <div className="h-px">{checked && <Separator />}</div>
       <ToggleControlUnbound
         checked={checked}
-        oninput={oninput}
-        onchange={onchange}
+        onInput={oninput}
+        onChange={onchange}
         label={label}
         allowWrappingLabel={allowWrappingLabel}
         labelPrefix={labelPrefix}

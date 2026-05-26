@@ -1,6 +1,6 @@
 import { Label, TextInput, HelperText } from 'flowbite-react';
 import type { ChangeEvent, InputEvent } from 'react';
-import type { RenderForm, RenderFormPath } from '../../../../hooks/useRenderForm';
+import type { RenderForm, RenderFormPath } from '../../../../../hooks/useRenderForm';
 
 interface FormTextInputProps {
   form: RenderForm;
@@ -27,9 +27,9 @@ export function FormTextInput(props: FormTextInputProps) {
 
   return (
     <form.Field name={field}>
-      {(f) => {
-        const errors = f.state.meta.errors as unknown as string[] | undefined;
-        const hasErrors = (Array.isArray(errors) && errors.length > 0) || extraIsErrored;
+      {(fieldApi) => {
+        const errors = fieldApi.state.meta.errors;
+        const hasErrors = errors.length > 0 || !!extraIsErrored;
 
         // Determine step: unenforcedStep overrides everything
         const stepValue = unenforcedStep ?? (type === 'number' ? undefined : undefined);
@@ -41,9 +41,9 @@ export function FormTextInput(props: FormTextInputProps) {
               name={field}
               type={type}
               color={hasErrors ? 'failure' : undefined}
-              value={(f.state.value as string | number | undefined) ?? ''}
+              value={(fieldApi.state.value as string | number | undefined) ?? ''}
               onChange={(e) => {
-                f.handleChange(
+                fieldApi.handleChange(
                   type === 'number' && e.target.value !== ''
                     ? Number(e.target.value)
                     : e.target.value,
@@ -53,7 +53,7 @@ export function FormTextInput(props: FormTextInputProps) {
               onInput={onInput}
               step={stepValue}
             />
-            {hasErrors && errors && errors.length > 0 && (
+            {hasErrors && errors.length > 0 && (
               <HelperText color="failure">{errors.join(', ')}</HelperText>
             )}
           </Label>
