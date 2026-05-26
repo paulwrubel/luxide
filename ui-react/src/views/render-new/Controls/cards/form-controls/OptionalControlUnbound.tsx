@@ -8,8 +8,8 @@ interface OptionalControlUnboundProps {
   labelPrefix?: React.ReactNode;
   labelSuffix?: React.ReactNode;
   checked: boolean;
-  oninput?: (e: InputEvent<HTMLInputElement>) => void;
-  onchange?: (e: ChangeEvent<HTMLInputElement>) => void;
+  onInput?: (e: InputEvent<HTMLInputElement>) => void;
+  onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
   disabled?: boolean;
   children: React.ReactNode;
 }
@@ -21,8 +21,8 @@ export function OptionalControlUnbound(props: OptionalControlUnboundProps) {
     labelPrefix,
     labelSuffix,
     checked,
-    oninput,
-    onchange,
+    onInput,
+    onChange,
     disabled,
     children,
   } = props;
@@ -32,8 +32,8 @@ export function OptionalControlUnbound(props: OptionalControlUnboundProps) {
       <div className="h-px">{checked && <Separator />}</div>
       <ToggleControlUnbound
         checked={checked}
-        onInput={oninput}
-        onChange={onchange}
+        onInput={onInput}
+        onChange={onChange}
         label={label}
         allowWrappingLabel={allowWrappingLabel}
         labelPrefix={labelPrefix}

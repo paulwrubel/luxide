@@ -1,8 +1,9 @@
 import { Label, RangeSlider } from 'flowbite-react';
+import type { RenderForm, RenderFormPath } from '../../../../../hooks/useRenderForm';
 
 interface RangeControlProps {
-  form: any;
-  field: string;
+  form: RenderForm;
+  fieldName: RenderFormPath;
   label: string;
   labelPrefix?: React.ReactNode;
   labelSuffix?: React.ReactNode;
@@ -12,11 +13,11 @@ interface RangeControlProps {
 }
 
 export function RangeControl(props: RangeControlProps) {
-  const { form, field, label, labelPrefix, labelSuffix, min, max, step } = props;
+  const { form, fieldName, label, labelPrefix, labelSuffix, min, max, step } = props;
 
   return (
-    <form.Field name={field}>
-      {(f: any) => (
+    <form.Field name={fieldName}>
+      {(field) => (
         <Label className="mb-2 flex flex-col gap-1.5">
           <span className="flex justify-between">
             <span className="flex gap-2">
@@ -24,11 +25,11 @@ export function RangeControl(props: RangeControlProps) {
               {label}
               {labelSuffix}
             </span>
-            <span>{f.state.value}</span>
+            <span>{field.state.value as number}</span>
           </span>
           <RangeSlider
-            value={f.state.value as number}
-            onChange={(e) => f.handleChange(Number(e.target.value))}
+            value={field.state.value as number}
+            onChange={(e) => field.handleChange(Number(e.target.value))}
             min={min}
             max={max}
             step={step}

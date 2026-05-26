@@ -4,20 +4,7 @@ import { capitalize, getNextUniqueName } from '../../../utils/render/utils';
 import type { RenderForm } from '../../../hooks/useRenderForm';
 import { useStore } from '@tanstack/react-form';
 import type { NormalizedSceneData } from '../../../utils/render/scene';
-
-function PlusIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-    </svg>
-  );
-}
+import { HiPlus } from 'react-icons/hi2';
 
 type GeometricType = Exclude<GeometricData['type'], 'obj_model'>;
 
@@ -65,7 +52,7 @@ export function NewGeometricSpeedDial(props: NewGeometricSpeedDialProps) {
   }
 
   return (
-    <Dropdown label={<PlusIcon className="h-6 w-6" />} arrowIcon={false} color="light" size="sm">
+    <Dropdown label={<HiPlus className="h-6 w-6" />} arrowIcon={false} color="light" size="sm">
       {GEOMETRIC_TYPES.map((item) => (
         <DropdownItem
           key={item.label}
@@ -74,7 +61,7 @@ export function NewGeometricSpeedDial(props: NewGeometricSpeedDialProps) {
           }}
         >
           <div className="flex items-center gap-2">
-            <PlusIcon className="h-4 w-4" />
+            <HiPlus className="h-4 w-4" />
             {item.label}
           </div>
         </DropdownItem>

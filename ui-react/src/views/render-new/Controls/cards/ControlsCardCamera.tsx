@@ -21,7 +21,7 @@ export function ControlsCardCamera(props: ControlsCardCameraProps) {
       <div className="flex flex-col gap-2 p-4">
         <RangeControl
           form={form}
-          field={`${formPath}.vertical_field_of_view_degrees`}
+          fieldName={`${formPath}.vertical_field_of_view_degrees`}
           label="Vertical FOV (degrees)"
           min={10.0}
           max={170.0}
@@ -29,28 +29,28 @@ export function ControlsCardCamera(props: ControlsCardCameraProps) {
         />
         <TextArrayInputControl
           form={form}
-          field={`${formPath}.eye_location` as DeepKeys<NormalizedRenderConfig>}
+          fieldName={`${formPath}.eye_location` as DeepKeys<NormalizedRenderConfig>}
           label="Eye"
           valueLabels={['x', 'y', 'z']}
           type="number"
         />
         <TextArrayInputControl
           form={form}
-          field={`${formPath}.target_location` as DeepKeys<NormalizedRenderConfig>}
+          fieldName={`${formPath}.target_location` as DeepKeys<NormalizedRenderConfig>}
           label="Target"
           valueLabels={['x', 'y', 'z']}
           type="number"
         />
         <TextArrayInputControl
           form={form}
-          field={`${formPath}.view_up` as DeepKeys<NormalizedRenderConfig>}
+          fieldName={`${formPath}.view_up` as DeepKeys<NormalizedRenderConfig>}
           label="View Up"
           valueLabels={['x', 'y', 'z']}
           type="number"
         />
         <RangeControl
           form={form}
-          field={`${formPath}.defocus_angle_degrees`}
+          fieldName={`${formPath}.defocus_angle_degrees`}
           label="Defocus Angle (degrees)"
           min={0.0}
           max={180.0}

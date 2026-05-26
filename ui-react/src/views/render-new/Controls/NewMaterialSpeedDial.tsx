@@ -3,20 +3,7 @@ import { defaultMaterialForType, type MaterialData } from '../../../utils/render
 import { capitalize, getNextUniqueName } from '../../../utils/render/utils';
 import type { RenderForm } from '../../../hooks/useRenderForm';
 import { useStore } from '@tanstack/react-form';
-
-function PlusIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-    </svg>
-  );
-}
+import { HiPlus } from 'react-icons/hi2';
 
 type MaterialType = Exclude<MaterialData['type'], 'dielectric'>;
 
@@ -40,22 +27,22 @@ export function NewMaterialSpeedDial(props: NewMaterialSpeedDialProps) {
   }
 
   return (
-    <Dropdown label={<PlusIcon className="h-6 w-6" />} arrowIcon={false} color="light" size="sm">
+    <Dropdown label={<HiPlus className="h-6 w-6" />} arrowIcon={false} color="light" size="sm">
       <DropdownItem disabled>
         <div className="flex items-center gap-2">
-          <PlusIcon className="h-4 w-4" />
+          <HiPlus className="h-4 w-4" />
           Dielectric Material
         </div>
       </DropdownItem>
       <DropdownItem onClick={() => handleNewMaterial('lambertian')}>
         <div className="flex items-center gap-2">
-          <PlusIcon className="h-4 w-4" />
+          <HiPlus className="h-4 w-4" />
           Lambertian Material
         </div>
       </DropdownItem>
       <DropdownItem onClick={() => handleNewMaterial('specular')}>
         <div className="flex items-center gap-2">
-          <PlusIcon className="h-4 w-4" />
+          <HiPlus className="h-4 w-4" />
           Specular Material
         </div>
       </DropdownItem>

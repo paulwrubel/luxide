@@ -56,7 +56,7 @@ export function ControlsCardTexture(props: ControlsCardTextureProps) {
           <>
             <TextInputControl
               form={form}
-              field={`textures.${name}.scale`}
+              fieldName={`textures.${name}.scale`}
               label="Scale"
               valueLabel="scale"
               type="number"
@@ -71,7 +71,7 @@ export function ControlsCardTexture(props: ControlsCardTextureProps) {
         {data.type === 'color' && (
           <TextArrayInputControl
             form={form}
-            field={`textures.${name}.color`}
+            fieldName={`textures.${name}.color`}
             label="Color"
             valueLabels={['red', 'green', 'blue']}
             type="number"

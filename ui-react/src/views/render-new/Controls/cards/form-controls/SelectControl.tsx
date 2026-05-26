@@ -1,4 +1,5 @@
 import { Label, Select } from 'flowbite-react';
+import type { RenderForm, RenderFormPath } from '../../../../../hooks/useRenderForm';
 
 interface SelectItem {
   name: string;
@@ -6,8 +7,8 @@ interface SelectItem {
 }
 
 interface SelectControlProps {
-  form: any;
-  field: string;
+  form: RenderForm;
+  fieldName: RenderFormPath;
   label: string;
   labelPrefix?: React.ReactNode;
   labelSuffix?: React.ReactNode;
@@ -15,12 +16,12 @@ interface SelectControlProps {
 }
 
 export function SelectControl(props: SelectControlProps) {
-  const { form, field, label, labelPrefix, labelSuffix, items } = props;
+  const { form, fieldName, label, labelPrefix, labelSuffix, items } = props;
 
   return (
-    <form.Field name={field}>
-      {(f: any) => {
-        const currentValue = f.state.value as string;
+    <form.Field name={fieldName}>
+      {(field) => {
+        const currentValue = field.state.value as string;
         const valueLabel = items.some((item) => item.value === currentValue)
           ? currentValue
           : '__MISSING__';
@@ -35,7 +36,7 @@ export function SelectControl(props: SelectControlProps) {
               </span>
               <span>{valueLabel}</span>
             </span>
-            <Select value={currentValue} onChange={(e) => f.handleChange(e.target.value)}>
+            <Select value={currentValue} onChange={(e) => field.handleChange(e.target.value)}>
               <option value="" disabled>
                 &nbsp;
               </option>

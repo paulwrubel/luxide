@@ -4,7 +4,7 @@ import type { RenderForm, RenderFormPath } from '../../../../../hooks/useRenderF
 
 interface FormTextInputProps {
   form: RenderForm;
-  field: RenderFormPath;
+  fieldName: RenderFormPath;
   type?: 'text' | 'number';
   valueLabel: string;
   onInput?: (e: InputEvent<HTMLInputElement>) => void;
@@ -16,7 +16,7 @@ interface FormTextInputProps {
 export function FormTextInput(props: FormTextInputProps) {
   const {
     form,
-    field,
+    fieldName,
     type = 'text',
     valueLabel,
     onInput,
@@ -26,9 +26,9 @@ export function FormTextInput(props: FormTextInputProps) {
   } = props;
 
   return (
-    <form.Field name={field}>
-      {(fieldApi) => {
-        const errors = fieldApi.state.meta.errors;
+    <form.Field name={fieldName}>
+      {(field) => {
+        const errors = field.state.meta.errors;
         const hasErrors = errors.length > 0 || !!extraIsErrored;
 
         // Determine step: unenforcedStep overrides everything
@@ -38,12 +38,12 @@ export function FormTextInput(props: FormTextInputProps) {
           <Label className="mb-0 flex w-full flex-col">
             <span className="flex-1 overflow-hidden px-2 text-ellipsis">{valueLabel}</span>
             <TextInput
-              name={field}
+              name={fieldName}
               type={type}
               color={hasErrors ? 'failure' : undefined}
-              value={(fieldApi.state.value as string | number | undefined) ?? ''}
+              value={(field.state.value as string | number | undefined) ?? ''}
               onChange={(e) => {
-                fieldApi.handleChange(
+                field.handleChange(
                   type === 'number' && e.target.value !== ''
                     ? Number(e.target.value)
                     : e.target.value,

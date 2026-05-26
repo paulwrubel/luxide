@@ -23,7 +23,7 @@ function GeometricMaterialSelect({
   return (
     <SelectControl
       form={form}
-      field={`geometrics.${name}.material`}
+      fieldName={`geometrics.${name}.material`}
       label="Material"
       items={items}
     />
@@ -74,14 +74,14 @@ export function ControlsCardGeometric(props: ControlsCardGeometricProps) {
           <>
             <TextArrayInputControl
               form={form}
-              field={`geometrics.${name}.a`}
+              fieldName={`geometrics.${name}.a`}
               label="Corner 1"
               valueLabels={['x', 'y', 'z']}
               type="number"
             />
             <TextArrayInputControl
               form={form}
-              field={`geometrics.${name}.b`}
+              fieldName={`geometrics.${name}.b`}
               label="Corner 2"
               valueLabels={['x', 'y', 'z']}
               type="number"
@@ -110,7 +110,7 @@ export function ControlsCardGeometric(props: ControlsCardGeometricProps) {
           <>
             <RangeControl
               form={form}
-              field={`geometrics.${name}.${hasDegrees ? 'degrees' : 'radians'}`}
+              fieldName={`geometrics.${name}.${hasDegrees ? 'degrees' : 'radians'}`}
               label={hasDegrees ? 'Degrees of Rotation' : 'Radians of Rotation'}
               min={0}
               max={hasDegrees ? 360 : 2 * Math.PI}
@@ -142,21 +142,21 @@ export function ControlsCardGeometric(props: ControlsCardGeometricProps) {
           <>
             <TextArrayInputControl
               form={form}
-              field={`geometrics.${name}.lower_left`}
+              fieldName={`geometrics.${name}.lower_left`}
               label="Lower Left"
               valueLabels={['x', 'y', 'z']}
               type="number"
             />
             <TextArrayInputControl
               form={form}
-              field={`geometrics.${name}.u`}
+              fieldName={`geometrics.${name}.u`}
               valueLabels={['x', 'y', 'z']}
               type="number"
               label="<em>u</em> Vector"
             />
             <TextArrayInputControl
               form={form}
-              field={`geometrics.${name}.v`}
+              fieldName={`geometrics.${name}.v`}
               valueLabels={['x', 'y', 'z']}
               type="number"
               label="<em>v</em> Vector"
@@ -169,14 +169,14 @@ export function ControlsCardGeometric(props: ControlsCardGeometricProps) {
           <>
             <TextArrayInputControl
               form={form}
-              field={`geometrics.${name}.center`}
+              fieldName={`geometrics.${name}.center`}
               label="Center"
               valueLabels={['x', 'y', 'z']}
               type="number"
             />
             <TextInputControl
               form={form}
-              field={`geometrics.${name}.radius`}
+              fieldName={`geometrics.${name}.radius`}
               label="Radius"
               valueLabel="radius"
               type="number"
@@ -189,21 +189,21 @@ export function ControlsCardGeometric(props: ControlsCardGeometricProps) {
           <>
             <TextArrayInputControl
               form={form}
-              field={`geometrics.${name}.a`}
+              fieldName={`geometrics.${name}.a`}
               label="Point A"
               valueLabels={['x', 'y', 'z']}
               type="number"
             />
             <TextArrayInputControl
               form={form}
-              field={`geometrics.${name}.b`}
+              fieldName={`geometrics.${name}.b`}
               label="Point B"
               valueLabels={['x', 'y', 'z']}
               type="number"
             />
             <TextArrayInputControl
               form={form}
-              field={`geometrics.${name}.c`}
+              fieldName={`geometrics.${name}.c`}
               label="Point C"
               valueLabels={['x', 'y', 'z']}
               type="number"

@@ -46,13 +46,13 @@ export function ControlsCardMaterial(props: ControlsCardMaterialProps) {
       <>
         <SelectControl
           form={form}
-          field={`materials.${name}.reflectance_texture`}
+          fieldName={`materials.${name}.reflectance_texture`}
           label="Reflectance Texture"
           items={textureItems}
         />
         <SelectControl
           form={form}
-          field={`materials.${name}.emittance_texture`}
+          fieldName={`materials.${name}.emittance_texture`}
           label="Emittance Texture"
           items={textureItems}
         />
@@ -69,7 +69,7 @@ export function ControlsCardMaterial(props: ControlsCardMaterialProps) {
           <>
             <RangeControl
               form={form}
-              field={`materials.${name}.index_of_refraction`}
+              fieldName={`materials.${name}.index_of_refraction`}
               label="Index of Refraction"
               min={1.0}
               max={10.0}
@@ -85,7 +85,7 @@ export function ControlsCardMaterial(props: ControlsCardMaterialProps) {
           <>
             <RangeControl
               form={form}
-              field={`materials.${name}.roughness`}
+              fieldName={`materials.${name}.roughness`}
               label="Roughness"
               min={0.0}
               max={1.0}

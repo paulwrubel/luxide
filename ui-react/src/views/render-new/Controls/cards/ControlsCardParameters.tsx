@@ -41,11 +41,11 @@ export function ControlsCardParameters(props: ControlsCardParametersProps) {
   return (
     <ControlsCard leftLabel="parameters" leftLabelStyle="light" startExpanded>
       <div className="flex flex-col gap-2 p-4">
-        <TextInputControl form={form} field="name" label="Name" valueLabel="name" />
+        <TextInputControl form={form} fieldName="name" label="Name" valueLabel="name" />
 
         <TextArrayInputControl
           form={form}
-          field="parameters.image_dimensions"
+          fieldName="parameters.image_dimensions"
           label="Size"
           valueLabels={['width', 'height']}
           type="number"
@@ -53,7 +53,7 @@ export function ControlsCardParameters(props: ControlsCardParametersProps) {
 
         <TextArrayInputControl
           form={form}
-          field="parameters.tile_dimensions"
+          fieldName="parameters.tile_dimensions"
           label="Tile Size"
           valueLabels={['width', 'height']}
           type="number"
@@ -62,7 +62,7 @@ export function ControlsCardParameters(props: ControlsCardParametersProps) {
 
         <TextInputControl
           form={form}
-          field="parameters.gamma_correction"
+          fieldName="parameters.gamma_correction"
           label="Gamma Correction"
           labelSpacePercentage={70}
           allowWrappingLabel
@@ -73,7 +73,7 @@ export function ControlsCardParameters(props: ControlsCardParametersProps) {
 
         <TextInputControl
           form={form}
-          field="parameters.samples_per_checkpoint"
+          fieldName="parameters.samples_per_checkpoint"
           label="Samples Per Checkpoint"
           labelSpacePercentage={70}
           valueLabel="samples"
@@ -82,7 +82,7 @@ export function ControlsCardParameters(props: ControlsCardParametersProps) {
 
         <TextInputControl
           form={form}
-          field="parameters.total_checkpoints"
+          fieldName="parameters.total_checkpoints"
           label="Total Checkpoints"
           labelSpacePercentage={70}
           valueLabel="checkpoints"
@@ -128,17 +128,13 @@ export function ControlsCardParameters(props: ControlsCardParametersProps) {
               <div className="py-2">
                 <TextInputControl
                   form={form}
-                  oninput={(e) => {
-                    setSavedCheckpointLimitLocal(
-                      Number((e as React.ChangeEvent<HTMLInputElement>).currentTarget.value),
-                    );
+                  onInput={(e) => {
+                    setSavedCheckpointLimitLocal(Number(e.currentTarget.value));
                   }}
-                  onchange={(e) => {
-                    setSavedCheckpointLimitLocal(
-                      Number((e as React.ChangeEvent<HTMLInputElement>).currentTarget.value),
-                    );
+                  onChange={(e) => {
+                    setSavedCheckpointLimitLocal(Number(e.currentTarget.value));
                   }}
-                  field="parameters.saved_checkpoint_limit"
+                  fieldName="parameters.saved_checkpoint_limit"
                   label="Saved Checkpoint Limit"
                   labelSpacePercentage={70}
                   valueLabel="checkpoints"
@@ -161,7 +157,7 @@ export function ControlsCardParameters(props: ControlsCardParametersProps) {
 
         <TextInputControl
           form={form}
-          field="parameters.max_bounces"
+          fieldName="parameters.max_bounces"
           label="Max Light Bounces"
           labelSpacePercentage={70}
           valueLabel="bounces"
@@ -171,7 +167,7 @@ export function ControlsCardParameters(props: ControlsCardParametersProps) {
 
         <ToggleControl
           form={form}
-          field="parameters.use_scaling_truncation"
+          fieldName="parameters.use_scaling_truncation"
           label="Use Scaling Truncation"
           labelSuffix={<WarningIconAdvancedProperty />}
         />

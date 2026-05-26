@@ -1,14 +1,13 @@
 import { FormTextInput } from './FormTextInput';
 import { getGridColumnsTemplateForPercentage } from './utils';
-import type { DeepKeys } from '@tanstack/react-form';
-import type { NormalizedRenderConfig } from '../../../../../utils/render/config';
-import type { ChangeEvent, FormEvent } from 'react';
+import type { ChangeEvent, InputEvent } from 'react';
+import type { RenderForm, RenderFormPath } from '../../../../../hooks/useRenderForm';
 
 interface TextInputControlProps {
-  form: any;
-  field: DeepKeys<NormalizedRenderConfig>;
-  oninput?: (e: FormEvent<HTMLInputElement>) => void;
-  onchange?: (e: ChangeEvent<HTMLInputElement>) => void;
+  form: RenderForm;
+  fieldName: RenderFormPath;
+  onInput?: (e: InputEvent<HTMLInputElement>) => void;
+  onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
   type?: 'text' | 'number';
   label: string;
   labelSpacePercentage?: 0 | 10 | 20 | 30 | 40 | 50 | 60 | 70 | 80 | 90 | 100;
@@ -21,9 +20,9 @@ interface TextInputControlProps {
 export function TextInputControl(props: TextInputControlProps) {
   const {
     form,
-    field,
-    oninput,
-    onchange,
+    fieldName,
+    onInput,
+    onChange,
     type = 'text',
     label,
     labelSpacePercentage = 40,
@@ -50,9 +49,9 @@ export function TextInputControl(props: TextInputControlProps) {
         <div className="items-flex-end flex gap-2">
           <FormTextInput
             form={form}
-            field={field}
-            onInput={oninput}
-            onChange={onchange}
+            fieldName={fieldName}
+            onInput={onInput}
+            onChange={onChange}
             type={type}
             valueLabel={valueLabel}
           />

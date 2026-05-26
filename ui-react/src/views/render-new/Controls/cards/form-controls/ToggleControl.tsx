@@ -1,8 +1,9 @@
 import { ToggleSwitch } from 'flowbite-react';
+import type { RenderForm, RenderFormPath } from '../../../../../hooks/useRenderForm';
 
 interface ToggleControlProps {
-  form: any;
-  field: string;
+  form: RenderForm;
+  fieldName: RenderFormPath;
   label: string;
   allowWrappingLabel?: boolean;
   labelPrefix?: React.ReactNode;
@@ -11,12 +12,12 @@ interface ToggleControlProps {
 }
 
 export function ToggleControl(props: ToggleControlProps) {
-  const { form, field, label, labelPrefix, labelSuffix, disabled } = props;
+  const { form, fieldName, label, labelPrefix, labelSuffix, disabled } = props;
 
   return (
     <div className="flex max-w-full flex-col">
-      <form.Field name={field}>
-        {(f: any) => (
+      <form.Field name={fieldName}>
+        {(f) => (
           <div className="flex w-full items-center justify-between py-2">
             <h6 className="overflow-hidden font-normal">
               <span className="flex items-center gap-2">
@@ -26,7 +27,7 @@ export function ToggleControl(props: ToggleControlProps) {
               </span>
             </h6>
             <ToggleSwitch
-              checked={f.state.value}
+              checked={!!f.state.value}
               onChange={(checked) => f.handleChange(checked)}
               disabled={disabled}
             />
