@@ -68,6 +68,7 @@ cargo-clippy:
 cargo-clippy-ci:
     SQLX_OFFLINE=true cargo clippy --no-default-features --workspace -- -D clippy::correctness
 
+
 [group('validate')]
 lint-ui: setup-ui-env
     cd ui && npm run lint
