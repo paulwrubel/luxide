@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Sidebar, SidebarItems, SidebarItemGroup, Spinner, type SidebarTheme } from 'flowbite-react';
 import { useRender } from '../../hooks/useRender';
@@ -14,16 +13,6 @@ export function RenderDetailPage() {
 
   const renderQuery = useRender({ renderID });
   const imageURLQuery = useLatestCheckpointImage({ renderID });
-  // cleanup object URL on unmount
-  useEffect(() => {
-    return () => {
-      const url = imageURLQuery.data;
-      if (url) {
-        URL.revokeObjectURL(url);
-      }
-    };
-  }, [imageURLQuery.data]);
-
   const sidebarTheme: DeepPartial<SidebarTheme> = {
     root: {
       base: 'bg-zinc-900 dark:bg-zinc-900',
