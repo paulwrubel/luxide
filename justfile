@@ -47,13 +47,15 @@ build-cli:
 [group('misc')]
 clean:
     cargo clean
-    -rm -r ./ui/build
+    -rm -r ./ui/dist
     docker compose down
 
 [group('misc')]
 setup-ui-env:
     cd ui \
+    && [ -s "$NVM_DIR/nvm.sh" ] \
     && . "$NVM_DIR/nvm.sh" \
+    && nvm install \
     && nvm use \
     && npm install
 

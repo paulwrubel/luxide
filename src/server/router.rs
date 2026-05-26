@@ -12,7 +12,7 @@ use crate::config::APIConfig;
 
 use super::{LuxideState, handlers};
 
-static UI_BUILD_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/ui/build");
+static UI_DIST_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/ui/dist");
 
 pub fn build_router(config: &APIConfig) -> Router<LuxideState> {
     Router::new()
@@ -40,14 +40,14 @@ fn build_ui_router() -> Router<LuxideState> {
         let path = req.uri().path().trim_start_matches('/');
         let path = if path.is_empty() { "index.html" } else { path };
 
-        if let Some(file) = UI_BUILD_DIR.get_file(path) {
+        if let Some(file) = UI_DIST_DIR.get_file(path) {
             axum::response::Response::builder()
                 .header("content-type", get_content_type(path))
                 .body(axum::body::Body::from(file.contents()))
                 .unwrap()
         } else {
             // If file not found, return index.html for client-side routing
-            if let Some(index_file) = UI_BUILD_DIR.get_file("index.html") {
+            if let Some(index_file) = UI_DIST_DIR.get_file("index.html") {
                 axum::response::Response::builder()
                     .header("content-type", "text/html")
                     .body(axum::body::Body::from(index_file.contents()))

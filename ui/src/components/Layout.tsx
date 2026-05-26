@@ -40,9 +40,12 @@ export function Layout() {
       <Navbar fluid theme={navbarTheme}>
         {/* @ts-expect-error polymorphic 'as' prop not typed in flowbite-react */}
         <NavbarBrand as={Link} to="/">
-          <span className="self-center text-xl font-semibold whitespace-nowrap text-white">
-            Luxide
-          </span>
+          <div className="flex items-baseline">
+            <span className="self-center text-xl font-semibold whitespace-nowrap text-white">
+              Luxide
+            </span>
+            <span className="ml-2 self-center text-xs text-zinc-500">{__APP_VERSION__}</span>
+          </div>
         </NavbarBrand>
         <div className="flex items-center">
           {isAuthenticated ? (
