@@ -29,7 +29,7 @@ export function ProgressState(props: ProgressStateProps) {
         />
       </div>
       <p>
-        {label} at checkpoint {checkpoint} / {totalCheckpoints}
+        {label} checkpoint {checkpoint} / {totalCheckpoints}
       </p>
     </>
   );
