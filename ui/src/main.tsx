@@ -4,9 +4,9 @@ import { initThemeMode } from 'flowbite-react';
 import './index.css';
 import App from './App.tsx';
 
-// initialize flowbite-react's dark mode before React renders.
+// initialize flowbite-react's dark mode before React renders
 //
-// without this, all flowbite components default to light mode.
+// without this, all flowbite components default to light mode
 initThemeMode({ mode: 'dark' });
 
 createRoot(document.getElementById('root')!).render(

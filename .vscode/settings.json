@@ -1,10 +1,10 @@
 {
     "eslint.workingDirectories": [
-        "./ui-react"
+        "./ui"
     ],
     "eslint.useFlatConfig": true,
     "editor.formatOnSave": true,
-    "prettier.configPath": "./ui-react/.prettierrc",
+    "prettier.configPath": "./ui/.prettierrc",
     "editor.codeActionsOnSave": {
         "source.fixAll.eslint": "always"
     },
@@ -17,5 +17,5 @@
     "files.associations": {
         "*.css": "tailwindcss"
     },
-    "typescript.tsdk": "./ui-react/node_modules/typescript/lib"
+    "typescript.tsdk": "./ui/node_modules/typescript/lib"
 }

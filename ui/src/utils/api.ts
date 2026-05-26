@@ -1,11 +1,11 @@
 import type { RawRenderConfig, RenderConfig } from './render/config';
 
 function getAPIURL(): string {
-  // in production, the UI and API are served from the same origin (Rust embeds both).
+  // in production, the UI and API are served from the same origin (Rust embeds both)
   //
-  // in dev, Vite proxies /api -> localhost:8080 transparently.
+  // in dev, Vite proxies /api -> localhost:8080 transparently
   //
-  // no port replacement is needed in either case.
+  // no port replacement is needed in either case
   return `${window.location.origin}/api/v1`;
 }
 

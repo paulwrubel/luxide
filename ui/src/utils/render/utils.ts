@@ -114,7 +114,7 @@ export function fixReferences(config: RenderConfig): RenderConfig {
   const geometrics = newConfig.geometrics ?? {};
   const scenes = newConfig.scenes ?? {};
 
-  // Fix texture references: checker sub-textures
+  // fix texture references: checker sub-textures
   for (const texture of Object.values(textures)) {
     if (texture.type === 'checker') {
       if (!Object.keys(textures).includes(texture.even_texture)) {
@@ -126,7 +126,7 @@ export function fixReferences(config: RenderConfig): RenderConfig {
     }
   }
 
-  // Fix material references: texture refs in materials
+  // fix material references: texture refs in materials
   for (const material of Object.values(materials)) {
     switch (material.type) {
       case 'dielectric':
@@ -142,7 +142,7 @@ export function fixReferences(config: RenderConfig): RenderConfig {
     }
   }
 
-  // Fix geometric references: material/texture refs in geometrics
+  // fix geometric references: material/texture refs in geometrics
   for (const geometric of Object.values(geometrics)) {
     switch (geometric.type) {
       case 'box':
@@ -162,7 +162,7 @@ export function fixReferences(config: RenderConfig): RenderConfig {
     }
   }
 
-  // Fix dangling geometric child references in composite geometrics
+  // fix dangling geometric child references in composite geometrics
   for (const geometric of Object.values(geometrics)) {
     switch (geometric.type) {
       case 'rotate_x':
@@ -182,7 +182,7 @@ export function fixReferences(config: RenderConfig): RenderConfig {
     }
   }
 
-  // Remove deleted geometric names from the active scene's geometric list
+  // remove deleted geometric names from the active scene's geometric list
   const activeScene = scenes[newConfig.active_scene];
   if (activeScene) {
     activeScene.geometrics = activeScene.geometrics.filter((name: string) =>
