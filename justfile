@@ -44,17 +44,43 @@ build-api: build-ui run-postgres
 build-cli:
     cargo build --release --bin {{ binary_name_cli }}
 
-[group('build')]
-check:
-    SQLX_OFFLINE=true cargo check --workspace
+[group('validate')]
+validate: cargo-check cargo-test cargo-clippy
 
-[group('build')]
-test:
-    SQLX_OFFLINE=true cargo test --workspace
+[group('validate')]
+cargo-check:
+    cargo check --workspace
+[group('validate')]
+cargo-check-ci:
+    SQLX_OFFLINE=true cargo check --no-default-features --workspace
 
-[group('build')]
-lint-clippy:
-    SQLX_OFFLINE=true cargo clippy --workspace -- -D warnings
+[group('validate')]
+cargo-test:
+    cargo test --workspace
+[group('validate')]
+cargo-test-ci:
+    SQLX_OFFLINE=true cargo test --no-default-features --workspace
+
+[group('validate')]
+cargo-clippy:
+    cargo clippy --workspace -- -D warnings
+[group('validate')]
+cargo-clippy-ci:
+    SQLX_OFFLINE=true cargo clippy --no-default-features --workspace -- -D warnings
+
+[group('validate')]
+lint-ui: setup-ui-env
+    cd ui && npm run lint
+[group('validate')]
+lint-ui-ci:
+    cd ui && npm run lint
+
+[group('validate')]
+typecheck-ui: setup-ui-env
+    cd ui && npm run type-check
+[group('validate')]
+typecheck-ui-ci:
+    cd ui && npm run type-check
 
 [group('build')]
 sqlx-prepare:

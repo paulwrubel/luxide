@@ -57,23 +57,23 @@ jobs:
 
       - name: cargo check
         if: github.event_name == 'pull_request'
-        run: just check
+        run: just cargo-check-ci
 
       - name: cargo test
         if: github.event_name == 'pull_request'
-        run: just test
+        run: just cargo-test-ci
 
       - name: cargo clippy
         if: github.event_name == 'pull_request'
-        run: just lint-clippy
+        run: just cargo-clippy-ci
 
       - name: eslint
         if: github.event_name == 'pull_request'
-        run: cd ui && npm run lint
+        run: just lint-ui-ci
 
       - name: tsc type-check
         if: github.event_name == 'pull_request'
-        run: cd ui && npm run type-check
+        run: just typecheck-ui-ci
 
       ## MAIN/TAG-ONLY STEPS (full build + publish) ##
 
