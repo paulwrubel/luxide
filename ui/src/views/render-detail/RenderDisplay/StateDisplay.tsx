@@ -45,7 +45,7 @@ export function StateDisplay(props: StateDisplayProps) {
       <ProgressState
         progress={state.pausing.progress_info.progress}
         color="yellow"
-        label="Pausing"
+        label="Pausing at"
         checkpoint={state.pausing.checkpoint_iteration}
         totalCheckpoints={totalCheckpoints}
       />
