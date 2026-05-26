@@ -2,9 +2,9 @@ import { ControlsCard } from './ControlsCard';
 import { WarningIconUnaffectedPreview } from '../icons/WarningIconUnaffectedPreview';
 import { RangeControl } from './form-controls/RangeControl';
 import { TextArrayInputControl } from './form-controls/TextArrayInputControl';
-import type { RenderForm, RenderFormPath } from '../../../../hooks/useRenderForm';
+import type { RenderForm, RenderFormPath } from '@/hooks/useRenderForm';
 import type { DeepKeys } from '@tanstack/react-form';
-import type { NormalizedRenderConfig } from '../../../../utils/render/config';
+import type { NormalizedRenderConfig } from '@/utils/render/config';
 
 interface ControlsCardCameraProps {
   form: RenderForm;

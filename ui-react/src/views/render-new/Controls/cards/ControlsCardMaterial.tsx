@@ -1,10 +1,10 @@
 import { ControlsCard } from './ControlsCard';
 import { RangeControl } from './form-controls/RangeControl';
 import { SelectControl } from './form-controls/SelectControl';
-import { getMaterialData } from '../../../../utils/render/material';
-import { fixReferences } from '../../../../utils/render/utils';
-import type { RenderConfig } from '../../../../utils/render/config';
-import type { RenderForm } from '../../../../hooks/useRenderForm';
+import { getMaterialData } from '@/utils/render/material';
+import { fixReferences } from '@/utils/render/utils';
+import type { RenderConfig } from '@/utils/render/config';
+import type { RenderForm } from '@/hooks/useRenderForm';
 import { useStore } from '@tanstack/react-form';
 
 interface ControlsCardMaterialProps {

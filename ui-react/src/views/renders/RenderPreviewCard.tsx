@@ -1,8 +1,8 @@
 import { Card, Progress, Spinner, type CardTheme } from 'flowbite-react';
 import { Link } from 'react-router-dom';
 import type { DeepPartial } from 'flowbite-react/types';
-import { isRenderStateRunning, isRenderStatePausing, type Render } from '../../utils/api';
-import { useLatestCheckpointImage } from '../../hooks/useLatestCheckpointImage';
+import { isRenderStateRunning, isRenderStatePausing, type Render } from '@/utils/api';
+import { useLatestCheckpointImage } from '@/hooks/useLatestCheckpointImage';
 
 export type RenderPreviewCardProps = {
   render: Render;

@@ -2,13 +2,13 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '@tanstack/react-form';
 import { Sidebar, SidebarItems, SidebarItemGroup, Spinner, Button, type SidebarTheme } from 'flowbite-react';
-import { Separator } from '../../components/Separator';
+import { Separator } from '@/components/Separator';
 import type { DeepPartial } from 'flowbite-react/types';
 import { Controls } from './Controls';
 import { Scene } from './Scene';
-import { useAuth } from '../../providers/auth';
-import { postRender } from '../../utils/api';
-import { useRenderForm } from '../../hooks/useRenderForm';
+import { useAuth } from '@/providers/auth';
+import { postRender } from '@/utils/api';
+import { useRenderForm } from '@/hooks/useRenderForm';
 
 export function NewRenderPage() {
   const navigate = useNavigate();

@@ -1,5 +1,5 @@
 import { ToggleSwitch } from 'flowbite-react';
-import type { RenderForm, RenderFormPath } from '../../../../../hooks/useRenderForm';
+import type { RenderForm, RenderFormPath } from '@/hooks/useRenderForm';
 
 interface ToggleControlProps {
   form: RenderForm;

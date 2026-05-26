@@ -1,6 +1,6 @@
 import { FormTextInput } from './FormTextInput';
 import { getGridColumnsTemplateForPercentage } from './utils';
-import type { RenderForm, RenderFormPath } from '../../../../../hooks/useRenderForm';
+import type { RenderForm, RenderFormPath } from '@/hooks/useRenderForm';
 
 interface TextArrayInputControlProps {
   form: RenderForm;

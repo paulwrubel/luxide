@@ -1,6 +1,6 @@
 import { Label, TextInput, HelperText } from 'flowbite-react';
 import type { ChangeEvent, InputEvent } from 'react';
-import type { RenderForm, RenderFormPath } from '../../../../../hooks/useRenderForm';
+import type { RenderForm, RenderFormPath } from '@/hooks/useRenderForm';
 
 interface FormTextInputProps {
   form: RenderForm;

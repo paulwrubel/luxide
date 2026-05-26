@@ -4,12 +4,12 @@ import { TextArrayInputControl } from '../form-controls/TextArrayInputControl';
 import { TextInputControl } from '../form-controls/TextInputControl';
 import { RangeControl } from '../form-controls/RangeControl';
 import { SelectControl } from '../form-controls/SelectControl';
-import { getGeometricData, getGeometricDataSafe } from '../../../../../utils/render/geometric';
-import { fixReferences } from '../../../../../utils/render/utils';
-import type { RenderConfig } from '../../../../../utils/render/config';
-import type { RenderForm } from '../../../../../hooks/useRenderForm';
+import { getGeometricData, getGeometricDataSafe } from '@/utils/render/geometric';
+import { fixReferences } from '@/utils/render/utils';
+import type { RenderConfig } from '@/utils/render/config';
+import type { RenderForm } from '@/hooks/useRenderForm';
 import { useStore } from '@tanstack/react-form';
-import { Separator } from '../../../../../components/Separator';
+import { Separator } from '@/components/Separator';
 
 function GeometricMaterialSelect({
   form,

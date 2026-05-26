@@ -3,7 +3,7 @@ import { Card, Button, type CardTheme } from 'flowbite-react';
 import { ChevronDownIcon, ChevronUpIcon } from 'flowbite-react';
 import type { DeepPartial } from 'flowbite-react/types';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Separator } from '../../../../components/Separator';
+import { Separator } from '@/components/Separator';
 import { HiTrash } from 'react-icons/hi2';
 
 type LabelType = 'bold' | 'light';

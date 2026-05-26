@@ -1,14 +1,14 @@
 import { ControlsCard } from '../ControlsCard';
 import { TextInputControl } from '../form-controls/TextInputControl';
 import { TextArrayInputControl } from '../form-controls/TextArrayInputControl';
-import { InfoIconAdditionalInfo } from '../../icons/InfoIconAdditionalInfo';
+import { InfoIconAdditionalInfo } from '@/views/render-new/Controls/icons/InfoIconAdditionalInfo';
 import { NestedTextureHeader } from './NestedTextureHeader';
-import { getTextureData } from '../../../../../utils/render/texture';
-import { fixReferences } from '../../../../../utils/render/utils';
-import type { RenderConfig } from '../../../../../utils/render/config';
-import type { RenderForm } from '../../../../../hooks/useRenderForm';
+import { getTextureData } from '@/utils/render/texture';
+import { fixReferences } from '@/utils/render/utils';
+import type { RenderConfig } from '@/utils/render/config';
+import type { RenderForm } from '@/hooks/useRenderForm';
 import { useStore } from '@tanstack/react-form';
-import { Separator } from '../../../../../components/Separator';
+import { Separator } from '@/components/Separator';
 
 interface ControlsCardTextureProps {
   form: RenderForm;

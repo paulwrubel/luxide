@@ -1,4 +1,4 @@
-import type { Render } from '../../../utils/api';
+import type { Render } from '@/utils/api';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { Spinner } from 'flowbite-react';
 import { StateDisplay } from './StateDisplay';

@@ -1,8 +1,8 @@
-import { getGeometricDataSafe } from '../../../utils/render/geometric';
-import { toRadians } from '../../../utils/render/utils';
-import { createParallelogramMesh, createTriangleMesh } from '../../../utils/three';
+import { getGeometricDataSafe } from '@/utils/render/geometric';
+import { toRadians } from '@/utils/render/utils';
+import { createParallelogramMesh, createTriangleMesh } from '@/utils/three';
 import { MaterialResolver } from './MaterialResolver';
-import type { RenderConfig } from '../../../utils/render/config';
+import type { RenderConfig } from '@/utils/render/config';
 
 interface GeometricRendererProps {
   config: RenderConfig;

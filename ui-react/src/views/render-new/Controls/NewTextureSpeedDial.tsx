@@ -1,7 +1,7 @@
 import { Dropdown, DropdownItem } from 'flowbite-react';
-import { defaultTextureForType, type TextureData } from '../../../utils/render/texture';
-import { capitalize, getNextUniqueName } from '../../../utils/render/utils';
-import type { RenderForm } from '../../../hooks/useRenderForm';
+import { defaultTextureForType, type TextureData } from '@/utils/render/texture';
+import { capitalize, getNextUniqueName } from '@/utils/render/utils';
+import type { RenderForm } from '@/hooks/useRenderForm';
 import { useStore } from '@tanstack/react-form';
 import { HiPlus } from 'react-icons/hi2';
 

@@ -8,13 +8,13 @@ import { ControlsCardTexture } from './cards/ControlsCardTexture';
 import { NewGeometricSpeedDial } from './NewGeometricSpeedDial';
 import { NewMaterialSpeedDial } from './NewMaterialSpeedDial';
 import { NewTextureSpeedDial } from './NewTextureSpeedDial';
-import { getSceneData } from '../../../utils/render/scene';
+import { getSceneData } from '@/utils/render/scene';
 import {
   removeDefaults,
   getTopLevelMaterialNames,
   getTopLevelTextureNames,
-} from '../../../utils/render/utils';
-import type { RenderForm } from '../../../hooks/useRenderForm';
+} from '@/utils/render/utils';
+import type { RenderForm } from '@/hooks/useRenderForm';
 import { useStore } from '@tanstack/react-form';
 import type { DeepPartial } from 'flowbite-react/types';
 

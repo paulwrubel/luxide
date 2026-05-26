@@ -1,6 +1,6 @@
-import { Separator } from '../../../../../components/Separator';
-import { getTextureData } from '../../../../../utils/render/texture';
-import type { RenderConfig } from '../../../../../utils/render/config';
+import { Separator } from '@/components/Separator';
+import { getTextureData } from '@/utils/render/texture';
+import type { RenderConfig } from '@/utils/render/config';
 
 interface NestedTextureHeaderProps {
   textureName: string;

@@ -1,7 +1,7 @@
 import { FormTextInput } from './FormTextInput';
 import { getGridColumnsTemplateForPercentage } from './utils';
 import type { ChangeEvent, InputEvent } from 'react';
-import type { RenderForm, RenderFormPath } from '../../../../../hooks/useRenderForm';
+import type { RenderForm, RenderFormPath } from '@/hooks/useRenderForm';
 
 interface TextInputControlProps {
   form: RenderForm;

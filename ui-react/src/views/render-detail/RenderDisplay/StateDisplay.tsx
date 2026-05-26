@@ -5,7 +5,7 @@ import {
   isRenderStateFinishedCheckpointIteration,
   isRenderStatePausing,
   isRenderStatePaused,
-} from '../../../utils/api';
+} from '@/utils/api';
 import { ProgressState } from './ProgressState';
 
 export type StateDisplayProps = {

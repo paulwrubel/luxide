@@ -1,5 +1,5 @@
 import { Label, RangeSlider } from 'flowbite-react';
-import type { RenderForm, RenderFormPath } from '../../../../../hooks/useRenderForm';
+import type { RenderForm, RenderFormPath } from '@/hooks/useRenderForm';
 
 interface RangeControlProps {
   form: RenderForm;
