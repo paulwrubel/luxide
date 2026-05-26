@@ -7,11 +7,11 @@ impl<T> ArcLock<T> {
         Self(Arc::new(RwLock::new(value)))
     }
 
-    pub fn read(&self) -> LockResult<RwLockReadGuard<T>> {
+    pub fn read(&self) -> LockResult<RwLockReadGuard<'_, T>> {
         self.0.read()
     }
 
-    pub fn write(&self) -> LockResult<RwLockWriteGuard<T>> {
+    pub fn write(&self) -> LockResult<RwLockWriteGuard<'_, T>> {
         self.0.write()
     }
 
@@ -29,7 +29,7 @@ impl<T> Clone for ArcLock<T> {
 pub struct ReadOnlyArcLock<T: ?Sized>(Arc<RwLock<T>>);
 
 impl<T> ReadOnlyArcLock<T> {
-    pub fn read(&self) -> LockResult<RwLockReadGuard<T>> {
+    pub fn read(&self) -> LockResult<RwLockReadGuard<'_, T>> {
         self.0.read()
     }
 }
