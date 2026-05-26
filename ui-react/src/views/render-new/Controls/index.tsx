@@ -76,7 +76,7 @@ export function Controls(props: ControlsProps) {
 
       <TabItem title="Camera">
         <div className="flex flex-col items-stretch gap-4 p-2">
-          <ControlsCardCamera form={form} camera={activeScene.camera} />
+          <ControlsCardCamera form={form} cameraName={activeScene.camera} />
         </div>
       </TabItem>
 

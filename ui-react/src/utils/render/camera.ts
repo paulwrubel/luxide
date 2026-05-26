@@ -1,8 +1,6 @@
 import { z } from 'zod';
 import type { RenderConfig } from './config';
 import { isNonNullObject } from './utils';
-// FormPath is a branded string type for schema field paths.
-type FormPath = string;
 
 export const CameraDataSchema = z.object({
   vertical_field_of_view_degrees: z.number().min(0).max(180),
@@ -43,7 +41,6 @@ export function isCameraData(data: unknown): data is CameraData {
 export type CameraDataResult = {
   data: CameraData;
   source: 'reference' | 'inline';
-  path: FormPath;
 };
 
 export function getCameraData(
@@ -54,7 +51,6 @@ export function getCameraData(
     return {
       data: nameOrData,
       source: 'inline',
-      path: 'active_scene.camera' as FormPath,
     };
   }
 
@@ -66,6 +62,5 @@ export function getCameraData(
   return {
     data: camera,
     source: 'reference',
-    path: `cameras.${nameOrData}` as FormPath,
   };
 }

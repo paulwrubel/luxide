@@ -8,7 +8,9 @@ export type UseRenderOptions = {
 
 export function useRender(options: UseRenderOptions) {
   const { renderID } = options;
-  const { token } = useAuth();
+
+  const { mustGetToken } = useAuth();
+  const token = mustGetToken();
 
   return useQuery({
     queryKey: ['render', renderID, token],

@@ -1,13 +1,14 @@
 import { Label, TextInput, HelperText } from 'flowbite-react';
-import type { ChangeEvent, FormEvent } from 'react';
+import type { ChangeEvent, InputEvent } from 'react';
+import type { RenderForm, RenderFormPath } from '../../../../hooks/useRenderForm';
 
 interface FormTextInputProps {
-  form: any;
-  field: string;
+  form: RenderForm;
+  field: RenderFormPath;
   type?: 'text' | 'number';
   valueLabel: string;
-  oninput?: (e: FormEvent<HTMLInputElement>) => void;
-  onchange?: (e: ChangeEvent<HTMLInputElement>) => void;
+  onInput?: (e: InputEvent<HTMLInputElement>) => void;
+  onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
   extraIsErrored?: boolean;
   unenforcedStep?: number;
 }
@@ -18,16 +19,16 @@ export function FormTextInput(props: FormTextInputProps) {
     field,
     type = 'text',
     valueLabel,
-    oninput,
-    onchange,
+    onInput,
+    onChange,
     extraIsErrored,
     unenforcedStep,
   } = props;
 
   return (
     <form.Field name={field}>
-      {(f: any) => {
-        const errors = f.state.meta.errors as string[] | undefined;
+      {(f) => {
+        const errors = f.state.meta.errors as unknown as string[] | undefined;
         const hasErrors = (Array.isArray(errors) && errors.length > 0) || extraIsErrored;
 
         // Determine step: unenforcedStep overrides everything
@@ -40,16 +41,16 @@ export function FormTextInput(props: FormTextInputProps) {
               name={field}
               type={type}
               color={hasErrors ? 'failure' : undefined}
-              value={f.state.value ?? ''}
+              value={(f.state.value as string | number | undefined) ?? ''}
               onChange={(e) => {
                 f.handleChange(
                   type === 'number' && e.target.value !== ''
                     ? Number(e.target.value)
                     : e.target.value,
                 );
-                onchange?.(e);
+                onChange?.(e);
               }}
-              onInput={oninput}
+              onInput={onInput}
               step={stepValue}
             />
             {hasErrors && errors && errors.length > 0 && (

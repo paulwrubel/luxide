@@ -2,31 +2,26 @@ import { ControlsCard } from './ControlsCard';
 import { WarningIconUnaffectedPreview } from '../icons/WarningIconUnaffectedPreview';
 import { RangeControl } from '../form-controls/RangeControl';
 import { TextArrayInputControl } from '../form-controls/TextArrayInputControl';
-import { getCameraData } from '../../../../utils/render/camera';
-import type { RenderForm } from '../../../../hooks/useRenderForm';
-import { useStore } from '@tanstack/react-form';
+import type { RenderForm, RenderFormPath } from '../../../../hooks/useRenderForm';
+import type { DeepKeys } from '@tanstack/react-form';
+import type { NormalizedRenderConfig } from '../../../../utils/render/config';
 
 interface ControlsCardCameraProps {
   form: RenderForm;
-  camera: string;
+  cameraName: string;
 }
 
 export function ControlsCardCamera(props: ControlsCardCameraProps) {
-  const { form, camera } = props;
+  const { form, cameraName } = props;
 
-  const renderConfig = useStore(form.store, (state) => state.values);
-  const { path } = getCameraData(renderConfig, camera);
+  const formPath: RenderFormPath = `cameras.${cameraName}`;
 
   return (
-    <ControlsCard
-      leftLabel={typeof camera === 'string' ? camera : 'inline'}
-      leftLabelStyle={typeof camera === 'string' ? 'bold' : 'light'}
-      startExpanded
-    >
+    <ControlsCard leftLabel={cameraName} startExpanded>
       <div className="flex flex-col gap-2 p-4">
         <RangeControl
           form={form}
-          field={`${path}.vertical_field_of_view_degrees`}
+          field={`${formPath}.vertical_field_of_view_degrees`}
           label="Vertical FOV (degrees)"
           min={10.0}
           max={170.0}
@@ -34,28 +29,28 @@ export function ControlsCardCamera(props: ControlsCardCameraProps) {
         />
         <TextArrayInputControl
           form={form}
-          field={`${path}.eye_location`}
+          field={`${formPath}.eye_location` as DeepKeys<NormalizedRenderConfig>}
           label="Eye"
           valueLabels={['x', 'y', 'z']}
           type="number"
         />
         <TextArrayInputControl
           form={form}
-          field={`${path}.target_location`}
+          field={`${formPath}.target_location` as DeepKeys<NormalizedRenderConfig>}
           label="Target"
           valueLabels={['x', 'y', 'z']}
           type="number"
         />
         <TextArrayInputControl
           form={form}
-          field={`${path}.view_up`}
+          field={`${formPath}.view_up` as DeepKeys<NormalizedRenderConfig>}
           label="View Up"
           valueLabels={['x', 'y', 'z']}
           type="number"
         />
         <RangeControl
           form={form}
-          field={`${path}.defocus_angle_degrees`}
+          field={`${formPath}.defocus_angle_degrees`}
           label="Defocus Angle (degrees)"
           min={0.0}
           max={180.0}

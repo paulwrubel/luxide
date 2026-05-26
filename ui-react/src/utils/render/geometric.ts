@@ -1,7 +1,7 @@
 import type { NormalizedRenderConfig, RenderConfig } from './config';
 import { normalizeMaterialData, type RawMaterialData } from './material';
 import { normalizeTextureData, type RawTextureData } from './texture';
-import { capitalize, getNextUniqueName, isTypedObject, type Angle } from './utils';
+import { capitalize, getNextUniqueName, isTypedObject, AngleSchema, type Angle } from './utils';
 import { z } from 'zod';
 
 // geometric types
@@ -441,26 +441,26 @@ export type RawGeometricObjModel = {
   material: string | RawMaterialData;
 };
 
-export const GeometricInstanceRotateXSchema = z.object({
-  type: z.literal('rotate_x'),
-  geometric: z.string().nonempty(),
-  degrees: z.number().optional(),
-  radians: z.number().optional(),
-});
+export const GeometricInstanceRotateXSchema = z
+  .object({
+    type: z.literal('rotate_x'),
+    geometric: z.string().nonempty(),
+  })
+  .and(AngleSchema);
 
-export const GeometricInstanceRotateYSchema = z.object({
-  type: z.literal('rotate_y'),
-  geometric: z.string().nonempty(),
-  degrees: z.number().optional(),
-  radians: z.number().optional(),
-});
+export const GeometricInstanceRotateYSchema = z
+  .object({
+    type: z.literal('rotate_y'),
+    geometric: z.string().nonempty(),
+  })
+  .and(AngleSchema);
 
-export const GeometricInstanceRotateZSchema = z.object({
-  type: z.literal('rotate_z'),
-  geometric: z.string().nonempty(),
-  degrees: z.number().optional(),
-  radians: z.number().optional(),
-});
+export const GeometricInstanceRotateZSchema = z
+  .object({
+    type: z.literal('rotate_z'),
+    geometric: z.string().nonempty(),
+  })
+  .and(AngleSchema);
 
 export type GeometricInstanceRotate = NormalizedGeometricInstanceRotate;
 
@@ -729,7 +729,7 @@ export type RawGeometricConstantVolume = {
   reflectance_texture: string | RawTextureData;
 };
 
-export const GeometricDataSchema = z.discriminatedUnion('type', [
+export const GeometricDataSchema = z.union([
   GeometricBoxSchema,
   GeometricListSchema,
   GeometricObjModelSchema,

@@ -9,7 +9,8 @@ export type UseLatestCheckpointImageOptions = {
 export function useLatestCheckpointImage(options: UseLatestCheckpointImageOptions) {
   const { renderID } = options;
 
-  const { token } = useAuth();
+  const { mustGetToken } = useAuth();
+  const token = mustGetToken();
 
   return useQuery({
     queryKey: ['checkpointImage', renderID, token],

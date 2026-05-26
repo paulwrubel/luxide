@@ -1,10 +1,12 @@
 import { FormTextInput } from './FormTextInput';
 import { getGridColumnsTemplateForPercentage } from './utils';
+import type { DeepKeys } from '@tanstack/react-form';
+import type { NormalizedRenderConfig } from '../../../../utils/render/config';
 import type { ChangeEvent, FormEvent } from 'react';
 
 interface TextInputControlProps {
   form: any;
-  field: string;
+  field: DeepKeys<NormalizedRenderConfig>;
   oninput?: (e: FormEvent<HTMLInputElement>) => void;
   onchange?: (e: ChangeEvent<HTMLInputElement>) => void;
   type?: 'text' | 'number';

@@ -1,9 +1,11 @@
 import { FormTextInput } from './FormTextInput';
 import { getGridColumnsTemplateForPercentage } from './utils';
+import type { DeepKeys } from '@tanstack/react-form';
+import type { NormalizedRenderConfig } from '../../../../utils/render/config';
 
 interface TextArrayInputControlProps {
   form: any;
-  field: string;
+  field: DeepKeys<NormalizedRenderConfig>;
   type?: 'text' | 'number';
   label: string;
   labelSpacePercentage?: 0 | 10 | 20 | 30 | 40 | 50 | 60 | 70 | 80 | 90 | 100;
@@ -47,7 +49,7 @@ export function TextArrayInputControl(props: TextArrayInputControlProps) {
             <div key={i} className="flex w-full flex-col">
               <FormTextInput
                 form={form}
-                field={`${field}[${i}]`}
+                field={`${field}[${i}]` as DeepKeys<NormalizedRenderConfig>}
                 type={type}
                 valueLabel={valueLabel}
                 unenforcedStep={unenforcedStep}

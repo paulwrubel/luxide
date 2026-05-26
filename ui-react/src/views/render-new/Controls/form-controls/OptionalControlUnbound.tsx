@@ -1,6 +1,6 @@
 import { ToggleControlUnbound } from './ToggleControlUnbound';
-import { Separator } from '../../../components/Separator';
-import type { ChangeEvent, FormEvent } from 'react';
+import { Separator } from '../../../../components/Separator';
+import type { ChangeEvent, InputEvent } from 'react';
 
 interface OptionalControlUnboundProps {
   label: string;
@@ -8,7 +8,7 @@ interface OptionalControlUnboundProps {
   labelPrefix?: React.ReactNode;
   labelSuffix?: React.ReactNode;
   checked: boolean;
-  oninput?: (e: FormEvent<HTMLInputElement>) => void;
+  oninput?: (e: InputEvent<HTMLInputElement>) => void;
   onchange?: (e: ChangeEvent<HTMLInputElement>) => void;
   disabled?: boolean;
   children: React.ReactNode;
