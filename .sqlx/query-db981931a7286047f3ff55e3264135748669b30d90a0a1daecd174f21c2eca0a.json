@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT render_id, iteration, started_at, ended_at\n                FROM checkpoints\n                WHERE render_id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "render_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "iteration",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "started_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "ended_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "db981931a7286047f3ff55e3264135748669b30d90a0a1daecd174f21c2eca0a"
+}

@@ -44,6 +44,22 @@ build-api: build-ui run-postgres
 build-cli:
     cargo build --release --bin {{ binary_name_cli }}
 
+[group('build')]
+check:
+    SQLX_OFFLINE=true cargo check --workspace
+
+[group('build')]
+test:
+    SQLX_OFFLINE=true cargo test --workspace
+
+[group('build')]
+lint-clippy:
+    SQLX_OFFLINE=true cargo clippy --workspace -- -D warnings
+
+[group('build')]
+sqlx-prepare:
+    cargo sqlx prepare
+
 [group('misc')]
 clean:
     cargo clean

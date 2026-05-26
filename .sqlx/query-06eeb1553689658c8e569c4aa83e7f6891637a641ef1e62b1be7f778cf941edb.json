@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE renders\n                SET state = CASE\n                    WHEN state ? 'running' THEN jsonb_set(state, '{running,progress_info}', $2::jsonb)\n                    WHEN state ? 'pausing' THEN jsonb_set(state, '{pausing,progress_info}', $2::jsonb)\n                    ELSE state\n                END,\n                updated_at = $3\n                WHERE id = $1\n                AND (state ? 'running' OR state ? 'pausing')\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Jsonb",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "06eeb1553689658c8e569c4aa83e7f6891637a641ef1e62b1be7f778cf941edb"
+}
