@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Card } from 'flowbite-react';
+import { Card, Button } from 'flowbite-react';
 import { ChevronDownIcon, ChevronUpIcon } from 'flowbite-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Separator } from '../../../components/Separator';
+import { Separator } from '../../../../components/Separator';
+import { HiTrash } from 'react-icons/hi2';
 
 type LabelType = 'bold' | 'light';
 
@@ -13,13 +14,14 @@ interface ControlsCardProps {
   leftLabelStyle?: LabelType;
   rightLabel?: string;
   rightLabelStyle?: LabelType;
+  onDelete?: () => void;
 }
 
 function LabelText({ text, type }: { text: string; type: LabelType }) {
   if (type === 'bold') {
     return <h2 className="text-xl font-bold">{text}</h2>;
   }
-  return <h2 className="text-xl font-light italic">{text}</h2>;
+  return <h2 className="text-lg font-light italic">{text}</h2>;
 }
 
 export function ControlsCard(props: ControlsCardProps) {
@@ -30,19 +32,27 @@ export function ControlsCard(props: ControlsCardProps) {
     leftLabelStyle = 'bold',
     rightLabel,
     rightLabelStyle = 'light',
+    onDelete,
   } = props;
 
   const [isExpanded, setIsExpanded] = useState(startExpanded);
 
+  const cardTheme = {
+    root: {
+      base: 'bg-zinc-800 dark:bg-zinc-800',
+      children: 'p-0',
+    },
+  };
+
   return (
-    <Card className="flex max-w-full flex-col !bg-zinc-800 !text-zinc-200 [&>div]:!p-0">
+    <Card theme={cardTheme} className="flex max-w-full flex-col text-zinc-200">
       <button
         className="flex items-center justify-between p-4 pr-2"
         onClick={() => setIsExpanded(!isExpanded)}
         type="button"
       >
         {leftLabel ? <LabelText text={leftLabel} type={leftLabelStyle} /> : <span />}
-        <div className="flex flex-row">
+        <div className="flex flex-row items-center gap-2">
           {rightLabel && <LabelText text={rightLabel} type={rightLabelStyle} />}
           {isExpanded ? (
             <ChevronUpIcon className="h-8 w-auto" />
@@ -62,6 +72,13 @@ export function ControlsCard(props: ControlsCardProps) {
           >
             <Separator />
             {children}
+            {onDelete && (
+              <div className="flex w-full justify-end px-4 pb-4">
+                <Button color="red" onClick={onDelete} size="sm">
+                  <HiTrash className="h-5 w-5" />
+                </Button>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

@@ -1,17 +1,17 @@
 import { ControlsCard } from './ControlsCard';
-import { WarningIconUnaffectedPreview } from './icons/WarningIconUnaffectedPreview';
-import { RangeControl } from './form-controls/RangeControl';
-import { TextArrayInputControl } from './form-controls/TextArrayInputControl';
-import { getCameraData } from '../../../utils/render/camera';
-import type { RenderForm } from '../../../hooks/useRenderForm';
+import { WarningIconUnaffectedPreview } from '../icons/WarningIconUnaffectedPreview';
+import { RangeControl } from '../form-controls/RangeControl';
+import { TextArrayInputControl } from '../form-controls/TextArrayInputControl';
+import { getCameraData } from '../../../../utils/render/camera';
+import type { RenderForm } from '../../../../hooks/useRenderForm';
 import { useStore } from '@tanstack/react-form';
 
-interface CameraControlsCardProps {
+interface ControlsCardCameraProps {
   form: RenderForm;
   camera: string;
 }
 
-export function CameraControlsCard(props: CameraControlsCardProps) {
+export function ControlsCardCamera(props: ControlsCardCameraProps) {
   const { form, camera } = props;
 
   const renderConfig = useStore(form.store, (state) => state.values);

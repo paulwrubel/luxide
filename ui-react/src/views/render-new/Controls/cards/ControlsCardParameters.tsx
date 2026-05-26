@@ -1,21 +1,21 @@
 import { ControlsCard } from './ControlsCard';
-import { WarningIconAdvancedProperty } from './icons/WarningIconAdvancedProperty';
-import { TextInputControl } from './form-controls/TextInputControl';
-import { TextArrayInputControl } from './form-controls/TextArrayInputControl';
-import { ToggleControl } from './form-controls/ToggleControl';
+import { WarningIconAdvancedProperty } from '../icons/WarningIconAdvancedProperty';
+import { TextInputControl } from '../form-controls/TextInputControl';
+import { TextArrayInputControl } from '../form-controls/TextArrayInputControl';
+import { ToggleControl } from '../form-controls/ToggleControl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tooltip, ToggleSwitch } from 'flowbite-react';
-import { useAuth } from '../../../providers/auth';
-import { Separator } from '../../../components/Separator';
+import { useAuth } from '../../../../providers/auth';
+import { Separator } from '../../../../components/Separator';
 import { useState, useEffect } from 'react';
-import type { RenderForm } from '../../../hooks/useRenderForm';
+import type { RenderForm } from '../../../../hooks/useRenderForm';
 import { useStore } from '@tanstack/react-form';
 
-interface ParametersControlsCardProps {
+interface ControlsCardParametersProps {
   form: RenderForm;
 }
 
-export function ParametersControlsCard(props: ParametersControlsCardProps) {
+export function ControlsCardParameters(props: ControlsCardParametersProps) {
   const { form } = props;
 
   const { user } = useAuth();
@@ -36,7 +36,7 @@ export function ParametersControlsCard(props: ParametersControlsCardProps) {
       'parameters.saved_checkpoint_limit',
       isCheckpointLimitEnabled ? savedCheckpointLimitLocal : undefined,
     );
-  }, [isCheckpointLimitEnabled]);
+  }, [form, isCheckpointLimitEnabled, savedCheckpointLimitLocal]);
 
   return (
     <ControlsCard leftLabel="parameters" leftLabelStyle="light" startExpanded>
