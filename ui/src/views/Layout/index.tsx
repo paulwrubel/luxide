@@ -28,15 +28,17 @@ export function Layout() {
   return (
     <div className="flex h-screen flex-col">
       <Navbar fluid theme={navbarTheme}>
-        {/* @ts-expect-error polymorphic 'as' prop not typed in flowbite-react */}
-        <NavbarBrand as={Link} to="/">
-          <div className="flex items-baseline">
+        <div className="flex items-baseline gap-4">
+          {/* @ts-expect-error polymorphic 'as' prop not typed in flowbite-react */}
+          <NavbarBrand as={Link} to="/">
             <span className="self-center text-xl font-semibold whitespace-nowrap text-white">
               Luxide
             </span>
-            <span className="ml-2 self-center text-xs text-zinc-500">{__APP_VERSION__}</span>
-          </div>
-        </NavbarBrand>
+          </NavbarBrand>
+          <span className="cursor-default self-baseline text-sm text-zinc-500 select-none">
+            {__APP_VERSION__}
+          </span>
+        </div>
         <div className="flex md:order-2">
           <UserBadge />
           <NavbarToggle />
