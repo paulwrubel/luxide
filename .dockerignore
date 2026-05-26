@@ -1,0 +1,10 @@
+# Ignore everything by default
+*
+
+# Allow only the compiled binary (the only file the Dockerfile copies)
+!target/
+!target/release/
+!target/release/luxide-api
+
+# Mounted at runtime via docker-compose volumes, not needed in build context:
+# luxide.json, luxide.secret.json, jwt-key-*.pem
