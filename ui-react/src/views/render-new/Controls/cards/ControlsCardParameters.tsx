@@ -30,7 +30,7 @@ export function ControlsCardParameters(props: ControlsCardParametersProps) {
     useStore(form.store, (state) => state.values.parameters.saved_checkpoint_limit) !== undefined,
   );
 
-  // Sync toggle state to form
+  // sync toggle state to form
   useEffect(() => {
     form.setFieldValue(
       'parameters.saved_checkpoint_limit',

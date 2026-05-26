@@ -29,7 +29,7 @@ export function MaterialResolver(props: MaterialResolverProps) {
     [emissiveColor],
   );
 
-  // Build material
+  // build material
   const material = useMemo(() => {
     if (materialData.type === 'dielectric') {
       console.warn('Dielectric material not yet supported');
@@ -50,7 +50,7 @@ export function MaterialResolver(props: MaterialResolverProps) {
         console.warn(
           `${reflectanceTexture.type} texture not yet supported for lambertian material`,
         );
-        // Fallback: white material
+        // fallback to white material if texture type not supported
         return new THREE.MeshLambertMaterial({ color: new THREE.Color(1, 1, 1) });
       }
       return null;
@@ -79,7 +79,7 @@ export function MaterialResolver(props: MaterialResolverProps) {
     return null;
   }, [materialData, reflectanceTexture, emissive, emissiveColor]);
 
-  // Emissive light
+  // emissive light
   const light = useMemo(() => {
     if (!emissiveColor) return null;
 

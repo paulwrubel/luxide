@@ -10,7 +10,7 @@ export function createTriangleMesh(geometricData: GeometricTriangle): THREE.Mesh
 
   const geometry = new THREE.BufferGeometry();
 
-  // Calculate the three corners
+  // calculate the three corners
   const vertices = new Float32Array([
     a[0],
     a[1],
@@ -25,10 +25,10 @@ export function createTriangleMesh(geometricData: GeometricTriangle): THREE.Mesh
 
   const hasCustomNormals = !!(a_normal && b_normal && c_normal);
 
-  // Create faces (one triangle)
+  // create faces (one triangle)
   const indices = [0, 1, 2];
 
-  // Set geometry attributes
+  // set geometry attributes
   if (hasCustomNormals) {
     geometry.setAttribute(
       'normal',
@@ -66,7 +66,7 @@ export function createParallelogramMesh(geometricData: GeometricParallelogram): 
 
   const geometry = new THREE.BufferGeometry();
 
-  // Calculate the four corners
+  // calculate the four corners
   const ll = lower_left;
   const vertices = new Float32Array([
     ll[0],
@@ -83,7 +83,7 @@ export function createParallelogramMesh(geometricData: GeometricParallelogram): 
     ll[2] + u[2] + v[2], // upper right
   ]);
 
-  // Create faces (two triangles)
+  // create faces (two triangles)
   const indices = [
     0,
     1,

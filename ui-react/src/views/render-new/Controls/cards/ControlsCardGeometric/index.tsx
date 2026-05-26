@@ -58,13 +58,13 @@ export function ControlsCardGeometric(props: ControlsCardGeometricProps) {
     form.setFieldValue('textures', fixed.textures);
   }
 
-  // Build material select items
+  // build material select items
   const materialItems = Object.keys(renderConfig.materials ?? {}).map((key) => ({
     name: key,
     value: key,
   }));
 
-  // Controls for a specific geometric type
+  // controls for a specific geometric type
   function renderControls(name: string): React.ReactNode {
     const { data } = getGeometricData(renderConfig, name);
 

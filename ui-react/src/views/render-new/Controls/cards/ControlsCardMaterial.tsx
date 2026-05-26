@@ -35,7 +35,7 @@ export function ControlsCardMaterial(props: ControlsCardMaterialProps) {
     form.setFieldValue('textures', fixed.textures);
   }
 
-  // Texture select items
+  // texture select items
   const textureItems = Object.keys(renderConfig.textures ?? {}).map((key) => ({
     name: key,
     value: key,

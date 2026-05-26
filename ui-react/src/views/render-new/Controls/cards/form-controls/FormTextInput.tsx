@@ -31,7 +31,7 @@ export function FormTextInput(props: FormTextInputProps) {
         const errors = field.state.meta.errors;
         const hasErrors = errors.length > 0 || !!extraIsErrored;
 
-        // Determine step: unenforcedStep overrides everything
+        // determine step - unenforcedStep overrides everything
         const stepValue = unenforcedStep ?? (type === 'number' ? undefined : undefined);
 
         return (

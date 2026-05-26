@@ -1,7 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '@tanstack/react-form';
-import { Sidebar, SidebarItems, SidebarItemGroup, Spinner, Button, type SidebarTheme } from 'flowbite-react';
+import {
+  Sidebar,
+  SidebarItems,
+  SidebarItemGroup,
+  Spinner,
+  Button,
+  type SidebarTheme,
+} from 'flowbite-react';
 import { Separator } from '@/components/Separator';
 import type { DeepPartial } from 'flowbite-react/types';
 import { Controls } from './Controls';
@@ -17,7 +24,7 @@ export function NewRenderPage() {
 
   const [isCreatingRender, setIsCreatingRender] = useState(false);
 
-  // Canvas container sizing
+  // canvas container sizing
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
   const [containerHeight, setContainerHeight] = useState(0);
@@ -37,7 +44,7 @@ export function NewRenderPage() {
 
   const form = useRenderForm({ user });
 
-  // Canvas sizing: maintain aspect ratio in container
+  // canvas sizing - maintain aspect ratio in container
   const imageDimensions = useStore(form.store, (state) => state.values.parameters.image_dimensions);
   const aspectRatio = imageDimensions[0] / imageDimensions[1];
   const formValuesForSubmit = useStore(form.store, (state) => state.values);
