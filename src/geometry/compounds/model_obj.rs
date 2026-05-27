@@ -123,7 +123,7 @@ impl ModelObj {
         }
 
         let geometric = if use_bvh {
-            ListOrBVH::BVH(BVH::from_list(triangles))
+            ListOrBVH::Bvh(BVH::from_list(triangles))
         } else {
             ListOrBVH::List(triangles)
         };
@@ -144,21 +144,21 @@ impl Geometric for ModelObj {
 
 enum ListOrBVH {
     List(List),
-    BVH(BVH),
+    Bvh(BVH),
 }
 
 impl Geometric for ListOrBVH {
     fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit> {
         match self {
             ListOrBVH::List(list) => list.intersect(ray, ray_t),
-            ListOrBVH::BVH(bvh) => bvh.intersect(ray, ray_t),
+            ListOrBVH::Bvh(bvh) => bvh.intersect(ray, ray_t),
         }
     }
 
     fn bounding_box(&self) -> AABB {
         match self {
             ListOrBVH::List(list) => list.bounding_box(),
-            ListOrBVH::BVH(bvh) => bvh.bounding_box(),
+            ListOrBVH::Bvh(bvh) => bvh.bounding_box(),
         }
     }
 }

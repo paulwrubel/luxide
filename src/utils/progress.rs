@@ -5,7 +5,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, Default)]
 pub struct ProgressInfo {
     pub progress: f64,
     pub elapsed: Duration,
@@ -66,17 +66,6 @@ impl From<ProgressInfo> for FormattedProgressInfo {
             elapsed: format_duration(info.elapsed),
             estimated_remaining: format_duration(info.estimated_remaining),
             estimated_total: format_duration(info.estimated_total),
-        }
-    }
-}
-
-impl ProgressInfo {
-    pub fn default() -> Self {
-        Self {
-            progress: 0.0,
-            elapsed: Duration::from_secs(0),
-            estimated_remaining: Duration::from_secs(0),
-            estimated_total: Duration::from_secs(0),
         }
     }
 }

@@ -173,7 +173,7 @@ impl RenderManager {
                     render.id,
                     RenderState::Running {
                         checkpoint_iteration: iteration,
-                        progress_info: ProgressInfo::default(),
+                        progress_info: ProgressInfo::empty(),
                     },
                 )
                 .await
