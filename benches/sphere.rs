@@ -1,9 +1,9 @@
-use criterion::{black_box, criterion_group, criterion_main, BatchSize, Criterion};
+use criterion::{BatchSize, Criterion, black_box, criterion_group, criterion_main};
 use luxide::{
-    geometry::{primitives::Sphere, Geometric, Point, Ray, RayHit, Vector},
+    geometry::{Geometric, Point, Ray, RayHit, Vector, primitives::Sphere},
     utils::Interval,
 };
-use rand::Rng;
+use rand::RngExt;
 
 fn random() -> (
     String,
@@ -33,10 +33,14 @@ fn hit() -> (
     let s = Sphere::unit();
 
     let setup = || -> Ray {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let origin = Point::new(0.0, 0.0, 2.0);
-        let target = Point::new(rng.gen_range(-0.8..0.8), rng.gen_range(-0.8..0.8), 0.0);
+        let target = Point::new(
+            rng.random_range(-0.8..0.8),
+            rng.random_range(-0.8..0.8),
+            0.0,
+        );
         let direction = origin.to(target).unit_vector();
 
         Ray::new(origin, direction, 0.0)

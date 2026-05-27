@@ -293,16 +293,18 @@ pub trait RenderStorage: Send + Sync + 'static {
             .get_all_renders()
             .await?
             .into_iter()
-            .filter(|r| match (r.state, state) {
-                (RenderState::Created, RenderState::Created) => true,
-                (RenderState::Running { .. }, RenderState::Running { .. }) => true,
-                (
-                    RenderState::FinishedCheckpointIteration { .. },
-                    RenderState::FinishedCheckpointIteration { .. },
-                ) => true,
-                (RenderState::Pausing { .. }, RenderState::Pausing { .. }) => true,
-                (RenderState::Paused(_), RenderState::Paused(_)) => true,
-                _ => false,
+            .filter(|r| {
+                matches!(
+                    (r.state, state),
+                    (RenderState::Created, RenderState::Created)
+                        | (RenderState::Running { .. }, RenderState::Running { .. })
+                        | (
+                            RenderState::FinishedCheckpointIteration { .. },
+                            RenderState::FinishedCheckpointIteration { .. }
+                        )
+                        | (RenderState::Pausing { .. }, RenderState::Pausing { .. })
+                        | (RenderState::Paused(_), RenderState::Paused(_))
+                )
             })
             .collect())
     }

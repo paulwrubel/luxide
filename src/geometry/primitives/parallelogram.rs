@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{AABB, Geometric, Point, Ray, RayHit, Vector},
+    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector},
     shading::materials::{Lambertian, Material},
     utils::Interval,
 };
@@ -16,7 +16,7 @@ pub struct Parallelogram {
     plane_d: f64,
     w: Vector,
     material: Arc<dyn Material>,
-    bounding_box: AABB,
+    bounding_box: Aabb,
 }
 
 impl Parallelogram {
@@ -38,7 +38,7 @@ impl Parallelogram {
             plane_d: lower_left.0.dot(normal),
             w: n / n.dot(n),
             material,
-            bounding_box: AABB::from_points(&[lower_left, lower_left + u + v]).pad(0.0001),
+            bounding_box: Aabb::from_points(&[lower_left, lower_left + u + v]).pad(0.0001),
         }
     }
 
@@ -105,7 +105,7 @@ impl Geometric for Parallelogram {
         })
     }
 
-    fn bounding_box(&self) -> AABB {
+    fn bounding_box(&self) -> Aabb {
         self.bounding_box
     }
 }

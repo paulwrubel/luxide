@@ -4,7 +4,7 @@ use crate::tracing::GithubID;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub struct APIConfig {
+pub struct ApiConfig {
     pub address: String,
     pub port: u16,
     pub public_url: Option<String>,
@@ -39,7 +39,7 @@ pub enum UserStorageConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub struct APISecrets {
+pub struct ApiSecrets {
     pub auth: AuthSecrets,
     pub render_storage: Option<RenderStorageSecrets>,
     pub user_storage: Option<UserStorageSecrets>,
@@ -49,7 +49,7 @@ pub struct APISecrets {
 #[serde(rename_all = "snake_case")]
 pub struct AuthSecrets {
     pub github: GitHubSecrets,
-    pub jwt: JWTSecrets,
+    pub jwt: JwtSecrets,
     pub admin_github_ids: Vec<GithubID>,
 }
 
@@ -62,7 +62,7 @@ pub struct GitHubSecrets {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub struct JWTSecrets {
+pub struct JwtSecrets {
     pub private_key_pem_filename: String,
     pub public_key_pem_filename: String,
 }
@@ -82,13 +82,13 @@ pub enum UserStorageSecrets {
 const DEFAULT_CONFIG_FILENAME: &str = "luxide.json";
 const DEFAULT_SECRETS_FILENAME: &str = "luxide.secret.json";
 
-pub fn load_api_config(filename: Option<&str>) -> Result<APIConfig, String> {
+pub fn load_api_config(filename: Option<&str>) -> Result<ApiConfig, String> {
     let filename = filename.unwrap_or(DEFAULT_CONFIG_FILENAME);
 
     load_api_json_file(filename)
 }
 
-pub fn load_api_secrets(filename: Option<&str>) -> Result<APISecrets, String> {
+pub fn load_api_secrets(filename: Option<&str>) -> Result<ApiSecrets, String> {
     let filename = filename.unwrap_or(DEFAULT_SECRETS_FILENAME);
 
     load_api_json_file(filename)

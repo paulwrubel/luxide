@@ -1,25 +1,25 @@
 use std::{cmp::Ordering, sync::Arc};
 
 use crate::{
-    geometry::{AABB, Geometric, Ray, RayHit},
+    geometry::{Aabb, Geometric, Ray, RayHit},
     utils::Interval,
 };
 
 use super::List;
 
 #[derive(Clone)]
-enum BVHNode {
-    Branch { left: Arc<BVH>, right: Arc<BVH> },
+enum BvhNode {
+    Branch { left: Arc<Bvh>, right: Arc<Bvh> },
     Leaf(Arc<dyn Geometric>),
 }
 
 #[derive(Clone)]
-pub struct BVH {
-    tree: BVHNode,
-    bounding_box: AABB,
+pub struct Bvh {
+    tree: BvhNode,
+    bounding_box: Aabb,
 }
 
-impl BVH {
+impl Bvh {
     pub fn new(mut geometrics: Vec<Arc<dyn Geometric>>) -> Self {
         fn box_compare(
             axis: usize,
@@ -59,12 +59,12 @@ impl BVH {
 
         let list_length = geometrics.len();
         let node = match list_length {
-            0 => panic!("Cannot create BVH from empty list"),
-            1 => BVHNode::Leaf(geometrics.pop().unwrap()),
+            0 => panic!("Cannot create Bvh from empty list"),
+            1 => BvhNode::Leaf(geometrics.pop().unwrap()),
             _ => {
                 let right = Self::new(geometrics.drain(list_length / 2..).collect());
                 let left = Self::new(geometrics);
-                BVHNode::Branch {
+                BvhNode::Branch {
                     left: Arc::new(left),
                     right: Arc::new(right),
                 }
@@ -72,11 +72,11 @@ impl BVH {
         };
 
         let bounding_box = match node {
-            BVHNode::Branch {
+            BvhNode::Branch {
                 ref left,
                 ref right,
-            } => AABB::from_aabbs(left.bounding_box(), right.bounding_box()),
-            BVHNode::Leaf(ref leaf) => leaf.bounding_box(),
+            } => Aabb::from_aabbs(left.bounding_box(), right.bounding_box()),
+            BvhNode::Leaf(ref leaf) => leaf.bounding_box(),
         };
 
         Self {
@@ -90,14 +90,14 @@ impl BVH {
     }
 }
 
-impl Geometric for BVH {
+impl Geometric for Bvh {
     fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit> {
         if !self.bounding_box.hit(ray, ray_t) {
             return None;
         }
 
         match &self.tree {
-            BVHNode::Branch { left, right } => {
+            BvhNode::Branch { left, right } => {
                 let left_intersection = left.intersect(ray, ray_t);
                 let updated_ray_t = match left_intersection {
                     Some(ref rayhit) => Interval::new(ray_t.minimum, rayhit.t),
@@ -106,11 +106,11 @@ impl Geometric for BVH {
                 let right_intersection = right.intersect(ray, updated_ray_t);
                 right_intersection.or(left_intersection)
             }
-            BVHNode::Leaf(leaf) => leaf.intersect(ray, ray_t),
+            BvhNode::Leaf(leaf) => leaf.intersect(ray, ray_t),
         }
     }
 
-    fn bounding_box(&self) -> AABB {
+    fn bounding_box(&self) -> Aabb {
         self.bounding_box
     }
 }

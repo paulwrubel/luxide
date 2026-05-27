@@ -1,14 +1,14 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{AABB, Geometric, Ray, RayHit},
+    geometry::{Aabb, Geometric, Ray, RayHit},
     utils::Interval,
 };
 
 #[derive(Clone)]
 pub struct List {
     pub items: Vec<Arc<dyn Geometric>>,
-    bounding_box: AABB,
+    bounding_box: Aabb,
 }
 
 impl Default for List {
@@ -21,7 +21,7 @@ impl List {
     pub fn new() -> Self {
         Self {
             items: vec![],
-            bounding_box: AABB::EMPTY,
+            bounding_box: Aabb::EMPTY,
         }
     }
 
@@ -30,7 +30,7 @@ impl List {
             .iter()
             .map(|p| p.bounding_box())
             .reduce(|acc, bb| acc.expand(bb).pad(0.00001))
-            .unwrap_or(AABB::EMPTY);
+            .unwrap_or(Aabb::EMPTY);
 
         Self {
             items: geometrics,
@@ -47,7 +47,7 @@ impl List {
     }
 
     pub fn clear(&mut self) {
-        self.bounding_box = AABB::EMPTY;
+        self.bounding_box = Aabb::EMPTY;
         self.items.clear();
     }
 
@@ -84,7 +84,7 @@ impl Geometric for List {
         closest_hit_record
     }
 
-    fn bounding_box(&self) -> AABB {
+    fn bounding_box(&self) -> Aabb {
         self.bounding_box
     }
 }

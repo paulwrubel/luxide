@@ -4,7 +4,7 @@ pub mod primitives;
 pub mod volumes;
 
 mod aabb;
-pub use aabb::AABB;
+pub use aabb::Aabb;
 
 mod geometric;
 pub use geometric::Geometric;

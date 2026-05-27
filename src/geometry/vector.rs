@@ -2,7 +2,7 @@ use std::ops::{Index, IndexMut, Neg};
 
 use auto_ops::{impl_op_ex, impl_op_ex_commutative};
 use bincode::{Decode, Encode};
-use rand::Rng;
+use rand::RngExt;
 
 use crate::utils::Angle;
 
@@ -67,11 +67,11 @@ impl Vector {
     }
 
     pub fn random_range(min: f64, max: f64) -> Self {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         Self {
-            x: rng.gen_range(min..max),
-            y: rng.gen_range(min..max),
-            z: rng.gen_range(min..max),
+            x: rng.random_range(min..max),
+            y: rng.random_range(min..max),
+            z: rng.random_range(min..max),
         }
     }
 
@@ -85,20 +85,20 @@ impl Vector {
     }
 
     pub fn random_in_unit_cube() -> Self {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         Self {
-            x: rng.gen_range(-1.0..1.0),
-            y: rng.gen_range(-1.0..1.0),
-            z: rng.gen_range(-1.0..1.0),
+            x: rng.random_range(-1.0..1.0),
+            y: rng.random_range(-1.0..1.0),
+            z: rng.random_range(-1.0..1.0),
         }
     }
 
     pub fn random_in_unit_disk() -> Self {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         loop {
             let p = Self {
-                x: rng.gen_range(-1.0..1.0),
-                y: rng.gen_range(-1.0..1.0),
+                x: rng.random_range(-1.0..1.0),
+                y: rng.random_range(-1.0..1.0),
                 z: 0.0,
             };
             if p.squared_length() < 1.0 {

@@ -1,7 +1,7 @@
 use std::{f64::consts::PI, sync::Arc};
 
 use crate::{
-    geometry::{AABB, Geometric, Point, Ray, RayHit, Vector},
+    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector},
     shading::materials::{Lambertian, Material},
     utils::Interval,
 };
@@ -12,7 +12,7 @@ pub struct Sphere {
     center_vector: Option<Vector>,
     radius: f64,
     material: Arc<dyn Material>,
-    bounding_box: AABB,
+    bounding_box: Aabb,
 }
 
 impl Sphere {
@@ -23,7 +23,7 @@ impl Sphere {
             center_vector: None,
             radius,
             material: Arc::clone(&material),
-            bounding_box: AABB::from_points(&[center - radius_vector, center + radius_vector]),
+            bounding_box: Aabb::from_points(&[center - radius_vector, center + radius_vector]),
         }
     }
 
@@ -35,15 +35,15 @@ impl Sphere {
     ) -> Self {
         let radius_vector = Vector::new(radius, radius, radius);
         let bounding_box_1 =
-            AABB::from_points(&[center_1 - radius_vector, center_1 + radius_vector]);
+            Aabb::from_points(&[center_1 - radius_vector, center_1 + radius_vector]);
         let bounding_box_2 =
-            AABB::from_points(&[center_2 - radius_vector, center_2 + radius_vector]);
+            Aabb::from_points(&[center_2 - radius_vector, center_2 + radius_vector]);
         Self {
             center_1,
             center_vector: Some(center_1.to(center_2)),
             radius,
             material,
-            bounding_box: AABB::from_aabbs(bounding_box_1, bounding_box_2),
+            bounding_box: Aabb::from_aabbs(bounding_box_1, bounding_box_2),
         }
     }
 
@@ -113,7 +113,7 @@ impl Geometric for Sphere {
         })
     }
 
-    fn bounding_box(&self) -> AABB {
+    fn bounding_box(&self) -> Aabb {
         self.bounding_box
     }
 }

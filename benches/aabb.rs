@@ -1,11 +1,11 @@
-use criterion::{black_box, criterion_group, criterion_main, BatchSize, Criterion};
+use criterion::{BatchSize, Criterion, black_box, criterion_group, criterion_main};
 use luxide::{
-    geometry::{Point, Ray, Vector, AABB},
+    geometry::{Aabb, Point, Ray, Vector},
     utils::Interval,
 };
 
 fn random() -> (String, Box<dyn Fn() -> Ray>, Box<dyn Fn(Ray) -> bool>) {
-    let aabb = AABB::unit();
+    let aabb = Aabb::unit();
 
     let setup = || -> Ray {
         let origin = Point::new(0.0, 0.0, 3.0);
@@ -21,7 +21,7 @@ fn random() -> (String, Box<dyn Fn() -> Ray>, Box<dyn Fn(Ray) -> bool>) {
 }
 
 fn hit() -> (String, Box<dyn Fn() -> Ray>, Box<dyn Fn(Ray) -> bool>) {
-    let aabb = AABB::unit();
+    let aabb = Aabb::unit();
 
     let setup = || -> Ray {
         let origin = Point::from_vector(Vector::random_in_unit_cube().unit_vector() * 3.0);
@@ -43,7 +43,7 @@ fn hit() -> (String, Box<dyn Fn() -> Ray>, Box<dyn Fn(Ray) -> bool>) {
 }
 
 fn miss() -> (String, Box<dyn Fn() -> Ray>, Box<dyn Fn(Ray) -> bool>) {
-    let aabb: AABB = AABB::unit();
+    let aabb: Aabb = Aabb::unit();
 
     let setup = || -> Ray {
         let origin = Point::from_vector(Vector::random_in_unit_cube().unit_vector() * 3.0);

@@ -70,7 +70,7 @@ cargo-clippy:
     cargo clippy --workspace -- -D clippy::correctness
 [group('validate')]
 cargo-clippy-ci:
-    SQLX_OFFLINE=true cargo clippy --no-default-features --workspace -- -D clippy::correctness
+    SQLX_OFFLINE=true cargo clippy --no-default-features --workspace -- -D warnings
 
 [group('validate')]
 lint-ui: setup-ui-env
