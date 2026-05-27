@@ -42,7 +42,7 @@ build-api: build-ui run-postgres
 
 [group('build')]
 build-api-ci: build-ui
-    cargo build --release --bin {{ binary_name_api }}
+    SQLX_OFFLINE=true cargo build --release --bin {{ binary_name_api }}
 
 [group('build')]
 build-cli:
