@@ -79,7 +79,7 @@ jobs:
 
       - name: build with just
         if: github.event_name != 'pull_request'
-        run: just build-api
+        run: just build-api-ci
 
       - name: log in to the container registry
         if: github.event_name != 'pull_request'

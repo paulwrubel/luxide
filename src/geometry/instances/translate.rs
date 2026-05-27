@@ -37,12 +37,10 @@ impl Geometric for Translate {
 
         local_ray.origin.0 = self.world_to_local(local_ray.origin.0);
 
-        self.geometric
-            .intersect(local_ray, ray_t)
-            .map(|mut rh| {
-                rh.point.0 = self.local_to_world(rh.point.0);
-                rh
-            })
+        self.geometric.intersect(local_ray, ray_t).map(|mut rh| {
+            rh.point.0 = self.local_to_world(rh.point.0);
+            rh
+        })
     }
 
     fn bounding_box(&self) -> AABB {
