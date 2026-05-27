@@ -14,7 +14,7 @@ pub async fn resume_render(
     claims: Claims,
     Path(id): Path<RenderID>,
 ) -> Response {
-    println!("Handing request for resume_render (id: {})...", id);
+    println!("Handing request for resume_render (id: {id})...");
 
     match state.render_manager.resume_render(id, claims.sub).await {
         Ok(_) => StatusCode::NO_CONTENT.into_response(),

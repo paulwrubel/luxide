@@ -218,18 +218,18 @@ impl AuthManager {
         match token_result {
             Ok(token) => Ok(token),
             Err(e) => {
-                println!("Token exchange error details: {:?}", e);
+                println!("Token exchange error details: {e:?}");
                 match e {
                     oauth2::RequestTokenError::ServerResponse(e) => {
-                        Err(format!("GitHub server error: {}", e))
+                        Err(format!("GitHub server error: {e}"))
                     }
-                    oauth2::RequestTokenError::Request(e) => Err(format!("Request error: {}", e)),
+                    oauth2::RequestTokenError::Request(e) => Err(format!("Request error: {e}")),
                     oauth2::RequestTokenError::Parse(e, data) => Err(format!(
                         "Parse error: {}. Raw response: {}",
                         e,
                         String::from_utf8_lossy(&data)
                     )),
-                    _ => Err(format!("Unknown error: {:?}", e)),
+                    _ => Err(format!("Unknown error: {e:?}")),
                 }
             }
         }

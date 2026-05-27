@@ -18,8 +18,7 @@ impl Build<Camera> for CameraRefOrInline {
                 .cameras
                 .get(name)
                 .ok_or(format!(
-                    "Camera {} not found. Is it specified in the cameras list?",
-                    name
+                    "Camera {name} not found. Is it specified in the cameras list?"
                 ))?
                 .clone()),
             Self::Inline(data) => data.build(builts),

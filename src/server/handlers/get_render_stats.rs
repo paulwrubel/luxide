@@ -66,7 +66,7 @@ pub async fn get_render_stats(
     claims: Claims,
     Path(id): Path<RenderID>,
 ) -> Response {
-    println!("Handing request for get_render_stats (id: {})...", id);
+    println!("Handing request for get_render_stats (id: {id})...");
 
     match state.render_manager.get_render_stats(id, claims.sub).await {
         Ok(Some(stats)) => {

@@ -23,10 +23,7 @@ impl Build<Scene> for SceneRefOrInline {
                 .scenes
                 .get(name)
                 .ok_or_else(|| {
-                    format!(
-                        "Scene {} not found. Is it specified in the scenes list?",
-                        name
-                    )
+                    format!("Scene {name} not found. Is it specified in the scenes list?")
                 })?
                 .clone()),
             Self::Inline(data) => data.build(builts),

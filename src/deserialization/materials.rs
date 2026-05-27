@@ -17,8 +17,7 @@ impl Build<Arc<dyn Material>> for MaterialRefOrInline {
     fn build(&self, builts: &Builts) -> Result<Arc<dyn Material>, String> {
         match self {
             Self::Ref(name) => Ok(Arc::clone(builts.materials.get(name).ok_or(format!(
-                "Material {} not found. Is it specified in the materials list?",
-                name
+                "Material {name} not found. Is it specified in the materials list?"
             ))?)),
             Self::Inline(data) => data.build(builts),
         }

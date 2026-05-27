@@ -188,7 +188,7 @@ fn build_textures(
             build_and_insert,
             "texture",
             0,
-        )?
+        )?;
     }
     Ok(())
 }
@@ -213,7 +213,7 @@ fn get_geometric_dependencies(geometric: &GeometricData) -> Vec<String> {
                 match g {
                     GeometricRefOrInline::Ref(ref_name) => deps.push(ref_name.clone()),
                     GeometricRefOrInline::Inline(data) => {
-                        deps.append(&mut get_geometric_dependencies(data))
+                        deps.append(&mut get_geometric_dependencies(data));
                     }
                 }
             }
@@ -224,7 +224,7 @@ fn get_geometric_dependencies(geometric: &GeometricData) -> Vec<String> {
         | GeometricData::InstanceTranslate { geometric, .. } => match geometric {
             GeometricRefOrInline::Ref(ref_name) => deps.push(ref_name.clone()),
             GeometricRefOrInline::Inline(data) => {
-                deps.append(&mut get_geometric_dependencies(data))
+                deps.append(&mut get_geometric_dependencies(data));
             }
         },
         _ => {}
@@ -261,7 +261,7 @@ fn build_geometrics(
             build_and_insert,
             "geometric",
             0,
-        )?
+        )?;
     }
     Ok(())
 }
@@ -282,23 +282,20 @@ fn build_resource_recursive<T>(
     // Check for maximum recursion depth
     if depth >= MAX_RECURSION_DEPTH {
         return Err(format!(
-            "Maximum recursion depth ({}) exceeded while building {} '{}'. This may indicate a cyclic dependency.",
-            MAX_RECURSION_DEPTH, resource_type, name
+            "Maximum recursion depth ({MAX_RECURSION_DEPTH}) exceeded while building {resource_type} '{name}'. This may indicate a cyclic dependency."
         ));
     }
 
     // Check for cycles
     if building.contains(name) {
         return Err(format!(
-            "Cycle detected in {} dependencies involving {}",
-            resource_type, name
+            "Cycle detected in {resource_type} dependencies involving {name}"
         ));
     }
 
     // Get the resource data
     let resource = resource_data.get(name).ok_or(format!(
-        "{} {} not found. Is it specified in the {} list?",
-        resource_type, name, resource_type
+        "{resource_type} {name} not found. Is it specified in the {resource_type} list?"
     ))?;
 
     // Mark that we're building this resource
@@ -315,7 +312,7 @@ fn build_resource_recursive<T>(
             build_and_insert,
             resource_type,
             depth + 1,
-        )?
+        )?;
     }
 
     // Now build this resource if it hasn't been built yet
@@ -352,7 +349,7 @@ fn build_scenes(
 const BUILT_IN_RESOURCE_PREFIX: &str = "__";
 
 fn prefix_builtin_key(key: &str) -> String {
-    format!("{}{}", BUILT_IN_RESOURCE_PREFIX, key)
+    format!("{BUILT_IN_RESOURCE_PREFIX}{key}")
 }
 
 fn get_builtin_textures() -> IndexMap<String, TextureData> {

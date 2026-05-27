@@ -23,10 +23,7 @@ pub async fn get_earliest_render_checkpoint_image(
     claims: Claims,
     Path(id): Path<RenderID>,
 ) -> Response {
-    println!(
-        "Handing request for get_earliest_render_checkpoint_image (id: {})...",
-        id
-    );
+    println!("Handing request for get_earliest_render_checkpoint_image (id: {id})...");
 
     match state
         .render_manager
@@ -47,10 +44,7 @@ pub async fn get_latest_render_checkpoint_image(
     claims: Claims,
     Path(id): Path<RenderID>,
 ) -> Response {
-    println!(
-        "Handing request for get_latest_render_checkpoint_image (id: {})...",
-        id
-    );
+    println!("Handing request for get_latest_render_checkpoint_image (id: {id})...");
 
     match state
         .render_manager
@@ -72,8 +66,7 @@ pub async fn get_render_checkpoint_image(
     Path((id, checkpoint_iteration)): Path<(RenderID, u32)>,
 ) -> Response {
     println!(
-        "Handing request for get_render_checkpoint (id: {}, iteration: {})...",
-        id, checkpoint_iteration
+        "Handing request for get_render_checkpoint (id: {id}, iteration: {checkpoint_iteration})..."
     );
 
     get_render_checkpoint_image_response(state.render_manager, id, checkpoint_iteration, claims.sub)

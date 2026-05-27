@@ -26,8 +26,7 @@ impl Build<Arc<dyn Geometric>> for GeometricRefOrInline {
     fn build(&self, builts: &Builts) -> Result<Arc<dyn Geometric>, String> {
         match self {
             Self::Ref(name) => Ok(Arc::clone(builts.geometrics.get(name).ok_or(format!(
-                "Geometric {} not found. Is it specified in the geometrics list?",
-                name
+                "Geometric {name} not found. Is it specified in the geometrics list?"
             ))?)),
             Self::Inline(data) => data.build(builts),
         }
@@ -286,8 +285,7 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
                         .textures
                         .get(reflectance_texture_name)
                         .ok_or(format!(
-                            "Texture {} not found. Is it specified in the textures list?",
-                            reflectance_texture_name
+                            "Texture {reflectance_texture_name} not found. Is it specified in the textures list?"
                         ))?;
 
                 Ok(Arc::new(volumes::Constant::new(

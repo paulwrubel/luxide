@@ -157,17 +157,17 @@ pub fn format_duration(d: Duration) -> String {
 
     let hours = d.as_secs() / 3600;
     if hours > 0 {
-        s.push_str(&format!("{}h", hours));
+        s.push_str(&format!("{hours}h"));
     }
 
     let minutes = (d.as_secs() % 3600) / 60;
     if minutes > 0 {
-        s.push_str(&format!("{}m", minutes));
+        s.push_str(&format!("{minutes}m"));
     }
 
     let seconds = d.as_secs_f64() % 60.0;
     if seconds > 0.0 {
-        s.push_str(&format!("{:>.1}s", seconds));
+        s.push_str(&format!("{seconds:>.1}s"));
     }
 
     s

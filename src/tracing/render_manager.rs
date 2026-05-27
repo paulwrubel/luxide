@@ -290,8 +290,8 @@ impl RenderManager {
                         return;
                     }
                 };
-                println!("    Found earliest checkpoint: {}", earliest_checkpoint);
-                println!("    Deleting checkpoint {}...", earliest_checkpoint);
+                println!("    Found earliest checkpoint: {earliest_checkpoint}");
+                println!("    Deleting checkpoint {earliest_checkpoint}...");
                 if let Err(e) = storage
                     .delete_render_checkpoint(render.id, earliest_checkpoint)
                     .await
@@ -385,7 +385,10 @@ impl RenderManager {
             ));
         }
 
-        self.storage.get_render(id).await.map_err(|e| e.into())
+        self.storage
+            .get_render(id)
+            .await
+            .map_err(std::convert::Into::into)
     }
 
     pub async fn get_all_renders(
@@ -395,7 +398,7 @@ impl RenderManager {
         self.storage
             .get_all_renders_for_user_id(user_id)
             .await
-            .map_err(|e| e.into())
+            .map_err(std::convert::Into::into)
     }
 
     pub async fn get_render_stats(
@@ -482,12 +485,8 @@ impl RenderManager {
             as u64;
 
         let to_std = |cd: &chrono::Duration, name: &str| {
-            cd.to_std().map_err(|e| {
-                format!(
-                    "Cannot convert {} duration to standard duration: {}",
-                    name, e
-                )
-            })
+            cd.to_std()
+                .map_err(|e| format!("Cannot convert {name} duration to standard duration: {e}"))
         };
 
         Ok(Some(RenderStats {
@@ -564,7 +563,7 @@ impl RenderManager {
         self.storage
             .create_render(render)
             .await
-            .map_err(|e| e.into())
+            .map_err(std::convert::Into::into)
     }
 
     pub async fn get_earliest_render_checkpoint_iteration(
@@ -586,7 +585,7 @@ impl RenderManager {
         self.storage
             .get_earliest_render_checkpoint_iteration(id)
             .await
-            .map_err(|e| e.into())
+            .map_err(std::convert::Into::into)
     }
 
     pub async fn get_latest_render_checkpoint_iteration(
@@ -608,7 +607,7 @@ impl RenderManager {
         self.storage
             .get_latest_render_checkpoint_iteration(id)
             .await
-            .map_err(|e| e.into())
+            .map_err(std::convert::Into::into)
     }
 
     pub async fn get_render_checkpoint(
@@ -635,7 +634,7 @@ impl RenderManager {
         self.storage
             .get_render_checkpoint(id, iteration)
             .await
-            .map_err(|e| e.into())
+            .map_err(std::convert::Into::into)
     }
 
     pub async fn delete_render_and_checkpoints(
@@ -665,7 +664,7 @@ impl RenderManager {
         self.storage
             .delete_render_and_checkpoints(id)
             .await
-            .map_err(|e| e.into())
+            .map_err(std::convert::Into::into)
     }
 
     pub async fn pause_render(
@@ -702,7 +701,7 @@ impl RenderManager {
                         },
                     )
                     .await
-                    .map_err(|e| e.into())
+                    .map_err(std::convert::Into::into)
             }
             _ => Err(RenderManagerError::ClientError(
                 StatusCode::BAD_REQUEST,
@@ -740,7 +739,7 @@ impl RenderManager {
                         RenderState::FinishedCheckpointIteration(checkpoint_iteration),
                     )
                     .await
-                    .map_err(|e| e.into())
+                    .map_err(std::convert::Into::into)
             }
             RenderState::Pausing {
                 checkpoint_iteration,
@@ -758,7 +757,7 @@ impl RenderManager {
                         },
                     )
                     .await
-                    .map_err(|e| e.into())
+                    .map_err(std::convert::Into::into)
             }
             _ => Err(RenderManagerError::ClientError(
                 StatusCode::BAD_REQUEST,
@@ -813,8 +812,7 @@ impl RenderManager {
             return Err(RenderManagerError::ClientError(
                 StatusCode::BAD_REQUEST,
                 format!(
-                    "New total_checkpoints ({}) must be greater than or equal to the current checkpoint iteration ({})",
-                    new_total_checkpoints, current_iteration
+                    "New total_checkpoints ({new_total_checkpoints}) must be greater than or equal to the current checkpoint iteration ({current_iteration})"
                 ),
             ));
         }
@@ -823,7 +821,7 @@ impl RenderManager {
         self.storage
             .update_render_total_checkpoints(id, new_total_checkpoints)
             .await
-            .map_err(|e| e.into())
+            .map_err(std::convert::Into::into)
     }
 
     pub async fn get_render_checkpoint_as_image(
@@ -864,7 +862,7 @@ impl RenderManager {
         self.storage
             .get_render_checkpoint_storage_usage_bytes()
             .await
-            .map_err(|e| e.into())
+            .map_err(std::convert::Into::into)
     }
 }
 
@@ -910,10 +908,10 @@ impl Display for RenderManagerError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             RenderManagerError::ClientError(status, message) => {
-                write!(f, "Client Error: {} | {}", status, message)
+                write!(f, "Client Error: {status} | {message}")
             }
             RenderManagerError::ServerError(message) => {
-                write!(f, "Server Error: 500 | {}", message)
+                write!(f, "Server Error: 500 | {message}")
             }
         }
     }

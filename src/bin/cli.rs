@@ -57,13 +57,13 @@ async fn main() -> Result<(), String> {
     let render_config_str =
         fs::read_to_string(&args.config_filename).map_err(|err| err.to_string())?;
     let render_config: RenderConfig = serde_json::from_str(&render_config_str)
-        .map_err(|err| format!("Failed to parse configuration file: {}", err))?;
+        .map_err(|err| format!("Failed to parse configuration file: {err}"))?;
 
     // create render manager
     let render_manager = Arc::new(
         RenderManager::new(Arc::clone(&storage))
             .await
-            .map_err(|e| format!("Failed to initialize render manager: {}", e))?,
+            .map_err(|e| format!("Failed to initialize render manager: {e}"))?,
     );
 
     // start render manager
@@ -72,7 +72,7 @@ async fn main() -> Result<(), String> {
         create_render_and_poll_completion(Arc::clone(&render_manager), render_config)
     );
 
-    res2.map_err(|e| format!("Failed to create render: {}", e))
+    res2.map_err(|e| format!("Failed to create render: {e}"))
 }
 
 async fn create_render_and_poll_completion(
@@ -85,7 +85,7 @@ async fn create_render_and_poll_completion(
             User::new_admin(1, 1, "".to_string(), "".to_string()),
         )
         .await
-        .map_err(|e| format!("Failed to create render: {}", e))?;
+        .map_err(|e| format!("Failed to create render: {e}"))?;
 
     // Poll until render is complete
     loop {
@@ -94,7 +94,7 @@ async fn create_render_and_poll_completion(
         let current_render = render_manager
             .get_render(render.id, 1)
             .await
-            .map_err(|e| format!("Failed to get render status: {}", e))?;
+            .map_err(|e| format!("Failed to get render status: {e}"))?;
 
         match current_render {
             Some(r) => match r.state {
@@ -202,7 +202,7 @@ fn final_scene() -> Scene {
                 Point::new(x1, y1, z1),
                 true,
                 Arc::clone(&lambertian_ground),
-            )))
+            )));
         }
     }
     world.push(Arc::new(Bvh::from_list(ground_boxes)));
@@ -281,7 +281,7 @@ fn final_scene() -> Scene {
             Point::from_vector(Vector::random_range(0.0, 165.0)),
             10.0,
             Arc::clone(&lambertian_light_grey),
-        )))
+        )));
     }
     let sphere_box = Arc::new(Bvh::from_list(sphere_box));
     let sphere_box = Arc::new(RotateYAxis::new(

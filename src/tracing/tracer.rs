@@ -92,7 +92,7 @@ impl Tracer {
                             if let Err(e) =
                                 progress_sender.blocking_send(ProgressPacket { coords: (x, y) })
                             {
-                                println!("Failed to send progress! {:?}", e);
+                                println!("Failed to send progress! {e:?}");
                             }
 
                             // average samples together
