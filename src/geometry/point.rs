@@ -21,6 +21,7 @@ impl Point {
         Self(vector)
     }
 
+    #[must_use]
     pub fn min_components_point(&self, other: Self) -> Point {
         Self::new(
             self.0.x.min(other.0.x),
@@ -29,6 +30,7 @@ impl Point {
         )
     }
 
+    #[must_use]
     pub fn max_components_point(&self, other: Self) -> Point {
         Self::new(
             self.0.x.max(other.0.x),

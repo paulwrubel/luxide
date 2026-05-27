@@ -281,8 +281,7 @@ impl RenderStorage for FileStorage {
             entry
                 .path()
                 .extension()
-                .map(|ext| ext == "json")
-                .unwrap_or(false)
+                .is_some_and(|ext| ext == "json")
         });
 
         Ok(checkpoint_files.count() as u32)
@@ -304,7 +303,7 @@ impl RenderStorage for FileStorage {
         let mut earliest_iteration = None;
         for entry in checkpoint_files {
             let path = entry.map_err(|e| e.to_string())?.path();
-            if path.is_file() && path.extension().map(|ext| ext == "png").unwrap_or(false) {
+            if path.is_file() && path.extension().is_some_and(|ext| ext == "png") {
                 let iteration = path
                     .file_name()
                     .and_then(|name| name.to_str().and_then(|s| s.parse::<u32>().ok()));
@@ -334,7 +333,7 @@ impl RenderStorage for FileStorage {
         let mut latest_iteration = None;
         for entry in checkpoint_files {
             let path = entry.map_err(|e| e.to_string())?.path();
-            if path.is_file() && path.extension().map(|ext| ext == "png").unwrap_or(false) {
+            if path.is_file() && path.extension().is_some_and(|ext| ext == "png") {
                 let iteration = path
                     .file_name()
                     .and_then(|name| name.to_str().and_then(|s| s.parse::<u32>().ok()));
@@ -384,16 +383,14 @@ impl RenderStorage for FileStorage {
                         format!(
                             "Failed to parse filename ({}) as u32: {}",
                             path.file_name()
-                                .map(|oss| oss.to_str().unwrap_or("???"))
-                                .unwrap_or("???"),
+                                .map_or("???", |oss| oss.to_str().unwrap_or("???")),
                             e
                         )
                     }),
                     None => Err(format!(
                         "Failed to parse filename ({}) as valid unicode",
                         path.file_name()
-                            .map(|oss| oss.to_str().unwrap_or("???"))
-                            .unwrap_or("???")
+                            .map_or("???", |oss| oss.to_str().unwrap_or("???"))
                     )),
                 },
                 None => Err("Failed to parse filename: no stem!".to_string()),

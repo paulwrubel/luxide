@@ -55,6 +55,7 @@ impl Aabb {
         }
     }
 
+    #[must_use]
     pub fn pad(self, delta: f64) -> Self {
         Self {
             x_interval: if self.x_interval.size() >= delta {
@@ -75,6 +76,7 @@ impl Aabb {
         }
     }
 
+    #[must_use]
     pub fn expand(self, other: Self) -> Self {
         Self::from_aabbs(self, other)
     }

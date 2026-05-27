@@ -132,6 +132,7 @@ impl Vector {
         *self /= self.length();
     }
 
+    #[must_use]
     pub fn unit_vector(&self) -> Self {
         self / self.length()
     }
@@ -149,6 +150,7 @@ impl Vector {
         self.x * other.x + self.y * other.y + self.z * other.z
     }
 
+    #[must_use]
     pub fn cross(&self, other: Self) -> Self {
         Self {
             x: self.y * other.z - self.z * other.y,
@@ -157,10 +159,12 @@ impl Vector {
         }
     }
 
+    #[must_use]
     pub fn reflect_around(&self, normal: Self) -> Self {
         self - 2.0 * self.dot(normal) * normal
     }
 
+    #[must_use]
     pub fn refract_around(&self, normal: Self, etai_over_etat: f64) -> Self {
         let cos_theta = (-*self).dot(normal).min(1.0);
         let perpendicular_component = etai_over_etat * (self + cos_theta * normal);
@@ -171,6 +175,7 @@ impl Vector {
         perpendicular_component + parallel_component
     }
 
+    #[must_use]
     pub fn scale_down(&self, scale: f64) -> Self {
         let max = self.x.max(self.y).max(self.z);
         if max > scale {
