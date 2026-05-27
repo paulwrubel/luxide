@@ -153,10 +153,11 @@ fn build_textures(
     let get_dependencies = |texture: &TextureData| {
         let mut deps = Vec::new();
         if let TextureData::Checker {
-                even_texture,
-                odd_texture,
-                ..
-            } = texture {
+            even_texture,
+            odd_texture,
+            ..
+        } = texture
+        {
             if let TextureRefOrInline::Ref(ref_name) = even_texture {
                 deps.push(ref_name.clone());
             }

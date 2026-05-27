@@ -26,13 +26,8 @@ impl ModelObj {
             single_index: true,
             ..tobj::LoadOptions::default()
         };
-        let (models, _materials) = tobj::load_obj(filename, &load_options).map_err(|err| {
-            format!(
-                "Error loading model from file \"{}\": {}",
-                filename,
-                err
-            )
-        })?;
+        let (models, _materials) = tobj::load_obj(filename, &load_options)
+            .map_err(|err| format!("Error loading model from file \"{}\": {}", filename, err))?;
 
         let offset = origin.0;
 
@@ -64,17 +59,17 @@ impl ModelObj {
                 let c_index = mesh.indices[i + 2] as usize;
 
                 let a = Point::new(
-                    mesh.positions[a_index * 3 ] as f64,
+                    mesh.positions[a_index * 3] as f64,
                     mesh.positions[a_index * 3 + 1] as f64,
                     mesh.positions[a_index * 3 + 2] as f64,
                 );
                 let b = Point::new(
-                    mesh.positions[b_index * 3 ] as f64,
+                    mesh.positions[b_index * 3] as f64,
                     mesh.positions[b_index * 3 + 1] as f64,
                     mesh.positions[b_index * 3 + 2] as f64,
                 );
                 let c = Point::new(
-                    mesh.positions[c_index * 3 ] as f64,
+                    mesh.positions[c_index * 3] as f64,
                     mesh.positions[c_index * 3 + 1] as f64,
                     mesh.positions[c_index * 3 + 2] as f64,
                 );
@@ -83,7 +78,7 @@ impl ModelObj {
                     a.to(b).cross(a.to(c)).unit_vector()
                 } else {
                     Vector::new(
-                        mesh.normals[a_index * 3 ] as f64,
+                        mesh.normals[a_index * 3] as f64,
                         mesh.normals[a_index * 3 + 1] as f64,
                         mesh.normals[a_index * 3 + 2] as f64,
                     )
@@ -93,7 +88,7 @@ impl ModelObj {
                     a.to(b).cross(a.to(c)).unit_vector()
                 } else {
                     Vector::new(
-                        mesh.normals[b_index * 3 ] as f64,
+                        mesh.normals[b_index * 3] as f64,
                         mesh.normals[b_index * 3 + 1] as f64,
                         mesh.normals[b_index * 3 + 2] as f64,
                     )
@@ -103,7 +98,7 @@ impl ModelObj {
                     a.to(b).cross(a.to(c)).unit_vector()
                 } else {
                     Vector::new(
-                        mesh.normals[c_index * 3 ] as f64,
+                        mesh.normals[c_index * 3] as f64,
                         mesh.normals[c_index * 3 + 1] as f64,
                         mesh.normals[c_index * 3 + 2] as f64,
                     )

@@ -41,6 +41,10 @@ build-api: build-ui run-postgres
     cargo build --release --bin {{ binary_name_api }}
 
 [group('build')]
+build-api-ci: build-ui
+    cargo build --release --bin {{ binary_name_api }}
+
+[group('build')]
 build-cli:
     cargo build --release --bin {{ binary_name_cli }}
 

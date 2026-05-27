@@ -17,7 +17,6 @@ pub enum RenderFormat {
     Minimal,
 }
 
-
 #[derive(Clone, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub struct RenderFormatQueryParameters {
