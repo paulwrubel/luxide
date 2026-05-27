@@ -66,7 +66,8 @@ impl Geometric for Constant {
 
         let ray_length = ray.direction.length();
         let distance_inside_boundary = (second_hit.t - first_hit.t) * ray_length;
-        let hit_distance: f64 = self.negative_inverse_density * rand::rng().random::<f64>().ln();
+        let hit_distance: f64 =
+            self.negative_inverse_density * rand::rng().random::<f64>().ln();
 
         // check if the ray made it through the volume
         if hit_distance > distance_inside_boundary {

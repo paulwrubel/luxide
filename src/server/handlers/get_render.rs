@@ -18,7 +18,7 @@ pub async fn get_render(
     Path(id): Path<RenderID>,
     Query(query_parameters): Query<RenderFormatQueryParameters>,
 ) -> Response {
-    println!("Handing request for get_render (id: {id})...");
+    println!("Handing request for get_render (id: {})...", id);
 
     match state.render_manager.get_render(id, claims.sub).await {
         Ok(Some(render)) => Json(FormattedRender::from((

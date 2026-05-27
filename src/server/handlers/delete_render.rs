@@ -13,7 +13,7 @@ pub async fn delete_render(
     claims: Claims,
     Path(id): Path<RenderID>,
 ) -> Response {
-    println!("Handing request for delete_render (id: {id})...");
+    println!("Handing request for delete_render (id: {})...", id);
 
     match state
         .render_manager

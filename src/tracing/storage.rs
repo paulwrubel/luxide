@@ -283,7 +283,7 @@ pub trait RenderStorage: Send + Sync + 'static {
 
     async fn update_progress<'a>(&'a self, render_id: RenderID, progress_info: ProgressInfo) {
         if let Err(e) = self.update_render_progress(render_id, progress_info).await {
-            println!("Failed to update render state: {e}");
+            println!("Failed to update render state: {}", e);
         }
     }
 
@@ -314,7 +314,7 @@ pub trait RenderStorage: Send + Sync + 'static {
         {
             let render = match self.get_render(id).await? {
                 Some(r) => r,
-                None => return Err(format!("Render {id} not found").into()),
+                None => return Err(format!("Render {} not found", id).into()),
             };
 
             // get the last checkpoint from the current running state

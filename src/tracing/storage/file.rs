@@ -217,24 +217,26 @@ impl RenderStorage for FileStorage {
         let renders = self.renders.read().await;
         let (render, dir) = match renders.iter().find(|(r, _)| r.id == id) {
             Some((r, dir)) => (r, dir),
-            None => return Err(format!("Render {id} not found").into()),
+            None => return Err(format!("Render {} not found", id).into()),
         };
 
         let checkpoint_dir = dir.join("checkpoints");
-        let checkpoint_image_file = checkpoint_dir.join(format!("{iteration}.png"));
-        let checkpoint_meta_file = checkpoint_dir.join(format!("{iteration}.json"));
+        let checkpoint_image_file = checkpoint_dir.join(format!("{}.png", iteration));
+        let checkpoint_meta_file = checkpoint_dir.join(format!("{}.json", iteration));
         match (
             checkpoint_meta_file.exists(),
             checkpoint_image_file.exists(),
         ) {
             (false, true) => {
                 return Err(format!(
-                    "Checkpoint iteration {iteration} image exists but metadata file is missing for render {id}"
+                    "Checkpoint iteration {} image exists but metadata file is missing for render {}",
+                    iteration, id
                 ).into());
             }
             (true, false) => {
                 return Err(format!(
-                    "Checkpoint iteration {iteration} metadata exists but image is missing for render {id}"
+                    "Checkpoint iteration {} metadata exists but image is missing for render {}",
+                    iteration, id
                 )
                 .into());
             }
@@ -266,7 +268,7 @@ impl RenderStorage for FileStorage {
         let renders = self.renders.read().await;
         let dir = match renders.iter().find(|(r, _)| r.id == id) {
             Some((_, dir)) => dir,
-            None => return Err(format!("Render {id} not found").into()),
+            None => return Err(format!("Render {} not found", id).into()),
         };
 
         let checkpoint_dir = dir.join("checkpoints");
@@ -295,7 +297,7 @@ impl RenderStorage for FileStorage {
         let renders = self.renders.read().await;
         let dir = match renders.iter().find(|(r, _)| r.id == id) {
             Some((_, dir)) => dir,
-            None => return Err(format!("Render {id} not found").into()),
+            None => return Err(format!("Render {} not found", id).into()),
         };
 
         let checkpoint_dir = dir.join("checkpoints");
@@ -325,7 +327,7 @@ impl RenderStorage for FileStorage {
         let renders = self.renders.read().await;
         let dir = match renders.iter().find(|(r, _)| r.id == id) {
             Some((_, dir)) => dir,
-            None => return Err(format!("Render {id} not found").into()),
+            None => return Err(format!("Render {} not found", id).into()),
         };
 
         let checkpoint_dir = dir.join("checkpoints");
@@ -354,7 +356,7 @@ impl RenderStorage for FileStorage {
         let renders = self.renders.read().await;
         let dir = match renders.iter().find(|(r, _)| r.id == id) {
             Some((_, dir)) => dir,
-            None => return Err(format!("Render {id} not found").into()),
+            None => return Err(format!("Render {} not found", id).into()),
         };
 
         let checkpoint_dir = dir.join("checkpoints");
@@ -363,7 +365,7 @@ impl RenderStorage for FileStorage {
         let checkpoint_metas = checkpoint_files.filter_map(|f| {
             let entry = match f {
                 Ok(entry) => entry,
-                Err(e) => return Some(Err(format!("Failed to read checkpoint file: {e}"))),
+                Err(e) => return Some(Err(format!("Failed to read checkpoint file: {}", e))),
             };
 
             // check file extension
@@ -379,7 +381,7 @@ impl RenderStorage for FileStorage {
 
             // get file name
             let iteration = match path.file_stem() {
-                Some(file_stem) => match file_stem.to_str().map(str::parse::<u32>) {
+                Some(file_stem) => match file_stem.to_str().map(|s| s.parse::<u32>()) {
                     Some(parse_res) => parse_res.map_err(|e| {
                         format!(
                             "Failed to parse filename ({}) as u32: {}",
@@ -437,11 +439,11 @@ impl RenderStorage for FileStorage {
         let renders = self.renders.read().await;
         let dir = match renders.iter().find(|(r, _)| r.id == id) {
             Some((_, dir)) => dir,
-            None => return Err(format!("Render {id} not found").into()),
+            None => return Err(format!("Render {} not found", id).into()),
         };
 
         let checkpoint_dir = dir.join("checkpoints");
-        let checkpoint_image_file = checkpoint_dir.join(format!("{iteration}.png"));
+        let checkpoint_image_file = checkpoint_dir.join(format!("{}.png", iteration));
         Ok(checkpoint_image_file.exists())
     }
 
@@ -486,24 +488,26 @@ impl RenderStorage for FileStorage {
         let renders = self.renders.read().await;
         let dir = match renders.iter().find(|(r, _)| r.id == id) {
             Some((_, dir)) => dir,
-            None => return Err(format!("Render {id} not found").into()),
+            None => return Err(format!("Render {} not found", id).into()),
         };
 
         let checkpoint_dir = dir.join("checkpoints");
-        let checkpoint_image_file = checkpoint_dir.join(format!("{checkpoint}.png"));
-        let checkpoint_meta_file = checkpoint_dir.join(format!("{checkpoint}.json"));
+        let checkpoint_image_file = checkpoint_dir.join(format!("{}.png", checkpoint));
+        let checkpoint_meta_file = checkpoint_dir.join(format!("{}.json", checkpoint));
         match (
             checkpoint_meta_file.exists(),
             checkpoint_image_file.exists(),
         ) {
             (false, true) => {
                 return Err(format!(
-                    "Checkpoint iteration {checkpoint} image exists but metadata file is missing for render {id}"
+                    "Checkpoint iteration {} image exists but metadata file is missing for render {}",
+                    checkpoint, id
                 ).into());
             }
             (true, false) => {
                 return Err(format!(
-                    "Checkpoint iteration {checkpoint} metadata exists but image is missing for render {id}"
+                    "Checkpoint iteration {} metadata exists but image is missing for render {}",
+                    checkpoint, id
                 )
                 .into());
             }
@@ -526,7 +530,7 @@ impl RenderStorage for FileStorage {
                 .find_map(|(r, dir)| if r.id == id { Some(dir) } else { None })
             {
                 Some(dir) => dir.clone(),
-                None => return Err(format!("Render {id} not found").into()),
+                None => return Err(format!("Render {} not found", id).into()),
             }
         };
 
@@ -550,7 +554,7 @@ impl RenderStorage for FileStorage {
 
     async fn update_progress<'a>(&'a self, render_id: RenderID, progress_info: ProgressInfo) {
         if let Err(e) = self.update_render_progress(render_id, progress_info).await {
-            println!("Failed to update render state: {e}");
+            println!("Failed to update render state: {}", e);
         }
 
         // TODO: print info out here! this is the spot!

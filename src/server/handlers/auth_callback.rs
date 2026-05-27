@@ -48,7 +48,7 @@ pub async fn auth_github_callback(
     let parsed_session_id = match Uuid::parse_str(&session_id) {
         Ok(uuid) => uuid,
         Err(e) => {
-            eprintln!("Failed to parse session_id: {e}");
+            eprintln!("Failed to parse session_id: {}", e);
             return (StatusCode::BAD_REQUEST, "Failed to parse session_id").into_response();
         }
     };
@@ -75,7 +75,7 @@ pub async fn auth_github_callback(
     let token = match state.auth_manager.exchange_code(code).await {
         Ok(token) => token,
         Err(e) => {
-            eprintln!("Failed to exchange code for access token: {e}");
+            eprintln!("Failed to exchange code for access token: {}", e);
             return (
                 StatusCode::BAD_REQUEST,
                 "Failed to exchange code for access token",
@@ -88,7 +88,7 @@ pub async fn auth_github_callback(
     let user_info = match state.auth_manager.get_github_user_info(token).await {
         Ok(user_info) => user_info,
         Err(e) => {
-            eprintln!("Failed to get user info: {e}");
+            eprintln!("Failed to get user info: {}", e);
             return (StatusCode::BAD_REQUEST, "Failed to get user info").into_response();
         }
     };
@@ -96,7 +96,7 @@ pub async fn auth_github_callback(
     let user = match get_user_by_github_id(&state, &user_info, user_info.id).await {
         Ok(user) => user,
         Err(e) => {
-            eprintln!("Failed to get user by github id: {e}");
+            eprintln!("Failed to get user by github id: {}", e);
             return (StatusCode::BAD_REQUEST, e).into_response();
         }
     };
@@ -104,14 +104,14 @@ pub async fn auth_github_callback(
     let token = match state.auth_manager.generate_new_jwt(user.id).await {
         Ok(token) => token,
         Err(e) => {
-            eprintln!("Failed to generate new JWT: {e}");
+            eprintln!("Failed to generate new JWT: {}", e);
             return (StatusCode::BAD_REQUEST, "Failed to generate new JWT").into_response();
         }
     };
 
-    println!("Generated JWT: {token}");
+    println!("Generated JWT: {}", token);
 
-    println!("User: {user:#?}");
+    println!("User: {:#?}", user);
 
     (
         StatusCode::OK,
@@ -131,13 +131,15 @@ async fn get_user_by_github_id(
             Ok(Some(user)) => Ok(user),
             Ok(None) => {
                 eprintln!(
-                    "Failed to get user with github id {github_id}: User exists but not found in database"
+                    "Failed to get user with github id {}: User exists but not found in database",
+                    github_id
                 );
                 Err("Failed to get user with github id".to_string())
             }
             Err(e) => {
                 eprintln!(
-                    "Failed to get user with github id {github_id}: Error retrieving user from database: {e}"
+                    "Failed to get user with github id {}: Error retrieving user from database: {}",
+                    github_id, e
                 );
                 Err("Failed to get user with github id".to_string())
             }
@@ -171,7 +173,8 @@ async fn get_user_by_github_id(
                 Ok(user) => Ok(user),
                 Err(e) => {
                     eprintln!(
-                        "Failed to create user with github id {github_id}: Error creating user in database: {e}"
+                        "Failed to create user with github id {}: Error creating user in database: {}",
+                        github_id, e
                     );
                     Err("Failed to create user with github id".to_string())
                 }
@@ -179,7 +182,8 @@ async fn get_user_by_github_id(
         }
         Err(e) => {
             eprintln!(
-                "Failed to check if user with github id {github_id} exists: Error checking user in database: {e}"
+                "Failed to check if user with github id {} exists: Error checking user in database: {}",
+                github_id, e
             );
             Err("Failed to check if user with github id exists".to_string())
         }

@@ -14,7 +14,7 @@ pub async fn pause_render(
     claims: Claims,
     Path(id): Path<RenderID>,
 ) -> Response {
-    println!("Handing request for pause_render (id: {id})...");
+    println!("Handing request for pause_render (id: {})...", id);
 
     match state.render_manager.pause_render(id, claims.sub).await {
         Ok(_) => StatusCode::NO_CONTENT.into_response(),

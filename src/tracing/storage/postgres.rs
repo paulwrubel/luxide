@@ -19,7 +19,7 @@ impl PostgresStorage {
         password: &str,
         database: &str,
     ) -> Result<Self, String> {
-        let conn_string = format!("postgres://{username}:{password}@{addr}/{database}");
+        let conn_string = format!("postgres://{}:{}@{}/{}", username, password, addr, database);
 
         let pool = sqlx::postgres::PgPoolOptions::new()
             .max_connections(5)
@@ -46,11 +46,13 @@ impl RenderStorage for PostgresStorage {
         .await
         {
             Ok(Some(row)) => {
-                let state = serde_json::from_value(row.state)
-                    .map_err(|e| format!("Failed to deserialize render state for id {id}: {e}"))?;
+                let state = serde_json::from_value(row.state).map_err(|e| {
+                    format!("Failed to deserialize render state for id {}: {}", id, e)
+                })?;
 
-                let config = serde_json::from_value(row.config)
-                    .map_err(|e| format!("Failed to deserialize render config for id {id}: {e}"))?;
+                let config = serde_json::from_value(row.config).map_err(|e| {
+                    format!("Failed to deserialize render config for id {}: {}", id, e)
+                })?;
 
                 let db_id: RenderID = row
                     .id
@@ -139,7 +141,7 @@ impl RenderStorage for PostgresStorage {
         )
         .fetch_all(&self.pool)
         .await
-        .map_err(|e| format!("Failed to get all renders: {e}"))?;
+        .map_err(|e| format!("Failed to get all renders: {}", e))?;
 
         let mut renders = Vec::with_capacity(rows.len());
         for row in rows {
@@ -187,7 +189,7 @@ impl RenderStorage for PostgresStorage {
         )
         .fetch_all(&self.pool)
         .await
-        .map_err(|e| format!("Failed to get all renders for user id {user_id}: {e}"))?;
+        .map_err(|e| format!("Failed to get all renders for user id {}: {}", user_id, e))?;
 
         let mut renders = Vec::with_capacity(rows.len());
         for row in rows {
@@ -265,7 +267,7 @@ impl RenderStorage for PostgresStorage {
             "#,
             id as i32,
             serde_json::to_value(&new_state)
-                .map_err(|e| format!("Failed to serialize render state for id {id}: {e}"))?,
+                .map_err(|e| format!("Failed to serialize render state for id {}: {}", id, e))?,
             chrono::Utc::now(),
         )
         .execute(&self.pool)
@@ -278,7 +280,7 @@ impl RenderStorage for PostgresStorage {
                 )
                 .into()),
             },
-            Err(e) => Err(format!("Failed to update render state for id {id}: {e}").into()),
+            Err(e) => Err(format!("Failed to update render state for id {}: {}", id, e).into()),
         }
     }
 
@@ -301,12 +303,12 @@ impl RenderStorage for PostgresStorage {
                 AND (state ? 'running' OR state ? 'pausing')
             "#,
             id as i32,
-            serde_json::to_value(&progress_info).map_err(|e| format!("Failed to serialize render progress for id {id}: {e}"))?,
+            serde_json::to_value(&progress_info).map_err(|e| format!("Failed to serialize render progress for id {}: {}", id, e))?,
             chrono::Utc::now(),
         )
         .execute(&self.pool)
         .await
-        .map_err(|e| format!("Failed to update render progress for id {id}: {e}"))?;
+        .map_err(|e| format!("Failed to update render progress for id {}: {}", id, e))?;
 
         Ok(())
     }
@@ -325,13 +327,19 @@ impl RenderStorage for PostgresStorage {
             "#,
             id as i32,
             serde_json::to_value(&new_total_checkpoints).map_err(|e| format!(
-                "Failed to serialize render total_checkpoints for id {id}: {e}"
+                "Failed to serialize render total_checkpoints for id {}: {}",
+                id, e
             ))?,
             chrono::Utc::now(),
         )
         .execute(&self.pool)
         .await
-        .map_err(|e| format!("Failed to update render total_checkpoints for id {id}: {e}"))?;
+        .map_err(|e| {
+            format!(
+                "Failed to update render total_checkpoints for id {}: {}",
+                id, e
+            )
+        })?;
 
         Ok(())
     }
@@ -356,7 +364,8 @@ impl RenderStorage for PostgresStorage {
             Ok(Some(row)) => {
                 let pixel_data = decode_pixel_data(&row.pixel_data).map_err(|e| {
                     format!(
-                        "Failed to decode pixel data for id {id} and iteration {iteration}: {e}"
+                        "Failed to decode pixel data for id {} and iteration {}: {}",
+                        id, iteration, e
                     )
                 })?;
 
@@ -550,11 +559,12 @@ impl RenderStorage for PostgresStorage {
             Ok(res) => match res.rows_affected() {
                 1 => Ok(()),
                 n => Err(format!(
-                    "Failed to delete render checkpoint for id {id} and iteration {checkpoint}: Expecting 1 row affected, got {n}"
+                    "Failed to delete render checkpoint for id {} and iteration {}: Expecting 1 row affected, got {}", 
+                    id, checkpoint, n
                 )
                 .into()),
             },
-            Err(e) => Err(format!("Failed to delete render checkpoint for id {id} and iteration {checkpoint}: {e}").into()),
+            Err(e) => Err(format!("Failed to delete render checkpoint for id {} and iteration {}: {}", id, checkpoint, e).into()),
         }
     }
 
@@ -563,7 +573,7 @@ impl RenderStorage for PostgresStorage {
             .pool
             .begin()
             .await
-            .map_err(|e| format!("Failed to begin transaction: {e}"))?;
+            .map_err(|e| format!("Failed to begin transaction: {}", e))?;
 
         // delete checkpoints first (foreign key constraint will prevent orphaned checkpoints)
         sqlx::query!(
@@ -575,7 +585,7 @@ impl RenderStorage for PostgresStorage {
         )
         .execute(&mut *tx)
         .await
-        .map_err(|e| format!("Failed to delete checkpoints for render id {id}: {e}"))?;
+        .map_err(|e| format!("Failed to delete checkpoints for render id {}: {}", id, e))?;
 
         // delete the render
         sqlx::query!(
@@ -587,12 +597,12 @@ impl RenderStorage for PostgresStorage {
         )
         .execute(&mut *tx)
         .await
-        .map_err(|e| format!("Failed to delete render for id {id}: {e}"))?;
+        .map_err(|e| format!("Failed to delete render for id {}: {}", id, e))?;
 
         // commit the transaction
         tx.commit()
             .await
-            .map_err(|e| format!("Failed to commit transaction: {e}"))?;
+            .map_err(|e| format!("Failed to commit transaction: {}", e))?;
 
         Ok(())
     }
@@ -606,7 +616,7 @@ impl RenderStorage for PostgresStorage {
         )
         .fetch_one(&self.pool)
         .await
-        .map_err(|e| format!("Failed to get next render ID: {e}"))?;
+        .map_err(|e| format!("Failed to get next render ID: {}", e))?;
 
         let next_id = row.max_id.unwrap_or(0) + 1;
         Ok(next_id
@@ -623,7 +633,7 @@ impl RenderStorage for PostgresStorage {
         )
         .fetch_one(&self.pool)
         .await
-        .map_err(|e| format!("Failed to get render checkpoint storage usage: {e}"))?;
+        .map_err(|e| format!("Failed to get render checkpoint storage usage: {}", e))?;
 
         Ok(rows.sum.unwrap_or(0) as u64)
     }
@@ -657,7 +667,7 @@ impl UserStorage for PostgresStorage {
                 max_render_pixel_count: row.max_render_pixel_count.map(|p| p as u32),
             })),
             Ok(None) => Ok(None),
-            Err(e) => Err(format!("Failed to get user with id {id}: {e}").into()),
+            Err(e) => Err(format!("Failed to get user with id {}: {}", id, e).into()),
         }
     }
 
@@ -690,7 +700,7 @@ impl UserStorage for PostgresStorage {
                 max_render_pixel_count: row.max_render_pixel_count.map(|p| p as u32),
             })),
             Ok(None) => Ok(None),
-            Err(e) => Err(format!("Failed to get user with github id {github_id}: {e}").into()),
+            Err(e) => Err(format!("Failed to get user with github id {}: {}", github_id, e).into()),
         }
     }
 
@@ -709,7 +719,7 @@ impl UserStorage for PostgresStorage {
         {
             Ok(Some(_)) => Ok(true),
             Ok(None) => Ok(false),
-            Err(e) => Err(format!("Failed to check if user with id {id} exists: {e}").into()),
+            Err(e) => Err(format!("Failed to check if user with id {} exists: {}", id, e).into()),
         }
     }
 
@@ -729,7 +739,8 @@ impl UserStorage for PostgresStorage {
             Ok(Some(_)) => Ok(true),
             Ok(None) => Ok(false),
             Err(e) => Err(format!(
-                "Failed to check if user with github id {github_id} exists: {e}"
+                "Failed to check if user with github id {} exists: {}",
+                github_id, e
             )
             .into()),
         }
@@ -758,11 +769,11 @@ impl UserStorage for PostgresStorage {
         {
             Ok(res) => match res.rows_affected() {
                 1 => Ok(user),
-                n => {
-                    Err(format!("Failed to create user: Expecting 1 row affected, got {n}").into())
-                }
+                n => Err(
+                    format!("Failed to create user: Expecting 1 row affected, got {}", n).into(),
+                ),
             },
-            Err(e) => Err(format!("Failed to create user: {e}").into()),
+            Err(e) => Err(format!("Failed to create user: {}", e).into()),
         }
     }
 
@@ -789,11 +800,11 @@ impl UserStorage for PostgresStorage {
         {
             Ok(res) => match res.rows_affected() {
                 1 => Ok(user),
-                n => {
-                    Err(format!("Failed to update user: Expecting 1 row affected, got {n}").into())
-                }
+                n => Err(
+                    format!("Failed to update user: Expecting 1 row affected, got {}", n).into(),
+                ),
             },
-            Err(e) => Err(format!("Failed to update user: {e}").into()),
+            Err(e) => Err(format!("Failed to update user: {}", e).into()),
         }
     }
 
@@ -810,11 +821,11 @@ impl UserStorage for PostgresStorage {
         {
             Ok(res) => match res.rows_affected() {
                 1 => Ok(()),
-                n => {
-                    Err(format!("Failed to delete user: Expecting 1 row affected, got {n}").into())
-                }
+                n => Err(
+                    format!("Failed to delete user: Expecting 1 row affected, got {}", n).into(),
+                ),
             },
-            Err(e) => Err(format!("Failed to delete user: {e}").into()),
+            Err(e) => Err(format!("Failed to delete user: {}", e).into()),
         }
     }
 
@@ -834,7 +845,7 @@ impl UserStorage for PostgresStorage {
                     .try_into()
                     .map_err(|_| "Next user ID cannot be represented as a UserID".to_string())?)
             }
-            Err(e) => Err(format!("Failed to get next user ID: {e}").into()),
+            Err(e) => Err(format!("Failed to get next user ID: {}", e).into()),
         }
     }
 }

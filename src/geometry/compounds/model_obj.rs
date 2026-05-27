@@ -27,7 +27,7 @@ impl ModelObj {
             ..tobj::LoadOptions::default()
         };
         let (models, _materials) = tobj::load_obj(filename, &load_options)
-            .map_err(|err| format!("Error loading model from file \"{filename}\": {err}"))?;
+            .map_err(|err| format!("Error loading model from file \"{}\": {}", filename, err))?;
 
         let offset = origin.0;
 

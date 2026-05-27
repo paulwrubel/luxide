@@ -34,10 +34,10 @@ async fn main() -> Result<(), String> {
     let args = Args::parse();
 
     let config = load_api_config(args.config_file.as_deref())
-        .map_err(|e| format!("Failed to load config: {e}"))?;
+        .map_err(|e| format!("Failed to load config: {}", e))?;
 
     let secrets = load_api_secrets(args.secret_file.as_deref())
-        .map_err(|e| format!("Failed to load secrets: {e}"))?;
+        .map_err(|e| format!("Failed to load secrets: {}", e))?;
 
     println!(
         "Starting API server at {}:{} with render backend: {:?} and user backend: {:?}",
@@ -57,7 +57,7 @@ async fn main() -> Result<(), String> {
             ) => Arc::new(
                 PostgresStorage::new(host, username, password, db)
                     .await
-                    .map_err(|e| format!("Failed to connect to postgres: {e}"))?,
+                    .map_err(|e| format!("Failed to connect to postgres: {}", e))?,
             ),
             _ => return Err("Invalid storage configuration".to_string()),
         };
@@ -69,7 +69,7 @@ async fn main() -> Result<(), String> {
         ) => Arc::new(
             PostgresStorage::new(host, username, password, db)
                 .await
-                .map_err(|e| format!("Failed to connect to postgres: {e}"))?,
+                .map_err(|e| format!("Failed to connect to postgres: {}", e))?,
         ),
         _ => return Err("Invalid storage configuration".to_string()),
     };
@@ -78,7 +78,7 @@ async fn main() -> Result<(), String> {
     let render_manager = Arc::new(
         RenderManager::new(Arc::clone(&render_storage))
             .await
-            .map_err(|e| format!("Failed to initialize render manager: {e}"))?,
+            .map_err(|e| format!("Failed to initialize render manager: {}", e))?,
     );
 
     // create auth manager
