@@ -20,7 +20,7 @@ use luxide::{
     utils::Angle,
 };
 use noise::{Perlin, Turbulence};
-use rand::Rng;
+use rand::RngExt;
 
 const _SD: (u32, u32) = (640, 480);
 const _HD: (u32, u32) = (1280, 720);
@@ -115,7 +115,7 @@ async fn create_render_and_poll_completion(
 
 #[allow(dead_code)]
 fn final_scene() -> Scene {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     // Textures
     let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::BLACK);
@@ -135,7 +135,7 @@ fn final_scene() -> Scene {
     // let output_fn = |n: f64, p: Point| 0.5 * (1.0 + (p.0.z + 10.0 * n).sin());
     let output_fn = |n: f64, p: Point| 0.5 * (1.0 + (p.0.z + 2.0 * n).sin());
     // let output_fn = |n: f64, p: Point| n;
-    let noise_perlin = Turbulence::<_, Perlin>::new(Perlin::new(rng.gen_range(0..=u32::MAX)));
+    let noise_perlin = Turbulence::<_, Perlin>::new(Perlin::new(rng.random_range(0..=u32::MAX)));
     let noise_perlin: Arc<dyn Texture> = Arc::new(
         Noise::new(noise_perlin)
             .map_input(input_fn)
@@ -194,7 +194,7 @@ fn final_scene() -> Scene {
             let y0 = 0.0;
 
             let x1 = x0 + width;
-            let y1 = rng.gen_range(1.0..101.0);
+            let y1 = rng.random_range(1.0..101.0);
             let z1 = z0 + width;
 
             ground_boxes.push(Arc::new(AxisAlignedPBox::new(
@@ -485,7 +485,7 @@ fn simple_light() -> Scene {
     let output_fn = |n: f64, p: Point| 0.5 * (1.0 + (p.0.z + 3.0 * n).sin());
     // let output_fn = |n: f64, p: Point| n;
     let noise_perlin =
-        Turbulence::<_, Perlin>::new(Perlin::new(rand::thread_rng().gen_range(0..=u32::MAX)))
+        Turbulence::<_, Perlin>::new(Perlin::new(rand::rng().random_range(0..=u32::MAX)))
             // .set_roughness(7)
             // .set_frequency(1.0)
             // .set_power(2.0)
@@ -664,7 +664,7 @@ fn two_perlin_spheres() -> Scene {
     let output_fn = |n: f64, p: Point| 0.5 * (1.0 + (p.0.z + 2.0 * n).sin());
     // let output_fn = |n: f64, p: Point| n;
     let noise_perlin =
-        Turbulence::<_, Perlin>::new(Perlin::new(rand::thread_rng().gen_range(0..=u32::MAX)))
+        Turbulence::<_, Perlin>::new(Perlin::new(rand::rng().random_range(0..=u32::MAX)))
             .set_roughness(7)
             .set_frequency(2.0)
             // .set_power(2.0)

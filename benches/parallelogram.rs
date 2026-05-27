@@ -1,9 +1,9 @@
-use criterion::{black_box, criterion_group, criterion_main, BatchSize, Criterion};
+use criterion::{BatchSize, Criterion, black_box, criterion_group, criterion_main};
 use luxide::{
-    geometry::{primitives::Parallelogram, Geometric, Point, Ray, RayHit, Vector},
+    geometry::{Geometric, Point, Ray, RayHit, Vector, primitives::Parallelogram},
     utils::Interval,
 };
-use rand::{rngs::ThreadRng, Rng};
+use rand::{RngExt, rngs::ThreadRng};
 
 fn random() -> (
     String,
@@ -33,10 +33,14 @@ fn hit() -> (
     let p = Parallelogram::unit();
 
     let setup = || -> Ray {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let origin = Point::new(0.0, 0.0, 1.0);
-        let target = Point::new(rng.gen_range(-0.5..0.5), rng.gen_range(-0.5..0.5), 0.0);
+        let target = Point::new(
+            rng.random_range(-0.5..0.5),
+            rng.random_range(-0.5..0.5),
+            0.0,
+        );
         let direction = origin.to(target).unit_vector();
 
         Ray::new(origin, direction, 0.0)
@@ -61,12 +65,16 @@ fn miss_offset() -> (
         let x_interval = Interval::new(-0.1, 1.1);
         let y_interval = Interval::new(-0.1, 1.1);
         let new_target_fn = |mut rng: ThreadRng| {
-            Point::new(rng.gen_range(-2.5..2.5), rng.gen_range(-2.5..2.5), 0.0)
+            Point::new(
+                rng.random_range(-2.5..2.5),
+                rng.random_range(-2.5..2.5),
+                0.0,
+            )
         };
-        let mut target = new_target_fn(rand::thread_rng());
+        let mut target = new_target_fn(rand::rng());
         while x_interval.contains_excluding(target.0.x) && y_interval.contains_excluding(target.0.y)
         {
-            target = new_target_fn(rand::thread_rng());
+            target = new_target_fn(rand::rng());
         }
         let direction = origin.to(target).unit_vector();
 
@@ -91,10 +99,14 @@ fn miss_plane() -> (
     let p = Parallelogram::unit();
 
     let setup = || -> Ray {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let origin = Point::new(0.5, 0.5, 1.0);
-        let target = Point::new(rng.gen_range(-0.5..0.5), rng.gen_range(-0.5..0.5), 2.0);
+        let target = Point::new(
+            rng.random_range(-0.5..0.5),
+            rng.random_range(-0.5..0.5),
+            2.0,
+        );
         let direction = origin.to(target).unit_vector();
 
         Ray::new(origin, direction, 0.0)
@@ -114,10 +126,14 @@ fn miss_culled() -> (
     let p = Parallelogram::unit();
 
     let setup = || -> Ray {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let origin = Point::new(0.0, 0.0, -1.0);
-        let target = Point::new(rng.gen_range(-0.5..0.5), rng.gen_range(-0.5..0.5), 0.0);
+        let target = Point::new(
+            rng.random_range(-0.5..0.5),
+            rng.random_range(-0.5..0.5),
+            0.0,
+        );
         let direction = origin.to(target).unit_vector();
 
         Ray::new(origin, direction, 0.0)

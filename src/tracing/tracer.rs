@@ -67,7 +67,7 @@ impl Tracer {
 
         let tiles = Tiles::new(parameters.image_dimensions, parameters.tile_dimensions);
 
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut tiles = tiles.collect::<Vec<Tile>>();
         tiles.shuffle(&mut rng);

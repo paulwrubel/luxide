@@ -1,6 +1,6 @@
 use std::f64::consts::PI;
 
-use rand::Rng;
+use rand::RngExt;
 
 use crate::{
     geometry::{Geometric, Point, Ray, Vector},
@@ -119,10 +119,10 @@ impl Camera {
     }
 
     fn pixel_sample_square(&self) -> Vector {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
-        let x_offset = self.pixel_delta_u * rng.gen_range(-0.5..0.5);
-        let y_offset = self.pixel_delta_v * rng.gen_range(-0.5..0.5);
+        let x_offset = self.pixel_delta_u * rng.random_range(-0.5..0.5);
+        let y_offset = self.pixel_delta_v * rng.random_range(-0.5..0.5);
 
         x_offset + y_offset
     }
