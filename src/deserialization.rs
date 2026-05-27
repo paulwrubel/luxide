@@ -268,6 +268,7 @@ fn build_geometrics(
 
 const MAX_RECURSION_DEPTH: usize = 100;
 
+#[allow(clippy::too_many_arguments)]
 fn build_resource_recursive<T>(
     name: &str,
     resource_data: &IndexMap<String, T>,

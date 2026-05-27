@@ -35,6 +35,7 @@ impl Triangle {
         )
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn new_with_optional_normals(
         a: Point,
         b: Point,
@@ -54,6 +55,7 @@ impl Triangle {
         Self::new_with_normals(a, b, c, a_normal, b_normal, c_normal, is_culled, material)
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn new_with_normals(
         a: Point,
         b: Point,
