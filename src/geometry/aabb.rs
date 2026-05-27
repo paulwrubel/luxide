@@ -8,13 +8,13 @@ use crate::{
 };
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct AABB {
+pub struct Aabb {
     pub x_interval: Interval,
     pub y_interval: Interval,
     pub z_interval: Interval,
 }
 
-impl AABB {
+impl Aabb {
     pub const EMPTY: Self = Self {
         x_interval: Interval::EMPTY,
         y_interval: Interval::EMPTY,
@@ -39,7 +39,7 @@ impl AABB {
         }
     }
 
-    pub fn from_aabbs(a: AABB, b: AABB) -> Self {
+    pub fn from_aabbs(a: Aabb, b: Aabb) -> Self {
         Self {
             x_interval: Interval::from_intervals(a.x_interval, b.x_interval),
             y_interval: Interval::from_intervals(a.y_interval, b.y_interval),
@@ -107,7 +107,7 @@ impl AABB {
     }
 }
 
-impl Index<usize> for AABB {
+impl Index<usize> for Aabb {
     type Output = Interval;
 
     fn index(&self, index: usize) -> &Self::Output {
@@ -120,7 +120,7 @@ impl Index<usize> for AABB {
     }
 }
 
-impl IndexMut<usize> for AABB {
+impl IndexMut<usize> for Aabb {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         match index {
             0 => &mut self.x_interval,
@@ -131,29 +131,29 @@ impl IndexMut<usize> for AABB {
     }
 }
 
-impl_op_ex_commutative!(+ |a: &AABB, b: &Vector| -> AABB {
-    AABB {
+impl_op_ex_commutative!(+ |a: &Aabb, b: &Vector| -> Aabb {
+    Aabb {
         x_interval: a.x_interval + b.x,
         y_interval: a.y_interval + b.y,
         z_interval: a.z_interval + b.z,
     }
 });
 
-impl_op_ex!(+= |a: &mut AABB, b: &Vector| {
+impl_op_ex!(+= |a: &mut Aabb, b: &Vector| {
     a.x_interval += b.x;
     a.y_interval += b.y;
     a.z_interval += b.z;
 });
 
-impl_op_ex!(-|a: &AABB, b: &Vector| -> AABB {
-    AABB {
+impl_op_ex!(-|a: &Aabb, b: &Vector| -> Aabb {
+    Aabb {
         x_interval: a.x_interval - b.x,
         y_interval: a.y_interval - b.y,
         z_interval: a.z_interval - b.z,
     }
 });
 
-impl_op_ex!(-= |a: &mut AABB, b: &Vector|  {
+impl_op_ex!(-= |a: &mut Aabb, b: &Vector|  {
     a.x_interval -= b.x;
     a.y_interval -= b.y;
     a.z_interval -= b.z;

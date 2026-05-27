@@ -1,5 +1,5 @@
 use crate::{
-    config::{APIConfig, AuthSecrets},
+    config::{ApiConfig, AuthSecrets},
     tracing::{GithubID, User, UserID, UserStorage},
 };
 use axum::{
@@ -47,7 +47,7 @@ impl AuthManager {
 
     pub fn new_github(
         storage: Arc<dyn UserStorage>,
-        config: &APIConfig,
+        config: &ApiConfig,
         secrets: &AuthSecrets,
     ) -> Self {
         let client_id = oauth2::ClientId::new(secrets.github.client_id.clone());
@@ -276,13 +276,13 @@ pub struct GitHubUserInfo {
     pub avatar_url: String,
 }
 
-pub trait JWTValidator {
+pub trait JwtValidator {
     type Error;
 
     fn validate_jwt(&self, token: &str) -> Result<Claims, Self::Error>;
 }
 
-impl JWTValidator for AuthManager {
+impl JwtValidator for AuthManager {
     type Error = AuthManagerError;
 
     fn validate_jwt(&self, token: &str) -> Result<Claims, Self::Error> {
@@ -306,7 +306,7 @@ pub struct Claims {
 
 impl<S> FromRequestParts<S> for Claims
 where
-    S: Send + Sync + JWTValidator,
+    S: Send + Sync + JwtValidator,
 {
     type Rejection = Response;
 

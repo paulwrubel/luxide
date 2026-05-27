@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     geometry::{
         Geometric,
-        compounds::{AxisAlignedPBox, BVH, List, ModelObj},
+        compounds::{AxisAlignedPBox, Bvh, List, ModelObj},
         instances::{RotateXAxis, RotateYAxis, RotateZAxis, Translate},
         primitives::{Parallelogram, Sphere, Triangle},
         volumes,
@@ -152,7 +152,7 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
                 }
 
                 if use_bvh.unwrap_or(false) {
-                    Ok(Arc::new(BVH::from_list(list)))
+                    Ok(Arc::new(Bvh::from_list(list)))
                 } else {
                     Ok(Arc::new(list))
                 }

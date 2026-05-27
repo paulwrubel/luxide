@@ -3,7 +3,7 @@ use std::sync::Arc;
 use rand::RngExt;
 
 use crate::{
-    geometry::{AABB, Geometric, Ray, RayHit, Vector},
+    geometry::{Aabb, Geometric, Ray, RayHit, Vector},
     shading::{
         Texture,
         materials::{Isotropic, Material},
@@ -85,7 +85,7 @@ impl Geometric for Constant {
         })
     }
 
-    fn bounding_box(&self) -> AABB {
+    fn bounding_box(&self) -> Aabb {
         self.geometric.bounding_box()
     }
 }

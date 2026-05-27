@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{AABB, Geometric, Point, Ray, RayHit, Vector},
+    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector},
     shading::materials::Material,
     utils::Interval,
 };
@@ -16,7 +16,7 @@ pub struct Triangle {
     c_normal: Vector,
     is_culled: bool,
     material: Arc<dyn Material>,
-    bounding_box: AABB,
+    bounding_box: Aabb,
 }
 
 impl Triangle {
@@ -66,7 +66,7 @@ impl Triangle {
         is_culled: bool,
         material: Arc<dyn Material>,
     ) -> Self {
-        let bounding_box = AABB::from_points(&[a, b, c]).pad(0.0001);
+        let bounding_box = Aabb::from_points(&[a, b, c]).pad(0.0001);
 
         Self {
             a,
@@ -159,7 +159,7 @@ impl Geometric for Triangle {
         self.intersect_moller_trumbore(ray, ray_t)
     }
 
-    fn bounding_box(&self) -> AABB {
+    fn bounding_box(&self) -> Aabb {
         self.bounding_box
     }
 }

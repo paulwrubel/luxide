@@ -9,14 +9,14 @@ use axum::{
 use include_dir::{Dir, include_dir};
 use tower_http::cors::CorsLayer;
 
-use crate::config::APIConfig;
+use crate::config::ApiConfig;
 
 use super::{LuxideState, handlers};
 
 #[cfg(feature = "embed-ui")]
 static UI_DIST_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/ui/dist");
 
-pub fn build_router(config: &APIConfig) -> Router<LuxideState> {
+pub fn build_router(config: &ApiConfig) -> Router<LuxideState> {
     let router = Router::new()
         .nest("/api/v1", build_api_router())
         .layer(get_cors_layer(config));
@@ -70,7 +70,7 @@ fn build_ui_router() -> Router<LuxideState> {
     })
 }
 
-fn get_cors_layer(config: &APIConfig) -> CorsLayer {
+fn get_cors_layer(config: &ApiConfig) -> CorsLayer {
     // for development, allow both the Vite dev server and the public URL
     let mut allowed_origins = vec![
         "http://localhost:5173".parse().unwrap(),

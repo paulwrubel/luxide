@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{AABB, Geometric, Point, Ray, RayHit, Vector},
+    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector},
     utils::{Angle, Interval},
 };
 
@@ -11,7 +11,7 @@ pub struct RotateYAxis {
     translation: Vector,
     sin_theta: f64,
     cos_theta: f64,
-    bounding_box: AABB,
+    bounding_box: Aabb,
 }
 
 impl RotateYAxis {
@@ -53,7 +53,7 @@ impl RotateYAxis {
             translation,
             sin_theta,
             cos_theta,
-            bounding_box: AABB::from_points(&[min_extent, max_extent]) + translation,
+            bounding_box: Aabb::from_points(&[min_extent, max_extent]) + translation,
         }
     }
 
@@ -97,7 +97,7 @@ impl Geometric for RotateYAxis {
         Some(rayhit)
     }
 
-    fn bounding_box(&self) -> AABB {
+    fn bounding_box(&self) -> Aabb {
         self.bounding_box
     }
 }

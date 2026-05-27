@@ -1,15 +1,15 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{AABB, Geometric, Point, Ray, RayHit, Vector, primitives::Triangle},
+    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector, primitives::Triangle},
     shading::materials::Material,
     utils::Interval,
 };
 
-use super::{BVH, List};
+use super::{Bvh, List};
 
 pub struct ModelObj {
-    geometric: ListOrBVH,
+    geometric: ListOrBvh,
 }
 
 impl ModelObj {
@@ -123,9 +123,9 @@ impl ModelObj {
         }
 
         let geometric = if use_bvh {
-            ListOrBVH::Bvh(BVH::from_list(triangles))
+            ListOrBvh::Bvh(Bvh::from_list(triangles))
         } else {
-            ListOrBVH::List(triangles)
+            ListOrBvh::List(triangles)
         };
 
         Ok(Self { geometric })
@@ -137,28 +137,28 @@ impl Geometric for ModelObj {
         self.geometric.intersect(ray, ray_t)
     }
 
-    fn bounding_box(&self) -> AABB {
+    fn bounding_box(&self) -> Aabb {
         self.geometric.bounding_box()
     }
 }
 
-enum ListOrBVH {
+enum ListOrBvh {
     List(List),
-    Bvh(BVH),
+    Bvh(Bvh),
 }
 
-impl Geometric for ListOrBVH {
+impl Geometric for ListOrBvh {
     fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit> {
         match self {
-            ListOrBVH::List(list) => list.intersect(ray, ray_t),
-            ListOrBVH::Bvh(bvh) => bvh.intersect(ray, ray_t),
+            ListOrBvh::List(list) => list.intersect(ray, ray_t),
+            ListOrBvh::Bvh(bvh) => bvh.intersect(ray, ray_t),
         }
     }
 
-    fn bounding_box(&self) -> AABB {
+    fn bounding_box(&self) -> Aabb {
         match self {
-            ListOrBVH::List(list) => list.bounding_box(),
-            ListOrBVH::Bvh(bvh) => bvh.bounding_box(),
+            ListOrBvh::List(list) => list.bounding_box(),
+            ListOrBvh::Bvh(bvh) => bvh.bounding_box(),
         }
     }
 }

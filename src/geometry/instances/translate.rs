@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{AABB, Geometric, Ray, RayHit, Vector},
+    geometry::{Aabb, Geometric, Ray, RayHit, Vector},
     utils::Interval,
 };
 
@@ -9,7 +9,7 @@ use crate::{
 pub struct Translate {
     geometric: Arc<dyn Geometric>,
     translation: Vector,
-    bounding_box: AABB,
+    bounding_box: Aabb,
 }
 
 impl Translate {
@@ -43,7 +43,7 @@ impl Geometric for Translate {
         })
     }
 
-    fn bounding_box(&self) -> AABB {
+    fn bounding_box(&self) -> Aabb {
         self.bounding_box
     }
 }

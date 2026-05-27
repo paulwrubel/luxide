@@ -3,7 +3,7 @@ use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    geometry::compounds::{BVH, List},
+    geometry::compounds::{Bvh, List},
     tracing::Scene,
 };
 
@@ -53,7 +53,7 @@ impl Build<Scene> for SceneData {
         let camera = self.camera.build(builts)?;
         let scene = Scene {
             world: if self.use_bvh {
-                Arc::new(BVH::from_list(world))
+                Arc::new(Bvh::from_list(world))
             } else {
                 Arc::new(world)
             },
