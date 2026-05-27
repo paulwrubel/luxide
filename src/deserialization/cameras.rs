@@ -42,10 +42,10 @@ impl Build<Camera> for CameraData {
         let eye_location: Point = self.eye_location.into();
         let target_location: Point = self.target_location.into();
         let camera = Camera::new(
+            self.vertical_field_of_view_degrees,
             eye_location,
             target_location,
             self.view_up.into(),
-            self.vertical_field_of_view_degrees,
             self.defocus_angle_degrees,
             match self.focus_distance {
                 FocusDistance::Exact(distance) => distance,

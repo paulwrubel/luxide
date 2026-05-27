@@ -61,7 +61,6 @@ impl RenderConfigBuilder {
         self.0
     }
 
-    #[must_use]
     pub fn with_builtins(mut self) -> Self {
         // builtin resources can be "overwritten" by user-defined resources
         // so we have to make sure that we add them last
@@ -74,7 +73,6 @@ impl RenderConfigBuilder {
         self
     }
 
-    #[must_use]
     pub fn with_overriding_limits(mut self, user: &User) -> Self {
         let render_limit = self.0.parameters.saved_checkpoint_limit;
         let user_limit = user.max_checkpoints_per_render;

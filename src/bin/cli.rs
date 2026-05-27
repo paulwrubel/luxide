@@ -308,10 +308,10 @@ fn final_scene() -> Scene {
     let focus_distance = 1.0;
 
     let camera = Camera::new(
+        vertical_field_of_view_degrees,
         eye_location,
         target_location,
         view_up,
-        vertical_field_of_view_degrees,
         defocus_angle_degrees,
         focus_distance,
     );
@@ -458,10 +458,10 @@ fn cornell_box() -> Scene {
     let focus_distance = 1.0;
 
     let camera = Camera::new(
+        vertical_field_of_view_degrees,
         eye_location,
         target_location,
         view_up,
-        vertical_field_of_view_degrees,
         defocus_angle_degrees,
         focus_distance,
     );
@@ -541,10 +541,10 @@ fn simple_light() -> Scene {
     let focus_distance = 1.0;
 
     let camera = Camera::new(
+        vertical_field_of_view_degrees,
         eye_location,
         target_location,
         view_up,
-        vertical_field_of_view_degrees,
         defocus_angle_degrees,
         focus_distance,
     );
@@ -638,10 +638,10 @@ fn quads() -> Scene {
     let focus_distance = 1.0;
 
     let camera = Camera::new(
+        vertical_field_of_view_degrees,
         eye_location,
         target_location,
         view_up,
-        vertical_field_of_view_degrees,
         defocus_angle_degrees,
         focus_distance,
     );
@@ -704,10 +704,10 @@ fn two_perlin_spheres() -> Scene {
     let focus_distance = 1.0;
 
     let camera = Camera::new(
+        vertical_field_of_view_degrees,
         eye_location,
         target_location,
         view_up,
-        vertical_field_of_view_degrees,
         defocus_angle_degrees,
         focus_distance,
     );
@@ -782,10 +782,10 @@ fn earth() -> Scene {
     let focus_distance = 1.0;
 
     let camera = Camera::new(
+        vertical_field_of_view_degrees,
         eye_location,
         target_location,
         view_up,
-        vertical_field_of_view_degrees,
         defocus_angle_degrees,
         focus_distance,
     );
@@ -835,10 +835,10 @@ fn two_spheres() -> Scene {
     let focus_distance = 1.0;
 
     let camera = Camera::new(
+        vertical_field_of_view_degrees,
         eye_location,
         target_location,
         view_up,
-        vertical_field_of_view_degrees,
         defocus_angle_degrees,
         focus_distance,
     );
@@ -972,10 +972,10 @@ fn random_spheres() -> Scene {
     let focus_distance = 10.0;
 
     let camera = Camera::new(
+        vertical_field_of_view_degrees,
         eye_location,
         target_location,
         view_up,
-        vertical_field_of_view_degrees,
         defocus_angle_degrees,
         focus_distance,
     );

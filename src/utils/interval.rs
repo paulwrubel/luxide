@@ -32,7 +32,6 @@ impl Interval {
         self.maximum - self.minimum
     }
 
-    #[must_use]
     pub fn expand(&self, delta: f64) -> Self {
         let padding = delta / 2.0;
         Self {

@@ -504,11 +504,13 @@ impl RenderManager {
                 max_elapsed: completed_elapsed_by_checkpoint
                     .iter()
                     .max()
-                    .map_or(Ok(Duration::from_secs(0)), |d| to_std(d, "max elapsed"))?,
+                    .map(|d| to_std(d, "max elapsed"))
+                    .unwrap_or(Ok(Duration::from_secs(0)))?,
                 min_elapsed: completed_elapsed_by_checkpoint
                     .iter()
                     .min()
-                    .map_or(Ok(Duration::from_secs(0)), |d| to_std(d, "min elapsed"))?,
+                    .map(|d| to_std(d, "min elapsed"))
+                    .unwrap_or(Ok(Duration::from_secs(0)))?,
             },
         }))
     }

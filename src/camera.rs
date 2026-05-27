@@ -36,18 +36,18 @@ pub struct Camera {
 
 impl Camera {
     pub fn new(
+        vertical_field_of_view_degrees: f64,
         eye_location: Point,
         target_location: Point,
         view_up: Vector,
-        vertical_field_of_view_degrees: f64,
         defocus_angle_degrees: f64,
         focus_distance: f64,
     ) -> Self {
         Self {
+            vertical_field_of_view_degrees,
             eye_location,
             target_location,
             view_up,
-            vertical_field_of_view_degrees,
             defocus_angle_degrees,
             focus_distance,
             ..Default::default()

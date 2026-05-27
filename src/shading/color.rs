@@ -46,7 +46,6 @@ impl Color {
         ))
     }
 
-    #[must_use]
     pub fn scale_down(&self, scale: f64) -> Self {
         Self(self.0.scale_down(scale))
     }

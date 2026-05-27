@@ -42,7 +42,6 @@ where
         }
     }
 
-    #[must_use]
     pub fn map_input(self, input_fn: Input) -> Self {
         Noise {
             input_fn: Some(input_fn),
@@ -50,7 +49,6 @@ where
         }
     }
 
-    #[must_use]
     pub fn map_output(self, output_fn: Output) -> Self {
         Noise {
             output_fn: Some(output_fn),
