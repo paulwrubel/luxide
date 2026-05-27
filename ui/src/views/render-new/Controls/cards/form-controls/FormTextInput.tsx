@@ -55,7 +55,10 @@ export function FormTextInput(props: FormTextInputProps) {
             />
             {hasErrors && errors.length > 0 && (
               <HelperText color="failure">
-                {errors.map((e) => (typeof e === 'string' ? e : e?.message)).filter(Boolean).join(', ')}
+                {errors
+                  .map((e) => (typeof e === 'string' ? e : e?.message))
+                  .filter(Boolean)
+                  .join(', ')}
               </HelperText>
             )}
           </Label>
