@@ -6,7 +6,7 @@ interface TextArrayInputControlProps {
   form: RenderForm;
   fieldName: RenderFormPath;
   type?: 'text' | 'number';
-  label: string;
+  label: string | React.ReactNode;
   labelSpacePercentage?: 0 | 10 | 20 | 30 | 40 | 50 | 60 | 70 | 80 | 90 | 100;
   allowWrappingLabel?: boolean;
   labelPrefix?: React.ReactNode;

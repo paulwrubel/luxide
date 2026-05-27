@@ -152,14 +152,22 @@ export function ControlsCardGeometric(props: ControlsCardGeometricProps) {
               fieldName={`geometrics.${name}.u`}
               valueLabels={['x', 'y', 'z']}
               type="number"
-              label="<em>u</em> Vector"
+              label={
+                <>
+                  <em>u</em> Vector
+                </>
+              }
             />
             <TextArrayInputControl
               form={form}
               fieldName={`geometrics.${name}.v`}
               valueLabels={['x', 'y', 'z']}
               type="number"
-              label="<em>v</em> Vector"
+              label={
+                <>
+                  <em>v</em> Vector
+                </>
+              }
             />
             <GeometricMaterialSelect form={form} name={name} items={materialItems} />
           </>
