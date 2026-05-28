@@ -733,16 +733,44 @@ export type RawGeometricConstantVolume = {
   reflectance_texture: string | RawTextureData;
 };
 
-export const GeometricDataSchema = z.union([
-  GeometricBoxSchema,
-  GeometricListSchema,
-  GeometricObjModelSchema,
-  GeometricInstanceRotateXSchema,
-  GeometricInstanceRotateYSchema,
-  GeometricInstanceRotateZSchema,
-  GeometricInstanceTranslateSchema,
-  GeometricParallelogramSchema,
-  GeometricSphereSchema,
-  GeometricTriangleSchema,
-  GeometricConstantVolumeSchema,
-]);
+const geometricSchemaByType: Record<string, z.ZodTypeAny> = {
+  box: GeometricBoxSchema,
+  list: GeometricListSchema,
+  obj_model: GeometricObjModelSchema,
+  rotate_x: GeometricInstanceRotateXSchema,
+  rotate_y: GeometricInstanceRotateYSchema,
+  rotate_z: GeometricInstanceRotateZSchema,
+  translate: GeometricInstanceTranslateSchema,
+  parallelogram: GeometricParallelogramSchema,
+  sphere: GeometricSphereSchema,
+  triangle: GeometricTriangleSchema,
+  constant_volume: GeometricConstantVolumeSchema,
+};
+
+export const GeometricDataSchema = z
+  .any()
+  .superRefine((data, ctx) => {
+    if (typeof data !== 'object' || data === null || !('type' in data)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Geometric data must be an object with a type field',
+      });
+      return;
+    }
+
+    const schema = geometricSchemaByType[data.type as string];
+    if (!schema) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Unknown geometric type: ${data.type}`,
+      });
+      return;
+    }
+
+    const result = schema.safeParse(data);
+    if (!result.success) {
+      for (const issue of result.error.issues) {
+        ctx.addIssue(issue);
+      }
+    }
+  }) as z.ZodType<NormalizedGeometricData>;
