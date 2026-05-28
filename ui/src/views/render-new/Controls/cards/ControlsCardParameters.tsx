@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Tooltip, ToggleSwitch } from 'flowbite-react';
 import { useAuth } from '@/providers/auth';
 import { Separator } from '@/components/Separator';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { useStore } from '@tanstack/react-form';
 
@@ -26,17 +26,17 @@ export function ControlsCardParameters(props: ControlsCardParametersProps) {
 
   const [savedCheckpointLimitLocal, setSavedCheckpointLimitLocal] = useState(savedCheckpointLimit);
 
-  const [isCheckpointLimitEnabled, setIsCheckpointLimitEnabled] = useState(
-    useStore(form.store, (state) => state.values.parameters.saved_checkpoint_limit) !== undefined,
-  );
+  // derived directly from the form — no separate state needed
+  const isCheckpointLimitEnabled = parameters.saved_checkpoint_limit !== undefined;
 
-  // sync toggle state to form
-  useEffect(() => {
-    form.setFieldValue(
-      'parameters.saved_checkpoint_limit',
-      isCheckpointLimitEnabled ? savedCheckpointLimitLocal : undefined,
-    );
-  }, [form, isCheckpointLimitEnabled, savedCheckpointLimitLocal]);
+  function handleToggle(checked: boolean) {
+    if (checked) {
+      form.setFieldValue('parameters.saved_checkpoint_limit', savedCheckpointLimitLocal);
+    } else {
+      setSavedCheckpointLimitLocal(savedCheckpointLimit);
+      form.setFieldValue('parameters.saved_checkpoint_limit', undefined);
+    }
+  }
 
   return (
     <ControlsCard leftLabel="parameters" leftLabelStyle="light" startExpanded>
@@ -112,7 +112,7 @@ export function ControlsCardParameters(props: ControlsCardParametersProps) {
           </h6>
           <ToggleSwitch
             checked={isCheckpointLimitEnabled}
-            onChange={setIsCheckpointLimitEnabled}
+            onChange={handleToggle}
             disabled={maxCheckpoints !== null}
           />
         </div>
@@ -124,16 +124,13 @@ export function ControlsCardParameters(props: ControlsCardParametersProps) {
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3, ease: 'easeInOut' }}
               className="overflow-hidden"
+              onAnimationStart={() => {
+                form.validate('change');
+              }}
             >
               <div className="py-2">
                 <TextInputControl
                   form={form}
-                  onInput={(e) => {
-                    setSavedCheckpointLimitLocal(Number(e.currentTarget.value));
-                  }}
-                  onChange={(e) => {
-                    setSavedCheckpointLimitLocal(Number(e.currentTarget.value));
-                  }}
                   fieldName="parameters.saved_checkpoint_limit"
                   label="Saved Checkpoint Limit"
                   labelSpacePercentage={70}

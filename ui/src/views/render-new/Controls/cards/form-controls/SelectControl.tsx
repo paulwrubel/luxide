@@ -37,9 +37,6 @@ export function SelectControl(props: SelectControlProps) {
               <span>{valueLabel}</span>
             </span>
             <Select value={currentValue} onChange={(e) => field.handleChange(e.target.value)}>
-              <option value="" disabled>
-                &nbsp;
-              </option>
               {items.map((item) => (
                 <option key={item.value} value={item.value}>
                   {item.name}

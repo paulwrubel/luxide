@@ -50,6 +50,9 @@ build-cli:
 
 [group('validate')]
 validate: cargo-check cargo-test cargo-clippy
+    cd ui \
+    && npm run lint \
+    && npm run type-check
 
 [group('validate')]
 cargo-check:

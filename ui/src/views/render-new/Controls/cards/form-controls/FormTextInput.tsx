@@ -54,7 +54,12 @@ export function FormTextInput(props: FormTextInputProps) {
               step={stepValue}
             />
             {hasErrors && errors.length > 0 && (
-              <HelperText color="failure">{errors.join(', ')}</HelperText>
+              <HelperText color="failure">
+                {errors
+                  .map((e) => (typeof e === 'string' ? e : e?.message))
+                  .filter(Boolean)
+                  .join(', ')}
+              </HelperText>
             )}
           </Label>
         );

@@ -1,7 +1,7 @@
 import type { NormalizedRenderConfig, RenderConfig } from './config';
 import { normalizeMaterialData, type RawMaterialData } from './material';
 import { normalizeTextureData, type RawTextureData } from './texture';
-import { capitalize, getNextUniqueName, isTypedObject, AngleSchema, type Angle } from './utils';
+import { AngleSchema, capitalize, getNextUniqueName, isTypedObject, type Angle } from './utils';
 import { z } from 'zod';
 
 // geometric types
@@ -486,9 +486,13 @@ export function normalizeGeometricInstanceRotate(
   return geometric as NormalizedGeometricInstanceRotate;
 }
 
-export type NormalizedGeometricInstanceRotate = Omit<RawGeometricInstanceRotate, 'geometric'> & {
+type DistributiveOmit<T, K extends PropertyKey> = T extends T ? Omit<T, K> : never;
+export type NormalizedGeometricInstanceRotate = DistributiveOmit<
+  RawGeometricInstanceRotate,
+  'geometric'
+> & {
   geometric: string;
-} & Angle;
+};
 
 export type RawGeometricInstanceRotate = {
   type: 'rotate_x' | 'rotate_y' | 'rotate_z';
@@ -729,16 +733,44 @@ export type RawGeometricConstantVolume = {
   reflectance_texture: string | RawTextureData;
 };
 
-export const GeometricDataSchema = z.union([
-  GeometricBoxSchema,
-  GeometricListSchema,
-  GeometricObjModelSchema,
-  GeometricInstanceRotateXSchema,
-  GeometricInstanceRotateYSchema,
-  GeometricInstanceRotateZSchema,
-  GeometricInstanceTranslateSchema,
-  GeometricParallelogramSchema,
-  GeometricSphereSchema,
-  GeometricTriangleSchema,
-  GeometricConstantVolumeSchema,
-]);
+const geometricSchemaByType: Record<string, z.ZodTypeAny> = {
+  box: GeometricBoxSchema,
+  list: GeometricListSchema,
+  obj_model: GeometricObjModelSchema,
+  rotate_x: GeometricInstanceRotateXSchema,
+  rotate_y: GeometricInstanceRotateYSchema,
+  rotate_z: GeometricInstanceRotateZSchema,
+  translate: GeometricInstanceTranslateSchema,
+  parallelogram: GeometricParallelogramSchema,
+  sphere: GeometricSphereSchema,
+  triangle: GeometricTriangleSchema,
+  constant_volume: GeometricConstantVolumeSchema,
+};
+
+export const GeometricDataSchema = z
+  .any()
+  .superRefine((data, ctx) => {
+    if (typeof data !== 'object' || data === null || !('type' in data)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Geometric data must be an object with a type field',
+      });
+      return;
+    }
+
+    const schema = geometricSchemaByType[data.type as string];
+    if (!schema) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Unknown geometric type: ${data.type}`,
+      });
+      return;
+    }
+
+    const result = schema.safeParse(data);
+    if (!result.success) {
+      for (const issue of result.error.issues) {
+        ctx.addIssue(issue);
+      }
+    }
+  }) as z.ZodType<NormalizedGeometricData>;
