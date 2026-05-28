@@ -50,7 +50,8 @@ export function Controls(props: ControlsProps) {
   const tabsTheme: DeepPartial<TabsTheme> = {
     tablist: {
       variant: {
-        pills: 'flex-nowrap space-x-2 text-sm font-medium text-gray-500 dark:text-gray-400',
+        pills:
+          'sticky top-0 z-10 bg-zinc-900 flex-nowrap space-x-2 text-sm font-medium text-gray-500 dark:text-gray-400  py-2 border-b border-zinc-600',
       },
       tabitem: {
         variant: {
@@ -63,7 +64,7 @@ export function Controls(props: ControlsProps) {
         },
       },
     },
-    tabpanel: 'border-t border-zinc-600 py-2',
+    tabpanel: 'pt-0',
   };
 
   return (

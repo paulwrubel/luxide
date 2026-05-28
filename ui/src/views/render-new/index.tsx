@@ -84,20 +84,22 @@ export function NewRenderPage() {
       <Sidebar theme={sidebarTheme} className="z-10 h-full w-lg">
         <SidebarItems className="h-full">
           <SidebarItemGroup className="flex h-full flex-col">
-            <div className="flex flex-1 flex-col overflow-y-auto gap-2">
+            <div className="mb-0 flex flex-1 flex-col gap-2 overflow-y-auto">
               <Controls form={form} />
             </div>
-            <Separator />
-            <Button onClick={handleCreateRender} disabled={isCreatingRender} color="default">
-              {isCreatingRender ? (
-                <span className="flex items-center justify-center gap-2">
-                  <Spinner size="sm" color="info" />
-                  Creating...
-                </span>
-              ) : (
-                'Create Render'
-              )}
-            </Button>
+            <div className="mt-0 flex flex-col gap-2">
+              <Separator className="mt-0" />
+              <Button onClick={handleCreateRender} disabled={isCreatingRender} color="default">
+                {isCreatingRender ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Spinner size="sm" color="info" />
+                    Creating...
+                  </span>
+                ) : (
+                  'Create Render'
+                )}
+              </Button>
+            </div>
           </SidebarItemGroup>
         </SidebarItems>
       </Sidebar>
