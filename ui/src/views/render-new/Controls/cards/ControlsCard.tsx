@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Card, Button, type CardTheme } from 'flowbite-react';
-import { ChevronDownIcon, ChevronUpIcon } from 'flowbite-react';
+import { HiChevronDown, HiChevronUp } from 'react-icons/hi2';
 import type { DeepPartial } from 'flowbite-react/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Separator } from '@/components/Separator';
@@ -41,7 +41,7 @@ export function ControlsCard(props: ControlsCardProps) {
   const cardTheme: DeepPartial<CardTheme> = {
     root: {
       base: 'bg-zinc-800 dark:bg-zinc-800',
-      children: 'p-0',
+      children: 'gap-0 p-0',
     },
   };
 
@@ -56,9 +56,9 @@ export function ControlsCard(props: ControlsCardProps) {
         <div className="flex flex-row items-center gap-2">
           {rightLabel && <LabelText text={rightLabel} type={rightLabelStyle} />}
           {isExpanded ? (
-            <ChevronUpIcon className="h-8 w-auto" />
+            <HiChevronUp className="h-4 w-auto" />
           ) : (
-            <ChevronDownIcon className="h-8 w-auto" />
+            <HiChevronDown className="h-4 w-auto" />
           )}
         </div>
       </button>
