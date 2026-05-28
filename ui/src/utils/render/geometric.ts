@@ -1,7 +1,7 @@
 import type { NormalizedRenderConfig, RenderConfig } from './config';
 import { normalizeMaterialData, type RawMaterialData } from './material';
 import { normalizeTextureData, type RawTextureData } from './texture';
-import { capitalize, getNextUniqueName, isTypedObject, type Angle } from './utils';
+import { AngleSchema, capitalize, getNextUniqueName, isTypedObject, type Angle } from './utils';
 import { z } from 'zod';
 
 // geometric types
@@ -441,26 +441,26 @@ export type RawGeometricObjModel = {
   material: string | RawMaterialData;
 };
 
-export const GeometricInstanceRotateXSchema = z.object({
-  type: z.literal('rotate_x'),
-  geometric: z.string().nonempty(),
-  degrees: z.number().optional(),
-  radians: z.number().optional(),
-});
+export const GeometricInstanceRotateXSchema = z
+  .object({
+    type: z.literal('rotate_x'),
+    geometric: z.string().nonempty(),
+  })
+  .and(AngleSchema);
 
-export const GeometricInstanceRotateYSchema = z.object({
-  type: z.literal('rotate_y'),
-  geometric: z.string().nonempty(),
-  degrees: z.number().optional(),
-  radians: z.number().optional(),
-});
+export const GeometricInstanceRotateYSchema = z
+  .object({
+    type: z.literal('rotate_y'),
+    geometric: z.string().nonempty(),
+  })
+  .and(AngleSchema);
 
-export const GeometricInstanceRotateZSchema = z.object({
-  type: z.literal('rotate_z'),
-  geometric: z.string().nonempty(),
-  degrees: z.number().optional(),
-  radians: z.number().optional(),
-});
+export const GeometricInstanceRotateZSchema = z
+  .object({
+    type: z.literal('rotate_z'),
+    geometric: z.string().nonempty(),
+  })
+  .and(AngleSchema);
 
 export type GeometricInstanceRotate = NormalizedGeometricInstanceRotate;
 
@@ -486,9 +486,13 @@ export function normalizeGeometricInstanceRotate(
   return geometric as NormalizedGeometricInstanceRotate;
 }
 
-export type NormalizedGeometricInstanceRotate = Omit<RawGeometricInstanceRotate, 'geometric'> & {
+type DistributiveOmit<T, K extends PropertyKey> = T extends T ? Omit<T, K> : never;
+export type NormalizedGeometricInstanceRotate = DistributiveOmit<
+  RawGeometricInstanceRotate,
+  'geometric'
+> & {
   geometric: string;
-} & { degrees?: number; radians?: number };
+};
 
 export type RawGeometricInstanceRotate = {
   type: 'rotate_x' | 'rotate_y' | 'rotate_z';
@@ -729,26 +733,16 @@ export type RawGeometricConstantVolume = {
   reflectance_texture: string | RawTextureData;
 };
 
-export const GeometricDataSchema = z
-  .discriminatedUnion('type', [
-    GeometricBoxSchema,
-    GeometricListSchema,
-    GeometricObjModelSchema,
-    GeometricInstanceRotateXSchema,
-    GeometricInstanceRotateYSchema,
-    GeometricInstanceRotateZSchema,
-    GeometricInstanceTranslateSchema,
-    GeometricParallelogramSchema,
-    GeometricSphereSchema,
-    GeometricTriangleSchema,
-    GeometricConstantVolumeSchema,
-  ])
-  .refine(
-    (data) => {
-      if (data.type.startsWith('rotate_')) {
-        return 'degrees' in data !== 'radians' in data;
-      }
-      return true;
-    },
-    { message: 'Either degrees or radians must be provided, but not both' },
-  );
+export const GeometricDataSchema = z.union([
+  GeometricBoxSchema,
+  GeometricListSchema,
+  GeometricObjModelSchema,
+  GeometricInstanceRotateXSchema,
+  GeometricInstanceRotateYSchema,
+  GeometricInstanceRotateZSchema,
+  GeometricInstanceTranslateSchema,
+  GeometricParallelogramSchema,
+  GeometricSphereSchema,
+  GeometricTriangleSchema,
+  GeometricConstantVolumeSchema,
+]);
