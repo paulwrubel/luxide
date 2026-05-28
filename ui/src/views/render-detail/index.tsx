@@ -3,6 +3,7 @@ import { Sidebar, SidebarItems, SidebarItemGroup, Spinner, type SidebarTheme } f
 import { useRender } from '@/hooks/useRender';
 import type { DeepPartial } from 'flowbite-react/types';
 import { useLatestCheckpointImage } from '@/hooks/useLatestCheckpointImage';
+import { useRenderStats } from '@/hooks/useRenderStats';
 import { RenderControls } from './RenderControls';
 import { RenderDisplay } from './RenderDisplay';
 
@@ -13,6 +14,7 @@ export function RenderDetailPage() {
 
   const renderQuery = useRender({ renderID });
   const imageURLQuery = useLatestCheckpointImage({ renderID });
+  const statsQuery = useRenderStats({ renderID });
   const sidebarTheme: DeepPartial<SidebarTheme> = {
     root: {
       base: 'bg-zinc-900 dark:bg-zinc-900',
@@ -38,7 +40,12 @@ export function RenderDetailPage() {
             <Spinner size="xl" color="info" />
           </div>
         )}
-        <RenderDisplay renderQuery={renderQuery} imageURLQuery={imageURLQuery} />
+        <RenderDisplay 
+          renderQuery={renderQuery} 
+          imageURLQuery={imageURLQuery}
+          samplesPerCheckpoint={renderQuery.isSuccess ? renderQuery.data.config.parameters.samples_per_checkpoint : undefined}
+          statsQuery={statsQuery}
+        />
       </div>
     </div>
   );

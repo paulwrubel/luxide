@@ -267,6 +267,38 @@ export async function updateRenderTotalCheckpoints(
   }
 }
 
+export type RenderCheckpointStats = {
+  average_elapsed: string;
+  min_elapsed: string;
+  max_elapsed: string;
+};
+
+export type RenderStats = {
+  image_dimensions: [number, number];
+  samples_per_checkpoint: number;
+  total_iterations: number;
+  completed_iterations: number;
+  pixel_samples_per_checkpoint: number;
+  total_samples_taken: number;
+  elapsed: string;
+  estimated_remaining: string;
+  estimated_total: string;
+  checkpoint_stats: RenderCheckpointStats;
+};
+
+export async function getRenderStats(token: string, renderID: number): Promise<RenderStats> {
+  const response = await fetch(`${getAPIURL()}/renders/${renderID}/stats`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`failed to get render stats: (${response.status}: ${body})`);
+  }
+
+  return (await response.json()) as RenderStats;
+}
+
 export async function getLatestCheckpointImage(token: string, renderID: number): Promise<Blob> {
   const response = await fetch(`${getAPIURL()}/renders/${renderID}/checkpoint/earliest`, {
     headers: { Authorization: `Bearer ${token}` },
