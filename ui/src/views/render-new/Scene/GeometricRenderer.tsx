@@ -7,10 +7,11 @@ import type { RenderConfig } from '@/utils/render/config';
 interface GeometricRendererProps {
   config: RenderConfig;
   name: string;
+  rotation?: [number, number, number];
 }
 
 export function GeometricRenderer(props: GeometricRendererProps) {
-  const { config, name } = props;
+  const { config, name, rotation = [0, 0, 0] } = props;
 
   const { data } = getGeometricDataSafe(config, name);
 
@@ -25,7 +26,7 @@ export function GeometricRenderer(props: GeometricRendererProps) {
         (data.a[2] + data.b[2]) / 2,
       ];
       return (
-        <mesh position={position} castShadow receiveShadow>
+        <mesh position={position} rotation={rotation} castShadow receiveShadow>
           <boxGeometry args={[width, height, depth]} />
           <MaterialResolver config={config} materialRef={data.material} geometricName={name} />
         </mesh>
@@ -34,7 +35,7 @@ export function GeometricRenderer(props: GeometricRendererProps) {
 
     case 'sphere':
       return (
-        <mesh position={data.center} castShadow receiveShadow>
+        <mesh position={data.center} rotation={rotation} castShadow receiveShadow>
           <sphereGeometry args={[data.radius]} />
           <MaterialResolver config={config} materialRef={data.material} geometricName={name} />
         </mesh>
@@ -44,43 +45,49 @@ export function GeometricRenderer(props: GeometricRendererProps) {
       return (
         <>
           {data.geometrics.map((subName: string) => (
-            <GeometricRenderer key={subName} config={config} name={subName} />
+            <GeometricRenderer key={subName} config={config} name={subName} rotation={rotation} />
           ))}
         </>
       );
 
     case 'rotate_x':
       return (
-        <group rotation-x={toRadians(data)}>
-          <GeometricRenderer config={config} name={data.geometric} />
-        </group>
+        <GeometricRenderer
+          config={config}
+          name={data.geometric}
+          rotation={[rotation[0] + toRadians(data), rotation[1], rotation[2]]}
+        />
       );
 
     case 'rotate_y':
       return (
-        <group rotation-y={toRadians(data)}>
-          <GeometricRenderer config={config} name={data.geometric} />
-        </group>
+        <GeometricRenderer
+          config={config}
+          name={data.geometric}
+          rotation={[rotation[0], rotation[1] + toRadians(data), rotation[2]]}
+        />
       );
 
     case 'rotate_z':
       return (
-        <group rotation-z={toRadians(data)}>
-          <GeometricRenderer config={config} name={data.geometric} />
-        </group>
+        <GeometricRenderer
+          config={config}
+          name={data.geometric}
+          rotation={[rotation[0], rotation[1], rotation[2] + toRadians(data)]}
+        />
       );
 
     case 'translate':
       return (
         <group position={data.translation}>
-          <GeometricRenderer config={config} name={data.geometric} />
+          <GeometricRenderer config={config} name={data.geometric} rotation={rotation} />
         </group>
       );
 
     case 'parallelogram': {
       const mesh = createParallelogramMesh(data);
       return (
-        <primitive object={mesh} castShadow receiveShadow>
+        <primitive object={mesh} rotation={rotation} castShadow receiveShadow>
           <MaterialResolver config={config} materialRef={data.material} geometricName={name} />
         </primitive>
       );
@@ -89,7 +96,7 @@ export function GeometricRenderer(props: GeometricRendererProps) {
     case 'triangle': {
       const mesh = createTriangleMesh(data);
       return (
-        <primitive object={mesh} castShadow receiveShadow>
+        <primitive object={mesh} rotation={rotation} castShadow receiveShadow>
           <MaterialResolver config={config} materialRef={data.material} geometricName={name} />
         </primitive>
       );
