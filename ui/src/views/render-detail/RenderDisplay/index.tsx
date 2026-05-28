@@ -15,12 +15,16 @@ export function RenderDisplay(props: RenderDisplayProps) {
   return (
     <div className="flex h-full flex-1 flex-col items-center justify-center gap-2 px-8">
       {/* checkpoint image */}
-      {imageURLQuery.isPending && <p>Loading...</p>}
+      {imageURLQuery.isPending && <Spinner size="lg" color="info" />}
       {imageURLQuery.isError && (
         <p>Error loading checkpoint image: {imageURLQuery.error?.message}</p>
       )}
       {imageURLQuery.isSuccess && (
-        <img alt="Render" src={imageURLQuery.data} className="rounded border border-zinc-700" />
+        <img
+          alt="Render"
+          src={imageURLQuery.data}
+          className="max-h-[80%] max-w-full min-h-0 rounded border border-zinc-700 object-contain"
+        />
       )}
 
       {/* render state */}

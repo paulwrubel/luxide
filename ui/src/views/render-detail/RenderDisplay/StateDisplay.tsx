@@ -1,3 +1,4 @@
+import { Progress } from 'flowbite-react';
 import {
   type Render,
   isRenderStateCreated,
@@ -6,7 +7,6 @@ import {
   isRenderStatePausing,
   isRenderStatePaused,
 } from '@/utils/api';
-import { ProgressState } from './ProgressState';
 
 export type StateDisplayProps = {
   state: Render['state'];
@@ -16,49 +16,54 @@ export type StateDisplayProps = {
 export function StateDisplay(props: StateDisplayProps) {
   const { state, totalCheckpoints } = props;
 
+  const running = isRenderStateRunning(state);
+  const pausing = isRenderStatePausing(state);
+  const showProgress = running || pausing;
+
+  const progress = running
+    ? state.running.progress_info.progress
+    : pausing
+      ? state.pausing.progress_info.progress
+      : 0;
+
+  const color: 'blue' | 'yellow' = running ? 'blue' : 'yellow';
+
+  const checkpoint = running
+    ? state.running.checkpoint_iteration
+    : pausing
+      ? state.pausing.checkpoint_iteration
+      : null;
+
+  let statusText: string;
   if (isRenderStateCreated(state)) {
-    return <p>CREATED</p>;
+    statusText = 'CREATED';
+  } else if (running) {
+    statusText = `Running to checkpoint ${checkpoint} / ${totalCheckpoints}`;
+  } else if (isRenderStateFinishedCheckpointIteration(state)) {
+    statusText = `Finished checkpoint ${state.finished_checkpoint_iteration} / ${totalCheckpoints}`;
+  } else if (pausing) {
+    statusText = `Pausing at checkpoint ${checkpoint} / ${totalCheckpoints}`;
+  } else if (isRenderStatePaused(state)) {
+    statusText = `Paused at checkpoint ${state.paused} / ${totalCheckpoints}`;
+  } else {
+    statusText = 'Unknown state';
   }
 
-  if (isRenderStateRunning(state)) {
-    return (
-      <ProgressState
-        progress={state.running.progress_info.progress}
-        color="blue"
-        label="Running to"
-        checkpoint={state.running.checkpoint_iteration}
-        totalCheckpoints={totalCheckpoints}
-      />
-    );
-  }
-
-  if (isRenderStateFinishedCheckpointIteration(state)) {
-    return (
-      <p>
-        Finished checkpoint {state.finished_checkpoint_iteration} / {totalCheckpoints}
-      </p>
-    );
-  }
-
-  if (isRenderStatePausing(state)) {
-    return (
-      <ProgressState
-        progress={state.pausing.progress_info.progress}
-        color="yellow"
-        label="Pausing at"
-        checkpoint={state.pausing.checkpoint_iteration}
-        totalCheckpoints={totalCheckpoints}
-      />
-    );
-  }
-
-  if (isRenderStatePaused(state)) {
-    return (
-      <p>
-        Paused at checkpoint {state.paused} / {totalCheckpoints}
-      </p>
-    );
-  }
-
-  return <p>Unknown state</p>;
+  return (
+    <>
+      <div className="min-h-4 w-full px-32">
+        {showProgress && (
+          <Progress
+            progress={Math.round(progress * 100)}
+            color={color}
+            size="lg"
+            labelProgress
+            progressLabelPosition="inside"
+            theme={{ bar: 'transition-[width] duration-1000 ease-linear' }}
+          />
+        )}
+      </div>
+      <p>{statusText}</p>
+    </>
+  );
 }
