@@ -65,7 +65,10 @@ export function RenderPreviewCard(props: RenderPreviewCardProps) {
               progress={Math.round(progress * 100)}
               color={running ? 'blue' : 'yellow'}
               size="sm"
-              theme={{ base: 'rounded-none', bar: 'rounded-none transition-[width] duration-500' }}
+              theme={{
+                base: 'rounded-none',
+                bar: 'rounded-none transition-[width] duration-1000 ease-linear',
+              }}
             />
           )}
         </div>
