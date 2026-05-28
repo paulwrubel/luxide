@@ -2,14 +2,14 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from 'flowbite-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './providers/auth';
-import { Layout } from './views/Layout';
-import { AuthenticatedRouteLayout } from './views/AuthenticatedRouteLayout';
-import { HomePage } from './views/home';
+import { Layout } from './layouts/Layout';
+import { AuthenticatedRouteLayout } from './layouts/AuthenticatedRouteLayout';
+import { HomePage } from './views';
 import { LoginPage } from './views/login';
-import { AuthCallbackPage } from './views/auth-callback';
+import { AuthCallbackPage } from './views/auth/github/callback';
 import { RendersPage } from './views/renders';
-import { RenderDetailPage } from './views/render-detail';
-import { NewRenderPage } from './views/render-new';
+import { RenderDetailPage } from './views/renders/[id]';
+import { NewRenderPage } from './views/renders/new';
 
 const queryClient = new QueryClient({
   defaultOptions: {

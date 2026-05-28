@@ -1,5 +1,11 @@
 import { useParams } from 'react-router-dom';
-import { Sidebar, SidebarItems, SidebarItemGroup, Spinner, type SidebarTheme } from 'flowbite-react';
+import {
+  Sidebar,
+  SidebarItems,
+  SidebarItemGroup,
+  Spinner,
+  type SidebarTheme,
+} from 'flowbite-react';
 import { useRender } from '@/hooks/useRender';
 import type { DeepPartial } from 'flowbite-react/types';
 import { useLatestCheckpointImage } from '@/hooks/useLatestCheckpointImage';
@@ -40,10 +46,14 @@ export function RenderDetailPage() {
             <Spinner size="xl" color="info" />
           </div>
         )}
-        <RenderDisplay 
-          renderQuery={renderQuery} 
+        <RenderDisplay
+          renderQuery={renderQuery}
           imageURLQuery={imageURLQuery}
-          samplesPerCheckpoint={renderQuery.isSuccess ? renderQuery.data.config.parameters.samples_per_checkpoint : undefined}
+          samplesPerCheckpoint={
+            renderQuery.isSuccess
+              ? renderQuery.data.config.parameters.samples_per_checkpoint
+              : undefined
+          }
           statsQuery={statsQuery}
         />
       </div>
