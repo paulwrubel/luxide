@@ -23,6 +23,9 @@ export function ControlsCardTexture(props: ControlsCardTextureProps) {
   const { data: textureData } = getTextureData(renderConfig, textureName);
 
   function handleDeleteTexture(name: string) {
+      if (!window.confirm(`Delete texture "${name}"?`)) {
+    return;
+  }
     const newTextures = { ...renderConfig.textures };
     delete newTextures[name];
 

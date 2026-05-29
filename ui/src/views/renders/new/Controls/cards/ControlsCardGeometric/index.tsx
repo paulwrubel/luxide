@@ -43,6 +43,9 @@ export function ControlsCardGeometric(props: ControlsCardGeometricProps) {
   const { data: geometricData } = getGeometricDataSafe(renderConfig, geometricName);
 
   function handleDeleteGeometric(name: string) {
+      if (!window.confirm(`Delete texture "${name}"?`)) {
+    return;
+  }
     const newGeometrics = { ...renderConfig.geometrics };
     delete newGeometrics[name];
 

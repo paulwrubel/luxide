@@ -20,6 +20,9 @@ export function ControlsCardMaterial(props: ControlsCardMaterialProps) {
   const { data: materialData } = getMaterialData(renderConfig, materialName);
 
   function handleDeleteMaterial(name: string) {
+      if (!window.confirm(`Delete material "${name}"?`)) {
+    return;
+  }
     const newMaterials = { ...renderConfig.materials };
     delete newMaterials[name];
 
