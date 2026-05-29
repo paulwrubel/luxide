@@ -10,7 +10,7 @@ import { AuthCallbackPage } from './views/auth/github/callback';
 import { RendersPage } from './views/renders';
 import { RenderDetailPage } from './views/renders/[id]';
 import { NewRenderPage } from './views/renders/new';
-
+import { AboutPage } from './views/about';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -29,6 +29,7 @@ export default function App() {
               <Route element={<Layout />}>
                 {/* public routes */}
                 <Route path="/" element={<HomePage />} />
+                <Route path="/about" element={<AboutPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/auth/github/callback" element={<AuthCallbackPage />} />
 
