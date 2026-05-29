@@ -14,12 +14,11 @@ import { RenderTiming } from './RenderTiming';
 export type RenderProgressProps = {
   state: Render['state'];
   totalCheckpoints: number;
-  samplesPerCheckpoint?: number;
   renderStats?: RenderStats;
 };
 
 export function RenderProgress(props: RenderProgressProps) {
-  const { state, totalCheckpoints, samplesPerCheckpoint, renderStats } = props;
+  const { state, totalCheckpoints, renderStats } = props;
 
   const showProgress = isRenderStateRunning(state) || isRenderStatePausing(state);
 
@@ -60,17 +59,9 @@ export function RenderProgress(props: RenderProgressProps) {
 
   let statusText: string;
   if (isRenderStateRunning(state)) {
-    const samplesText =
-      samplesPerCheckpoint !== undefined
-        ? ` · ${Math.round(state.running.progress_info.progress * samplesPerCheckpoint)} of ${samplesPerCheckpoint} samples`
-        : '';
-    statusText = `Checkpoint ${state.running.checkpoint_iteration} of ${totalCheckpoints}${samplesText}`;
+    statusText = `Checkpoint ${state.running.checkpoint_iteration} of ${totalCheckpoints}`;
   } else if (isRenderStatePausing(state)) {
-    const samplesText =
-      samplesPerCheckpoint !== undefined
-        ? ` · ${Math.round(state.pausing.progress_info.progress * samplesPerCheckpoint)} of ${samplesPerCheckpoint} samples`
-        : '';
-    statusText = `Pausing at checkpoint ${state.pausing.checkpoint_iteration} of ${totalCheckpoints}${samplesText}`;
+    statusText = `Pausing at checkpoint ${state.pausing.checkpoint_iteration} of ${totalCheckpoints}`;
   } else if (isRenderStateCreated(state)) {
     statusText = 'Created and waiting to start';
   } else if (isRenderStatePaused(state)) {

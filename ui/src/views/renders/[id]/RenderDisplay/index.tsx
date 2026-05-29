@@ -8,12 +8,11 @@ import { RenderProgress } from './RenderProgress';
 export type RenderDisplayProps = {
   renderQuery: UseQueryResult<Render, Error>;
   imageURLQuery: UseQueryResult<string, Error>;
-  samplesPerCheckpoint?: number;
   statsQuery: UseQueryResult<RenderStats, Error>;
 };
 
 export function RenderDisplay(props: RenderDisplayProps) {
-  const { renderQuery, imageURLQuery, samplesPerCheckpoint, statsQuery } = props;
+  const { renderQuery, imageURLQuery, statsQuery } = props;
 
   // Loading state — takes full height
   if (renderQuery.isPending) {
@@ -45,7 +44,6 @@ export function RenderDisplay(props: RenderDisplayProps) {
       <RenderProgress
         state={render.state}
         totalCheckpoints={render.config.parameters.total_checkpoints}
-        samplesPerCheckpoint={samplesPerCheckpoint}
         renderStats={statsQuery.data}
       />
     </div>

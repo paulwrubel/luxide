@@ -42,11 +42,6 @@ export function RenderDetailPage() {
       <RenderDisplay
         renderQuery={renderQuery}
         imageURLQuery={imageURLQuery}
-        samplesPerCheckpoint={
-          renderQuery.isSuccess
-            ? renderQuery.data.config.parameters.samples_per_checkpoint
-            : undefined
-        }
         statsQuery={statsQuery}
       />
     </div>
