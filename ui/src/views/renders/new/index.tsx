@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '@tanstack/react-form';
+
 import {
   Sidebar,
   SidebarItems,
@@ -71,7 +72,23 @@ export function NewRenderPage() {
       setIsCreatingRender(false);
     }
   }
+  function handleDownloadConfig() {
+    const json = JSON.stringify(formValuesForSubmit, null, 2);
 
+    const blob = new Blob([json], {
+      type: 'application/json',
+    });
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'render-config.json';
+    
+document.body.appendChild(link);
+link.click();
+document.body.removeChild(link);
+  }
   const sidebarTheme: DeepPartial<SidebarTheme> = {
     root: {
       base: 'bg-zinc-900 dark:bg-zinc-900',
@@ -89,6 +106,9 @@ export function NewRenderPage() {
             </div>
             <div className="mt-0 flex flex-col gap-2">
               <Separator className="mt-0" />
+              <Button color="gray" onClick={handleDownloadConfig}>
+                Download Config
+              </Button>
               <Button onClick={handleCreateRender} disabled={isCreatingRender} color="default">
                 {isCreatingRender ? (
                   <span className="flex items-center justify-center gap-2">
