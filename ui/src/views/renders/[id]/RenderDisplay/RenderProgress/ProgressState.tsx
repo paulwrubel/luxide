@@ -2,16 +2,12 @@ import { Progress, type ProgressTheme } from 'flowbite-react';
 import type { DeepPartial } from 'flowbite-react/types';
 
 export type ProgressStateProps = {
-  progress: number;
+  progress: number; // 0.0 to 1.0
   color: 'blue' | 'yellow';
-  label: string;
-  checkpoint: number;
-  totalCheckpoints: number;
-  samplesPerCheckpoint?: number;
 };
 
 export function ProgressState(props: ProgressStateProps) {
-  const { progress, color, label, checkpoint, totalCheckpoints, samplesPerCheckpoint } = props;
+  const { progress, color } = props;
 
   const progressTheme: DeepPartial<ProgressTheme> = {
     bar: 'transition-[width] duration-500 ease-in-out',
@@ -28,12 +24,6 @@ export function ProgressState(props: ProgressStateProps) {
           progressLabelPosition="inside"
           theme={progressTheme}
         />
-      </div>
-      <div className="mt-2 flex items-center justify-between text-sm text-zinc-400">
-        <span>{label} checkpoint {checkpoint} / {totalCheckpoints}</span>
-        {samplesPerCheckpoint !== undefined && (
-          <span>{Math.round(progress * samplesPerCheckpoint)} of {samplesPerCheckpoint} samples</span>
-        )}
       </div>
     </div>
   );
