@@ -10,7 +10,7 @@ export function ProgressState(props: ProgressStateProps) {
   const { progress, color } = props;
 
   const progressTheme: DeepPartial<ProgressTheme> = {
-    bar: 'transition-[width] duration-500 ease-in-out',
+    bar: 'transition-[width] duration-1000 ease-linear',
   };
 
   return (

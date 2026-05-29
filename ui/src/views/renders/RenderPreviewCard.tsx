@@ -35,7 +35,7 @@ export function RenderPreviewCard(props: RenderPreviewCardProps) {
         className="text-zinc-200 hover:bg-zinc-700"
         theme={cardTheme}
         renderImage={() => (
-          <div>
+          <div className="flex aspect-video items-center justify-center overflow-hidden bg-zinc-900">
             {checkpointImageQuery.isPending && (
               <div className="flex flex-col items-center justify-center">
                 <Spinner size="xl" color="info" />
@@ -46,24 +46,32 @@ export function RenderPreviewCard(props: RenderPreviewCardProps) {
               <img
                 src={`https://placehold.co/${renderSize[0]}x${renderSize[1]}?text=Error`}
                 alt="Render Error"
+                className="h-full w-full object-contain"
               />
             )}
             {checkpointImageQuery.isSuccess && (
-              <img src={checkpointImageQuery.data} alt="Render Preview" />
+              <img
+                src={checkpointImageQuery.data}
+                alt="Render Preview"
+                className="h-full w-full object-contain"
+              />
             )}
           </div>
         )}
       >
-        {showProgress && (
-          <div>
+        <div className="min-h-1.5">
+          {showProgress && (
             <Progress
               progress={Math.round(progress * 100)}
               color={running ? 'blue' : 'yellow'}
               size="sm"
-              theme={{ base: 'rounded-none', bar: 'rounded-none transition-[width] duration-500' }}
+              theme={{
+                base: 'rounded-none',
+                bar: 'rounded-none transition-[width] duration-1000 ease-linear',
+              }}
             />
-          </div>
-        )}
+          )}
+        </div>
         <div className="flex items-center justify-between p-3">
           <h5 className="text-lg font-semibold">{render.config.name}</h5>
           <code className="text-sm font-light italic">#{render.id}</code>
