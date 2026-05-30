@@ -1,6 +1,4 @@
 import {
-  type Render,
-  type RenderStats,
   isRenderStateRunning,
   isRenderStatePausing,
   isRenderStateCreated,
@@ -8,17 +6,49 @@ import {
   isRenderStatePaused,
 } from '@/utils/api';
 import { formatDuration } from '@/utils/duration';
+import { useRender } from '@/hooks/useRender';
+import { useRenderStats } from '@/hooks/useRenderStats';
+import { Spinner } from 'flowbite-react';
 import { ProgressState } from './ProgressState';
 import { RenderTiming } from './RenderTiming';
 
-export type RenderProgressProps = {
-  state: Render['state'];
-  totalCheckpoints: number;
-  renderStats?: RenderStats;
-};
+export function RenderProgress({ renderID }: { renderID: number }) {
+  const {
+    data: render,
+    isPending: isRenderPending,
+    isError: isRenderError,
+    error: renderError,
+  } = useRender({ renderID });
 
-export function RenderProgress(props: RenderProgressProps) {
-  const { state, totalCheckpoints, renderStats } = props;
+  const {
+    data: renderStats,
+    isPending: isStatsPending,
+    isError: isStatsError,
+    error: statsError,
+  } = useRenderStats({ renderID });
+
+  if (isRenderPending || isStatsPending) {
+    return (
+      <div className="flex w-full shrink-0 flex-col items-center justify-center px-6 pb-4">
+        <Spinner size="md" />
+      </div>
+    );
+  }
+
+  if (isRenderError || isStatsError) {
+    return (
+      <div className="flex w-full shrink-0 flex-col px-6 pb-4">
+        <p className="text-center text-sm text-red-500">
+          {isRenderError
+            ? `Error loading render: ${renderError.message}`
+            : `Error loading render stats: ${statsError!.message}`}
+        </p>
+      </div>
+    );
+  }
+
+  const { state } = render;
+  const { total_checkpoints: totalCheckpoints } = render.config.parameters;
 
   const showProgress = isRenderStateRunning(state) || isRenderStatePausing(state);
 

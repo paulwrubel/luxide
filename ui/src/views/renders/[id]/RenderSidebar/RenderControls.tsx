@@ -1,23 +1,64 @@
 import { Button, Spinner } from 'flowbite-react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useRender } from '@/hooks/useRender';
+import { useAuth } from '@/providers/auth';
+import {
+  pauseRender,
+  resumeRender,
+  deleteRender,
+  isRenderStatePausing,
+  isRenderStatePaused,
+  isRenderStateRunning,
+} from '@/utils/api';
 
 export type RenderControlsProps = {
-  isPausingOrResuming: boolean;
-  isPaused: boolean;
-  isPausing: boolean;
-  isRunning: boolean;
-  onPauseOrResume: () => void;
-  onDelete: () => void;
+  renderID: number;
 };
 
 export function RenderControls(props: RenderControlsProps) {
-  const { isPausingOrResuming, isPaused, isPausing, isRunning, onPauseOrResume, onDelete } = props;
+  const { renderID } = props;
+
+  const navigate = useNavigate();
+  const { mustGetToken } = useAuth();
+  const renderQuery = useRender({ renderID });
+  const [isPausingOrResuming, setIsPausingOrResuming] = useState(false);
+
+  const token = mustGetToken();
+
+  if (renderQuery.isLoading) {
+    return <Spinner size="md" className="fill-zinc-400" />;
+  }
+
+  if (renderQuery.isError) {
+    return <p className="text-sm text-red-500">Error loading render controls</p>;
+  }
+
+  const isPaused = isRenderStatePaused(renderQuery.data.state);
+  const isPausing = isRenderStatePausing(renderQuery.data.state);
+  const isRunning = isRenderStateRunning(renderQuery.data.state);
+
+  async function handlePauseOrResume() {
+    setIsPausingOrResuming(true);
+    if (isPaused || isPausing) {
+      await resumeRender(token, renderID);
+    } else if (isRunning) {
+      await pauseRender(token, renderID);
+    }
+    setIsPausingOrResuming(false);
+  }
+
+  async function handleDelete() {
+    await deleteRender(token, renderID);
+    navigate('/renders');
+  }
 
   return (
     <div className="flex justify-evenly gap-2">
       <Button
         color={isPaused || isPausing ? 'default' : 'yellow'}
         outline
-        onClick={onPauseOrResume}
+        onClick={handlePauseOrResume}
         disabled={isPausingOrResuming || !(isPaused || isPausing || isRunning)}
       >
         {isPausingOrResuming ? (
@@ -32,7 +73,7 @@ export function RenderControls(props: RenderControlsProps) {
         )}
       </Button>
 
-      <Button color="red" onClick={onDelete} disabled={isPausing || isRunning}>
+      <Button color="red" onClick={handleDelete} disabled={isPausing || isRunning}>
         Delete Render
       </Button>
     </div>
