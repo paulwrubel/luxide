@@ -1,10 +1,5 @@
 import { useParams } from 'react-router-dom';
-import {
-  Sidebar,
-  SidebarItems,
-  SidebarItemGroup,
-  type SidebarTheme,
-} from 'flowbite-react';
+import { Sidebar, SidebarItems, SidebarItemGroup, type SidebarTheme } from 'flowbite-react';
 import { useRender } from '@/hooks/useRender';
 import type { DeepPartial } from 'flowbite-react/types';
 import { useLatestCheckpointImage } from '@/hooks/useLatestCheckpointImage';

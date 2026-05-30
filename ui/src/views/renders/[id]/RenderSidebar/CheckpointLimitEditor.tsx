@@ -9,6 +9,14 @@ export type CheckpointLimitEditorProps = {
 };
 
 export function CheckpointLimitEditor(props: CheckpointLimitEditorProps) {
+  const {
+    newCheckpointLimit,
+    setNewCheckpointLimit,
+    isUpdatingCheckpoints,
+    totalCheckpoints,
+    onUpdate,
+  } = props;
+
   return (
     <>
       <Label>
@@ -17,22 +25,18 @@ export function CheckpointLimitEditor(props: CheckpointLimitEditorProps) {
           type="number"
           required
           className="w-full"
-          value={props.newCheckpointLimit}
-          onChange={(e) => props.setNewCheckpointLimit(Number(e.target.value))}
+          value={newCheckpointLimit}
+          onChange={(e) => setNewCheckpointLimit(Number(e.target.value))}
         />
       </Label>
 
       <Button
         color="default"
         outline
-        onClick={props.onUpdate}
-        disabled={
-          props.isUpdatingCheckpoints ||
-          !Number.isInteger(props.newCheckpointLimit) ||
-          props.newCheckpointLimit <= props.totalCheckpoints
-        }
+        onClick={onUpdate}
+        disabled={isUpdatingCheckpoints || !Number.isInteger(newCheckpointLimit)}
       >
-        {props.isUpdatingCheckpoints ? (
+        {isUpdatingCheckpoints ? (
           <span className="flex items-center justify-center">
             <Spinner size="sm" className="mr-2" />
             Updating...

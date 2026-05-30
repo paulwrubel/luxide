@@ -10,8 +10,7 @@ export type RenderControlsProps = {
 };
 
 export function RenderControls(props: RenderControlsProps) {
-  const { isPausingOrResuming, isPaused, isPausing, isRunning, onPauseOrResume, onDelete } =
-    props;
+  const { isPausingOrResuming, isPaused, isPausing, isRunning, onPauseOrResume, onDelete } = props;
 
   return (
     <div className="flex justify-evenly gap-2">

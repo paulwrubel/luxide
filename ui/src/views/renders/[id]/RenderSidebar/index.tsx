@@ -14,6 +14,7 @@ import { useAuth } from '@/providers/auth';
 import { RenderInfo } from './RenderInfo';
 import { CheckpointLimitEditor } from './CheckpointLimitEditor';
 import { RenderControls } from './RenderControls';
+import { Separator } from '@/components/Separator';
 
 export type RenderSidebarProps = {
   render: Render;
@@ -62,6 +63,7 @@ export function RenderSidebar(props: RenderSidebarProps) {
   return (
     <div className="flex h-full flex-col items-stretch gap-4 p-4">
       <RenderInfo render={render} />
+      <span className="mt-auto" />
       <CheckpointLimitEditor
         newCheckpointLimit={newCheckpointLimit}
         setNewCheckpointLimit={setNewCheckpointLimit}
@@ -69,7 +71,7 @@ export function RenderSidebar(props: RenderSidebarProps) {
         totalCheckpoints={render.config.parameters.total_checkpoints}
         onUpdate={handleUpdateCheckpoints}
       />
-      <span className="mt-auto w-full border-b border-zinc-600" />
+      <Separator />
       <RenderControls
         isPausingOrResuming={isPausingOrResuming}
         isPaused={isPaused}
