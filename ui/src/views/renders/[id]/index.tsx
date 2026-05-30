@@ -1,14 +1,6 @@
 import { useParams } from 'react-router-dom';
-import {
-  Sidebar,
-  SidebarItems,
-  SidebarItemGroup,
-  type SidebarTheme,
-} from 'flowbite-react';
-import { useRender } from '@/hooks/useRender';
+import { Sidebar, SidebarItems, SidebarItemGroup, type SidebarTheme } from 'flowbite-react';
 import type { DeepPartial } from 'flowbite-react/types';
-import { useLatestCheckpointImage } from '@/hooks/useLatestCheckpointImage';
-import { useRenderStats } from '@/hooks/useRenderStats';
 import { RenderSidebar } from './RenderSidebar';
 import { RenderDisplay } from './RenderDisplay';
 
@@ -17,9 +9,6 @@ export function RenderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const renderID = Number(id);
 
-  const renderQuery = useRender({ renderID });
-  const imageURLQuery = useLatestCheckpointImage({ renderID });
-  const statsQuery = useRenderStats({ renderID });
   const sidebarTheme: DeepPartial<SidebarTheme> = {
     root: {
       base: 'bg-zinc-900 dark:bg-zinc-900',
@@ -32,18 +21,12 @@ export function RenderDetailPage() {
       <Sidebar theme={sidebarTheme} className="z-10 h-full w-82">
         <SidebarItems className="h-full">
           <SidebarItemGroup className="flex h-full flex-col">
-            {renderQuery.isSuccess && (
-              <RenderSidebar render={renderQuery.data} renderID={renderID} />
-            )}
+            <RenderSidebar renderID={renderID} />
           </SidebarItemGroup>
         </SidebarItems>
       </Sidebar>
 
-      <RenderDisplay
-        renderQuery={renderQuery}
-        imageURLQuery={imageURLQuery}
-        statsQuery={statsQuery}
-      />
+      <RenderDisplay renderID={renderID} />
     </div>
   );
 }
