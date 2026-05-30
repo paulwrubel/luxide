@@ -80,21 +80,26 @@ export function NewRenderSidebar({ form }: NewRenderSidebarProps) {
             <div className="mb-0 flex flex-1 flex-col gap-2 overflow-y-auto">
               <Controls form={form} />
             </div>
-            <div className="px-4 py-2">
-              <ViewConfigJSONButton onClick={() => setShowModal(true)} />
-            </div>
             <div className="mt-0 flex flex-col gap-2">
               <Separator className="mt-0" />
-              <Button onClick={handleCreateRender} disabled={isCreatingRender} color="default">
-                {isCreatingRender ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <Spinner size="sm" color="info" />
-                    Creating...
-                  </span>
-                ) : (
-                  'Create Render'
-                )}
-              </Button>
+              <div className="flex gap-2 px-4">
+                <ViewConfigJSONButton onClick={() => setShowModal(true)} />
+                <Button
+                  onClick={handleCreateRender}
+                  disabled={isCreatingRender}
+                  color="default"
+                  className="flex-1"
+                >
+                  {isCreatingRender ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Spinner size="sm" color="info" />
+                      Creating...
+                    </span>
+                  ) : (
+                    'Create Render'
+                  )}
+                </Button>
+              </div>
             </div>
           </SidebarItemGroup>
         </SidebarItems>

@@ -7,7 +7,7 @@ export interface ViewConfigJSONButtonProps {
 
 export const ViewConfigJSONButton = ({ onClick }: ViewConfigJSONButtonProps) => {
   return (
-    <Button size="sm" color="gray" onClick={onClick}>
+    <Button color="gray" onClick={onClick}>
       <HiEye />
       View JSON
     </Button>
