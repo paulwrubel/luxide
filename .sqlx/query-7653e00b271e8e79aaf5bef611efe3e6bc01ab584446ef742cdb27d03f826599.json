@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT 1 as exists\n                FROM checkpoints\n                WHERE render_id = $1 AND iteration = $2\n                LIMIT 1\n            ",
+  "query": "\n                SELECT 1 as exists\n                FROM checkpoints\n                WHERE render_id = $1 AND iteration = $2 AND NOT pixel_data_cleared\n                LIMIT 1\n            ",
   "describe": {
     "columns": [
       {
@@ -19,5 +19,5 @@
       null
     ]
   },
-  "hash": "456c6b3ceec7a09548f7af69c90e7d71d987fae6ddd747d6129a0caf2c86bec4"
+  "hash": "7653e00b271e8e79aaf5bef611efe3e6bc01ab584446ef742cdb27d03f826599"
 }

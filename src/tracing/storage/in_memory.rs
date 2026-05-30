@@ -179,7 +179,6 @@ impl RenderStorage for InMemoryStorage {
             .await
             .iter()
             .find(|c| c.render_id == id && c.iteration == iteration)
-            .filter(|c| !c.pixel_data_cleared)
             .cloned())
     }
 
