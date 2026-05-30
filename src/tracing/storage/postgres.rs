@@ -362,12 +362,15 @@ impl RenderStorage for PostgresStorage {
         .await
         {
             Ok(Some(row)) => {
-                let pixel_data = decode_pixel_data(&row.pixel_data).map_err(|e| {
-                    format!(
-                        "Failed to decode pixel data for id {} and iteration {}: {}",
-                        id, iteration, e
-                    )
-                })?;
+                let pixel_data = match row.pixel_data {
+                    Some(data) => Some(decode_pixel_data(&data).map_err(|e| {
+                        format!(
+                            "Failed to decode pixel data for id {} and iteration {}: {}",
+                            id, iteration, e
+                        )
+                    })?),
+                    None => None,
+                };
 
                 Ok(Some(RenderCheckpoint {
                     render_id: id,
@@ -375,6 +378,7 @@ impl RenderStorage for PostgresStorage {
                     pixel_data,
                     started_at: row.started_at,
                     ended_at: row.ended_at,
+                    pixel_data_cleared: false,
                 }))
             }
             Ok(None) => Ok(None),
@@ -390,7 +394,7 @@ impl RenderStorage for PostgresStorage {
             r#"
                 SELECT count(*)
                 FROM checkpoints
-                WHERE render_id = $1
+                WHERE render_id = $1 AND NOT pixel_data_cleared
             "#,
             id as i32,
         )
@@ -410,7 +414,7 @@ impl RenderStorage for PostgresStorage {
             r#"
                 SELECT min(iteration)
                 FROM checkpoints
-                WHERE render_id = $1
+                WHERE render_id = $1 AND NOT pixel_data_cleared
             "#,
             id as i32,
         )
@@ -433,7 +437,7 @@ impl RenderStorage for PostgresStorage {
             r#"
                 SELECT max(iteration)
                 FROM checkpoints
-                WHERE render_id = $1
+                WHERE render_id = $1 AND NOT pixel_data_cleared
             "#,
             id as i32,
         )
@@ -448,7 +452,7 @@ impl RenderStorage for PostgresStorage {
         }
     }
 
-    async fn get_render_checkpoints_without_data(
+    async fn get_render_checkpoints_excluding_pixel_data(
         &self,
         id: RenderID,
     ) -> Result<Vec<RenderCheckpointMeta>, StorageError> {
@@ -473,7 +477,7 @@ impl RenderStorage for PostgresStorage {
                 })
                 .collect()),
             Err(e) => Err(format!(
-                "Failed to get render checkpoints without data for id {id}: {e}"
+                "Failed to get render checkpoints excluding pixel data for id {id}: {e}"
             )
             .into()),
         }
@@ -488,7 +492,7 @@ impl RenderStorage for PostgresStorage {
             r#"
                 SELECT 1 as exists
                 FROM checkpoints
-                WHERE render_id = $1 AND iteration = $2
+                WHERE render_id = $1 AND iteration = $2 AND NOT pixel_data_cleared
                 LIMIT 1
             "#,
             id as i32,
@@ -507,23 +511,28 @@ impl RenderStorage for PostgresStorage {
         &self,
         render_checkpoint: RenderCheckpoint,
     ) -> Result<(), StorageError> {
-        let pixel_data = encode_pixel_data(&render_checkpoint.pixel_data).map_err(|e| {
-            format!(
-                "Failed to encode pixel data for id {} and iteration {}: {}",
-                render_checkpoint.render_id, render_checkpoint.iteration, e
-            )
-        })?;
+        let pixel_data = match &render_checkpoint.pixel_data {
+            Some(pd) => Some(encode_pixel_data(pd).map_err(|e| {
+                format!(
+                    "Failed to encode pixel data for id {} and iteration {}: {}",
+                    render_checkpoint.render_id, render_checkpoint.iteration, e
+                )
+            })?),
+            None => None,
+        };
+        let pixel_data_cleared = render_checkpoint.pixel_data.is_none();
 
         match sqlx::query!(
             r#"
-                INSERT INTO checkpoints (render_id, iteration, pixel_data, started_at, ended_at)
-                VALUES ($1, $2, $3, $4, $5)
+                INSERT INTO checkpoints (render_id, iteration, pixel_data, started_at, ended_at, pixel_data_cleared)
+                VALUES ($1, $2, $3, $4, $5, $6)
             "#,
             render_checkpoint.render_id as i32,
             render_checkpoint.iteration as i32,
-            &pixel_data,
+            pixel_data,
             render_checkpoint.started_at,
             render_checkpoint.ended_at,
+            pixel_data_cleared,
         )
         .execute(&self.pool)
         .await
@@ -540,14 +549,15 @@ impl RenderStorage for PostgresStorage {
         }
     }
 
-    async fn delete_render_checkpoint(
+    async fn clear_checkpoint_pixel_data(
         &self,
         id: RenderID,
         checkpoint: u32,
     ) -> Result<(), StorageError> {
         match sqlx::query!(
             r#"
-                DELETE FROM checkpoints
+                UPDATE checkpoints
+                SET pixel_data = NULL, pixel_data_cleared = TRUE
                 WHERE render_id = $1 AND iteration = $2
             "#,
             id as i32,
@@ -559,12 +569,12 @@ impl RenderStorage for PostgresStorage {
             Ok(res) => match res.rows_affected() {
                 1 => Ok(()),
                 n => Err(format!(
-                    "Failed to delete render checkpoint for id {} and iteration {}: Expecting 1 row affected, got {}", 
+                    "Failed to clear pixel data for checkpoint id {} and iteration {}: Expecting 1 row affected, got {}", 
                     id, checkpoint, n
                 )
                 .into()),
             },
-            Err(e) => Err(format!("Failed to delete render checkpoint for id {} and iteration {}: {}", id, checkpoint, e).into()),
+            Err(e) => Err(format!("Failed to clear pixel data for checkpoint id {} and iteration {}: {}", id, checkpoint, e).into()),
         }
     }
 

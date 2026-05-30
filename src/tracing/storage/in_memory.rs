@@ -179,6 +179,7 @@ impl RenderStorage for InMemoryStorage {
             .await
             .iter()
             .find(|c| c.render_id == id && c.iteration == iteration)
+            .filter(|c| !c.pixel_data_cleared)
             .cloned())
     }
 
@@ -188,7 +189,7 @@ impl RenderStorage for InMemoryStorage {
             .read()
             .await
             .iter()
-            .filter(|c| c.render_id == id)
+            .filter(|c| c.render_id == id && !c.pixel_data_cleared)
             .count() as u32)
     }
 
@@ -201,7 +202,7 @@ impl RenderStorage for InMemoryStorage {
             .read()
             .await
             .iter()
-            .filter(|c| c.render_id == id)
+            .filter(|c| c.render_id == id && !c.pixel_data_cleared)
             .map(|c| c.iteration)
             .min())
     }
@@ -215,12 +216,12 @@ impl RenderStorage for InMemoryStorage {
             .read()
             .await
             .iter()
-            .filter(|c| c.render_id == id)
+            .filter(|c| c.render_id == id && !c.pixel_data_cleared)
             .map(|c| c.iteration)
             .max())
     }
 
-    async fn get_render_checkpoints_without_data(
+    async fn get_render_checkpoints_excluding_pixel_data(
         &self,
         id: RenderID,
     ) -> Result<Vec<RenderCheckpointMeta>, StorageError> {
@@ -244,7 +245,7 @@ impl RenderStorage for InMemoryStorage {
             .read()
             .await
             .iter()
-            .any(|c| c.render_id == id && c.iteration == iteration))
+            .any(|c| c.render_id == id && c.iteration == iteration && !c.pixel_data_cleared))
     }
 
     async fn create_render_checkpoint(
@@ -262,13 +263,18 @@ impl RenderStorage for InMemoryStorage {
         Ok(())
     }
 
-    async fn delete_render_checkpoint(
+    async fn clear_checkpoint_pixel_data(
         &self,
         id: RenderID,
         checkpoint: u32,
     ) -> Result<(), StorageError> {
         let mut checkpoints = self.checkpoints.write().await;
-        checkpoints.retain(|c| !(c.render_id == id && c.iteration == checkpoint));
+        if let Some(c) = checkpoints
+            .iter_mut()
+            .find(|c| c.render_id == id && c.iteration == checkpoint)
+        {
+            c.pixel_data_cleared = true;
+        }
         Ok(())
     }
 
@@ -302,7 +308,7 @@ impl RenderStorage for InMemoryStorage {
             .iter()
             .map(|c| {
                 // get the bytes used to store the hashmap
-                c.pixel_data.len() as u64 * entry_size_bytes
+                c.pixel_data.as_ref().map(|pd| pd.len()).unwrap_or(0) as u64 * entry_size_bytes
             })
             .sum())
     }
