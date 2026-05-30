@@ -246,15 +246,23 @@ impl RenderStorage for FileStorage {
             serde_json::from_str(&meta).map_err(|e| e.to_string())?;
 
         if !checkpoint_image_file.exists() {
-            // png doesn't exist (pixel data was cleared), return checkpoint without pixel data
-            return Ok(Some(RenderCheckpoint {
-                render_id: id,
-                iteration,
-                pixel_data: None,
-                started_at: meta.started_at,
-                ended_at: meta.ended_at,
-                pixel_data_cleared: meta.pixel_data_cleared,
-            }));
+            if meta.pixel_data_cleared {
+                // pixel data was legitimately cleared — return checkpoint without pixel data
+                return Ok(Some(RenderCheckpoint {
+                    render_id: id,
+                    iteration,
+                    pixel_data: None,
+                    started_at: meta.started_at,
+                    ended_at: meta.ended_at,
+                    pixel_data_cleared: true,
+                }));
+            } else {
+                // meta says data wasn't cleared but image is missing — corruption
+                return Err(format!(
+                    "Checkpoint iteration {} metadata says pixel data not cleared but image is missing for render {}",
+                    iteration, id
+                ).into());
+            }
         }
 
         // load checkpoint image
