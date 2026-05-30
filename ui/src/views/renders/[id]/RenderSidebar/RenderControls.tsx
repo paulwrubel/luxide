@@ -21,22 +21,30 @@ export function RenderControls(props: RenderControlsProps) {
 
   const navigate = useNavigate();
   const { mustGetToken } = useAuth();
-  const renderQuery = useRender({ renderID });
-  const [isPausingOrResuming, setIsPausingOrResuming] = useState(false);
-
   const token = mustGetToken();
 
-  if (renderQuery.isLoading) {
+  const {
+    data: render,
+    isLoading: isRenderLoading,
+    isError: isRenderError,
+    error: renderError,
+  } = useRender({ renderID });
+
+  const [isPausingOrResuming, setIsPausingOrResuming] = useState(false);
+
+  if (isRenderLoading || !render) {
     return <Spinner size="md" className="fill-zinc-400" />;
   }
 
-  if (renderQuery.isError) {
-    return <p className="text-sm text-red-500">Error loading render controls</p>;
+  if (isRenderError) {
+    return (
+      <p className="text-sm text-red-500">Error loading render controls: {renderError.message}</p>
+    );
   }
 
-  const isPaused = isRenderStatePaused(renderQuery.data.state);
-  const isPausing = isRenderStatePausing(renderQuery.data.state);
-  const isRunning = isRenderStateRunning(renderQuery.data.state);
+  const isPaused = isRenderStatePaused(render.state);
+  const isPausing = isRenderStatePausing(render.state);
+  const isRunning = isRenderStateRunning(render.state);
 
   async function handlePauseOrResume() {
     setIsPausingOrResuming(true);

@@ -2,42 +2,36 @@ import { Button, Spinner, TextInput, Label } from 'flowbite-react';
 import { useState, useEffect } from 'react';
 import { useRender } from '@/hooks/useRender';
 import { useAuth } from '@/providers/auth';
-import { updateRenderTotalCheckpoints, type RenderState } from '@/utils/api';
-
-function getCurrentCheckpointIteration(state: RenderState): number {
-  if (typeof state === 'object') {
-    if ('running' in state) {
-      return state.running.checkpoint_iteration;
-    }
-    if ('finished_checkpoint_iteration' in state) {
-      return state.finished_checkpoint_iteration;
-    }
-    if ('pausing' in state) {
-      return state.pausing.checkpoint_iteration;
-    }
-    if ('paused' in state) {
-      return state.paused;
-    }
-  }
-  return 0;
-}
+import {
+  updateRenderTotalCheckpoints,
+  isRenderStateRunning,
+  isRenderStatePausing,
+  isRenderStateFinishedCheckpointIteration,
+  isRenderStatePaused,
+  type RenderState,
+} from '@/utils/api';
 
 export type CheckpointLimitEditorProps = {
   renderID: number;
 };
 
 export function CheckpointLimitEditor({ renderID }: CheckpointLimitEditorProps) {
-  const renderQuery = useRender({ renderID });
+  const {
+    data: render,
+    isLoading: isRenderLoading,
+    isError: isRenderError,
+    error: renderError,
+  } = useRender({ renderID });
   const { mustGetToken } = useAuth();
   const [newCheckpointLimit, setNewCheckpointLimit] = useState<number>(0);
   const [isUpdatingCheckpoints, setIsUpdatingCheckpoints] = useState(false);
 
   useEffect(() => {
-    if (renderQuery.data && newCheckpointLimit === 0) {
+    if (render && newCheckpointLimit === 0) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setNewCheckpointLimit(renderQuery.data.config.parameters.total_checkpoints);
+      setNewCheckpointLimit(render.config.parameters.total_checkpoints);
     }
-  }, [renderQuery.data, newCheckpointLimit]);
+  }, [render, newCheckpointLimit]);
 
   async function handleUpdate() {
     setIsUpdatingCheckpoints(true);
@@ -45,17 +39,15 @@ export function CheckpointLimitEditor({ renderID }: CheckpointLimitEditorProps) 
     setIsUpdatingCheckpoints(false);
   }
 
-  if (renderQuery.isLoading) {
+  if (isRenderLoading) {
     return <Spinner size="md" className="fill-zinc-400" />;
   }
 
-  if (renderQuery.isError) {
-    return <p className="text-sm text-red-500">Error loading render</p>;
+  if (isRenderError) {
+    return <p className="text-sm text-red-500">Error loading render: {renderError.message}</p>;
   }
 
-  const currentCheckpointIteration = renderQuery.data
-    ? getCurrentCheckpointIteration(renderQuery.data.state)
-    : 0;
+  const currentCheckpointIteration = render ? getCurrentCheckpointIteration(render.state) : 0;
 
   return (
     <>
@@ -91,4 +83,17 @@ export function CheckpointLimitEditor({ renderID }: CheckpointLimitEditorProps) 
       </Button>
     </>
   );
+}
+
+function getCurrentCheckpointIteration(state: RenderState): number {
+  if (isRenderStateRunning(state)) {
+    return state.running.checkpoint_iteration;
+  } else if (isRenderStatePausing(state)) {
+    return state.pausing.checkpoint_iteration;
+  } else if (isRenderStateFinishedCheckpointIteration(state)) {
+    return state.finished_checkpoint_iteration;
+  } else if (isRenderStatePaused(state)) {
+    return state.paused;
+  }
+  return 0;
 }
