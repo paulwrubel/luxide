@@ -27,9 +27,7 @@ export function RenderDisplay(props: RenderDisplayProps) {
   if (renderQuery.isError) {
     return (
       <div className="flex h-full w-full items-center justify-center">
-        <p className="text-sm text-red-500">
-          Error loading render: {renderQuery.error?.message}
-        </p>
+        <p className="text-sm text-red-500">Error loading render: {renderQuery.error?.message}</p>
       </div>
     );
   }
