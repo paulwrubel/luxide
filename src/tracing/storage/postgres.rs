@@ -351,7 +351,7 @@ impl RenderStorage for PostgresStorage {
     ) -> Result<Option<RenderCheckpoint>, StorageError> {
         match sqlx::query!(
             r#"
-                SELECT pixel_data, started_at, ended_at
+                SELECT pixel_data, started_at, ended_at, pixel_data_cleared
                 FROM checkpoints
                 WHERE render_id = $1 AND iteration = $2
             "#,
@@ -378,7 +378,7 @@ impl RenderStorage for PostgresStorage {
                     pixel_data,
                     started_at: row.started_at,
                     ended_at: row.ended_at,
-                    pixel_data_cleared: false,
+                    pixel_data_cleared: row.pixel_data_cleared,
                 }))
             }
             Ok(None) => Ok(None),
