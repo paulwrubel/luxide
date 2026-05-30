@@ -185,7 +185,9 @@ impl RenderManager {
             }
 
             let initial_pixel_data = match previous_checkpoint {
-                Some(rcp) => rcp.pixel_data,
+                Some(rcp) => rcp.pixel_data.expect(
+                    "previous checkpoint pixel data should not be cleared during active render",
+                ),
                 None => PixelData::new(),
             };
 
@@ -239,9 +241,10 @@ impl RenderManager {
                 .create_render_checkpoint(RenderCheckpoint {
                     render_id: render.id,
                     iteration,
-                    pixel_data: new_pixel_data,
+                    pixel_data: Some(new_pixel_data),
                     started_at,
                     ended_at,
+                    pixel_data_cleared: false,
                 })
                 .await
             {
@@ -252,7 +255,7 @@ impl RenderManager {
             }
             println!("Finished saving pixel_data");
 
-            println!("Checking if old checkpoints need to be deleted...");
+            println!("Checking if old checkpoints' pixel data needs to be cleared...");
             let total_checkpoints_saved = match storage.get_render_checkpoint_count(render.id).await
             {
                 Ok(count) => count,
@@ -269,7 +272,7 @@ impl RenderManager {
                 .saved_checkpoint_limit
                 .is_some_and(|limit| limit < total_checkpoints_saved)
             {
-                println!("  Deleting old checkpoints...");
+                println!("  Clearing old checkpoint pixel data...");
                 println!("    Finding earliest checkpoint...");
                 let earliest_checkpoint = match storage
                     .get_earliest_render_checkpoint_iteration(render.id)
@@ -291,19 +294,22 @@ impl RenderManager {
                     }
                 };
                 println!("    Found earliest checkpoint: {}", earliest_checkpoint);
-                println!("    Deleting checkpoint {}...", earliest_checkpoint);
+                println!(
+                    "    Clearing pixel data for checkpoint {}...",
+                    earliest_checkpoint
+                );
                 if let Err(e) = storage
-                    .delete_render_checkpoint(render.id, earliest_checkpoint)
+                    .clear_checkpoint_pixel_data(render.id, earliest_checkpoint)
                     .await
                 {
-                    println!("Failed to delete old render checkpoint: {e}");
+                    println!("Failed to clear old render checkpoint pixel data: {e}");
                     // remove from running set on error
                     running_renders.lock().unwrap().remove(&render.id);
                     return;
                 }
-                println!("  Finished deleting old checkpoints");
+                println!("  Finished clearing old checkpoint pixel data");
             }
-            println!("Finished checking if old checkpoints need to be deleted");
+            println!("Finished checking if old checkpoint pixel data needs to be cleared");
 
             // check if render was paused
             let current_state = match storage.get_render(render.id).await {
@@ -415,7 +421,10 @@ impl RenderManager {
         }
 
         let render = self.storage.get_render(id).await?.unwrap();
-        let checkpoints_meta = self.storage.get_render_checkpoints_without_data(id).await?;
+        let checkpoints_meta = self
+            .storage
+            .get_render_checkpoints_excluding_pixel_data(id)
+            .await?;
 
         // get iteration numbers
         let total_iterations = render.config.parameters.total_checkpoints;

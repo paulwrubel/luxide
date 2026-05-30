@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT min(iteration)\n                FROM checkpoints\n                WHERE render_id = $1\n            ",
+  "query": "\n                SELECT min(iteration)\n                FROM checkpoints\n                WHERE render_id = $1 AND NOT pixel_data_cleared\n            ",
   "describe": {
     "columns": [
       {
@@ -18,5 +18,5 @@
       null
     ]
   },
-  "hash": "7f8fca59eda4f03d00027eda47e7be59cd4efe186171f1ab06bdda38e4638273"
+  "hash": "eede01c5a77e9172ab31f24a437cac7edef0d8e604c661cf8a7b0c6b35594208"
 }

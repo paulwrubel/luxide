@@ -85,9 +85,10 @@ impl Render {
 pub struct RenderCheckpoint {
     pub render_id: RenderID,
     pub iteration: u32,
-    pub pixel_data: PixelData,
+    pub pixel_data: Option<PixelData>,
     pub started_at: chrono::DateTime<chrono::Utc>,
     pub ended_at: chrono::DateTime<chrono::Utc>,
+    pub pixel_data_cleared: bool,
 }
 
 impl RenderCheckpoint {
@@ -96,7 +97,11 @@ impl RenderCheckpoint {
         let (width, height) = params.image_dimensions;
         let mut img = RgbaImage::new(width, height);
 
-        for ((x, y), color) in self.pixel_data.iter() {
+        let pixel_data = match &self.pixel_data {
+            Some(pd) => pd,
+            None => return RgbaImage::new(params.image_dimensions.0, params.image_dimensions.1),
+        };
+        for ((x, y), color) in pixel_data.iter() {
             let pixel = img.get_pixel_mut(*x, *y);
             *pixel = if params.use_scaling_truncation {
                 color
@@ -128,9 +133,10 @@ impl RenderCheckpoint {
         Self {
             render_id,
             iteration,
-            pixel_data,
+            pixel_data: Some(pixel_data),
             started_at,
             ended_at,
+            pixel_data_cleared: false,
         }
     }
 }
@@ -254,7 +260,7 @@ pub trait RenderStorage: Send + Sync + 'static {
         render_id: RenderID,
     ) -> Result<Option<u32>, StorageError>;
 
-    async fn get_render_checkpoints_without_data(
+    async fn get_render_checkpoints_excluding_pixel_data(
         &self,
         render_id: RenderID,
     ) -> Result<Vec<RenderCheckpointMeta>, StorageError>;
@@ -270,7 +276,9 @@ pub trait RenderStorage: Send + Sync + 'static {
         render_checkpoint: RenderCheckpoint,
     ) -> Result<(), StorageError>;
 
-    async fn delete_render_checkpoint(
+    /// clear pixel data for a checkpoint (nulls out pixel_data, sets pixel_data_cleared = true,
+    /// keeps the metadata row)
+    async fn clear_checkpoint_pixel_data(
         &self,
         render_id: RenderID,
         checkpoint: u32,

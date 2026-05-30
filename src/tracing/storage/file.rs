@@ -20,6 +20,8 @@ pub struct FileStorage {
 pub struct RenderCheckpointFileMeta {
     started_at: chrono::DateTime<chrono::Utc>,
     ended_at: chrono::DateTime<chrono::Utc>,
+    #[serde(default)]
+    pixel_data_cleared: bool,
 }
 
 impl From<RenderCheckpoint> for RenderCheckpointFileMeta {
@@ -27,6 +29,7 @@ impl From<RenderCheckpoint> for RenderCheckpointFileMeta {
         Self {
             started_at: checkpoint.started_at,
             ended_at: checkpoint.ended_at,
+            pixel_data_cleared: false,
         }
     }
 }
@@ -233,26 +236,39 @@ impl RenderStorage for FileStorage {
                     iteration, id
                 ).into());
             }
-            (true, false) => {
-                return Err(format!(
-                    "Checkpoint iteration {} metadata exists but image is missing for render {}",
-                    iteration, id
-                )
-                .into());
-            }
             (false, false) => return Ok(None),
             _ => {}
         };
+
+        // load checkpoint metadata
+        let meta = fs::read_to_string(&checkpoint_meta_file).map_err(|e| e.to_string())?;
+        let meta: RenderCheckpointFileMeta =
+            serde_json::from_str(&meta).map_err(|e| e.to_string())?;
+
+        if !checkpoint_image_file.exists() {
+            if meta.pixel_data_cleared {
+                // pixel data was legitimately cleared — return checkpoint without pixel data
+                return Ok(Some(RenderCheckpoint {
+                    render_id: id,
+                    iteration,
+                    pixel_data: None,
+                    started_at: meta.started_at,
+                    ended_at: meta.ended_at,
+                    pixel_data_cleared: true,
+                }));
+            } else {
+                // meta says data wasn't cleared but image is missing — corruption
+                return Err(format!(
+                    "Checkpoint iteration {} metadata says pixel data not cleared but image is missing for render {}",
+                    iteration, id
+                ).into());
+            }
+        }
 
         // load checkpoint image
         let image = image::open(checkpoint_image_file)
             .map_err(|e| e.to_string())?
             .to_rgba8();
-
-        // load checkpoint metadata
-        let meta = fs::read_to_string(checkpoint_meta_file).map_err(|e| e.to_string())?;
-        let meta: RenderCheckpointFileMeta =
-            serde_json::from_str(&meta).map_err(|e| e.to_string())?;
 
         Ok(Some(RenderCheckpoint::from_image(
             id,
@@ -274,20 +290,26 @@ impl RenderStorage for FileStorage {
         let checkpoint_dir = dir.join("checkpoints");
         let checkpoint_files = fs::read_dir(checkpoint_dir).map_err(|e| e.to_string())?;
 
-        let checkpoint_files = checkpoint_files.filter(|entry| {
+        let mut count = 0u32;
+        for entry in checkpoint_files {
             let entry = match entry {
                 Ok(e) => e,
-                Err(_) => return false,
+                Err(_) => continue,
             };
 
-            entry
-                .path()
-                .extension()
-                .map(|ext| ext == "json")
-                .unwrap_or(false)
-        });
+            let path = entry.path();
+            if path.extension().map(|ext| ext == "json").unwrap_or(false) {
+                // read meta file and check pixel_data_cleared flag
+                if let Ok(meta_string) = fs::read_to_string(&path)
+                    && let Ok(meta) = serde_json::from_str::<RenderCheckpointFileMeta>(&meta_string)
+                    && !meta.pixel_data_cleared
+                {
+                    count += 1;
+                }
+            }
+        }
 
-        Ok(checkpoint_files.count() as u32)
+        Ok(count)
     }
 
     async fn get_earliest_render_checkpoint_iteration(
@@ -306,9 +328,16 @@ impl RenderStorage for FileStorage {
         let mut earliest_iteration = None;
         for entry in checkpoint_files {
             let path = entry.map_err(|e| e.to_string())?.path();
-            if path.is_file() && path.extension().map(|ext| ext == "png").unwrap_or(false) {
+            if path.is_file() && path.extension().map(|ext| ext == "json").unwrap_or(false) {
+                // read meta file and skip checkpoints with cleared pixel data
+                if let Ok(meta_string) = fs::read_to_string(&path)
+                    && let Ok(meta) = serde_json::from_str::<RenderCheckpointFileMeta>(&meta_string)
+                    && meta.pixel_data_cleared
+                {
+                    continue;
+                }
                 let iteration = path
-                    .file_name()
+                    .file_stem()
                     .and_then(|name| name.to_str().and_then(|s| s.parse::<u32>().ok()));
                 if let Some(iteration) = iteration {
                     earliest_iteration =
@@ -336,9 +365,16 @@ impl RenderStorage for FileStorage {
         let mut latest_iteration = None;
         for entry in checkpoint_files {
             let path = entry.map_err(|e| e.to_string())?.path();
-            if path.is_file() && path.extension().map(|ext| ext == "png").unwrap_or(false) {
+            if path.is_file() && path.extension().map(|ext| ext == "json").unwrap_or(false) {
+                // read meta file and skip checkpoints with cleared pixel data
+                if let Ok(meta_string) = fs::read_to_string(&path)
+                    && let Ok(meta) = serde_json::from_str::<RenderCheckpointFileMeta>(&meta_string)
+                    && meta.pixel_data_cleared
+                {
+                    continue;
+                }
                 let iteration = path
-                    .file_name()
+                    .file_stem()
                     .and_then(|name| name.to_str().and_then(|s| s.parse::<u32>().ok()));
                 if let Some(iteration) = iteration {
                     latest_iteration = Some(latest_iteration.unwrap_or(0).max(iteration));
@@ -349,7 +385,7 @@ impl RenderStorage for FileStorage {
         Ok(latest_iteration)
     }
 
-    async fn get_render_checkpoints_without_data(
+    async fn get_render_checkpoints_excluding_pixel_data(
         &self,
         id: RenderID,
     ) -> Result<Vec<RenderCheckpointMeta>, StorageError> {
@@ -462,25 +498,33 @@ impl RenderStorage for FileStorage {
             fs::create_dir_all(&checkpoint_dir).map_err(|e| e.to_string())?;
         }
 
-        // save checkpoint data as a png image
-        let image_file = checkpoint_dir.join(format!("{}.png", checkpoint.iteration));
-        let image = checkpoint.as_image(&render.config.parameters);
-        image
-            .save_with_format(image_file, image::ImageFormat::Png)
-            .map_err(|e| e.to_string())?;
+        let pixel_data_cleared = checkpoint.pixel_data.is_none();
+
+        // save checkpoint data as a png image if pixel data exists
+        if !pixel_data_cleared {
+            let image_file = checkpoint_dir.join(format!("{}.png", checkpoint.iteration));
+            let image = checkpoint.as_image(&render.config.parameters);
+            image
+                .save_with_format(image_file, image::ImageFormat::Png)
+                .map_err(|e| e.to_string())?;
+        }
 
         let meta_file = checkpoint_dir.join(format!("{}.json", checkpoint.iteration));
         fs::write(
             meta_file,
-            serde_json::to_string(&RenderCheckpointFileMeta::from(checkpoint))
-                .map_err(|e| e.to_string())?,
+            serde_json::to_string(&RenderCheckpointFileMeta {
+                started_at: checkpoint.started_at,
+                ended_at: checkpoint.ended_at,
+                pixel_data_cleared,
+            })
+            .map_err(|e| e.to_string())?,
         )
         .map_err(|e| e.to_string())?;
 
         Ok(())
     }
 
-    async fn delete_render_checkpoint(
+    async fn clear_checkpoint_pixel_data(
         &self,
         id: RenderID,
         checkpoint: u32,
@@ -494,29 +538,31 @@ impl RenderStorage for FileStorage {
         let checkpoint_dir = dir.join("checkpoints");
         let checkpoint_image_file = checkpoint_dir.join(format!("{}.png", checkpoint));
         let checkpoint_meta_file = checkpoint_dir.join(format!("{}.json", checkpoint));
-        match (
-            checkpoint_meta_file.exists(),
-            checkpoint_image_file.exists(),
-        ) {
-            (false, true) => {
-                return Err(format!(
-                    "Checkpoint iteration {} image exists but metadata file is missing for render {}",
-                    checkpoint, id
-                ).into());
-            }
-            (true, false) => {
-                return Err(format!(
-                    "Checkpoint iteration {} metadata exists but image is missing for render {}",
-                    checkpoint, id
-                )
-                .into());
-            }
-            (false, false) => return Ok(()),
-            _ => {}
-        };
 
-        fs::remove_file(&checkpoint_image_file).map_err(|e| e.to_string())?;
-        fs::remove_file(&checkpoint_meta_file).map_err(|e| e.to_string())?;
+        // meta file must exist to be able to mark pixel data as cleared
+        if !checkpoint_meta_file.exists() {
+            return Err(format!(
+                "Checkpoint iteration {} metadata file is missing for render {}",
+                checkpoint, id
+            )
+            .into());
+        }
+
+        // delete the png image file if it exists (pixel data)
+        if checkpoint_image_file.exists() {
+            fs::remove_file(&checkpoint_image_file).map_err(|e| e.to_string())?;
+        }
+
+        // read the meta file, set pixel_data_cleared, and write it back
+        let meta_string = fs::read_to_string(&checkpoint_meta_file).map_err(|e| e.to_string())?;
+        let mut meta: RenderCheckpointFileMeta =
+            serde_json::from_str(&meta_string).map_err(|e| e.to_string())?;
+        meta.pixel_data_cleared = true;
+        fs::write(
+            &checkpoint_meta_file,
+            serde_json::to_string(&meta).map_err(|e| e.to_string())?,
+        )
+        .map_err(|e| e.to_string())?;
 
         Ok(())
     }

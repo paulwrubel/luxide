@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO checkpoints (render_id, iteration, pixel_data, started_at, ended_at, pixel_data_cleared)\n                VALUES ($1, $2, $3, $4, $5, $6)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Bytea",
+        "Timestamptz",
+        "Timestamptz",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0fe9e816ca53309da7c7fb0fb629a9cb88e18c0c8c165a054c6f65e4fed20a3c"
+}
