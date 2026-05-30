@@ -1,5 +1,7 @@
 import { Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'flowbite-react';
 import { HiArrowDownTray, HiClipboard, HiCheck } from 'react-icons/hi2';
+import SyntaxHighlighter from 'react-syntax-highlighter';
+import { nightOwl } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 
 export interface ConfigJSONModalProps {
   show: boolean;
@@ -18,9 +20,20 @@ export function ConfigJSONModal(props: ConfigJSONModalProps) {
       <ModalHeader>Render Config JSON</ModalHeader>
       <ModalBody>
         <div className="relative">
-          <pre className="max-h-96 overflow-auto rounded-lg bg-zinc-800 p-4 text-sm text-zinc-200">
-            <code>{jsonString}</code>
-          </pre>
+          <SyntaxHighlighter
+            language="json"
+            style={nightOwl}
+            customStyle={{
+              borderRadius: '0.5rem',
+              maxHeight: '24rem',
+              overflow: 'auto',
+              padding: '1rem',
+              fontSize: '0.875rem',
+              lineHeight: '1.25rem',
+            }}
+          >
+            {jsonString}
+          </SyntaxHighlighter>
           <Button size="xs" color="gray" className="absolute top-2 right-2" onClick={onCopy}>
             {copied ? <HiCheck /> : <HiClipboard />}
           </Button>
