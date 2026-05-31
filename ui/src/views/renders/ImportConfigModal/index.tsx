@@ -40,7 +40,7 @@ export function ImportConfigModal(props: ImportConfigModalProps) {
     setError(null);
     try {
       const parsed = JSON.parse(jsonText);
-      const normalized = normalizeRenderConfig(parsed as any);
+      const normalized = normalizeRenderConfig(parsed);
       const result = RenderConfigSchema.safeParse(normalized);
       if (!result.success) {
         setError('Configuration has validation errors — see inline markers above.');
