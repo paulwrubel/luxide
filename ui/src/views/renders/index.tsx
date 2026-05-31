@@ -6,7 +6,6 @@ import { useRenders } from '@/hooks/useRenders';
 import { RenderPreviewCard } from './RenderPreviewCard';
 import { NewRenderCard } from './NewRenderCard';
 import { SkeletonRenderCard } from './SkeletonRenderCard';
-import { ImportConfigCard } from './ImportConfigCard';
 import { ImportConfigModal } from './ImportConfigModal';
 import type { RenderConfig } from '@/utils/render/config';
 
@@ -57,17 +56,9 @@ export function RendersPage() {
             </div>
           ))}
           {canCreateNewRender && (
-            <>
-              <div className="w-80">
-                <NewRenderCard />
-              </div>
-              <div className="w-80">
-                <ImportConfigCard
-                  onClick={() => setShowImportModal(true)}
-                  disabled={allRendersQuery.isPending}
-                />
-              </div>
-            </>
+            <div className="w-80">
+              <NewRenderCard onImport={() => setShowImportModal(true)} />
+            </div>
           )}
         </div>
       )}
