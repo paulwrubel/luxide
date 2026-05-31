@@ -1,6 +1,7 @@
 use axum::{
     Json,
     extract::{Query, State},
+    http::StatusCode,
     response::{IntoResponse, Response},
 };
 use axum_extra::extract::{SignedCookieJar, cookie::Cookie};
@@ -33,9 +34,15 @@ pub async fn auth_login(
         .secure(true)
         .http_only(true);
 
-    let (url, auth_state) = state
+    let (url, auth_state) = match state
         .auth_manager
-        .get_auth_url_and_state(query_parameters.origin);
+        .get_auth_url_and_state(query_parameters.origin)
+    {
+        Ok(result) => result,
+        Err(e) => {
+            return (StatusCode::BAD_REQUEST, e).into_response();
+        }
+    };
 
     state
         .auth_manager

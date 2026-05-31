@@ -420,7 +420,16 @@ impl RenderManager {
             ));
         }
 
-        let render = self.storage.get_render(id).await?.unwrap();
+        let render = self
+            .storage
+            .get_render(id)
+            .await?
+            .ok_or_else(|| {
+                RenderManagerError::ClientError(
+                    StatusCode::NOT_FOUND,
+                    "Render not found".to_string(),
+                )
+            })?;
         let checkpoints_meta = self
             .storage
             .get_render_checkpoints_excluding_pixel_data(id)
