@@ -185,9 +185,17 @@ impl RenderManager {
             }
 
             let initial_pixel_data = match previous_checkpoint {
-                Some(rcp) => rcp.pixel_data.expect(
-                    "previous checkpoint pixel data should not be cleared during active render",
-                ),
+                Some(rcp) => match rcp.pixel_data {
+                    Some(pixel_data) => pixel_data,
+                    None => {
+                        println!(
+                            "Checkpoint pixel data unexpectedly missing for render {} at iteration {}",
+                            render.id, rcp.iteration
+                        );
+                        running_renders.lock().unwrap().remove(&render.id);
+                        return;
+                    }
+                },
                 None => PixelData::new(),
             };
 
