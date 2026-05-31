@@ -151,7 +151,7 @@ async fn get_user_by_github_id(
                         .auth_manager
                         .get_next_user_id()
                         .await
-                        .expect("Failed to get next user ID"),
+                        ?,
                     github_id,
                     user_info.login.clone(),
                     user_info.avatar_url.clone(),
@@ -162,7 +162,7 @@ async fn get_user_by_github_id(
                         .auth_manager
                         .get_next_user_id()
                         .await
-                        .expect("Failed to get next user ID"),
+                        ?,
                     github_id,
                     user_info.login.clone(),
                     user_info.avatar_url.clone(),
