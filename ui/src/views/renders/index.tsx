@@ -1,9 +1,14 @@
+import { useState } from 'react';
 import { Alert } from 'flowbite-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/providers/auth';
 import { useRenders } from '@/hooks/useRenders';
 import { RenderPreviewCard } from './RenderPreviewCard';
 import { NewRenderCard } from './NewRenderCard';
 import { SkeletonRenderCard } from './SkeletonRenderCard';
+import { ImportConfigCard } from './ImportConfigCard';
+import { ImportConfigModal } from './ImportConfigModal';
+import type { RenderConfig } from '@/utils/render/config';
 
 export function RendersPage() {
   const { user } = useAuth();
@@ -13,6 +18,14 @@ export function RendersPage() {
     (user?.max_renders ?? null) === null ||
     (allRendersQuery.data !== undefined &&
       allRendersQuery.data.length < (user?.max_renders ?? Infinity));
+
+  const navigate = useNavigate();
+  const [showImportModal, setShowImportModal] = useState(false);
+
+  const handleImportSuccess = (config: RenderConfig) => {
+    setShowImportModal(false);
+    navigate('/renders/new', { state: { importedConfig: config } });
+  };
 
   return (
     <div className="flex w-full flex-col overflow-y-auto p-12">
@@ -31,8 +44,8 @@ export function RendersPage() {
       )}
 
       {allRendersQuery.isError && (
-        <Alert color="failure" className="w-full">
-          <span className="font-medium">Error loading renders: {allRendersQuery.error?.message}</span>
+        <Alert color="failure" className="w-full font-medium">
+          Error loading renders: {allRendersQuery.error?.message}
         </Alert>
       )}
 
@@ -44,12 +57,26 @@ export function RendersPage() {
             </div>
           ))}
           {canCreateNewRender && (
-            <div className="w-80">
-              <NewRenderCard />
-            </div>
+            <>
+              <div className="w-80">
+                <NewRenderCard />
+              </div>
+              <div className="w-80">
+                <ImportConfigCard
+                  onClick={() => setShowImportModal(true)}
+                  disabled={allRendersQuery.isPending}
+                />
+              </div>
+            </>
           )}
         </div>
       )}
+
+      <ImportConfigModal
+        show={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onImportSuccess={handleImportSuccess}
+      />
     </div>
   );
 }

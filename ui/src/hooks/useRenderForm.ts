@@ -5,13 +5,14 @@ import type { User } from '../utils/api';
 
 export type UseRenderFormOptions = {
   user: User | undefined;
+  initialValues?: RenderConfig;
 };
 
 export type RenderForm = ReturnType<typeof useRenderForm>;
 export type RenderFormPath = DeepKeys<RenderConfig>;
 
 export function useRenderForm(options: UseRenderFormOptions) {
-  const { user } = options;
+  const { user, initialValues } = options;
 
   const formSchema = RenderConfigSchema.refine(
     ({ parameters }) => {
@@ -42,7 +43,7 @@ export function useRenderForm(options: UseRenderFormOptions) {
   );
 
   return useForm({
-    defaultValues: getDefaultRenderConfig(),
+    defaultValues: initialValues ?? getDefaultRenderConfig(),
     validators: {
       onChange: formSchema,
     },
