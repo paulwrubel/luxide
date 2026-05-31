@@ -80,7 +80,7 @@ lint-ui: setup-ui-env
     cd ui && npm run lint
 [group('validate')]
 lint-ui-ci:
-    cd ui && npm run lint
+    cd ui && npm run lint -- --max-warnings 0
 
 [group('validate')]
 typecheck-ui: setup-ui-env
