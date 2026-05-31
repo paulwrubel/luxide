@@ -1,6 +1,7 @@
 import { useRender } from '@/hooks/useRender';
 import { Spinner } from 'flowbite-react';
 import { PropertyRow } from './PropertyRow';
+import { ViewRenderJSONButton } from '@/components/ViewRenderJSONButton';
 
 export type RenderInfoProps = {
   renderID: number;
@@ -18,7 +19,10 @@ export function RenderInfo(props: RenderInfoProps) {
 
   return (
     <div className="rounded border border-zinc-700 p-3">
-      <h3 className="mb-2 text-sm font-semibold text-zinc-300">Render Info</h3>
+      <div className="mb-2 flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-zinc-300">Render Info</h3>
+        {render && <ViewRenderJSONButton config={render.config} size="xs" />}
+      </div>
       {isRenderLoading || !render ? (
         <div className="flex justify-center">
           <Spinner size="md" className="fill-zinc-400" />

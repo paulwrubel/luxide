@@ -16,7 +16,7 @@ import { useAuth } from '@/providers/auth';
 import { postRender } from '@/utils/api';
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { ViewConfigJSONButton } from './ViewConfigJSONButton';
-import { ConfigJSONModal } from './ConfigJSONModal';
+import { ConfigJSONModal } from '@/components/ViewRenderJSONButton/ConfigJSONModal';
 
 export interface NewRenderSidebarProps {
   form: RenderForm;
