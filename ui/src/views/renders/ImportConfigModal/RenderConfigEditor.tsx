@@ -4,7 +4,11 @@ import { json, jsonParseLinter } from '@codemirror/lang-json';
 import { linter, lintGutter, type Diagnostic } from '@codemirror/lint';
 import { vscodeDark } from '@uiw/codemirror-theme-vscode';
 import type { EditorView } from '@codemirror/view';
-import { RenderConfigSchema, normalizeRenderConfig } from '@/utils/render/config';
+import {
+  RenderConfigSchema,
+  normalizeRenderConfig,
+  type RawRenderConfig,
+} from '@/utils/render/config';
 import jsonSourceMap from 'json-source-map';
 
 function schemaLintSource(view: EditorView): Diagnostic[] {
@@ -12,7 +16,7 @@ function schemaLintSource(view: EditorView): Diagnostic[] {
   if (!text.trim()) return [];
   try {
     const { data, pointers } = jsonSourceMap.parse(text);
-    const normalized = normalizeRenderConfig(data as any);
+    const normalized = normalizeRenderConfig(data as RawRenderConfig);
     const result = RenderConfigSchema.safeParse(normalized);
     if (!result.success) {
       return result.error.issues.map((issue) => {
