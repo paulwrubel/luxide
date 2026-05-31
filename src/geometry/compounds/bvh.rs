@@ -11,6 +11,7 @@ use super::List;
 enum BvhNode {
     Branch { left: Arc<Bvh>, right: Arc<Bvh> },
     Leaf(Arc<dyn Geometric>),
+    Empty,
 }
 
 #[derive(Clone)]
@@ -59,7 +60,7 @@ impl Bvh {
 
         let list_length = geometrics.len();
         let node = match list_length {
-            0 => panic!("Cannot create Bvh from empty list"),
+            0 => BvhNode::Empty,
             1 => BvhNode::Leaf(geometrics.pop().unwrap()),
             _ => {
                 let right = Self::new(geometrics.drain(list_length / 2..).collect());
@@ -77,6 +78,7 @@ impl Bvh {
                 ref right,
             } => Aabb::from_aabbs(left.bounding_box(), right.bounding_box()),
             BvhNode::Leaf(ref leaf) => leaf.bounding_box(),
+            BvhNode::Empty => Aabb::EMPTY,
         };
 
         Self {
@@ -92,7 +94,7 @@ impl Bvh {
 
 impl Geometric for Bvh {
     fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit> {
-        if !self.bounding_box.hit(ray, ray_t) {
+        if matches!(&self.tree, BvhNode::Empty) || !self.bounding_box.hit(ray, ray_t) {
             return None;
         }
 
@@ -107,6 +109,7 @@ impl Geometric for Bvh {
                 right_intersection.or(left_intersection)
             }
             BvhNode::Leaf(leaf) => leaf.intersect(ray, ray_t),
+            BvhNode::Empty => unreachable!("handled in early return"),
         }
     }
 
