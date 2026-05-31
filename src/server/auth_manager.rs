@@ -188,12 +188,13 @@ impl AuthManager {
         .map_err(|e| e.to_string())
     }
 
-    pub fn get_auth_url_and_state(&self, origin: Option<String>) -> (String, CsrfToken) {
+    pub fn get_auth_url_and_state(&self, origin: Option<String>) -> Result<(String, CsrfToken), AuthManagerError> {
         let oauth_client = match origin {
             // update redirect uri if we were given an origin from the API caller
             Some(ref origin) => {
                 let redirect_url = format!("{origin}/auth/github/callback");
-                let redirect_url = RedirectUrl::new(redirect_url).expect("invalid redirect URL");
+                let redirect_url = RedirectUrl::new(redirect_url)
+                    .map_err(|e| format!("Invalid redirect URL from origin header: {e}"))?;
 
                 &self.oauth_client.clone().set_redirect_uri(redirect_url)
             }
@@ -202,7 +203,7 @@ impl AuthManager {
 
         let (url, state) = oauth_client.authorize_url(CsrfToken::new_random).url();
 
-        (url.to_string(), state)
+        Ok((url.to_string(), state))
     }
 
     pub async fn exchange_code(
