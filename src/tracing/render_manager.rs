@@ -185,16 +185,31 @@ impl RenderManager {
             }
 
             let initial_pixel_data = match previous_checkpoint {
-                Some(rcp) => rcp.pixel_data.expect(
-                    "previous checkpoint pixel data should not be cleared during active render",
-                ),
+                Some(rcp) => match rcp.pixel_data {
+                    Some(pixel_data) => pixel_data,
+                    None => {
+                        println!(
+                            "Checkpoint pixel data unexpectedly missing for render {} at iteration {}",
+                            render.id, rcp.iteration
+                        );
+                        running_renders.lock().unwrap().remove(&render.id);
+                        return;
+                    }
+                },
                 None => PixelData::new(),
             };
 
-            let render_data = render
-                .config
-                .compile()
-                .expect("Failing to compile render config at tracing time!");
+            let render_data = match render.config.compile() {
+                Ok(data) => data,
+                Err(e) => {
+                    println!(
+                        "Failed to compile render config for render {} at tracing time: {e}",
+                        render.id
+                    );
+                    running_renders.lock().unwrap().remove(&render.id);
+                    return;
+                }
+            };
 
             let (sender, mut receiver) = mpsc::channel(100);
 
@@ -420,16 +435,9 @@ impl RenderManager {
             ));
         }
 
-        let render = self
-            .storage
-            .get_render(id)
-            .await?
-            .ok_or_else(|| {
-                RenderManagerError::ClientError(
-                    StatusCode::NOT_FOUND,
-                    "Render not found".to_string(),
-                )
-            })?;
+        let render = self.storage.get_render(id).await?.ok_or_else(|| {
+            RenderManagerError::ClientError(StatusCode::NOT_FOUND, "Render not found".to_string())
+        })?;
         let checkpoints_meta = self
             .storage
             .get_render_checkpoints_excluding_pixel_data(id)
