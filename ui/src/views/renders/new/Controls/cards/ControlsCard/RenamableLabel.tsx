@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, TextInput } from 'flowbite-react';
+import { Button, TextInput, type ButtonProps } from 'flowbite-react';
 import { HiPencil, HiCheck } from 'react-icons/hi2';
 import { LabelText, type LabelTextProps } from './LabelText';
 
@@ -26,11 +26,17 @@ export function RenamableLabel(props: RenamableLabelProps) {
     setIsEditing(true);
   }
 
+  const buttonProps: ButtonProps = {
+    size: 'xs',
+    outline: true,
+    pill: true,
+    color: 'dark',
+  };
+
   if (isEditing) {
     return (
       <span className="inline-flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
         <TextInput
-          sizing="sm"
           value={editText}
           onChange={(e) => setEditText(e.target.value)}
           onKeyDown={(e) => {
@@ -40,7 +46,7 @@ export function RenamableLabel(props: RenamableLabelProps) {
           }}
           className="w-40"
         />
-        <Button size="sm" onClick={handleConfirm}>
+        <Button {...buttonProps} onClick={handleConfirm}>
           <HiCheck className="h-4 w-4" />
         </Button>
       </span>
@@ -50,7 +56,7 @@ export function RenamableLabel(props: RenamableLabelProps) {
   return (
     <span className="inline-flex items-center gap-2">
       <LabelText text={label} type={labelStyle} />
-      <Button size="sm" onClick={handleStartEditing}>
+      <Button {...buttonProps} onClick={handleStartEditing}>
         <HiPencil className="h-4 w-4" />
       </Button>
     </span>

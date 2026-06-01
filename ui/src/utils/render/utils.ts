@@ -205,6 +205,24 @@ function moveKey<T>(
 }
 
 /**
+ * renames a camera and updates all scene references
+ * throughout the config to point to the new name.
+ */
+export function renameCamera(config: RenderConfig, oldName: string, newName: string): RenderConfig {
+  const newConfig = { ...config };
+  newConfig.cameras = moveKey(newConfig.cameras, oldName, newName);
+
+  // update scene camera references
+  Object.values(newConfig.scenes ?? {}).forEach((scene) => {
+    if (scene.camera === oldName) {
+      scene.camera = newName;
+    }
+  });
+
+  return newConfig;
+}
+
+/**
  * renames a texture and updates all texture, material, and geometric references
  * throughout the config to point to the new name.
  */
