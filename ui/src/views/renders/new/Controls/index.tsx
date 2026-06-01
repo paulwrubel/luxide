@@ -15,7 +15,7 @@ import {
   getTopLevelTextureNames,
 } from '@/utils/render/utils';
 import type { RenderForm } from '@/hooks/useRenderForm';
-import { useStore } from '@tanstack/react-form';
+import { useSelector } from '@tanstack/react-store';
 import type { DeepPartial } from 'flowbite-react/types';
 
 interface ControlsProps {
@@ -25,7 +25,7 @@ interface ControlsProps {
 export function Controls(props: ControlsProps) {
   const { form } = props;
 
-  const renderConfig = useStore(form.store, (state) => state.values);
+  const renderConfig = useSelector(form.store, (state) => state.values);
 
   const activeScene = useMemo(
     () => getSceneData(renderConfig, renderConfig.active_scene),

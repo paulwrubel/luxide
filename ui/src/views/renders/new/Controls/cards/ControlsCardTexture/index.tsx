@@ -4,10 +4,10 @@ import { TextArrayInputControl } from '../form-controls/TextArrayInputControl';
 import { InfoIconAdditionalInfo } from '@/views/renders/new/Controls/icons/InfoIconAdditionalInfo';
 import { NestedTextureHeader } from './NestedTextureHeader';
 import { getTextureData } from '@/utils/render/texture';
-import { fixReferences } from '@/utils/render/utils';
+import { fixReferences, renameTexture } from '@/utils/render/utils';
 import type { RenderConfig } from '@/utils/render/config';
 import type { RenderForm } from '@/hooks/useRenderForm';
-import { useStore } from '@tanstack/react-form';
+import { useSelector } from '@tanstack/react-store';
 import { Separator } from '@/components/Separator';
 
 interface ControlsCardTextureProps {
@@ -18,9 +18,23 @@ interface ControlsCardTextureProps {
 export function ControlsCardTexture(props: ControlsCardTextureProps) {
   const { form, textureName } = props;
 
-  const renderConfig = useStore(form.store, (state) => state.values);
+  const renderConfig = useSelector(form.store, (state) => state.values);
 
   const { data: textureData } = getTextureData(renderConfig, textureName);
+
+  function handleRename(newName: string) {
+    const trimmed = newName.trim();
+    if (!trimmed || trimmed === textureName) {
+      return;
+    }
+
+    const renamed = renameTexture(renderConfig, textureName, trimmed);
+
+    form.setFieldValue('textures', renamed.textures);
+    form.setFieldValue('materials', renamed.materials);
+    form.setFieldValue('geometrics', renamed.geometrics);
+    form.setFieldValue('scenes', renamed.scenes);
+  }
 
   function handleDeleteTexture(name: string) {
     const newTextures = { ...renderConfig.textures };
@@ -94,6 +108,7 @@ export function ControlsCardTexture(props: ControlsCardTextureProps) {
   return (
     <ControlsCard
       leftLabel={textureName}
+      onRename={handleRename}
       rightLabel={textureData.type}
       rightLabelStyle="light"
       onDelete={() => handleDeleteTexture(textureName)}

@@ -2,10 +2,10 @@ import { ControlsCard } from './ControlsCard';
 import { RangeControl } from './form-controls/RangeControl';
 import { SelectControl } from './form-controls/SelectControl';
 import { getMaterialData } from '@/utils/render/material';
-import { fixReferences } from '@/utils/render/utils';
+import { fixReferences, renameMaterial } from '@/utils/render/utils';
 import type { RenderConfig } from '@/utils/render/config';
 import type { RenderForm } from '@/hooks/useRenderForm';
-import { useStore } from '@tanstack/react-form';
+import { useSelector } from '@tanstack/react-store';
 
 interface ControlsCardMaterialProps {
   form: RenderForm;
@@ -15,9 +15,23 @@ interface ControlsCardMaterialProps {
 export function ControlsCardMaterial(props: ControlsCardMaterialProps) {
   const { form, materialName } = props;
 
-  const renderConfig = useStore(form.store, (state) => state.values);
+  const renderConfig = useSelector(form.store, (state) => state.values);
 
   const { data: materialData } = getMaterialData(renderConfig, materialName);
+
+  function handleRename(newName: string) {
+    const trimmed = newName.trim();
+    if (!trimmed || trimmed === materialName) {
+      return;
+    }
+
+    const renamed = renameMaterial(renderConfig, materialName, trimmed);
+
+    form.setFieldValue('textures', renamed.textures);
+    form.setFieldValue('materials', renamed.materials);
+    form.setFieldValue('geometrics', renamed.geometrics);
+    form.setFieldValue('scenes', renamed.scenes);
+  }
 
   function handleDeleteMaterial(name: string) {
     const newMaterials = { ...renderConfig.materials };
@@ -102,6 +116,7 @@ export function ControlsCardMaterial(props: ControlsCardMaterialProps) {
   return (
     <ControlsCard
       leftLabel={materialName}
+      onRename={handleRename}
       rightLabel={materialData.type}
       rightLabelStyle="light"
       onDelete={() => handleDeleteMaterial(materialName)}

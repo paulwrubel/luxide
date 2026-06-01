@@ -1,7 +1,7 @@
 import { Canvas } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
 import { useRef, useEffect } from 'react';
-import { useStore } from '@tanstack/react-form';
+import { useSelector } from '@tanstack/react-store';
 import * as THREE from 'three';
 import { GeometricRenderer } from './GeometricRenderer';
 import { getSceneData } from '@/utils/render/scene';
@@ -38,7 +38,7 @@ function CameraUpdater({ cameraData }: { cameraData: RawCameraData }) {
 export function Scene(props: SceneProps) {
   const { form } = props;
 
-  const renderConfig = useStore(form.store, (state) => state.values);
+  const renderConfig = useSelector(form.store, (state) => state.values);
   const activeScene = getSceneData(renderConfig, renderConfig.active_scene);
   const { data: cameraData } = getCameraData(renderConfig, activeScene.camera);
 

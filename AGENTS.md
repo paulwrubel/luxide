@@ -107,7 +107,7 @@ Dark mode requires THREE things simultaneously:
 3. **React tree**: `<ThemeProvider>` wrapping the app in `App.tsx`
 
 ### TanStack Form
-- **Values require `useStore`**: Use `useStore(form.store, selector)` to read form values reactively — NOT `form.state.values`. Example: `const values = useStore(form.store, (state) => state.values);`
+- **Values require `useSelector`**: Use `useSelector(form.store, selector)` to read form values reactively — NOT `form.state.values`. Example: `const values = useSelector(form.store, (state) => state.values);`
 
 ### Tailwind CSS v4
 - No `tailwind.config.ts` file exists. All configuration is done via CSS `@theme` block in `ui/src/index.css`.

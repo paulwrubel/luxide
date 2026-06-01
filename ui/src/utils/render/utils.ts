@@ -192,3 +192,172 @@ export function fixReferences(config: RenderConfig): RenderConfig {
 
   return newConfig;
 }
+
+function moveKey<T>(
+  collection: Record<string, T> | undefined,
+  oldName: string,
+  newName: string,
+): Record<string, T> {
+  const newCollection = { ...collection };
+  newCollection[newName] = newCollection[oldName];
+  delete newCollection[oldName];
+  return newCollection;
+}
+
+/**
+ * renames a camera and updates all scene references
+ * throughout the config to point to the new name.
+ */
+export function renameCamera(config: RenderConfig, oldName: string, newName: string): RenderConfig {
+  const newConfig = { ...config };
+  newConfig.cameras = moveKey(newConfig.cameras, oldName, newName);
+
+  // update scene camera references
+  Object.values(newConfig.scenes ?? {}).forEach((scene) => {
+    if (scene.camera === oldName) {
+      scene.camera = newName;
+    }
+  });
+
+  return newConfig;
+}
+
+/**
+ * renames a texture and updates all texture, material, and geometric references
+ * throughout the config to point to the new name.
+ */
+export function renameTexture(
+  config: RenderConfig,
+  oldName: string,
+  newName: string,
+): RenderConfig {
+  const newConfig = { ...config };
+  newConfig.textures = moveKey(newConfig.textures, oldName, newName);
+
+  // checker sub-textures
+  Object.values(newConfig.textures ?? {}).forEach((texture) => {
+    if (texture.type === 'checker') {
+      if (texture.even_texture === oldName) {
+        texture.even_texture = newName;
+      }
+      if (texture.odd_texture === oldName) {
+        texture.odd_texture = newName;
+      }
+    }
+  });
+
+  // material reflectance/emittance textures
+  Object.values(newConfig.materials ?? {}).forEach((material) => {
+    switch (material.type) {
+      case 'dielectric':
+      case 'lambertian':
+      case 'specular': {
+        if (material.reflectance_texture === oldName) {
+          material.reflectance_texture = newName;
+        }
+        if (material.emittance_texture === oldName) {
+          material.emittance_texture = newName;
+        }
+
+        break;
+      }
+    }
+  });
+
+  // constant_volume geometric reflectance_texture
+  Object.values(newConfig.geometrics ?? {}).forEach((geometric) => {
+    switch (geometric.type) {
+      case 'constant_volume': {
+        if (geometric.reflectance_texture === oldName) {
+          geometric.reflectance_texture = newName;
+        }
+
+        break;
+      }
+    }
+  });
+
+  return newConfig;
+}
+
+/**
+ * renames a material and updates all geometric references
+ * throughout the config to point to the new name.
+ */
+export function renameMaterial(
+  config: RenderConfig,
+  oldName: string,
+  newName: string,
+): RenderConfig {
+  const newConfig = { ...config };
+  newConfig.materials = moveKey(newConfig.materials, oldName, newName);
+
+  // leaf geometrics: material reference
+  Object.values(newConfig.geometrics ?? {}).forEach((geometric) => {
+    switch (geometric.type) {
+      case 'box':
+      case 'obj_model':
+      case 'parallelogram':
+      case 'sphere':
+      case 'triangle': {
+        if (geometric.material === oldName) {
+          geometric.material = newName;
+        }
+
+        break;
+      }
+    }
+  });
+
+  return newConfig;
+}
+
+/**
+ * renames a geometric and updates all composite geometric, list geometric,
+ * and scene references throughout the config to point to the new name.
+ */
+export function renameGeometric(
+  config: RenderConfig,
+  oldName: string,
+  newName: string,
+): RenderConfig {
+  const newConfig = { ...config };
+  newConfig.geometrics = moveKey(newConfig.geometrics, oldName, newName);
+
+  // composite geometric references and list geometric arrays
+  Object.values(newConfig.geometrics ?? {}).forEach((geometric) => {
+    switch (geometric.type) {
+      case 'rotate_x':
+      case 'rotate_y':
+      case 'rotate_z':
+      case 'translate':
+      case 'constant_volume': {
+        if (geometric.geometric === oldName) {
+          geometric.geometric = newName;
+        }
+
+        break;
+      }
+      case 'list': {
+        geometric.geometrics = geometric.geometrics.map((name: string) =>
+          name === oldName ? newName : name,
+        );
+
+        break;
+      }
+    }
+  });
+
+  // scene geometric lists
+  if (newConfig.scenes) {
+    const scenes = newConfig.scenes;
+    const activeScene = scenes[newConfig.active_scene];
+    if (activeScene) {
+      activeScene.geometrics = activeScene.geometrics.map((name: string) =>
+        name === oldName ? newName : name,
+      );
+    }
+  }
+
+  return newConfig;
+}

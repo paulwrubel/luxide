@@ -2,9 +2,11 @@ import { ControlsCard } from './ControlsCard';
 import { WarningIconUnaffectedPreview } from '../icons/WarningIconUnaffectedPreview';
 import { RangeControl } from './form-controls/RangeControl';
 import { TextArrayInputControl } from './form-controls/TextArrayInputControl';
+import { renameCamera } from '@/utils/render/utils';
 import type { RenderForm, RenderFormPath } from '@/hooks/useRenderForm';
 import type { DeepKeys } from '@tanstack/react-form';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
+import { useSelector } from '@tanstack/react-store';
 
 interface ControlsCardCameraProps {
   form: RenderForm;
@@ -14,10 +16,24 @@ interface ControlsCardCameraProps {
 export function ControlsCardCamera(props: ControlsCardCameraProps) {
   const { form, cameraName } = props;
 
+  const renderConfig = useSelector(form.store, (state) => state.values);
+
+  function handleRename(newName: string) {
+    const trimmed = newName.trim();
+    if (!trimmed || trimmed === cameraName) {
+      return;
+    }
+
+    const renamed = renameCamera(renderConfig, cameraName, trimmed);
+
+    form.setFieldValue('cameras', renamed.cameras);
+    form.setFieldValue('scenes', renamed.scenes);
+  }
+
   const formPath: RenderFormPath = `cameras.${cameraName}`;
 
   return (
-    <ControlsCard leftLabel={cameraName} startExpanded>
+    <ControlsCard leftLabel={cameraName} onRename={handleRename} startExpanded>
       <div className="flex flex-col gap-2 p-4">
         <RangeControl
           form={form}
