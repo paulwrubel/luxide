@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { useStore } from '@tanstack/react-form';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/providers/auth';
 import { useRenderForm } from '@/hooks/useRenderForm';
 import { NewRenderSidebar } from './NewRenderSidebar';
 import { Scene } from './Scene';
 import type { RenderConfig } from '@/utils/render/config';
+import { useSelector } from '@tanstack/react-store';
 
 export function NewRenderPage() {
   const { user } = useAuth();
@@ -33,7 +33,10 @@ export function NewRenderPage() {
   const form = useRenderForm({ user, initialValues: importedConfig });
 
   // canvas sizing - maintain aspect ratio in container
-  const imageDimensions = useStore(form.store, (state) => state.values.parameters.image_dimensions);
+  const imageDimensions = useSelector(
+    form.store,
+    (state) => state.values.parameters.image_dimensions,
+  );
   const aspectRatio = imageDimensions[0] / imageDimensions[1];
 
   let canvasWidth = 0;

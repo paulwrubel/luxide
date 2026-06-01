@@ -5,24 +5,18 @@ import type { DeepPartial } from 'flowbite-react/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Separator } from '@/components/Separator';
 import { HiTrash } from 'react-icons/hi2';
-
-type LabelType = 'bold' | 'light';
+import { RenamableLabel } from './RenamableLabel';
+import { LabelText, type LabelTextProps } from './LabelText';
 
 interface ControlsCardProps {
   children: React.ReactNode;
   startExpanded?: boolean;
-  leftLabel?: string;
-  leftLabelStyle?: LabelType;
+  leftLabel: string;
+  leftLabelStyle?: LabelTextProps['type'];
   rightLabel?: string;
-  rightLabelStyle?: LabelType;
+  rightLabelStyle?: LabelTextProps['type'];
+  onRename?: (newName: string) => void;
   onDelete?: () => void;
-}
-
-function LabelText({ text, type }: { text: string; type: LabelType }) {
-  if (type === 'bold') {
-    return <h2 className="text-xl font-bold">{text}</h2>;
-  }
-  return <h2 className="text-lg font-light italic">{text}</h2>;
 }
 
 export function ControlsCard(props: ControlsCardProps) {
@@ -33,6 +27,7 @@ export function ControlsCard(props: ControlsCardProps) {
     leftLabelStyle = 'bold',
     rightLabel,
     rightLabelStyle = 'light',
+    onRename,
     onDelete,
   } = props;
 
@@ -52,7 +47,11 @@ export function ControlsCard(props: ControlsCardProps) {
         onClick={() => setIsExpanded(!isExpanded)}
         type="button"
       >
-        {leftLabel ? <LabelText text={leftLabel} type={leftLabelStyle} /> : <span />}
+        {onRename ? (
+          <RenamableLabel label={leftLabel} labelStyle={leftLabelStyle} onRename={onRename} />
+        ) : (
+          <LabelText text={leftLabel} type={leftLabelStyle} />
+        )}
         <div className="flex flex-row items-center gap-2">
           {rightLabel && <LabelText text={rightLabel} type={rightLabelStyle} />}
           {isExpanded ? (

@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useStore } from '@tanstack/react-form';
+import { useSelector } from '@tanstack/react-store';
 import {
   Sidebar,
   SidebarItems,
@@ -27,8 +27,8 @@ export function NewRenderSidebar({ form }: NewRenderSidebarProps) {
   const [copied, setCopied] = useState(false);
   const [isCreatingRender, setIsCreatingRender] = useState(false);
 
-  const formValues = useStore(form.store, (state) => state.values);
-  const configName = useStore(form.store, (state) => state.values.name);
+  const formValues = useSelector(form.store, (state) => state.values);
+  const configName = useSelector(form.store, (state) => state.values.name);
 
   const jsonString = JSON.stringify(formValues, null, 2);
 

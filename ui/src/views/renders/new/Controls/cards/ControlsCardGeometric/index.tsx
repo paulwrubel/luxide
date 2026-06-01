@@ -5,10 +5,10 @@ import { TextInputControl } from '../form-controls/TextInputControl';
 import { RangeControl } from '../form-controls/RangeControl';
 import { SelectControl } from '../form-controls/SelectControl';
 import { getGeometricData, getGeometricDataSafe } from '@/utils/render/geometric';
-import { fixReferences } from '@/utils/render/utils';
+import { fixReferences, renameGeometric } from '@/utils/render/utils';
 import type { RenderConfig } from '@/utils/render/config';
 import type { RenderForm } from '@/hooks/useRenderForm';
-import { useStore } from '@tanstack/react-form';
+import { useSelector } from '@tanstack/react-store';
 import { Separator } from '@/components/Separator';
 
 function GeometricMaterialSelect({
@@ -38,9 +38,23 @@ interface ControlsCardGeometricProps {
 export function ControlsCardGeometric(props: ControlsCardGeometricProps) {
   const { form, geometricName } = props;
 
-  const renderConfig = useStore(form.store, (state) => state.values);
+  const renderConfig = useSelector(form.store, (state) => state.values);
 
   const { data: geometricData } = getGeometricDataSafe(renderConfig, geometricName);
+
+  function handleRename(newName: string) {
+    const trimmed = newName.trim();
+    if (!trimmed || trimmed === geometricName) {
+      return;
+    }
+
+    const renamed = renameGeometric(renderConfig, geometricName, trimmed);
+
+    form.setFieldValue('textures', renamed.textures);
+    form.setFieldValue('materials', renamed.materials);
+    form.setFieldValue('geometrics', renamed.geometrics);
+    form.setFieldValue('scenes', renamed.scenes);
+  }
 
   function handleDeleteGeometric(name: string) {
     const newGeometrics = { ...renderConfig.geometrics };
@@ -227,6 +241,7 @@ export function ControlsCardGeometric(props: ControlsCardGeometricProps) {
   return (
     <ControlsCard
       leftLabel={geometricName}
+      onRename={handleRename}
       rightLabel={geometricData.type}
       rightLabelStyle="light"
       onDelete={() => handleDeleteGeometric(geometricName)}

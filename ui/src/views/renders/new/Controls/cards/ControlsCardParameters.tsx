@@ -9,7 +9,7 @@ import { useAuth } from '@/providers/auth';
 import { Separator } from '@/components/Separator';
 import { useState } from 'react';
 import type { RenderForm } from '@/hooks/useRenderForm';
-import { useStore } from '@tanstack/react-form';
+import { useSelector } from '@tanstack/react-store';
 
 interface ControlsCardParametersProps {
   form: RenderForm;
@@ -19,7 +19,7 @@ export function ControlsCardParameters(props: ControlsCardParametersProps) {
   const { form } = props;
 
   const { user } = useAuth();
-  const renderConfig = useStore(form.store, (state) => state.values);
+  const renderConfig = useSelector(form.store, (state) => state.values);
   const parameters = renderConfig.parameters;
   const savedCheckpointLimit = parameters.saved_checkpoint_limit ?? 1;
   const maxCheckpoints = user?.max_checkpoints_per_render ?? null;

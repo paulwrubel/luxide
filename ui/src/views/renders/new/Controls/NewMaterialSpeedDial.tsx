@@ -2,7 +2,7 @@ import { Dropdown, DropdownItem } from 'flowbite-react';
 import { defaultMaterialForType, type MaterialData } from '@/utils/render/material';
 import { capitalize, getNextUniqueName } from '@/utils/render/utils';
 import type { RenderForm } from '@/hooks/useRenderForm';
-import { useStore } from '@tanstack/react-form';
+import { useSelector } from '@tanstack/react-store';
 import { HiPlus } from 'react-icons/hi2';
 
 type MaterialType = Exclude<MaterialData['type'], 'dielectric'>;
@@ -14,7 +14,7 @@ interface NewMaterialSpeedDialProps {
 export function NewMaterialSpeedDial(props: NewMaterialSpeedDialProps) {
   const { form } = props;
 
-  const formValues = useStore(form.store, (state) => state.values);
+  const formValues = useSelector(form.store, (state) => state.values);
 
   function handleNewMaterial(type: MaterialType) {
     const newMaterial = defaultMaterialForType(type);
