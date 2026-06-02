@@ -3,6 +3,13 @@ import type { GeometricData } from './geometric';
 import type { MaterialData } from './material';
 import type { TextureData } from './texture';
 
+export interface Template {
+  id: string;
+  name: string;
+  description: string;
+  createConfig: () => RenderConfig;
+}
+
 export function getDefaultRenderConfig(): RenderConfig {
   return getCornellBoxRenderConfig();
 }
@@ -275,3 +282,18 @@ function getDefaultTextures(): Record<string, TextureData> {
     },
   };
 }
+
+export const TEMPLATES: Template[] = [
+  {
+    id: 'cornell-box',
+    name: 'Cornell Box',
+    description: 'Classic Cornell Box scene with two boxes, colored walls, and a ceiling light',
+    createConfig: getCornellBoxRenderConfig,
+  },
+  {
+    id: 'empty',
+    name: 'Empty',
+    description: 'Blank canvas with default parameters — build your scene from scratch',
+    createConfig: getEmptyRenderConfig,
+  },
+];
