@@ -1,18 +1,17 @@
 import { useState, useRef, useCallback } from 'react';
-import { Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'flowbite-react';
+import { Button, ModalHeader, ModalBody, ModalFooter } from 'flowbite-react';
 import { HiFolderOpen } from 'react-icons/hi2';
 import type { RenderConfig } from '@/utils/render/config';
 import { RenderConfigSchema, normalizeRenderConfig } from '@/utils/render/config';
 import { RenderConfigEditor } from './RenderConfigEditor';
 
-interface ImportConfigModalProps {
-  show: boolean;
-  onClose: () => void;
+export type ImportConfigBodyProps = {
   onImportSuccess: (config: RenderConfig) => void;
-}
+  onCancel?: () => void;
+};
 
-export function ImportConfigModal(props: ImportConfigModalProps) {
-  const { show, onClose, onImportSuccess } = props;
+export function ImportConfigBody(props: ImportConfigBodyProps) {
+  const { onImportSuccess, onCancel } = props;
 
   const [jsonText, setJsonText] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +46,7 @@ export function ImportConfigModal(props: ImportConfigModalProps) {
         return;
       }
       onImportSuccess(result.data);
-      onClose();
+      onCancel?.();
     } catch (e) {
       if (e instanceof SyntaxError) {
         setError('Invalid JSON: ' + e.message);
@@ -57,10 +56,10 @@ export function ImportConfigModal(props: ImportConfigModalProps) {
     } finally {
       setIsValidating(false);
     }
-  }, [jsonText, onImportSuccess, onClose]);
+  }, [jsonText, onImportSuccess, onCancel]);
 
   return (
-    <Modal show={show} onClose={onClose} size="xl" dismissible>
+    <>
       <ModalHeader>Import Render Config</ModalHeader>
       <ModalBody>
         <div className="flex flex-col gap-4">
@@ -95,10 +94,12 @@ export function ImportConfigModal(props: ImportConfigModalProps) {
         <Button color="default" onClick={handleImportConfig} disabled={isValidating}>
           Import Config
         </Button>
-        <Button color="gray" onClick={onClose}>
-          Cancel
-        </Button>
+        {onCancel && (
+          <Button color="gray" onClick={onCancel}>
+            Cancel
+          </Button>
+        )}
       </ModalFooter>
-    </Modal>
+    </>
   );
 }

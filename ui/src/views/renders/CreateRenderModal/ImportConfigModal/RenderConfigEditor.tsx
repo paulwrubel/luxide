@@ -63,12 +63,14 @@ function schemaLintSource(view: EditorView): Diagnostic[] {
   }
 }
 
-interface RenderConfigEditorProps {
+export type RenderConfigEditorProps = {
   value: string;
   onChange: (value: string) => void;
-}
+};
 
-export function RenderConfigEditor({ value, onChange }: RenderConfigEditorProps) {
+export function RenderConfigEditor(props: RenderConfigEditorProps) {
+  const { value, onChange } = props;
+
   const extensions: Extension[] = [
     basicSetup,
     json(),
