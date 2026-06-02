@@ -48,7 +48,7 @@ export function RenderTitleBar(props: RenderTitleBarProps) {
               </h2>
               <div className="flex items-center gap-2">
                 <StateBadge renderState={render.state} />
-                <Button size="xs" color="gray" onClick={handleDownload}>
+                <Button size="sm" outline color="gray" onClick={handleDownload}>
                   <HiArrowDownTray />
                 </Button>
               </div>
