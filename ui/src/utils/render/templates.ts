@@ -23,7 +23,6 @@ export const TEMPLATES: Template[] = [
     id: 'empty',
     name: 'Empty',
     description: 'Blank canvas with default parameters — build your scene from scratch',
-    thumbnail: '/templates/empty.png',
     config: getEmptyRenderConfig(),
   },
 ];

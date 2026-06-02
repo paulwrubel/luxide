@@ -26,7 +26,7 @@ export function TemplatePicker(props: TemplatePickerProps) {
   const selectedTemplate = selectedId ? (TEMPLATES.find((t) => t.id === selectedId) ?? null) : null;
 
   const buttonClassName: HTMLAttributes<HTMLButtonElement>['className'] =
-    'flex h-full w-full flex-col items-center gap-1 p-4 text-zinc-200 hover:bg-zinc-900 text-wrap hover:rounded-lg';
+    'flex h-full w-full flex-col justify-end items-center gap-1 p-4 text-zinc-200 hover:bg-zinc-900 text-wrap hover:rounded-lg';
 
   return (
     <>
@@ -41,19 +41,14 @@ export function TemplatePicker(props: TemplatePickerProps) {
                 key={template.id}
                 theme={cardTheme}
                 className={isSelected ? 'w-60 border-solid border-zinc-400 bg-zinc-800' : 'w-60'}
+                imgAlt={template.thumbnail ? template.name : undefined}
+                imgSrc={template.thumbnail}
               >
                 <button
                   type="button"
                   onClick={() => setSelectedId(template.id)}
                   className={buttonClassName}
                 >
-                  {template.thumbnail && (
-                    <img
-                      src={template.thumbnail}
-                      alt={template.name}
-                      className="h-24 w-full rounded-t-md object-cover"
-                    />
-                  )}
                   <span className="text-base font-normal">{template.name}</span>
                   <span className="text-sm text-zinc-400">{template.description}</span>
                 </button>
@@ -70,16 +65,14 @@ export function TemplatePicker(props: TemplatePickerProps) {
                 <img
                   src={selectedTemplate.thumbnail}
                   alt={selectedTemplate.name}
-                  className="h-24 w-32 shrink-0 rounded-lg object-cover"
+                  className="h-24 w-32 shrink-0 rounded-lg object-contain"
                 />
               )}
               <div>
                 <h3 className="text-sm font-medium text-zinc-200">
                   Preview: {selectedTemplate.name}
                 </h3>
-                <p className="mt-1 text-sm text-zinc-400">
-                  {selectedTemplate.description}
-                </p>
+                <p className="mt-1 text-sm text-zinc-400">{selectedTemplate.description}</p>
               </div>
             </div>
           </div>
