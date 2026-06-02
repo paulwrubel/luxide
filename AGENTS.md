@@ -126,3 +126,9 @@ Dark mode requires THREE things simultaneously:
 - Database: PostgreSQL with JSONB columns for render state and config, BYTEA for bincode-encoded pixel data.
 - The backend embeds the built UI at compile time via `include_dir!`, so `just build-api` builds the UI first.
 - The API server's Vite dev proxy forwards `/api` to `localhost:8080` for development; in production the API serves the UI directly.
+
+## 7. React Component Conventions
+
+When modifying or creating React components, load the `react-component-conventions` skill
+(`.opencode/skills/react-component-conventions/`). All UI components must use
+`export type` props, function declaration, and first-line destructure.
