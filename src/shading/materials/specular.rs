@@ -5,7 +5,7 @@ use crate::{
     shading::{Color, Texture},
 };
 
-use super::Material;
+use super::{Material, ScatterRecord};
 
 #[derive(Debug, Clone)]
 pub struct Specular {
@@ -37,7 +37,7 @@ impl Material for Specular {
         self.emittance_texture.value(u, v, p)
     }
 
-    fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<Ray> {
+    fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<ScatterRecord> {
         let reflected = ray.direction.unit_vector().reflect_around(ray_hit.normal);
 
         let scattered = Ray::new(
@@ -47,9 +47,18 @@ impl Material for Specular {
         );
 
         if scattered.direction.dot(ray_hit.normal) > 0.0 {
-            Some(scattered)
+            Some(ScatterRecord {
+                attenuation: self.reflectance_texture.value(ray_hit.u, ray_hit.v, ray_hit.point),
+                scattered,
+                pdf: 0.0,
+                skip_pdf: true,
+            })
         } else {
             None
         }
+    }
+
+    fn scattering_pdf(&self, _ray_in: Ray, _ray_hit: &RayHit, _scattered: &Ray) -> f64 {
+        0.0
     }
 }

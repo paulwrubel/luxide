@@ -120,6 +120,18 @@ impl Vector {
         }
     }
 
+    pub fn random_cosine_direction() -> Self {
+        let r1 = rand::random::<f64>();
+        let r2 = rand::random::<f64>();
+        let phi = 2.0 * std::f64::consts::PI * r1;
+        let sqrt_r2 = r2.sqrt();
+        Self {
+            x: phi.cos() * sqrt_r2,
+            y: phi.sin() * sqrt_r2,
+            z: (1.0 - r2).sqrt(),
+        }
+    }
+
     pub fn length(&self) -> f64 {
         self.squared_length().sqrt()
     }

@@ -4,7 +4,7 @@ use rand::RngExt;
 
 use crate::{
     geometry::{Geometric, Point, Ray, Vector},
-    shading::Color,
+    shading::{Color, materials::ScatterRecord},
     tracing::{RenderParameters, Scene},
     utils::{Angle, Interval},
 };
@@ -145,29 +145,24 @@ impl Camera {
             // update our accumulated color
             accumulated_color += attentuation_strength * emittance;
 
-            let reflectance = ray_hit
-                .material
-                .reflectance(ray_hit.u, ray_hit.v, ray_hit.point);
-
-            // if the surface is black, it's not going to let any incoming light contribute to the outgoing color
-            // so we can safely say no light is reflected and simply return the accumulated color so far
-            if bounces >= max_bounces || reflectance == Color::BLACK {
+            // if we've exceeded the maximum number of bounces, terminate
+            if bounces >= max_bounces {
                 return accumulated_color;
             }
 
-            // get scattered ray, if possible
-            match ray_hit.material.scatter(ray, &ray_hit) {
-                Some(scatter) => {
-                    // redirect the ray
-                    ray = scatter;
-                    // update the attenuation by the effect this surface has on the light rays
-                    attentuation_strength *= reflectance;
-                }
-                None => {
-                    // the surface absorbed this ray, so we can return the accumulated color
-                    return accumulated_color;
-                }
+            // get scattered ray and material info from the unified scatter record
+            let Some(srec) = ray_hit.material.scatter(ray, &ray_hit) else {
+                return accumulated_color;
             };
+            ray = srec.scattered;
+            if srec.skip_pdf {
+                // specular/dielectric: skip PDF division (delta-function BRDF)
+                attentuation_strength *= srec.attenuation;
+            } else {
+                // diffuse: explicit PDF ratio (pdf = scattering_pdf for now, ratio = 1.0)
+                let pdf = srec.pdf;
+                attentuation_strength *= srec.attenuation * srec.pdf / pdf;
+            }
 
             bounces += 1;
         }

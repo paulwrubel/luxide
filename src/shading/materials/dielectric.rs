@@ -5,7 +5,7 @@ use crate::{
     shading::{Color, Texture},
 };
 
-use super::Material;
+use super::{Material, ScatterRecord};
 
 #[derive(Debug, Clone)]
 pub struct Dielectric {
@@ -43,7 +43,7 @@ impl Material for Dielectric {
         self.emittance_texture.value(u, v, p)
     }
 
-    fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<Ray> {
+    fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<ScatterRecord> {
         let (refractive_normal, refraction_ratio) = if ray.direction.dot(ray_hit.normal) < 0.0 {
             (ray_hit.normal, 1.0 / self.index_of_refraction)
         } else {
@@ -65,7 +65,15 @@ impl Material for Dielectric {
             unit_direction.refract_around(refractive_normal, refraction_ratio)
         };
 
-        let scattered = Ray::new(ray_hit.point, refracted, ray.time);
-        Some(scattered)
+        Some(ScatterRecord {
+            attenuation: Color::WHITE, // glass is perfectly transparent (no absorption)
+            scattered: Ray::new(ray_hit.point, refracted, ray.time),
+            pdf: 0.0,
+            skip_pdf: true,
+        })
+    }
+
+    fn scattering_pdf(&self, _ray_in: Ray, _ray_hit: &RayHit, _scattered: &Ray) -> f64 {
+        0.0
     }
 }

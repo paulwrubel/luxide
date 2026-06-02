@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{Point, Ray, RayHit, Vector},
+    geometry::{Onb, Point, Ray, RayHit, Vector},
     shading::{Color, Texture, textures::SolidColor},
 };
 
-use super::Material;
+use super::{Material, ScatterRecord};
 
 #[derive(Debug, Clone)]
 pub struct Lambertian {
@@ -47,18 +47,24 @@ impl Material for Lambertian {
         self.emittance_texture.value(u, v, p)
     }
 
-    fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<Ray> {
-        let direction = ray_hit.normal + Vector::random_unit();
-
-        // prevent degenerate rays from being generated
-        let direction = if direction.is_near_zero() {
-            ray_hit.normal
+    fn scattering_pdf(&self, _ray_in: Ray, ray_hit: &RayHit, scattered: &Ray) -> f64 {
+        let cos_theta = ray_hit.normal.dot(scattered.direction.unit_vector());
+        if cos_theta < 0.0 {
+            0.0
         } else {
-            direction
-        };
+            cos_theta / std::f64::consts::PI
+        }
+    }
 
-        let scattered = Ray::new(ray_hit.point, direction, ray.time);
-
-        Some(scattered)
+    fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<ScatterRecord> {
+        let onb = Onb::build_from_w(ray_hit.normal);
+        let direction = onb.local_from_vec(Vector::random_cosine_direction());
+        let cos_theta = ray_hit.normal.dot(direction);
+        Some(ScatterRecord {
+            attenuation: self.reflectance_texture.value(ray_hit.u, ray_hit.v, ray_hit.point),
+            scattered: Ray::new(ray_hit.point, direction, ray.time),
+            pdf: if cos_theta < 0.0 { 0.0 } else { cos_theta / std::f64::consts::PI },
+            skip_pdf: false,
+        })
     }
 }

@@ -5,7 +5,7 @@ use crate::{
     shading::{Color, Texture},
 };
 
-use super::Material;
+use super::{Material, ScatterRecord};
 
 #[derive(Debug, Clone)]
 pub struct Isotropic {
@@ -31,8 +31,17 @@ impl Material for Isotropic {
         self.emittance_texture.value(u, v, p)
     }
 
-    fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<Ray> {
-        // always scatter, and always scatter in a random direction
-        Some(Ray::new(ray_hit.point, Vector::random_unit(), ray.time))
+    fn scattering_pdf(&self, _ray_in: Ray, _ray_hit: &RayHit, _scattered: &Ray) -> f64 {
+        1.0 / (4.0 * std::f64::consts::PI)
+    }
+
+    fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<ScatterRecord> {
+        // uniform sampling over the full sphere, PDF = 1/(4π)
+        Some(ScatterRecord {
+            attenuation: self.reflectance_texture.value(ray_hit.u, ray_hit.v, ray_hit.point),
+            scattered: Ray::new(ray_hit.point, Vector::random_unit(), ray.time),
+            pdf: 1.0 / (4.0 * std::f64::consts::PI),
+            skip_pdf: false,
+        })
     }
 }
