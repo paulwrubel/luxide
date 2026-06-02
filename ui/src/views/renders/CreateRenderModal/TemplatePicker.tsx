@@ -47,6 +47,13 @@ export function TemplatePicker(props: TemplatePickerProps) {
                   onClick={() => setSelectedId(template.id)}
                   className={buttonClassName}
                 >
+                  {template.thumbnail && (
+                    <img
+                      src={template.thumbnail}
+                      alt={template.name}
+                      className="h-24 w-full rounded-t-md object-cover"
+                    />
+                  )}
                   <span className="text-base font-normal">{template.name}</span>
                   <span className="text-sm text-zinc-400">{template.description}</span>
                 </button>
@@ -58,10 +65,23 @@ export function TemplatePicker(props: TemplatePickerProps) {
         {selectedTemplate && (
           <div className="mt-6">
             <Separator />
-            <h3 className="mt-4 text-sm font-medium text-zinc-200">
-              Preview: {selectedTemplate.name}
-            </h3>
-            <p className="mt-1 text-sm text-zinc-400">{selectedTemplate.description}</p>
+            <div className="mt-4 flex gap-4">
+              {selectedTemplate.thumbnail && (
+                <img
+                  src={selectedTemplate.thumbnail}
+                  alt={selectedTemplate.name}
+                  className="h-24 w-32 shrink-0 rounded-lg object-cover"
+                />
+              )}
+              <div>
+                <h3 className="text-sm font-medium text-zinc-200">
+                  Preview: {selectedTemplate.name}
+                </h3>
+                <p className="mt-1 text-sm text-zinc-400">
+                  {selectedTemplate.description}
+                </p>
+              </div>
+            </div>
           </div>
         )}
       </ModalBody>

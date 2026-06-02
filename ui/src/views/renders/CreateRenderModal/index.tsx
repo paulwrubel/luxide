@@ -5,6 +5,7 @@ import { SourceChoice } from './SourceChoice';
 import { TemplatePicker } from './TemplatePicker';
 import { ImportConfigBody } from './ImportConfigModal/ImportConfigBody';
 import type { RenderConfig } from '@/utils/render/config';
+import type { Template } from '@/utils/render/templates';
 
 type Stage = 'source-choice' | 'template-picker' | 'import-json';
 
@@ -24,8 +25,8 @@ export function CreateRenderModal(props: CreateRenderModalProps) {
     onClose();
   }
 
-  const handleTemplateSelect = (template: { createConfig: () => RenderConfig }) => {
-    const config = template.createConfig();
+  const handleTemplateSelect = (template: Template) => {
+    const config = template.config;
     navigate('/renders/new', { state: { importedConfig: config } });
     onClose();
   };
