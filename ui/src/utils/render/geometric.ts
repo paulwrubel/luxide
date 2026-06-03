@@ -320,7 +320,7 @@ export const GeometricBoxSchema = z.object({
   type: z.literal('box'),
   a: z.tuple([z.number(), z.number(), z.number()]),
   b: z.tuple([z.number(), z.number(), z.number()]),
-  is_culled: z.boolean().optional(),
+  is_culled: z.boolean().nullish(),
   material: z.string().nonempty(),
 });
 
@@ -359,7 +359,7 @@ export type RawGeometricBox = {
 
 export const GeometricListSchema = z.object({
   type: z.literal('list'),
-  use_bvh: z.boolean().optional(),
+  use_bvh: z.boolean().nullish(),
   geometrics: z.array(z.string().nonempty()),
 });
 
@@ -399,10 +399,10 @@ export type RawGeometricList = {
 export const GeometricObjModelSchema = z.object({
   type: z.literal('obj_model'),
   filename: z.string(),
-  origin: z.tuple([z.number(), z.number(), z.number()]).optional(),
-  scale: z.number().optional(),
-  recalculate_normals: z.boolean().optional(),
-  use_bvh: z.boolean().optional(),
+  origin: z.tuple([z.number(), z.number(), z.number()]).nullish(),
+  scale: z.number().nullish(),
+  recalculate_normals: z.boolean().nullish(),
+  use_bvh: z.boolean().nullish(),
   material: z.string().nonempty(),
 });
 
@@ -445,6 +445,7 @@ export const GeometricInstanceRotateXSchema = z
   .object({
     type: z.literal('rotate_x'),
     geometric: z.string().nonempty(),
+    around: z.tuple([z.number(), z.number(), z.number()]).nullish(),
   })
   .and(AngleSchema);
 
@@ -452,6 +453,7 @@ export const GeometricInstanceRotateYSchema = z
   .object({
     type: z.literal('rotate_y'),
     geometric: z.string().nonempty(),
+    around: z.tuple([z.number(), z.number(), z.number()]).nullish(),
   })
   .and(AngleSchema);
 
@@ -459,6 +461,7 @@ export const GeometricInstanceRotateZSchema = z
   .object({
     type: z.literal('rotate_z'),
     geometric: z.string().nonempty(),
+    around: z.tuple([z.number(), z.number(), z.number()]).nullish(),
   })
   .and(AngleSchema);
 
@@ -548,7 +551,7 @@ export const GeometricParallelogramSchema = z.object({
   lower_left: z.tuple([z.number(), z.number(), z.number()]),
   u: z.tuple([z.number(), z.number(), z.number()]),
   v: z.tuple([z.number(), z.number(), z.number()]),
-  is_culled: z.boolean().optional(),
+  is_culled: z.boolean().nullish(),
   material: z.string().nonempty(),
 });
 
@@ -630,10 +633,10 @@ export const GeometricTriangleSchema = z.object({
   a: z.tuple([z.number(), z.number(), z.number()]),
   b: z.tuple([z.number(), z.number(), z.number()]),
   c: z.tuple([z.number(), z.number(), z.number()]),
-  a_normal: z.tuple([z.number(), z.number(), z.number()]).optional(),
-  b_normal: z.tuple([z.number(), z.number(), z.number()]).optional(),
-  c_normal: z.tuple([z.number(), z.number(), z.number()]).optional(),
-  is_culled: z.boolean().optional(),
+  a_normal: z.tuple([z.number(), z.number(), z.number()]).nullish(),
+  b_normal: z.tuple([z.number(), z.number(), z.number()]).nullish(),
+  c_normal: z.tuple([z.number(), z.number(), z.number()]).nullish(),
+  is_culled: z.boolean().nullish(),
   material: z.string().nonempty(),
 });
 
@@ -747,30 +750,28 @@ const geometricSchemaByType: Record<string, z.ZodTypeAny> = {
   constant_volume: GeometricConstantVolumeSchema,
 };
 
-export const GeometricDataSchema = z
-  .any()
-  .superRefine((data, ctx) => {
-    if (typeof data !== 'object' || data === null || !('type' in data)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Geometric data must be an object with a type field',
-      });
-      return;
-    }
+export const GeometricDataSchema = z.any().superRefine((data, ctx) => {
+  if (typeof data !== 'object' || data === null || !('type' in data)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Geometric data must be an object with a type field',
+    });
+    return;
+  }
 
-    const schema = geometricSchemaByType[data.type as string];
-    if (!schema) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: `Unknown geometric type: ${data.type}`,
-      });
-      return;
-    }
+  const schema = geometricSchemaByType[data.type as string];
+  if (!schema) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `Unknown geometric type: ${data.type}`,
+    });
+    return;
+  }
 
-    const result = schema.safeParse(data);
-    if (!result.success) {
-      for (const issue of result.error.issues) {
-        ctx.addIssue(issue);
-      }
+  const result = schema.safeParse(data);
+  if (!result.success) {
+    for (const issue of result.error.issues) {
+      ctx.addIssue(issue);
     }
-  }) as z.ZodType<NormalizedGeometricData>;
+  }
+}) as z.ZodType<NormalizedGeometricData>;
