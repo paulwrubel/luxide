@@ -41,20 +41,26 @@ pub enum GeometricData {
     CompoundAxisAlignedPBox {
         a: [f64; 3],
         b: [f64; 3],
+        #[serde(skip_serializing_if = "Option::is_none")]
         is_culled: Option<bool>,
         material: MaterialRefOrInline,
     },
     #[serde(rename = "list")]
     CompoundList {
+        #[serde(skip_serializing_if = "Option::is_none")]
         use_bvh: Option<bool>,
         geometrics: Vec<GeometricRefOrInline>,
     },
     #[serde(rename = "obj_model")]
     CompoundModelObj {
         filename: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
         origin: Option<[f64; 3]>,
+        #[serde(skip_serializing_if = "Option::is_none")]
         scale: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
         recalculate_normals: Option<bool>,
+        #[serde(skip_serializing_if = "Option::is_none")]
         use_bvh: Option<bool>,
         material: MaterialRefOrInline,
     },
@@ -63,6 +69,7 @@ pub enum GeometricData {
         geometric: GeometricRefOrInline,
         #[serde(flatten)]
         angle: Angle,
+        #[serde(skip_serializing_if = "Option::is_none")]
         around: Option<[f64; 3]>,
     },
     #[serde(rename = "rotate_y")]
@@ -70,6 +77,7 @@ pub enum GeometricData {
         geometric: GeometricRefOrInline,
         #[serde(flatten)]
         angle: Angle,
+        #[serde(skip_serializing_if = "Option::is_none")]
         around: Option<[f64; 3]>,
     },
     #[serde(rename = "rotate_z")]
@@ -77,6 +85,7 @@ pub enum GeometricData {
         geometric: GeometricRefOrInline,
         #[serde(flatten)]
         angle: Angle,
+        #[serde(skip_serializing_if = "Option::is_none")]
         around: Option<[f64; 3]>,
     },
     #[serde(rename = "translate")]
@@ -89,6 +98,7 @@ pub enum GeometricData {
         lower_left: [f64; 3],
         u: [f64; 3],
         v: [f64; 3],
+        #[serde(skip_serializing_if = "Option::is_none")]
         is_culled: Option<bool>,
         material: MaterialRefOrInline,
     },
@@ -103,9 +113,13 @@ pub enum GeometricData {
         a: [f64; 3],
         b: [f64; 3],
         c: [f64; 3],
+        #[serde(skip_serializing_if = "Option::is_none")]
         a_normal: Option<[f64; 3]>,
+        #[serde(skip_serializing_if = "Option::is_none")]
         b_normal: Option<[f64; 3]>,
+        #[serde(skip_serializing_if = "Option::is_none")]
         c_normal: Option<[f64; 3]>,
+        #[serde(skip_serializing_if = "Option::is_none")]
         is_culled: Option<bool>,
         material: MaterialRefOrInline,
     },

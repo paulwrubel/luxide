@@ -5,7 +5,7 @@ import { InfoIconAdditionalInfo } from '@/views/renders/new/Controls/icons/InfoI
 import { NestedTextureHeader } from './NestedTextureHeader';
 import { getTextureData } from '@/utils/render/texture';
 import { fixReferences, renameTexture } from '@/utils/render/utils';
-import type { RenderConfig } from '@/utils/render/config';
+import type { NormalizedRenderConfig } from '@/utils/render/config';
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { useSelector } from '@tanstack/react-store';
 import { Separator } from '@/components/Separator';
@@ -40,7 +40,7 @@ export function ControlsCardTexture(props: ControlsCardTextureProps) {
     const newTextures = { ...renderConfig.textures };
     delete newTextures[name];
 
-    const newConfig: RenderConfig = {
+    const newConfig: NormalizedRenderConfig = {
       ...renderConfig,
       textures: newTextures,
     };

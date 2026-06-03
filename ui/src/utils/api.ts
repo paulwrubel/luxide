@@ -1,4 +1,4 @@
-import type { RawRenderConfig, RenderConfig } from './render/config';
+import type { RawRenderConfig, NormalizedRenderConfig } from './render/config';
 
 function getAPIURL(): string {
   // in production, the UI and API are served from the same origin (Rust embeds both)
@@ -93,7 +93,7 @@ export type PostRenderResponse = Render & {
 
 export async function postRender(
   token: string,
-  renderConfig: RenderConfig,
+  renderConfig: NormalizedRenderConfig,
 ): Promise<PostRenderResponse> {
   const response = await fetch(`${getAPIURL()}/renders`, {
     headers: {

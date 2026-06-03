@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { type RawCameraData } from './camera';
-import type { RenderConfig } from './config';
+import type { RenderConfig, NormalizedRenderConfig } from './config';
 import { normalizeGeometricData, type RawGeometricData } from './geometric';
 import { capitalize, getNextUniqueName, isNonNullObject } from './utils';
 
@@ -65,7 +65,7 @@ export function isSceneData(x: unknown): x is SceneData {
   );
 }
 
-export function getSceneData(config: RenderConfig, nameOrData: string | SceneData): SceneData {
+export function getSceneData(config: NormalizedRenderConfig, nameOrData: string | SceneData): SceneData {
   if (isSceneData(nameOrData)) {
     return nameOrData;
   }

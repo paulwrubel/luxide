@@ -1,6 +1,6 @@
 import { degreesToRadians, radiansToDegrees } from '../math';
 import { z } from 'zod';
-import type { RenderConfig } from './config';
+import type { NormalizedRenderConfig } from './config';
 
 /* CONFIG HELPER FUNCTIONS */
 
@@ -8,7 +8,7 @@ export function removeDefaults(array: string[]) {
   return array.filter((item) => !item.startsWith('__'));
 }
 
-export function getTopLevelGeometricNames(config: RenderConfig) {
+export function getTopLevelGeometricNames(config: NormalizedRenderConfig) {
   return Object.keys(config.geometrics ?? {}).filter(
     (name) =>
       !Object.values(config.geometrics ?? {})
@@ -30,11 +30,11 @@ export function getTopLevelGeometricNames(config: RenderConfig) {
   );
 }
 
-export function getTopLevelMaterialNames(config: RenderConfig) {
+export function getTopLevelMaterialNames(config: NormalizedRenderConfig) {
   return Object.keys(config.materials ?? {});
 }
 
-export function getTopLevelTextureNames(config: RenderConfig) {
+export function getTopLevelTextureNames(config: NormalizedRenderConfig) {
   return Object.keys(config.textures ?? {}).filter(
     (name) =>
       !Object.values(config.textures ?? {})
@@ -107,7 +107,7 @@ export function toDegrees(angle: Angle): number {
  * replaces broken references with default values (__white, __black, __lambertian_white, __unit_box).
  * also filters deleted items from the active scene's geometric list and list-type geometrics.
  */
-export function fixReferences(config: RenderConfig): RenderConfig {
+export function fixReferences(config: NormalizedRenderConfig): NormalizedRenderConfig {
   const newConfig = { ...config };
   const textures = newConfig.textures ?? {};
   const materials = newConfig.materials ?? {};
@@ -208,7 +208,7 @@ function moveKey<T>(
  * renames a camera and updates all scene references
  * throughout the config to point to the new name.
  */
-export function renameCamera(config: RenderConfig, oldName: string, newName: string): RenderConfig {
+export function renameCamera(config: NormalizedRenderConfig, oldName: string, newName: string): NormalizedRenderConfig {
   const newConfig = { ...config };
   newConfig.cameras = moveKey(newConfig.cameras, oldName, newName);
 
@@ -227,10 +227,10 @@ export function renameCamera(config: RenderConfig, oldName: string, newName: str
  * throughout the config to point to the new name.
  */
 export function renameTexture(
-  config: RenderConfig,
+  config: NormalizedRenderConfig,
   oldName: string,
   newName: string,
-): RenderConfig {
+): NormalizedRenderConfig {
   const newConfig = { ...config };
   newConfig.textures = moveKey(newConfig.textures, oldName, newName);
 
@@ -285,10 +285,10 @@ export function renameTexture(
  * throughout the config to point to the new name.
  */
 export function renameMaterial(
-  config: RenderConfig,
+  config: NormalizedRenderConfig,
   oldName: string,
   newName: string,
-): RenderConfig {
+): NormalizedRenderConfig {
   const newConfig = { ...config };
   newConfig.materials = moveKey(newConfig.materials, oldName, newName);
 
@@ -317,10 +317,10 @@ export function renameMaterial(
  * and scene references throughout the config to point to the new name.
  */
 export function renameGeometric(
-  config: RenderConfig,
+  config: NormalizedRenderConfig,
   oldName: string,
   newName: string,
-): RenderConfig {
+): NormalizedRenderConfig {
   const newConfig = { ...config };
   newConfig.geometrics = moveKey(newConfig.geometrics, oldName, newName);
 

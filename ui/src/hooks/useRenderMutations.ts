@@ -7,7 +7,7 @@ import {
   updateRenderTotalCheckpoints,
 } from '../utils/api';
 import { useAuth } from '../providers/auth';
-import type { RenderConfig } from '../utils/render/config';
+import type { NormalizedRenderConfig } from '../utils/render/config';
 
 export function useCreateRender() {
   const { mustGetToken } = useAuth();
@@ -16,7 +16,7 @@ export function useCreateRender() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (config: RenderConfig) => postRender(token, config),
+    mutationFn: (config: NormalizedRenderConfig) => postRender(token, config),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['renders'] });
     },

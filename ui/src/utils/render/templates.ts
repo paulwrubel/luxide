@@ -1,4 +1,4 @@
-import type { RenderConfig } from './config';
+import type { NormalizedRenderConfig } from './config';
 import type { GeometricData } from './geometric';
 import type { MaterialData } from './material';
 import type { TextureData } from './texture';
@@ -8,7 +8,7 @@ export type Template = {
   name: string;
   description: string;
   thumbnail?: string;
-  config: RenderConfig;
+  config: NormalizedRenderConfig;
 };
 
 export const TEMPLATES: Template[] = [
@@ -27,11 +27,11 @@ export const TEMPLATES: Template[] = [
   },
 ];
 
-export function getDefaultRenderConfig(): RenderConfig {
+export function getDefaultRenderConfig(): NormalizedRenderConfig {
   return getCornellBoxRenderConfig();
 }
 
-export function getEmptyRenderConfig(): RenderConfig {
+export function getEmptyRenderConfig(): NormalizedRenderConfig {
   return withDefaultResources({
     name: 'Empty',
     parameters: {
@@ -69,7 +69,7 @@ export function getEmptyRenderConfig(): RenderConfig {
   });
 }
 
-export function getCornellBoxRenderConfig(): RenderConfig {
+export function getCornellBoxRenderConfig(): NormalizedRenderConfig {
   return withDefaultResources({
     name: 'Cornell Box',
     parameters: {
@@ -242,7 +242,7 @@ export function getCornellBoxRenderConfig(): RenderConfig {
   });
 }
 
-function withDefaultResources(config: RenderConfig): RenderConfig {
+function withDefaultResources(config: NormalizedRenderConfig): NormalizedRenderConfig {
   return {
     ...config,
     geometrics: {

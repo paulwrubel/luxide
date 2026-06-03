@@ -1,12 +1,12 @@
 import { useState, useRef, useCallback } from 'react';
 import { Button, ModalHeader, ModalBody, ModalFooter } from 'flowbite-react';
 import { HiFolderOpen } from 'react-icons/hi2';
-import type { RenderConfig } from '@/utils/render/config';
+import type { NormalizedRenderConfig } from '@/utils/render/config';
 import { RenderConfigSchema, normalizeRenderConfig } from '@/utils/render/config';
 import { RenderConfigEditor } from './RenderConfigEditor';
 
 export type ImportConfigBodyProps = {
-  onImportSuccess: (config: RenderConfig) => void;
+  onImportSuccess: (config: NormalizedRenderConfig) => void;
   onCancel?: () => void;
 };
 
