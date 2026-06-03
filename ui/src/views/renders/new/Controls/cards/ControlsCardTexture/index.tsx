@@ -64,9 +64,9 @@ export function ControlsCardTexture(props: ControlsCardTextureProps) {
   function renderControls(name: string) {
     const { data } = getTextureData(renderConfig, name);
 
-    return (
-      <>
-        {data.type === 'checker' && (
+    switch (data.type) {
+      case 'checker': {
+        return (
           <>
             <TextInputControl
               form={form}
@@ -80,9 +80,13 @@ export function ControlsCardTexture(props: ControlsCardTextureProps) {
             <Separator />
             <SubTexture name={data.odd_texture} />
           </>
-        )}
-        {data.type === 'image' && <p className="text-sm text-zinc-500">Image texture — TODO</p>}
-        {data.type === 'color' && (
+        );
+      }
+      // case 'image': {
+      //   return <p className="text-sm text-zinc-500">Image texture — TODO</p>;
+      // }
+      case 'color': {
+        return (
           <TextArrayInputControl
             form={form}
             fieldName={`textures.${name}.color`}
@@ -100,9 +104,11 @@ export function ControlsCardTexture(props: ControlsCardTextureProps) {
               />
             }
           />
-        )}
-      </>
-    );
+        );
+      }
+      default:
+        return <h6 className="text-sm">Unimplemented texture: {data.type} (sorry!)</h6>;
+    }
   }
 
   return (

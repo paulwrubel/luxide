@@ -118,8 +118,9 @@ export function ControlsCardGeometric(props: ControlsCardGeometricProps) {
       case 'rotate_x':
       case 'rotate_y':
       case 'rotate_z': {
-        const rotateData = data;
-        const hasDegrees = 'degrees' in rotateData;
+        const { geometric: embedddedGeometricName } = data;
+
+        const hasDegrees = 'degrees' in data;
         return (
           <>
             <RangeControl
@@ -131,23 +132,32 @@ export function ControlsCardGeometric(props: ControlsCardGeometricProps) {
               step={hasDegrees ? 1.0 : 0.01}
             />
             <NestedGeometricHeader
-              geometricName={rotateData.geometric}
+              geometricName={embedddedGeometricName}
               renderConfig={renderConfig}
             />
             <Separator />
-            {renderControls(rotateData.geometric)}
+            {renderControls(embedddedGeometricName)}
           </>
         );
       }
       case 'translate': {
-        const transData = data;
+        const { geometric: embedddedGeometricName } = data;
+
         return (
           <>
+            <TextArrayInputControl
+              form={form}
+              fieldName={`geometrics.${name}.translation`}
+              label="Translation"
+              valueLabels={['x', 'y', 'z']}
+              type="number"
+            />
             <NestedGeometricHeader
-              geometricName={transData.geometric}
+              geometricName={embedddedGeometricName}
               renderConfig={renderConfig}
             />
-            {renderControls(transData.geometric)}
+            <Separator />
+            {renderControls(embedddedGeometricName)}
           </>
         );
       }
@@ -233,8 +243,33 @@ export function ControlsCardGeometric(props: ControlsCardGeometricProps) {
             <GeometricMaterialSelect form={form} name={name} items={materialItems} />
           </>
         );
+      case 'constant_volume': {
+        const { geometric: embedddedGeometricName } = data;
+
+        return (
+          <>
+            <RangeControl
+              form={form}
+              fieldName={`geometrics.${name}.density`}
+              label="Density"
+              min={0}
+              max={1}
+              step={0.01}
+            />
+            <GeometricMaterialSelect form={form} name={name} items={materialItems} />
+            <NestedGeometricHeader
+              geometricName={embedddedGeometricName}
+              renderConfig={renderConfig}
+            />
+            <Separator />
+            {renderControls(embedddedGeometricName)}
+          </>
+        );
+      }
       default:
-        return <h6 className="text-sm">Unknown or unimplemented geometric: {data.type}</h6>;
+        return (
+          <h6 className="text-sm">Unknown or unimplemented geometric: {data.type} (sorry!)</h6>
+        );
     }
   }
 

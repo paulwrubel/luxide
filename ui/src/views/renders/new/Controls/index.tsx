@@ -91,16 +91,34 @@ export function Controls(props: ControlsProps) {
             <AddEntityDropdown
               form={form}
               options={[
-                { subtype: 'box', label: 'Box' },
-                { subtype: 'list', label: 'List' },
-                { subtype: 'rotate_x', label: 'Instance | Rotate X' },
-                { subtype: 'rotate_y', label: 'Instance | Rotate Y' },
-                { subtype: 'rotate_z', label: 'Instance | Rotate Z' },
-                { subtype: 'translate', label: 'Instance | Translate' },
-                { subtype: 'parallelogram', label: 'Parallelogram' },
-                { subtype: 'sphere', label: 'Sphere' },
-                { subtype: 'triangle', label: 'Triangle' },
-                { subtype: 'constant_volume', label: 'Constant Volume' },
+                {
+                  subtype: 'box',
+                  label: 'Box',
+                  description: 'Axis-aligned box defined by two opposite corners.',
+                },
+                {
+                  subtype: 'sphere',
+                  label: 'Sphere',
+                  description: 'Sphere defined by center and radius.',
+                },
+                {
+                  subtype: 'triangle',
+                  label: 'Triangle',
+                  description: 'Triangle defined by three vertices.',
+                },
+                {
+                  subtype: 'parallelogram',
+                  label: 'Parallelogram',
+                  description: 'Parallelogram defined by origin and two edge vectors.',
+                },
+                {
+                  subtype: 'obj_model',
+                  label: 'OBJ Model',
+                  description: 'Import a 3D model from an OBJ file.',
+                  disabled: true,
+                  disabledReason:
+                    'OBJ model creation requires file upload support, which is not yet implemented in the UI.',
+                },
               ]}
               type="geometrics"
               getDefault={(type) =>
@@ -132,8 +150,24 @@ export function Controls(props: ControlsProps) {
             <AddEntityDropdown
               form={form}
               options={[
-                { subtype: 'lambertian', label: 'Lambertian Material' },
-                { subtype: 'specular', label: 'Specular Material' },
+                {
+                  subtype: 'lambertian',
+                  label: 'Lambertian Material',
+                  description:
+                    'Diffuse material that scatters light equally in all directions (ideal matte).',
+                },
+                {
+                  subtype: 'specular',
+                  label: 'Specular Material',
+                  description: 'Glossy material with adjustable roughness for reflections.',
+                },
+                {
+                  subtype: 'dielectric',
+                  label: 'Dielectric Material',
+                  description: 'Transparent material with refraction (glass, water).',
+                  disabled: true,
+                  disabledReason: 'Dielectric materials are not yet supported in the 3D preview.',
+                },
               ]}
               type="materials"
               getDefault={(type) => defaultMaterialForType(type as MaterialData['type'])}
@@ -150,7 +184,28 @@ export function Controls(props: ControlsProps) {
           <div className="flex w-full justify-end">
             <AddEntityDropdown
               form={form}
-              options={[{ subtype: 'color', label: 'Color Texture' }]}
+              options={[
+                {
+                  subtype: 'color',
+                  label: 'Color Texture',
+                  description: 'Solid color defined by RGB values.',
+                },
+                {
+                  subtype: 'checker',
+                  label: 'Checker Texture',
+                  description: 'Procedural checker pattern with two sub-textures.',
+                  disabled: true,
+                  disabledReason: 'Checker textures are not yet supported in the 3D preview.',
+                },
+                {
+                  subtype: 'image',
+                  label: 'Image Texture',
+                  description: 'Load a texture from an image file.',
+                  disabled: true,
+                  disabledReason:
+                    'Image texture creation requires file upload support, which is not yet implemented in the UI.',
+                },
+              ]}
               type="textures"
               getDefault={(type) =>
                 defaultTextureForType(type as Exclude<TextureData['type'], 'image'>)
