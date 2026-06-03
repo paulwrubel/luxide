@@ -9,8 +9,11 @@ import {
 import type { DeepPartial } from 'flowbite-react/types';
 import { UserBadge } from './UserBadge';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/providers/auth';
 
 export function LayoutNavbar() {
+  const { isAuthenticated } = useAuth();
+
   const navbarTheme: DeepPartial<NavbarTheme> = {
     root: {
       base: 'bg-zinc-900 border-b border-zinc-800 px-4 h-16 dark:bg-zinc-900 dark:border-zinc-800',
@@ -22,7 +25,7 @@ export function LayoutNavbar() {
 
   return (
     <Navbar fluid theme={navbarTheme}>
-      <div className="flex items-baseline gap-4">
+      <div className="flex flex-1 items-baseline gap-4">
         {/* @ts-expect-error polymorphic 'as' prop not typed in flowbite-react */}
         <NavbarBrand as={Link} to="/">
           <span className="self-center text-xl font-semibold whitespace-nowrap text-white">
@@ -33,15 +36,17 @@ export function LayoutNavbar() {
           {__APP_VERSION__}
         </span>
       </div>
-      <div className="flex md:order-2">
+      <div className="flex flex-1 justify-end md:order-2">
         <UserBadge />
         <NavbarToggle />
       </div>
       <NavbarCollapse>
-        {/* @ts-expect-error polymorphic 'as' prop not typed in flowbite-react */}
-        <NavbarLink as={Link} to="/renders">
-          Renders
-        </NavbarLink>
+        {isAuthenticated && (
+          // @ts-expect-error polymorphic 'as' prop not typed in flowbite-react
+          <NavbarLink as={Link} to="/renders">
+            Renders
+          </NavbarLink>
+        )}
       </NavbarCollapse>
     </Navbar>
   );

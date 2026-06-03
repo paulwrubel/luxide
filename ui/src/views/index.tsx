@@ -54,7 +54,7 @@ function LandingHero() {
       >
         <Button color="default" onClick={() => navigateToAPILogin().catch(console.error)}>
           <FaGithub className="mr-2 h-5 w-5" />
-          Log in with GitHub
+          Sign in with GitHub
         </Button>
       </motion.div>
     </div>
