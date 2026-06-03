@@ -4,10 +4,10 @@ import { getMaterialDataSafe } from '@/utils/render/material';
 import { getTextureDataSafe } from '@/utils/render/texture';
 import { isComposite, getCenterPoint } from '@/utils/render/geometric';
 import { getGeometricDataSafe } from '@/utils/render/geometric';
-import type { RenderConfig } from '@/utils/render/config';
+import type { NormalizedRenderConfig } from '@/utils/render/config';
 
 interface MaterialResolverProps {
-  config: RenderConfig;
+  config: NormalizedRenderConfig;
   materialRef: string;
   geometricName: string;
 }

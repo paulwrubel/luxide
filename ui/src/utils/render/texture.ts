@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { RenderConfig } from './config';
+import type { RenderConfig, NormalizedRenderConfig } from './config';
 import { capitalize, getNextUniqueName, isTypedObject } from './utils';
 
 export type TextureData = NormalizedTextureData;
@@ -36,7 +36,7 @@ export type TextureDataResult = {
 };
 
 export function getTextureDataSafe(
-  config: RenderConfig,
+  config: NormalizedRenderConfig,
   nameOrData: string | TextureData,
 ): TextureDataResult {
   try {
@@ -51,7 +51,7 @@ export function getTextureDataSafe(
 }
 
 export function getTextureData(
-  config: RenderConfig,
+  config: NormalizedRenderConfig,
   nameOrData: string | TextureData,
 ): TextureDataResult {
   if (isTextureData(nameOrData)) {

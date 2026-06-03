@@ -6,7 +6,7 @@ import { RangeControl } from '../form-controls/RangeControl';
 import { SelectControl } from '../form-controls/SelectControl';
 import { getGeometricData, getGeometricDataSafe } from '@/utils/render/geometric';
 import { fixReferences, renameGeometric } from '@/utils/render/utils';
-import type { RenderConfig } from '@/utils/render/config';
+import type { NormalizedRenderConfig } from '@/utils/render/config';
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { useSelector } from '@tanstack/react-store';
 import { Separator } from '@/components/Separator';
@@ -60,7 +60,7 @@ export function ControlsCardGeometric(props: ControlsCardGeometricProps) {
     const newGeometrics = { ...renderConfig.geometrics };
     delete newGeometrics[name];
 
-    const newConfig: RenderConfig = {
+    const newConfig: NormalizedRenderConfig = {
       ...renderConfig,
       geometrics: newGeometrics,
     };

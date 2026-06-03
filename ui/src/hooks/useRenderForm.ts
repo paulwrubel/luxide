@@ -1,15 +1,15 @@
 import { useForm, type DeepKeys } from '@tanstack/react-form';
-import { RenderConfigSchema, type RenderConfig } from '../utils/render/config';
+import { RenderConfigSchema, type NormalizedRenderConfig } from '../utils/render/config';
 import { getDefaultRenderConfig } from '../utils/render/templates';
 import type { User } from '../utils/api';
 
 export type UseRenderFormOptions = {
   user: User | undefined;
-  initialValues?: RenderConfig;
+  initialValues?: NormalizedRenderConfig;
 };
 
 export type RenderForm = ReturnType<typeof useRenderForm>;
-export type RenderFormPath = DeepKeys<RenderConfig>;
+export type RenderFormPath = DeepKeys<NormalizedRenderConfig>;
 
 export function useRenderForm(options: UseRenderFormOptions) {
   const { user, initialValues } = options;

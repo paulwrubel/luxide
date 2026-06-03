@@ -4,13 +4,13 @@ import { useAuth } from '@/providers/auth';
 import { useRenderForm } from '@/hooks/useRenderForm';
 import { NewRenderSidebar } from './NewRenderSidebar';
 import { Scene } from './Scene';
-import type { RenderConfig } from '@/utils/render/config';
+import type { NormalizedRenderConfig } from '@/utils/render/config';
 import { useSelector } from '@tanstack/react-store';
 
 export function NewRenderPage() {
   const { user } = useAuth();
   const location = useLocation();
-  const importedConfig = location.state?.importedConfig as RenderConfig | undefined;
+  const importedConfig = location.state?.importedConfig as NormalizedRenderConfig | undefined;
 
   // canvas container sizing
   const containerRef = useRef<HTMLDivElement>(null);

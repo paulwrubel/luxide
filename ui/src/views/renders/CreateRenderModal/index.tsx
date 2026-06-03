@@ -4,7 +4,7 @@ import { Modal } from 'flowbite-react';
 import { SourceChoice } from './SourceChoice';
 import { TemplatePicker } from './TemplatePicker';
 import { ImportConfigBody } from './ImportConfigModal/ImportConfigBody';
-import type { RenderConfig } from '@/utils/render/config';
+import type { NormalizedRenderConfig } from '@/utils/render/config';
 import type { Template } from '@/utils/render/templates';
 
 type Stage = 'source-choice' | 'template-picker' | 'import-json';
@@ -31,7 +31,7 @@ export function CreateRenderModal(props: CreateRenderModalProps) {
     onClose();
   };
 
-  const handleImportSuccess = (config: RenderConfig) => {
+  const handleImportSuccess = (config: NormalizedRenderConfig) => {
     navigate('/renders/new', { state: { importedConfig: config } });
     onClose();
   };

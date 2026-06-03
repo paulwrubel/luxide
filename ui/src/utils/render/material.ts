@@ -55,7 +55,7 @@ export type MaterialDataResult = {
 };
 
 export function getMaterialDataSafe(
-  config: RenderConfig,
+  config: NormalizedRenderConfig,
   nameOrData: string | MaterialData,
 ): MaterialDataResult {
   try {
@@ -70,7 +70,7 @@ export function getMaterialDataSafe(
 }
 
 export function getMaterialData(
-  config: RenderConfig,
+  config: NormalizedRenderConfig,
   nameOrData: string | MaterialData,
 ): MaterialDataResult {
   if (isMaterialData(nameOrData)) {

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { RenderConfig } from './config';
+import type { NormalizedRenderConfig } from './config';
 import { isNonNullObject } from './utils';
 
 export const CameraDataSchema = z.object({
@@ -44,7 +44,7 @@ export type CameraDataResult = {
 };
 
 export function getCameraData(
-  config: RenderConfig,
+  config: NormalizedRenderConfig,
   nameOrData: string | CameraData,
 ): CameraDataResult {
   if (isCameraData(nameOrData)) {

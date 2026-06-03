@@ -179,7 +179,7 @@ export type GeometricDataResult = {
 };
 
 export function getGeometricDataSafe(
-  config: RenderConfig,
+  config: NormalizedRenderConfig,
   nameOrData: string | GeometricData,
 ): GeometricDataResult {
   try {
@@ -194,7 +194,7 @@ export function getGeometricDataSafe(
 }
 
 export function getGeometricData(
-  config: RenderConfig,
+  config: NormalizedRenderConfig,
   nameOrData: string | GeometricData,
 ): GeometricDataResult {
   if (isGeometricData(nameOrData)) {

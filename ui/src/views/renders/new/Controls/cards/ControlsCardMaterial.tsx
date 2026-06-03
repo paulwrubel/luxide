@@ -3,7 +3,7 @@ import { RangeControl } from './form-controls/RangeControl';
 import { SelectControl } from './form-controls/SelectControl';
 import { getMaterialData } from '@/utils/render/material';
 import { fixReferences, renameMaterial } from '@/utils/render/utils';
-import type { RenderConfig } from '@/utils/render/config';
+import type { NormalizedRenderConfig } from '@/utils/render/config';
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { useSelector } from '@tanstack/react-store';
 
@@ -37,7 +37,7 @@ export function ControlsCardMaterial(props: ControlsCardMaterialProps) {
     const newMaterials = { ...renderConfig.materials };
     delete newMaterials[name];
 
-    const newConfig: RenderConfig = {
+    const newConfig: NormalizedRenderConfig = {
       ...renderConfig,
       materials: newMaterials,
     };
