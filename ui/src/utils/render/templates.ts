@@ -13,11 +13,26 @@ export type Template = {
 
 export const TEMPLATES: Template[] = [
   {
+    id: 'cornell-box-base',
+    name: 'Cornell Box — Empty',
+    description:
+      'Empty Cornell Box scene with colored walls and a ceiling light — ready to customize',
+    thumbnail: '/templates/cornell-box-empty.png',
+    config: getCornellBoxBaseRenderConfig(),
+  },
+  {
     id: 'cornell-box',
     name: 'Cornell Box',
     description: 'Classic Cornell Box scene with two boxes, colored walls, and a ceiling light',
     thumbnail: '/templates/cornell-box.png',
     config: getCornellBoxRenderConfig(),
+  },
+  {
+    id: 'cornell-box-mirror-spheres',
+    name: 'Cornell Box — Mirror Spheres',
+    description: 'Cornell Box scene with two mirror-reflective spheres instead of boxes',
+    thumbnail: '/templates/cornell-box-mirror-spheres.png',
+    config: getCornellBoxMirrorSpheresRenderConfig(),
   },
   {
     id: 'empty',
@@ -69,9 +84,9 @@ export function getEmptyRenderConfig(): NormalizedRenderConfig {
   });
 }
 
-export function getCornellBoxRenderConfig(): NormalizedRenderConfig {
+export function getCornellBoxBaseRenderConfig(): NormalizedRenderConfig {
   return withDefaultResources({
-    name: 'Cornell Box',
+    name: 'Cornell Box — Empty',
     parameters: {
       image_dimensions: [500, 500],
       tile_dimensions: [1, 1],
@@ -86,8 +101,6 @@ export function getCornellBoxRenderConfig(): NormalizedRenderConfig {
     scenes: {
       'Cornell Box': {
         geometrics: [
-          'Far Left Box',
-          'Near Right Box',
           'Left Wall',
           'Right Wall',
           'Floor',
@@ -168,32 +181,6 @@ export function getCornellBoxRenderConfig(): NormalizedRenderConfig {
         is_culled: false,
         material: 'White Light',
       },
-      'Far Left Box': {
-        type: 'rotate_y',
-        geometric: 'Far Left Box - Unrotated',
-        degrees: 15.0,
-        around: [3.5, 0.0, -6.5],
-      },
-      'Far Left Box - Unrotated': {
-        type: 'box',
-        a: [2.0, 0.0, -5.0],
-        b: [5.0, 6.0, -8.0],
-        is_culled: false,
-        material: 'White',
-      },
-      'Near Right Box': {
-        type: 'rotate_y',
-        geometric: 'Near Right Box - Unrotated',
-        degrees: 342.0,
-        around: [6.5, 0.0, -3.5],
-      },
-      'Near Right Box - Unrotated': {
-        type: 'box',
-        a: [5.0, 0.0, -2.0],
-        b: [8.0, 3.0, -5.0],
-        is_culled: false,
-        material: 'White',
-      },
     },
     materials: {
       White: {
@@ -240,6 +227,91 @@ export function getCornellBoxRenderConfig(): NormalizedRenderConfig {
       },
     },
   });
+}
+
+export function getCornellBoxRenderConfig(): NormalizedRenderConfig {
+  const base = getCornellBoxBaseRenderConfig();
+  const scenes = base.scenes!;
+  return {
+    ...base,
+    name: 'Cornell Box',
+    scenes: {
+      ...scenes,
+      'Cornell Box': {
+        ...scenes['Cornell Box'],
+        geometrics: ['Far Left Box', 'Near Right Box', ...scenes['Cornell Box'].geometrics],
+      },
+    },
+    geometrics: {
+      ...base.geometrics,
+      'Far Left Box': {
+        type: 'rotate_y',
+        geometric: 'Far Left Box - Unrotated',
+        degrees: 15.0,
+        around: [3.5, 0.0, -6.5],
+      },
+      'Far Left Box - Unrotated': {
+        type: 'box',
+        a: [2.0, 0.0, -5.0],
+        b: [5.0, 6.0, -8.0],
+        is_culled: false,
+        material: 'White',
+      },
+      'Near Right Box': {
+        type: 'rotate_y',
+        geometric: 'Near Right Box - Unrotated',
+        degrees: 342.0,
+        around: [6.5, 0.0, -3.5],
+      },
+      'Near Right Box - Unrotated': {
+        type: 'box',
+        a: [5.0, 0.0, -2.0],
+        b: [8.0, 3.0, -5.0],
+        is_culled: false,
+        material: 'White',
+      },
+    },
+  };
+}
+
+export function getCornellBoxMirrorSpheresRenderConfig(): NormalizedRenderConfig {
+  const base = getCornellBoxBaseRenderConfig();
+  const scenes = base.scenes!;
+  return {
+    ...base,
+    name: 'Cornell Box — Mirror Spheres',
+    scenes: {
+      ...scenes,
+      'Cornell Box': {
+        ...scenes['Cornell Box'],
+        geometrics: ['Far Left Sphere', 'Near Right Sphere', ...scenes['Cornell Box'].geometrics],
+      },
+    },
+    geometrics: {
+      ...base.geometrics,
+      'Far Left Sphere': {
+        type: 'sphere',
+        center: [3.0, 2.0, -7.0],
+        radius: 2.0,
+        material: 'Mirror',
+      },
+      'Near Right Sphere': {
+        type: 'sphere',
+        center: [7.5, 1.5, -2.5],
+        radius: 1.5,
+        material: 'Mirror',
+      },
+    },
+    materials: {
+      ...base.materials,
+      Mirror: {
+        type: 'specular',
+        reflectance_texture: 'White',
+        emittance_texture: 'Black',
+        roughness: 0,
+      },
+    },
+  };
 }
 
 function withDefaultResources(config: NormalizedRenderConfig): NormalizedRenderConfig {
