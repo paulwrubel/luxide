@@ -2,6 +2,12 @@
 
 Luxide renders images via Monte Carlo path tracing — simulating how light bounces through a scene to produce physically-based global illumination. It runs as a single-binary CLI for local rendering, or as a multi-tenant API server for managing renders at scale.
 
+<p align="center">
+  <img src="assets/cornell-box.png" alt="A Cornell Box rendered with Luxide — diffuse global illumination, colored walls, two rotated lambertian boxes, and a ceiling area light" width="600">
+  <br>
+  <em>A classic Cornell Box rendered with Luxide — diffuse global illumination, colored walls, rotated lambertian boxes, and a ceiling area light.</em>
+</p>
+
 ---
 
 ## Features
