@@ -108,8 +108,6 @@ export function ControlsCardMaterial(props: ControlsCardMaterialProps) {
             <TextureSelects name={name} />
           </>
         );
-      default:
-        return null;
     }
   }
 
