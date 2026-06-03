@@ -4,10 +4,11 @@ import { Modal } from 'flowbite-react';
 import { SourceChoice } from './SourceChoice';
 import { TemplatePicker } from './TemplatePicker';
 import { ImportConfigBody } from './ImportConfigModal/ImportConfigBody';
+import { ExistingRenderPicker } from './ExistingRenderPicker';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
 import type { Template } from '@/utils/render/templates';
 
-type Stage = 'source-choice' | 'template-picker' | 'import-json';
+type Stage = 'source-choice' | 'template-picker' | 'import-json' | 'render-picker';
 
 export type CreateRenderModalProps = {
   show: boolean;
@@ -36,12 +37,19 @@ export function CreateRenderModal(props: CreateRenderModalProps) {
     onClose();
   };
 
+  const handleExistingRenderSelect = (config: NormalizedRenderConfig) => {
+    const modifiedConfig = { ...config, name: `${config.name} (copy)` };
+    navigate('/renders/new', { state: { importedConfig: modifiedConfig } });
+    onClose();
+  };
+
   return (
     <Modal show={show} onClose={handleClose} size="xl" dismissible>
       {stage === 'source-choice' && (
         <SourceChoice
           onSelectTemplate={() => setStage('template-picker')}
           onSelectImportJSON={() => setStage('import-json')}
+          onSelectCloneExisting={() => setStage('render-picker')}
           onCancel={handleClose}
         />
       )}
@@ -52,6 +60,12 @@ export function CreateRenderModal(props: CreateRenderModalProps) {
         <ImportConfigBody
           onImportSuccess={handleImportSuccess}
           onCancel={() => setStage('source-choice')}
+        />
+      )}
+      {stage === 'render-picker' && (
+        <ExistingRenderPicker
+          onSelect={handleExistingRenderSelect}
+          onBack={() => setStage('source-choice')}
         />
       )}
     </Modal>
