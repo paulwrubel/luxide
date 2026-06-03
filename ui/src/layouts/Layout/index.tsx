@@ -16,7 +16,7 @@ export function Layout() {
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,var(--color-primary-500)_0%,transparent_60%)] opacity-10" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_80%,var(--color-secondary-500)_0%,transparent_60%)] opacity-10" />
         </div>
-        <div className="relative z-10 flex min-h-0 flex-1 flex-col">
+        <div className="relative z-0 flex min-h-0 flex-1 flex-col">
           <Outlet />
         </div>
       </main>
