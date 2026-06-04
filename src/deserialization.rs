@@ -73,16 +73,6 @@ impl RenderConfigBuilder {
         self
     }
 
-    pub fn with_overriding_limits(mut self, user: &User) -> Self {
-        let render_limit = self.0.parameters.saved_checkpoint_limit;
-        let user_limit = user.max_checkpoints_per_render;
-
-        if let (None, Some(user_limit)) = (render_limit, user_limit) {
-            self.0.parameters.saved_checkpoint_limit = Some(user_limit);
-        }
-
-        self
-    }
 }
 
 impl From<RenderConfig> for RenderConfigBuilder {
