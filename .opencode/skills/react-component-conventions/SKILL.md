@@ -1,11 +1,11 @@
 ---
 name: react-component-conventions
-description: Use when creating, editing, or refactoring React components and hooks in ui/src/. Enforces the repo's seven formatting rules: export type props, function declaration with props parameter, first-line destructure, blank line after, hook return destructuring, mandatory block braces, and component size/folder structure.
+description: Use when creating, editing, or refactoring React components and hooks in ui/src/. Enforces the repo's eight formatting rules: export type props, function declaration with props parameter, first-line destructure, blank line after, hook return destructuring, mandatory block braces, component size/folder structure, and one component per file.
 ---
 
 # React Component Conventions
 
-Every React component and hook in `ui/src/` must follow these seven rules.
+Every React component and hook in `ui/src/` must follow these eight rules.
 
 ## Rules
 
@@ -56,6 +56,8 @@ Every React component and hook in `ui/src/` must follow these seven rules.
 
    The `views/admin/`, `views/renders/[id]/RenderSidebar/`, and `views/renders/[id]/RenderDisplay/` directories demonstrate this pattern in the codebase.
 
+8. **One component per file** — Each file must contain at most one React component (exported or unexported). If a parent component needs sub-components that are only used by it, those sub-components must live in their own separate files within a folder (see Rule 7). Non-component helper/utility functions and type definitions may co-exist in the same file as the component.
+
 ## Example
 
 ### Before (❌)
@@ -91,7 +93,7 @@ export function Foo(props: FooProps) {
 
 ## When creating a new component
 
-Apply all seven rules from the start. If the component will likely exceed 500 lines, start it as a folder with `index.tsx` from the beginning.
+Apply all eight rules from the start. If the component will likely exceed 500 lines, start it as a folder with `index.tsx` from the beginning.
 
 ## When editing an existing component
 
@@ -107,4 +109,5 @@ The checklist is:
 5. All hook calls destructure their needed values at the call site (no `const x = useX(); x.data` patterns)
 6. All `if`/`for`/`while` blocks use curly braces, even for single-line bodies
 7. The component is under ~500 lines; if approaching that threshold, it is a folder with `index.tsx` and child component files
-8. Run `just validate` from the repo root to confirm the changes pass all checks (TypeScript, ESLint, Rust checks, clippy, tests)
+8. The file contains at most one React component (sub-components are separate files within a folder)
+9. Run `just validate` from the repo root to confirm the changes pass all checks (TypeScript, ESLint, Rust checks, clippy, tests)
