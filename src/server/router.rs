@@ -96,14 +96,14 @@ fn get_cors_layer(config: &ApiConfig) -> CorsLayer {
 
 fn build_api_router() -> Router<LuxideState> {
     let api_router = Router::new().route("/", get(handlers::index)).route(
-        "/usage",
+        "/storage_usage",
         get(handlers::get_global_render_checkpoint_storage_usage),
     );
 
     api_router
         .nest("/renders", build_renders_router())
         .nest("/auth", build_auth_router())
-        .nest("/admin", build_admin_router())
+        .nest("/users", build_users_router())
         .fallback(handlers::not_found)
 }
 
@@ -141,11 +141,11 @@ fn build_auth_router() -> Router<LuxideState> {
         .route("/current_user_info", get(handlers::get_current_user_info))
 }
 
-fn build_admin_router() -> Router<LuxideState> {
+fn build_users_router() -> Router<LuxideState> {
     Router::new()
-        .route("/users", get(handlers::get_admin_users))
-        .route("/users/{id}/role", put(handlers::update_user_role))
-        .route("/users/{id}/quotas", put(handlers::update_user_quotas))
+        .route("/", get(handlers::get_admin_users))
+        .route("/{id}/role", put(handlers::update_user_role))
+        .route("/{id}/quotas", put(handlers::update_user_quotas))
 }
 
 pub async fn serve(router: Router, address: &str, port: u16) -> Result<(), String> {

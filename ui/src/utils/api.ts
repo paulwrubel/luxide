@@ -317,7 +317,7 @@ export async function getLatestCheckpointImage(token: string, renderID: number):
 }
 
 export async function getAllUsers(token: string): Promise<User[]> {
-  const response = await fetch(`${getAPIURL()}/admin/users`, {
+  const response = await fetch(`${getAPIURL()}/users`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 
@@ -330,7 +330,7 @@ export async function getAllUsers(token: string): Promise<User[]> {
 }
 
 export async function updateUserRole(token: string, userID: number, role: Role): Promise<User> {
-  const response = await fetch(`${getAPIURL()}/admin/users/${userID}/role`, {
+  const response = await fetch(`${getAPIURL()}/users/${userID}/role`, {
     method: 'PUT',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -354,7 +354,7 @@ export async function updateUserQuotas(
   maxCheckpointsPerRender: number | null,
   maxRenderPixelCount: number | null,
 ): Promise<User> {
-  const response = await fetch(`${getAPIURL()}/admin/users/${userID}/quotas`, {
+  const response = await fetch(`${getAPIURL()}/users/${userID}/quotas`, {
     method: 'PUT',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -376,7 +376,7 @@ export async function updateUserQuotas(
 }
 
 export async function getStorageUsage(token: string): Promise<UsageResponse> {
-  const response = await fetch(`${getAPIURL()}/usage`, {
+  const response = await fetch(`${getAPIURL()}/storage_usage`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 
