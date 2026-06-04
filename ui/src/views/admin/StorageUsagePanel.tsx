@@ -1,11 +1,5 @@
 import { Alert, Spinner } from 'flowbite-react';
-
-export type StorageUsagePanelProps = {
-  isPending: boolean;
-  isError: boolean;
-  error: Error | null;
-  storageUsage: { bytes: number } | undefined;
-};
+import { useStorageUsage } from '@/hooks/useStorageUsage';
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) {
@@ -18,8 +12,8 @@ function formatBytes(bytes: number): string {
   return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${units[i]}`;
 }
 
-export function StorageUsagePanel(props: StorageUsagePanelProps) {
-  const { isPending, isError, error, storageUsage } = props;
+export function StorageUsagePanel() {
+  const { data: storageUsage, isPending, isError, error } = useStorageUsage();
 
   return (
     <section>

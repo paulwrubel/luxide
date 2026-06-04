@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Alert,
   Avatar,
@@ -12,18 +13,26 @@ import {
   TableRow,
 } from 'flowbite-react';
 import type { Role, User } from '@/utils/api';
+import { useAllUsers } from '@/hooks/useAllUsers';
+import { useUpdateUserRole } from '@/hooks/useAdminMutations';
+import { useAuth } from '@/providers/auth';
+import { RoleChangeModal } from './RoleChangeModal';
 
-export type UsersTableProps = {
-  users: User[] | undefined;
-  isPending: boolean;
-  isError: boolean;
-  error: Error | null;
-  onRoleToggle: (user: User, newRole: Role) => void;
-  currentUserId: number;
-};
+export function UsersTable() {
+  const { user: currentUser } = useAuth();
 
-export function UsersTable(props: UsersTableProps) {
-  const { users, isPending, isError, error, onRoleToggle, currentUserId } = props;
+  const { data: users, isPending, isError, error } = useAllUsers();
+  const { mutate: updateUserRole, isPending: updateUserRoleIsPending } = useUpdateUserRole();
+
+  const [confirmTarget, setConfirmTarget] = useState<{ user: User; newRole: Role } | null>(null);
+
+  const handleConfirmRoleChange = () => {
+    if (!confirmTarget) {
+      return;
+    }
+    updateUserRole({ userID: confirmTarget.user.id, role: confirmTarget.newRole });
+    setConfirmTarget(null);
+  };
 
   return (
     <section>
@@ -62,8 +71,13 @@ export function UsersTable(props: UsersTableProps) {
                     <Button
                       color="default"
                       size="xs"
-                      disabled={user.id === currentUserId}
-                      onClick={() => onRoleToggle(user, user.role === 'admin' ? 'user' : 'admin')}
+                      disabled={user.id === currentUser!.id}
+                      onClick={() =>
+                        setConfirmTarget({
+                          user,
+                          newRole: user.role === 'admin' ? 'user' : 'admin',
+                        })
+                      }
                     >
                       {user.role === 'admin' ? 'Demote to User' : 'Promote to Admin'}
                     </Button>
@@ -77,6 +91,13 @@ export function UsersTable(props: UsersTableProps) {
       {!isPending && !isError && users && users.length === 0 && (
         <p className="text-zinc-400">No users found.</p>
       )}
+
+      <RoleChangeModal
+        confirmTarget={confirmTarget}
+        isPending={updateUserRoleIsPending}
+        onClose={() => setConfirmTarget(null)}
+        onConfirm={handleConfirmRoleChange}
+      />
     </section>
   );
 }
