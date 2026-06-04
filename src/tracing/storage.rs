@@ -417,7 +417,7 @@ impl User {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
 #[derive(Default)]
 pub enum Role {
@@ -457,6 +457,8 @@ impl From<Role> for String {
 #[async_trait::async_trait]
 pub trait UserStorage: Send + Sync + 'static {
     async fn get_user(&self, id: UserID) -> Result<Option<User>, StorageError>;
+
+    async fn get_all_users(&self) -> Result<Vec<User>, StorageError>;
 
     async fn get_user_by_github_id(
         &self,

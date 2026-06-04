@@ -112,6 +112,13 @@ impl AuthManager {
             .map_err(AuthManagerError::from)
     }
 
+    pub async fn get_all_users(&self) -> Result<Vec<User>, AuthManagerError> {
+        self.storage
+            .get_all_users()
+            .await
+            .map_err(AuthManagerError::from)
+    }
+
     pub async fn get_user_by_github_id(
         &self,
         github_id: GithubID,
@@ -188,7 +195,10 @@ impl AuthManager {
         .map_err(|e| e.to_string())
     }
 
-    pub fn get_auth_url_and_state(&self, origin: Option<String>) -> Result<(String, CsrfToken), AuthManagerError> {
+    pub fn get_auth_url_and_state(
+        &self,
+        origin: Option<String>,
+    ) -> Result<(String, CsrfToken), AuthManagerError> {
         let oauth_client = match origin {
             // update redirect uri if we were given an origin from the API caller
             Some(ref origin) => {
