@@ -5,31 +5,36 @@ import { useAuth } from '../providers/auth';
 
 export type UseLatestCheckpointImageOptions = {
   renderID: number;
+  enabled?: boolean;
 };
 
 export function useLatestCheckpointImage(options: UseLatestCheckpointImageOptions) {
-  const { renderID } = options;
+  const { renderID, enabled } = options;
 
   const { mustGetToken } = useAuth();
   const token = mustGetToken();
 
-  const query = useQuery({
+  const { data: checkpointData, ...queryRest } = useQuery({
     queryKey: ['checkpointImage', renderID, token],
     queryFn: async () => {
       const blob = await getLatestCheckpointImage(token, renderID);
+      if (blob === null) {
+        return null;
+      }
       return URL.createObjectURL(blob);
     },
     refetchInterval: 1000,
+    enabled: enabled ?? true,
   });
 
-  // revoke the previous blob URL when query.data changes or on unmount
+  // revoke the previous blob URL when checkpointData changes or on unmount
   useEffect(() => {
     return () => {
-      if (query.data) {
-        URL.revokeObjectURL(query.data);
+      if (checkpointData) {
+        URL.revokeObjectURL(checkpointData);
       }
     };
-  }, [query.data]);
+  }, [checkpointData]);
 
-  return query;
+  return { data: checkpointData, ...queryRest };
 }

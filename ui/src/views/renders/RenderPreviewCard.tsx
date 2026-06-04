@@ -10,7 +10,12 @@ export type RenderPreviewCardProps = {
 
 export function RenderPreviewCard(props: RenderPreviewCardProps) {
   const { render } = props;
-  const checkpointImageQuery = useLatestCheckpointImage({ renderID: render.id });
+  const {
+    data: checkpointImage,
+    isPending: isCheckpointImagePending,
+    isError: isCheckpointImageError,
+    isSuccess: isCheckpointImageSuccess,
+  } = useLatestCheckpointImage({ renderID: render.id });
   const renderSize = render.config.parameters.image_dimensions;
   const state = render.state;
   const running = isRenderStateRunning(state);
@@ -36,22 +41,28 @@ export function RenderPreviewCard(props: RenderPreviewCardProps) {
         theme={cardTheme}
         renderImage={() => (
           <div className="flex aspect-video items-center justify-center overflow-hidden bg-zinc-900">
-            {checkpointImageQuery.isPending && (
+            {isCheckpointImagePending && (
               <div className="flex flex-col items-center justify-center">
                 <Spinner size="xl" color="info" />
                 <span className="mt-2 text-sm">loading preview...</span>
               </div>
             )}
-            {checkpointImageQuery.isError && (
+            {isCheckpointImageError && (
               <img
                 src={`https://placehold.co/${renderSize[0]}x${renderSize[1]}?text=Error`}
                 alt="Render Error"
                 className="h-full w-full object-contain"
               />
             )}
-            {checkpointImageQuery.isSuccess && (
+            {isCheckpointImageSuccess && checkpointImage === null && (
+              <div className="flex flex-col items-center justify-center">
+                <Spinner size="xl" color="info" />
+                <span className="mt-2 text-sm">Rendering initial checkpoint...</span>
+              </div>
+            )}
+            {isCheckpointImageSuccess && checkpointImage !== null && (
               <img
-                src={checkpointImageQuery.data}
+                src={checkpointImage}
                 alt="Render Preview"
                 className="h-full w-full object-contain"
               />

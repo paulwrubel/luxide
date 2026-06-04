@@ -25,6 +25,9 @@ export function RenderTitleBar(props: RenderTitleBarProps) {
     const [width, height] = render.config.parameters.image_dimensions;
     const filename = `${render.config.name}-checkpoint-${width}x${height}.png`;
     const blob = await getLatestCheckpointImage(token, renderID);
+    if (blob === null) {
+      return;
+    }
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

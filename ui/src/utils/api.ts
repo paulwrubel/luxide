@@ -303,10 +303,17 @@ export async function getRenderStats(token: string, renderID: number): Promise<R
   return (await response.json()) as RenderStats;
 }
 
-export async function getLatestCheckpointImage(token: string, renderID: number): Promise<Blob> {
-  const response = await fetch(`${getAPIURL()}/renders/${renderID}/checkpoint/earliest`, {
+export async function getLatestCheckpointImage(
+  token: string,
+  renderID: number,
+): Promise<Blob | null> {
+  const response = await fetch(`${getAPIURL()}/renders/${renderID}/checkpoint/latest`, {
     headers: { Authorization: `Bearer ${token}` },
   });
+
+  if (response.status === 404) {
+    return null;
+  }
 
   if (!response.ok) {
     const body = await response.text();
