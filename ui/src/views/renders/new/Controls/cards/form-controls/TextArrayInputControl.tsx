@@ -1,4 +1,3 @@
-import { FormTextInput } from '@/components/FormTextInput';
 import { getGridColumnsTemplateForPercentage } from './utils';
 import type { RenderForm, RenderFormPath } from '@/hooks/useRenderForm';
 
@@ -13,7 +12,7 @@ export type TextArrayInputControlProps = {
   labelSuffix?: React.ReactNode;
   valueLabels: string[];
   unenforcedStep?: number;
-}
+};
 
 export function TextArrayInputControl(props: TextArrayInputControlProps) {
   const {
@@ -46,14 +45,18 @@ export function TextArrayInputControl(props: TextArrayInputControlProps) {
         <div className="items-flex-end flex gap-2">
           {valueLabels.map((valueLabel, i) => (
             <div key={i} className="flex w-full flex-col">
-              <FormTextInput
-                form={form}
+              <form.AppField
                 // template literal indexers aren't tracked to DeepKeys paths
-                fieldName={`${fieldName}[${i}]` as RenderFormPath}
-                type={type}
-                valueLabel={valueLabel}
-                unenforcedStep={unenforcedStep}
-              />
+                name={`${fieldName}[${i}]` as RenderFormPath}
+              >
+                {(field) => (
+                  <field.FormTextField
+                    type={type}
+                    valueLabel={valueLabel}
+                    unenforcedStep={unenforcedStep}
+                  />
+                )}
+              </form.AppField>
             </div>
           ))}
         </div>

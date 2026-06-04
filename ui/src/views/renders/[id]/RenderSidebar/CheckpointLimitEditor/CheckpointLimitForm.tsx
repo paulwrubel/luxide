@@ -1,7 +1,7 @@
 import { Button, Spinner } from 'flowbite-react';
-import { FormTextInput } from '@/components/FormTextInput';
 import { useState } from 'react';
-import { useForm } from '@tanstack/react-form';
+import { useSelector } from '@tanstack/react-store';
+import { useAppForm } from '@/hooks/useAppForm';
 import { z } from 'zod';
 import { useAuth } from '@/providers/auth';
 import { updateRenderTotalCheckpoints } from '@/utils/api';
@@ -18,7 +18,7 @@ export function CheckpointLimitForm(props: CheckpointLimitFormProps) {
   const { mustGetToken } = useAuth();
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: { total_checkpoints: currentValue },
     validators: {
       onChange: z.object({
@@ -33,6 +33,8 @@ export function CheckpointLimitForm(props: CheckpointLimitFormProps) {
     },
   });
 
+  const isFormValid = useSelector(form.store, (state) => state.isValid);
+
   async function handleSubmit() {
     const value = form.state.values.total_checkpoints;
     setIsUpdating(true);
@@ -42,14 +44,16 @@ export function CheckpointLimitForm(props: CheckpointLimitFormProps) {
 
   return (
     <>
-      <FormTextInput
-        form={form}
-        fieldName="total_checkpoints"
-        type="number"
-        valueLabel="Checkpoint Limit"
-        required
-        className="w-full"
-      />
+      <form.AppField name="total_checkpoints">
+        {(field) => (
+          <field.FormTextField
+            type="number"
+            valueLabel="Checkpoint Limit"
+            required
+            className="w-full"
+          />
+        )}
+      </form.AppField>
 
       <Button
         color="default"
@@ -57,9 +61,7 @@ export function CheckpointLimitForm(props: CheckpointLimitFormProps) {
         onClick={handleSubmit}
         disabled={
           isUpdating ||
-          typeof form.state.values.total_checkpoints !== 'number' ||
-          !Number.isInteger(form.state.values.total_checkpoints) ||
-          form.state.values.total_checkpoints <= currentCheckpointIteration
+          !isFormValid
         }
       >
         {isUpdating ? (

@@ -1,4 +1,3 @@
-import { FormTextInput } from '@/components/FormTextInput';
 import { getGridColumnsTemplateForPercentage } from './utils';
 import type { ChangeEvent, InputEvent } from 'react';
 import type { RenderForm, RenderFormPath } from '@/hooks/useRenderForm';
@@ -15,7 +14,7 @@ export type TextInputControlProps = {
   labelPrefix?: React.ReactNode;
   labelSuffix?: React.ReactNode;
   valueLabel: string;
-}
+};
 
 export function TextInputControl(props: TextInputControlProps) {
   const {
@@ -47,14 +46,16 @@ export function TextInputControl(props: TextInputControlProps) {
       </h6>
       <div className="flex flex-col">
         <div className="items-flex-end flex gap-2">
-          <FormTextInput
-            form={form}
-            fieldName={fieldName}
-            onInput={onInput}
-            onChange={onChange}
-            type={type}
-            valueLabel={valueLabel}
-          />
+          <form.AppField name={fieldName}>
+            {(field) => (
+              <field.FormTextField
+                type={type}
+                valueLabel={valueLabel}
+                onInput={onInput}
+                onChange={onChange}
+              />
+            )}
+          </form.AppField>
         </div>
       </div>
     </div>
