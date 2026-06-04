@@ -7,13 +7,15 @@ import {
   SidebarItemGroup,
   Spinner,
   Button,
+  Tooltip,
   type SidebarTheme,
 } from 'flowbite-react';
 import { Separator } from '@/components/Separator';
 import type { DeepPartial } from 'flowbite-react/types';
 import { Controls } from '../Controls';
 import { useAuth } from '@/providers/auth';
-import { postRender } from '@/utils/api';
+import { useCreateRender } from '@/hooks/useRenderMutations';
+import { useRenders } from '@/hooks/useRenders';
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { ViewConfigJSONButton } from './ViewConfigJSONButton';
 import { ConfigJSONModal } from '@/components/ViewRenderJSONButton/ConfigJSONModal';
@@ -25,12 +27,14 @@ export interface NewRenderSidebarProps {
 export function NewRenderSidebar({ form }: NewRenderSidebarProps) {
   const [showModal, setShowModal] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [isCreatingRender, setIsCreatingRender] = useState(false);
 
   const formValues = useSelector(form.store, (state) => state.values);
   const configName = useSelector(form.store, (state) => state.values.name);
 
   const jsonString = JSON.stringify(formValues, null, 2);
+
+  const { mutate: createRender, isPending: isCreatingRender } = useCreateRender();
+  const { data: renders } = useRenders();
 
   const handleDownload = useCallback(() => {
     const blob = new Blob([jsonString], { type: 'application/json' });
@@ -53,17 +57,20 @@ export function NewRenderSidebar({ form }: NewRenderSidebarProps) {
   }, [jsonString]);
 
   const navigate = useNavigate();
-  const { mustGetToken } = useAuth();
+  const { user } = useAuth();
 
-  async function handleCreateRender() {
-    setIsCreatingRender(true);
-    try {
-      const response = await postRender(mustGetToken(), formValues);
-      navigate(`/renders/${response.id}`);
-    } catch {
-      setIsCreatingRender(false);
-    }
-  }
+  const handleCreateRender = form.handleSubmit((values) => {
+    createRender(values, {
+      onSuccess: (response) => {
+        navigate(`/renders/${response.id}`);
+      },
+    });
+  });
+
+  const isAtRenderLimit =
+    (user?.max_renders ?? null) !== null &&
+    renders !== undefined &&
+    renders.length >= (user?.max_renders ?? Infinity);
 
   const sidebarTheme: DeepPartial<SidebarTheme> = {
     root: {
@@ -84,21 +91,35 @@ export function NewRenderSidebar({ form }: NewRenderSidebarProps) {
               <Separator className="mt-0" />
               <div className="flex gap-2 px-4">
                 <ViewConfigJSONButton onClick={() => setShowModal(true)} />
-                <Button
-                  onClick={handleCreateRender}
-                  disabled={isCreatingRender}
-                  color="default"
-                  className="flex-1"
-                >
-                  {isCreatingRender ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <Spinner size="sm" color="info" />
-                      Creating...
-                    </span>
-                  ) : (
-                    'Create Render'
-                  )}
-                </Button>
+                {isAtRenderLimit ? (
+                  <Tooltip
+                    content={`You have reached your maximum number of renders (${renders?.length ?? '?'}/${user?.max_renders}). Please delete an existing render first.`}
+                  >
+                    <Button
+                      disabled
+                      color="default"
+                      className="flex-1"
+                    >
+                      Create Render
+                    </Button>
+                  </Tooltip>
+                ) : (
+                  <Button
+                    onClick={handleCreateRender}
+                    disabled={isCreatingRender}
+                    color="default"
+                    className="flex-1"
+                  >
+                    {isCreatingRender ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <Spinner size="sm" color="info" />
+                        Creating...
+                      </span>
+                    ) : (
+                      'Create Render'
+                    )}
+                  </Button>
+                )}
               </div>
             </div>
           </SidebarItemGroup>

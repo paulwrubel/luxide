@@ -575,6 +575,21 @@ impl RenderManager {
             ));
         }
 
+        // reject configs whose saved_checkpoint_limit exceeds the user's max
+        if let (Some(render_limit), Some(user_limit)) = (
+            render_config.parameters.saved_checkpoint_limit,
+            user.max_checkpoints_per_render,
+        ) && render_limit > user_limit
+        {
+            return Err(RenderManagerError::ClientError(
+                StatusCode::FORBIDDEN,
+                format!(
+                    "Saved checkpoint limit ({}) exceeds user maximum ({})",
+                    render_limit, user_limit,
+                ),
+            ));
+        }
+
         let render_config = RenderConfigBuilder::from(render_config)
             .with_overriding_limits(&user)
             .with_builtins()

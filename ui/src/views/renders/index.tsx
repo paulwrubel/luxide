@@ -47,10 +47,15 @@ export function RendersPage() {
               <RenderPreviewCard render={render} />
             </div>
           ))}
-          {canCreateNewRender && (
-            <div className="w-80">
-              <NewRenderCard onClick={() => setShowCreateModal(true)} />
-            </div>
+          <div className="w-80">
+            <NewRenderCard onClick={() => setShowCreateModal(true)} />
+          </div>
+          {!canCreateNewRender && (
+            <Alert color="info" className="w-80 text-sm">
+              You have reached your maximum number of renders (
+              {allRendersQuery.data?.length}/{user?.max_renders}
+              ). Please delete an existing render before creating a new one.
+            </Alert>
           )}
         </div>
       )}

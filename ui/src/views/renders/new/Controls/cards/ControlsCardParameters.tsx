@@ -50,6 +50,28 @@ export function ControlsCardParameters(props: ControlsCardParametersProps) {
           type="number"
         />
 
+        {(() => {
+          const [w, h] = parameters.image_dimensions;
+          const pixelCount = w * h;
+          const maxPixels = user?.max_render_pixel_count ?? null;
+          const exceedsLimit = maxPixels !== null && pixelCount > maxPixels;
+
+          return (
+            <div
+              className={`pl-[40%] text-sm ${exceedsLimit ? 'font-semibold text-red-500' : 'text-zinc-400'}`}
+            >
+              {w.toLocaleString()} × {h.toLocaleString()} ={' '}
+              {pixelCount.toLocaleString()} px
+              {maxPixels !== null && (
+                <>
+                  {' '}
+                  (limit: {maxPixels.toLocaleString()})
+                </>
+              )}
+            </div>
+          );
+        })()}
+
         <TextArrayInputControl
           form={form}
           fieldName="parameters.tile_dimensions"

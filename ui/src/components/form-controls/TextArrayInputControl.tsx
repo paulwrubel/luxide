@@ -1,4 +1,5 @@
 import { getGridColumnsTemplateForPercentage } from './utils';
+import { HelperText } from 'flowbite-react';
 import type { RenderForm, RenderFormPath } from '@/hooks/useRenderForm';
 
 export type TextArrayInputControlProps = {
@@ -30,6 +31,8 @@ export function TextArrayInputControl(props: TextArrayInputControlProps) {
 
   const gridStr = getGridColumnsTemplateForPercentage(labelSpacePercentage);
 
+  const { state: { meta: { errors: arrayErrors } } } = form.useField({ name: fieldName });
+
   return (
     <div className={`grid items-center ${gridStr}`}>
       <h6 className="mt-3 overflow-hidden font-normal">
@@ -60,6 +63,14 @@ export function TextArrayInputControl(props: TextArrayInputControlProps) {
             </div>
           ))}
         </div>
+        {arrayErrors.length > 0 && (
+          <HelperText color="failure">
+            {arrayErrors
+              .map((e: { message?: string } | string) => (typeof e === 'string' ? e : e?.message))
+              .filter(Boolean)
+              .join(', ')}
+          </HelperText>
+        )}
       </div>
     </div>
   );

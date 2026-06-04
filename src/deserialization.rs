@@ -77,16 +77,8 @@ impl RenderConfigBuilder {
         let render_limit = self.0.parameters.saved_checkpoint_limit;
         let user_limit = user.max_checkpoints_per_render;
 
-        match (render_limit, user_limit) {
-            // user requested a limit that's higher than their permitted limit
-            (Some(render_limit), Some(user_limit)) if user_limit < render_limit => {
-                self.0.parameters.saved_checkpoint_limit = Some(user_limit);
-            }
-            // user requested no limit, but their permitted limit is non-zero
-            (None, Some(user_limit)) => {
-                self.0.parameters.saved_checkpoint_limit = Some(user_limit);
-            }
-            _ => {}
+        if let (None, Some(user_limit)) = (render_limit, user_limit) {
+            self.0.parameters.saved_checkpoint_limit = Some(user_limit);
         }
 
         self
