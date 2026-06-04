@@ -1,4 +1,5 @@
-import { useForm, type DeepKeys } from '@tanstack/react-form';
+import { type DeepKeys } from '@tanstack/react-form';
+import { useAppForm } from '@/hooks/useAppForm';
 import { RenderConfigSchema, type NormalizedRenderConfig } from '../utils/render/config';
 import { getDefaultRenderConfig } from '../utils/render/templates';
 import type { User } from '../utils/api';
@@ -42,7 +43,7 @@ export function useRenderForm(options: UseRenderFormOptions) {
     },
   );
 
-  return useForm({
+  return useAppForm({
     defaultValues: initialValues ?? getDefaultRenderConfig(),
     validators: {
       onChange: formSchema,

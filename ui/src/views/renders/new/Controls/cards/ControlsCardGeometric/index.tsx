@@ -1,9 +1,7 @@
 import { ControlsCard } from '../ControlsCard';
 import { NestedGeometricHeader } from './NestedGeometricHeader';
-import { TextArrayInputControl } from '../form-controls/TextArrayInputControl';
-import { TextInputControl } from '../form-controls/TextInputControl';
-import { RangeControl } from '../form-controls/RangeControl';
-import { SelectControl } from '../form-controls/SelectControl';
+import { TextArrayInputControl } from '@/components/form-controls/TextArrayInputControl';
+import { TextInputControl } from '@/components/form-controls/TextInputControl';
 import { getGeometricData, getGeometricDataSafe } from '@/utils/render/geometric';
 import { fixReferences, renameGeometric } from '@/utils/render/utils';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
@@ -21,12 +19,9 @@ function GeometricMaterialSelect({
   items: { name: string; value: string }[];
 }) {
   return (
-    <SelectControl
-      form={form}
-      fieldName={`geometrics.${name}.material`}
-      label="Material"
-      items={items}
-    />
+    <form.AppField name={`geometrics.${name}.material`}>
+      {(field) => <field.SelectControl label="Material" items={items} />}
+    </form.AppField>
   );
 }
 
@@ -123,14 +118,9 @@ export function ControlsCardGeometric(props: ControlsCardGeometricProps) {
         const hasDegrees = 'degrees' in data;
         return (
           <>
-            <RangeControl
-              form={form}
-              fieldName={`geometrics.${name}.${hasDegrees ? 'degrees' : 'radians'}`}
-              label={hasDegrees ? 'Degrees of Rotation' : 'Radians of Rotation'}
-              min={0}
-              max={hasDegrees ? 360 : 2 * Math.PI}
-              step={hasDegrees ? 1.0 : 0.01}
-            />
+            <form.AppField name={`geometrics.${name}.${hasDegrees ? 'degrees' : 'radians'}`}>
+              {(field) => <field.RangeControl label={hasDegrees ? 'Degrees of Rotation' : 'Radians of Rotation'} min={0} max={hasDegrees ? 360 : 2 * Math.PI} step={hasDegrees ? 1.0 : 0.01} />}
+            </form.AppField>
             <NestedGeometricHeader
               geometricName={embedddedGeometricName}
               renderConfig={renderConfig}
@@ -248,14 +238,9 @@ export function ControlsCardGeometric(props: ControlsCardGeometricProps) {
 
         return (
           <>
-            <RangeControl
-              form={form}
-              fieldName={`geometrics.${name}.density`}
-              label="Density"
-              min={0}
-              max={1}
-              step={0.01}
-            />
+            <form.AppField name={`geometrics.${name}.density`}>
+              {(field) => <field.RangeControl label="Density" min={0} max={1} step={0.01} />}
+            </form.AppField>
             <GeometricMaterialSelect form={form} name={name} items={materialItems} />
             <NestedGeometricHeader
               geometricName={embedddedGeometricName}

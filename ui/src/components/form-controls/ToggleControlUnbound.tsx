@@ -1,7 +1,7 @@
 import { ToggleSwitch } from 'flowbite-react';
 import type { ChangeEvent, InputEvent } from 'react';
 
-interface ToggleControlUnboundProps {
+export type ToggleControlUnboundProps = {
   checked: boolean;
   onInput?: (e: InputEvent<HTMLInputElement>) => void;
   onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
@@ -10,7 +10,7 @@ interface ToggleControlUnboundProps {
   labelPrefix?: React.ReactNode;
   labelSuffix?: React.ReactNode;
   disabled?: boolean;
-}
+};
 
 export function ToggleControlUnbound(props: ToggleControlUnboundProps) {
   const { checked, onInput, onChange, label, labelPrefix, labelSuffix, disabled } = props;
@@ -24,8 +24,11 @@ export function ToggleControlUnbound(props: ToggleControlUnboundProps) {
           onChange={(checked) => {
             const syntheticEvent = {
               target: { checked },
+            // ToggleSwitch onChange provides boolean, not a DOM event;
+            // synthesize a ChangeEvent so callers receive a consistent interface
             } as ChangeEvent<HTMLInputElement>;
             onChange?.(syntheticEvent);
+            // same synthetic event adapted to the InputEvent shape
             onInput?.(syntheticEvent as unknown as InputEvent<HTMLInputElement>);
           }}
           disabled={disabled}

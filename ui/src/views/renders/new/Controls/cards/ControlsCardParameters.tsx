@@ -1,8 +1,7 @@
 import { ControlsCard } from './ControlsCard';
 import { WarningIconAdvancedProperty } from '../icons/WarningIconAdvancedProperty';
-import { TextInputControl } from './form-controls/TextInputControl';
-import { TextArrayInputControl } from './form-controls/TextArrayInputControl';
-import { ToggleControl } from './form-controls/ToggleControl';
+import { TextInputControl } from '@/components/form-controls/TextInputControl';
+import { TextArrayInputControl } from '@/components/form-controls/TextArrayInputControl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tooltip, ToggleSwitch } from 'flowbite-react';
 import { useAuth } from '@/providers/auth';
@@ -162,12 +161,9 @@ export function ControlsCardParameters(props: ControlsCardParametersProps) {
           labelSuffix={<WarningIconAdvancedProperty />}
         />
 
-        <ToggleControl
-          form={form}
-          fieldName="parameters.use_scaling_truncation"
-          label="Use Scaling Truncation"
-          labelSuffix={<WarningIconAdvancedProperty />}
-        />
+        <form.AppField name="parameters.use_scaling_truncation">
+          {(field) => <field.ToggleControl label="Use Scaling Truncation" labelSuffix={<WarningIconAdvancedProperty />} />}
+        </form.AppField>
       </div>
     </ControlsCard>
   );

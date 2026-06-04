@@ -1,7 +1,6 @@
 import { ControlsCard } from './ControlsCard';
 import { WarningIconUnaffectedPreview } from '../icons/WarningIconUnaffectedPreview';
-import { RangeControl } from './form-controls/RangeControl';
-import { TextArrayInputControl } from './form-controls/TextArrayInputControl';
+import { TextArrayInputControl } from '@/components/form-controls/TextArrayInputControl';
 import { renameCamera } from '@/utils/render/utils';
 import type { RenderForm, RenderFormPath } from '@/hooks/useRenderForm';
 import type { DeepKeys } from '@tanstack/react-form';
@@ -35,14 +34,9 @@ export function ControlsCardCamera(props: ControlsCardCameraProps) {
   return (
     <ControlsCard leftLabel={cameraName} onRename={handleRename} startExpanded>
       <div className="flex flex-col gap-2 p-4">
-        <RangeControl
-          form={form}
-          fieldName={`${formPath}.vertical_field_of_view_degrees`}
-          label="Vertical FOV (degrees)"
-          min={10.0}
-          max={170.0}
-          step={1.0}
-        />
+        <form.AppField name={`${formPath}.vertical_field_of_view_degrees`}>
+          {(field) => <field.RangeControl label="Vertical FOV (degrees)" min={10.0} max={170.0} step={1.0} />}
+        </form.AppField>
         <TextArrayInputControl
           form={form}
           fieldName={`${formPath}.eye_location` as DeepKeys<NormalizedRenderConfig>}
@@ -64,15 +58,9 @@ export function ControlsCardCamera(props: ControlsCardCameraProps) {
           valueLabels={['x', 'y', 'z']}
           type="number"
         />
-        <RangeControl
-          form={form}
-          fieldName={`${formPath}.defocus_angle_degrees`}
-          label="Defocus Angle (degrees)"
-          min={0.0}
-          max={180.0}
-          step={1.0}
-          labelPrefix={<WarningIconUnaffectedPreview />}
-        />
+        <form.AppField name={`${formPath}.defocus_angle_degrees`}>
+          {(field) => <field.RangeControl label="Defocus Angle (degrees)" min={0.0} max={180.0} step={1.0} labelPrefix={<WarningIconUnaffectedPreview />} />}
+        </form.AppField>
       </div>
     </ControlsCard>
   );
