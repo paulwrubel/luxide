@@ -11,8 +11,20 @@ import { RoleChangeModal } from './RoleChangeModal';
 export function AdminPage() {
   const { user: currentUser } = useAuth();
 
-  const usersQuery = useAllUsers();
-  const usageQuery = useStorageUsage();
+  const {
+    data: users,
+    isPending: usersIsPending,
+    isSuccess: usersIsSuccess,
+    isError: usersIsError,
+    error: usersError,
+  } = useAllUsers();
+  const {
+    data: storageUsage,
+    isPending: storageUsageIsPending,
+    isSuccess: storageUsageIsSuccess,
+    isError: storageUsageIsError,
+    error: storageUsageError,
+  } = useStorageUsage();
   const { mutate: updateUserRole, isPending: updateUserRoleIsPending } = useUpdateUserRole();
 
   const [confirmTarget, setConfirmTarget] = useState<{ user: User; newRole: Role } | null>(null);
@@ -30,17 +42,17 @@ export function AdminPage() {
       <h1 className="text-2xl font-bold text-white">Admin Panel</h1>
 
       <StorageUsagePanel
-        isPending={usageQuery.isPending}
-        isError={usageQuery.isError}
-        error={usageQuery.error}
-        storageUsage={usageQuery.data}
+        isPending={storageUsageIsPending}
+        isError={storageUsageIsError}
+        error={storageUsageError}
+        storageUsage={storageUsage}
       />
 
       <UsersTable
-        users={usersQuery.data}
-        isPending={usersQuery.isPending}
-        isError={usersQuery.isError}
-        error={usersQuery.error}
+        users={users}
+        isPending={usersIsPending}
+        isError={usersIsError}
+        error={usersError}
         onRoleToggle={(user, newRole) => setConfirmTarget({ user, newRole })}
         currentUserId={currentUser!.id}
       />
