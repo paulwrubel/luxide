@@ -1,17 +1,19 @@
 import { Label, TextInput, HelperText } from 'flowbite-react';
 import type { ChangeEvent, InputEvent } from 'react';
-import type { RenderForm, RenderFormPath } from '@/hooks/useRenderForm';
 
-interface FormTextInputProps {
-  form: RenderForm;
-  fieldName: RenderFormPath;
+export type FormTextInputProps = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  form: any;
+  fieldName: string;
   type?: 'text' | 'number';
   valueLabel: string;
   onInput?: (e: InputEvent<HTMLInputElement>) => void;
   onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
   extraIsErrored?: boolean;
   unenforcedStep?: number;
-}
+  required?: boolean;
+  className?: string;
+};
 
 export function FormTextInput(props: FormTextInputProps) {
   const {
@@ -23,16 +25,16 @@ export function FormTextInput(props: FormTextInputProps) {
     onChange,
     extraIsErrored,
     unenforcedStep,
+    required,
+    className,
   } = props;
 
   return (
     <form.Field name={fieldName}>
-      {(field) => {
+      {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (field: { state: { value: any; meta: { errors: any[] } }; handleChange: (updater: any) => void }) => {
         const errors = field.state.meta.errors;
         const hasErrors = errors.length > 0 || !!extraIsErrored;
-
-        // determine step - unenforcedStep overrides everything
-        const stepValue = unenforcedStep ?? (type === 'number' ? undefined : undefined);
 
         return (
           <Label className="mb-0 flex w-full flex-col">
@@ -40,23 +42,25 @@ export function FormTextInput(props: FormTextInputProps) {
             <TextInput
               name={fieldName}
               type={type}
+              required={required}
+              className={className}
               color={hasErrors ? 'failure' : undefined}
               value={(field.state.value as string | number | undefined) ?? ''}
               onChange={(e) => {
                 field.handleChange(
-                  type === 'number' && e.target.value !== ''
+                  (type === 'number' && e.target.value !== ''
                     ? Number(e.target.value)
-                    : e.target.value,
+                    : e.target.value) as never,
                 );
                 onChange?.(e);
               }}
               onInput={onInput}
-              step={stepValue}
+              step={unenforcedStep}
             />
             {hasErrors && errors.length > 0 && (
               <HelperText color="failure">
                 {errors
-                  .map((e) => (typeof e === 'string' ? e : e?.message))
+                  .map((e: { message?: string } | string) => (typeof e === 'string' ? e : e?.message))
                   .filter(Boolean)
                   .join(', ')}
               </HelperText>

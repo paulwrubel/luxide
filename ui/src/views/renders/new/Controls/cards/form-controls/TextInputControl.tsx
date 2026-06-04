@@ -1,4 +1,4 @@
-import { FormTextInput } from './FormTextInput';
+import { FormTextInput } from '@/components/FormTextInput';
 import { getGridColumnsTemplateForPercentage } from './utils';
 import type { ChangeEvent, InputEvent } from 'react';
 import type { RenderForm, RenderFormPath } from '@/hooks/useRenderForm';

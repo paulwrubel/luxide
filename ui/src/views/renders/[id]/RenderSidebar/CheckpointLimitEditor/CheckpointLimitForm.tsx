@@ -1,4 +1,5 @@
-import { Button, Spinner, TextInput, Label, HelperText } from 'flowbite-react';
+import { Button, Spinner } from 'flowbite-react';
+import { FormTextInput } from '@/components/FormTextInput';
 import { useState } from 'react';
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
@@ -41,38 +42,14 @@ export function CheckpointLimitForm(props: CheckpointLimitFormProps) {
 
   return (
     <>
-      <form.Field name="total_checkpoints">
-        {(field) => {
-          const errors = field.state.meta.errors;
-          const hasErrors = errors.length > 0;
-
-          return (
-            <Label>
-              <span className="mb-1 block">Checkpoint Limit</span>
-              <TextInput
-                type="number"
-                required
-                className="w-full"
-                color={hasErrors ? 'failure' : undefined}
-                value={(field.state.value as number | undefined) ?? ''}
-                onChange={(e) => {
-                  field.handleChange(
-                    (e.target.value !== '' ? Number(e.target.value) : e.target.value) as number,
-                  );
-                }}
-              />
-              {hasErrors && errors.length > 0 && (
-                <HelperText color="failure">
-                  {errors
-                    .map((e) => (typeof e === 'string' ? e : e?.message))
-                    .filter(Boolean)
-                    .join(', ')}
-                </HelperText>
-              )}
-            </Label>
-          );
-        }}
-      </form.Field>
+      <FormTextInput
+        form={form}
+        fieldName="total_checkpoints"
+        type="number"
+        valueLabel="Checkpoint Limit"
+        required
+        className="w-full"
+      />
 
       <Button
         color="default"
