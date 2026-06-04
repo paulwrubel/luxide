@@ -3,7 +3,7 @@ import { getGridColumnsTemplateForPercentage } from './utils';
 import type { ChangeEvent, InputEvent } from 'react';
 import type { RenderForm, RenderFormPath } from '@/hooks/useRenderForm';
 
-interface TextInputControlProps {
+export type TextInputControlProps = {
   form: RenderForm;
   fieldName: RenderFormPath;
   onInput?: (e: InputEvent<HTMLInputElement>) => void;

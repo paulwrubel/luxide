@@ -2,7 +2,7 @@ import { FormTextInput } from '@/components/FormTextInput';
 import { getGridColumnsTemplateForPercentage } from './utils';
 import type { RenderForm, RenderFormPath } from '@/hooks/useRenderForm';
 
-interface TextArrayInputControlProps {
+export type TextArrayInputControlProps = {
   form: RenderForm;
   fieldName: RenderFormPath;
   type?: 'text' | 'number';
@@ -48,6 +48,7 @@ export function TextArrayInputControl(props: TextArrayInputControlProps) {
             <div key={i} className="flex w-full flex-col">
               <FormTextInput
                 form={form}
+                // template literal indexers aren't tracked to DeepKeys paths
                 fieldName={`${fieldName}[${i}]` as RenderFormPath}
                 type={type}
                 valueLabel={valueLabel}

@@ -1,10 +1,19 @@
+import { type ReactFormExtendedApi, type DeepKeys } from '@tanstack/react-form';
 import { Label, TextInput, HelperText } from 'flowbite-react';
 import type { ChangeEvent, InputEvent } from 'react';
 
-export type FormTextInputProps = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  form: any;
-  fieldName: string;
+// useForm is generic over 12 type params with no defaults;
+// the 11 validator params default to undefined at runtime
+type FormApi<TFormData> = ReactFormExtendedApi<
+  TFormData,
+  undefined, undefined, undefined, undefined, undefined,
+  undefined, undefined, undefined, undefined, undefined,
+  undefined
+>;
+
+export type FormTextInputProps<TFormData> = {
+  form: FormApi<TFormData>;
+  fieldName: DeepKeys<TFormData>;
   type?: 'text' | 'number';
   valueLabel: string;
   onInput?: (e: InputEvent<HTMLInputElement>) => void;
@@ -15,7 +24,9 @@ export type FormTextInputProps = {
   className?: string;
 };
 
-export function FormTextInput(props: FormTextInputProps) {
+type blah = InferFormType<>
+
+export function FormTextInput<TFormData>(props: FormTextInputProps<TFormData>) {
   const {
     form,
     fieldName,
@@ -31,8 +42,7 @@ export function FormTextInput(props: FormTextInputProps) {
 
   return (
     <form.Field name={fieldName}>
-      {// eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (field: { state: { value: any; meta: { errors: any[] } }; handleChange: (updater: any) => void }) => {
+      {(field) => {
         const errors = field.state.meta.errors;
         const hasErrors = errors.length > 0 || !!extraIsErrored;
 
@@ -45,8 +55,11 @@ export function FormTextInput(props: FormTextInputProps) {
               required={required}
               className={className}
               color={hasErrors ? 'failure' : undefined}
+              // narrow TFieldValue to types that TextInput accepts for display
               value={(field.state.value as string | number | undefined) ?? ''}
               onChange={(e) => {
+                // number inputs emit "" when cleared; passing the raw value
+                // through handleChange preserves invalid state for Zod error display
                 field.handleChange(
                   (type === 'number' && e.target.value !== ''
                     ? Number(e.target.value)
@@ -60,7 +73,9 @@ export function FormTextInput(props: FormTextInputProps) {
             {hasErrors && errors.length > 0 && (
               <HelperText color="failure">
                 {errors
-                  .map((e: { message?: string } | string) => (typeof e === 'string' ? e : e?.message))
+                  .map((e: { message?: string } | string) =>
+                    typeof e === 'string' ? e : e?.message,
+                  )
                   .filter(Boolean)
                   .join(', ')}
               </HelperText>
