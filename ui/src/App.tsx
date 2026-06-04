@@ -10,6 +10,8 @@ import { AuthCallbackPage } from './views/auth/github/callback';
 import { RendersPage } from './views/renders';
 import { RenderDetailPage } from './views/renders/[id]';
 import { NewRenderPage } from './views/renders/new';
+import { AdminRouteLayout } from './layouts/AdminRouteLayout';
+import { AdminPage } from './views/admin';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,6 +39,11 @@ export default function App() {
                   <Route path="/renders" element={<RendersPage />} />
                   <Route path="/renders/:id" element={<RenderDetailPage />} />
                   <Route path="/renders/new" element={<NewRenderPage />} />
+                </Route>
+
+                {/* admin routes — nested inside admin layout to redirect non-admins */}
+                <Route element={<AdminRouteLayout />}>
+                  <Route path="/admin" element={<AdminPage />} />
                 </Route>
               </Route>
             </Routes>

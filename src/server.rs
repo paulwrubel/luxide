@@ -1,3 +1,6 @@
+mod admin;
+pub use admin::*;
+
 mod auth_manager;
 pub use auth_manager::*;
 

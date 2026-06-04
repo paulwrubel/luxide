@@ -48,6 +48,10 @@ export type User = {
   max_render_pixel_count: number | null;
 };
 
+export type UsageResponse = {
+  bytes: number;
+};
+
 export async function fetchAuthTokenGitHub(code: string, state: string): Promise<string> {
   const response = await fetch(`${getAPIURL()}/auth/github/callback?code=${code}&state=${state}`, {
     credentials: 'include',
@@ -310,4 +314,48 @@ export async function getLatestCheckpointImage(token: string, renderID: number):
   }
 
   return await response.blob();
+}
+
+export async function getAllUsers(token: string): Promise<User[]> {
+  const response = await fetch(`${getAPIURL()}/admin/users`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`failed to get all users: (${response.status}: ${body})`);
+  }
+
+  return (await response.json()) as User[];
+}
+
+export async function updateUserRole(token: string, userID: number, role: Role): Promise<User> {
+  const response = await fetch(`${getAPIURL()}/admin/users/${userID}/role`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ role }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`failed to update user role: (${response.status}: ${body})`);
+  }
+
+  return (await response.json()) as User;
+}
+
+export async function getStorageUsage(token: string): Promise<UsageResponse> {
+  const response = await fetch(`${getAPIURL()}/usage`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`failed to get usage: (${response.status}: ${body})`);
+  }
+
+  return (await response.json()) as UsageResponse;
 }

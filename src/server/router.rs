@@ -103,6 +103,7 @@ fn build_api_router() -> Router<LuxideState> {
     api_router
         .nest("/renders", build_renders_router())
         .nest("/auth", build_auth_router())
+        .nest("/admin", build_admin_router())
         .fallback(handlers::not_found)
 }
 
@@ -138,6 +139,12 @@ fn build_auth_router() -> Router<LuxideState> {
         .route("/login", get(handlers::auth_login))
         .route("/github/callback", get(handlers::auth_github_callback))
         .route("/current_user_info", get(handlers::get_current_user_info))
+}
+
+fn build_admin_router() -> Router<LuxideState> {
+    Router::new()
+        .route("/users", get(handlers::get_admin_users))
+        .route("/users/{id}/role", put(handlers::update_user_role))
 }
 
 pub async fn serve(router: Router, address: &str, port: u16) -> Result<(), String> {

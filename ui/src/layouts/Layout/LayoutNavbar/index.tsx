@@ -12,7 +12,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@/providers/auth';
 
 export function LayoutNavbar() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   const navbarTheme: DeepPartial<NavbarTheme> = {
     root: {
@@ -45,6 +45,12 @@ export function LayoutNavbar() {
           // @ts-expect-error polymorphic 'as' prop not typed in flowbite-react
           <NavbarLink as={Link} to="/renders">
             Renders
+          </NavbarLink>
+        )}
+        {isAuthenticated && user?.role === 'admin' && (
+          // @ts-expect-error polymorphic 'as' prop not typed in flowbite-react
+          <NavbarLink as={Link} to="/admin">
+            Admin
           </NavbarLink>
         )}
       </NavbarCollapse>
