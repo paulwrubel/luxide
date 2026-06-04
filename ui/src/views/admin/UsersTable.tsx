@@ -60,9 +60,9 @@ export function UsersTable() {
                 <TableHeadCell>User</TableHeadCell>
                 <TableHeadCell>Role</TableHeadCell>
                 <TableHeadCell>Created</TableHeadCell>
-                <TableHeadCell>Renders</TableHeadCell>
-                <TableHeadCell>Checkpoints</TableHeadCell>
-                <TableHeadCell>Pixels</TableHeadCell>
+                <TableHeadCell>Allowed Renders</TableHeadCell>
+                <TableHeadCell>Allowed Checkpoints per Render</TableHeadCell>
+                <TableHeadCell>Allowed Pixels per Render</TableHeadCell>
                 <TableHeadCell>Actions</TableHeadCell>
               </TableRow>
             </TableHead>
