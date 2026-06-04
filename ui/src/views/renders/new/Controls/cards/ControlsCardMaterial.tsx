@@ -1,6 +1,4 @@
 import { ControlsCard } from './ControlsCard';
-import { RangeControl } from './form-controls/RangeControl';
-import { SelectControl } from './form-controls/SelectControl';
 import { getMaterialData } from '@/utils/render/material';
 import { fixReferences, renameMaterial } from '@/utils/render/utils';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
@@ -58,18 +56,12 @@ export function ControlsCardMaterial(props: ControlsCardMaterialProps) {
   function TextureSelects({ name }: { name: string }) {
     return (
       <>
-        <SelectControl
-          form={form}
-          fieldName={`materials.${name}.reflectance_texture`}
-          label="Reflectance Texture"
-          items={textureItems}
-        />
-        <SelectControl
-          form={form}
-          fieldName={`materials.${name}.emittance_texture`}
-          label="Emittance Texture"
-          items={textureItems}
-        />
+        <form.AppField name={`materials.${name}.reflectance_texture`}>
+          {(field) => <field.SelectControl label="Reflectance Texture" items={textureItems} />}
+        </form.AppField>
+        <form.AppField name={`materials.${name}.emittance_texture`}>
+          {(field) => <field.SelectControl label="Emittance Texture" items={textureItems} />}
+        </form.AppField>
       </>
     );
   }
@@ -81,14 +73,9 @@ export function ControlsCardMaterial(props: ControlsCardMaterialProps) {
       case 'dielectric':
         return (
           <>
-            <RangeControl
-              form={form}
-              fieldName={`materials.${name}.index_of_refraction`}
-              label="Index of Refraction"
-              min={1.0}
-              max={10.0}
-              step={0.01}
-            />
+            <form.AppField name={`materials.${name}.index_of_refraction`}>
+              {(field) => <field.RangeControl label="Index of Refraction" min={1.0} max={10.0} step={0.01} />}
+            </form.AppField>
             <TextureSelects name={name} />
           </>
         );
@@ -97,14 +84,9 @@ export function ControlsCardMaterial(props: ControlsCardMaterialProps) {
       case 'specular':
         return (
           <>
-            <RangeControl
-              form={form}
-              fieldName={`materials.${name}.roughness`}
-              label="Roughness"
-              min={0.0}
-              max={1.0}
-              step={0.01}
-            />
+            <form.AppField name={`materials.${name}.roughness`}>
+              {(field) => <field.RangeControl label="Roughness" min={0.0} max={1.0} step={0.01} />}
+            </form.AppField>
             <TextureSelects name={name} />
           </>
         );
