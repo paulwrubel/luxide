@@ -42,10 +42,17 @@ export function ControlsCard(props: ControlsCardProps) {
 
   return (
     <Card theme={cardTheme} className="flex max-w-full flex-col text-zinc-200">
-      <button
-        className="flex items-center justify-between p-4 pr-2"
+      <div
+        role="button"
+        tabIndex={0}
+        className="flex cursor-pointer items-center justify-between p-4 pr-2"
         onClick={() => setIsExpanded(!isExpanded)}
-        type="button"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setIsExpanded(!isExpanded);
+          }
+        }}
       >
         {onRename ? (
           <RenamableLabel label={leftLabel} labelStyle={leftLabelStyle} onRename={onRename} />
@@ -60,7 +67,7 @@ export function ControlsCard(props: ControlsCardProps) {
             <HiChevronDown className="h-4 w-auto" />
           )}
         </div>
-      </button>
+      </div>
       <AnimatePresence initial={false}>
         {isExpanded && (
           <motion.div

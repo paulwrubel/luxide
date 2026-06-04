@@ -6,6 +6,7 @@ import { RenderPreviewCard } from './RenderPreviewCard';
 import { NewRenderCard } from './NewRenderCard';
 import { SkeletonRenderCard } from './SkeletonRenderCard';
 import { CreateRenderModal } from './CreateRenderModal';
+import { HiExclamationTriangle } from 'react-icons/hi2';
 
 export function RendersPage() {
   const { user } = useAuth();
@@ -19,7 +20,19 @@ export function RendersPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   return (
-    <div className="flex w-full flex-col overflow-y-auto p-12">
+    <div className="flex w-full flex-col gap-6 overflow-y-auto p-12">
+      {!canCreateNewRender && (
+        <Alert
+          color="warning"
+          icon={HiExclamationTriangle}
+          // className="mb-4 w-full text-sm [&>div]:!bg-yellow-900/20 [&>div]:!text-yellow-200"
+        >
+          You have reached your maximum number of renders ({allRendersQuery.data?.length}/
+          {user?.max_renders}
+          ). Please delete an existing render before creating a new one.
+        </Alert>
+      )}
+
       {allRendersQuery.isPending && (
         <div className="flex w-full flex-wrap justify-center gap-4">
           <div className="w-80">
@@ -50,13 +63,6 @@ export function RendersPage() {
           <div className="w-80">
             <NewRenderCard onClick={() => setShowCreateModal(true)} />
           </div>
-          {!canCreateNewRender && (
-            <Alert color="info" className="w-80 text-sm">
-              You have reached your maximum number of renders (
-              {allRendersQuery.data?.length}/{user?.max_renders}
-              ). Please delete an existing render before creating a new one.
-            </Alert>
-          )}
         </div>
       )}
 

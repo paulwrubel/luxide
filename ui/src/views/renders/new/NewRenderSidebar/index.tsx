@@ -59,13 +59,17 @@ export function NewRenderSidebar({ form }: NewRenderSidebarProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const handleCreateRender = form.handleSubmit((values) => {
-    createRender(values, {
+  const handleClick = async () => {
+    await form.validate('submit');
+    if (!form.state.isValid) {
+      return;
+    }
+    createRender(form.state.values, {
       onSuccess: (response) => {
         navigate(`/renders/${response.id}`);
       },
     });
-  });
+  };
 
   const isAtRenderLimit =
     (user?.max_renders ?? null) !== null &&
@@ -95,17 +99,13 @@ export function NewRenderSidebar({ form }: NewRenderSidebarProps) {
                   <Tooltip
                     content={`You have reached your maximum number of renders (${renders?.length ?? '?'}/${user?.max_renders}). Please delete an existing render first.`}
                   >
-                    <Button
-                      disabled
-                      color="default"
-                      className="flex-1"
-                    >
+                    <Button disabled color="default" className="flex-1">
                       Create Render
                     </Button>
                   </Tooltip>
                 ) : (
                   <Button
-                    onClick={handleCreateRender}
+                    onClick={handleClick}
                     disabled={isCreatingRender}
                     color="default"
                     className="flex-1"

@@ -11,7 +11,7 @@ use crate::{
     camera::Camera,
     geometry::Geometric,
     shading::{Color, Texture, materials::Material},
-    tracing::{RenderParameters, Scene, User},
+    tracing::{RenderParameters, Scene},
     utils::Angle,
 };
 
@@ -72,7 +72,6 @@ impl RenderConfigBuilder {
 
         self
     }
-
 }
 
 impl From<RenderConfig> for RenderConfigBuilder {
