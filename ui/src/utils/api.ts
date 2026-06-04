@@ -347,6 +347,34 @@ export async function updateUserRole(token: string, userID: number, role: Role):
   return (await response.json()) as User;
 }
 
+export async function updateUserQuotas(
+  token: string,
+  userID: number,
+  maxRenders: number | null,
+  maxCheckpointsPerRender: number | null,
+  maxRenderPixelCount: number | null,
+): Promise<User> {
+  const response = await fetch(`${getAPIURL()}/admin/users/${userID}/quotas`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      max_renders: maxRenders,
+      max_checkpoints_per_render: maxCheckpointsPerRender,
+      max_render_pixel_count: maxRenderPixelCount,
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`failed to update user quotas: (${response.status}: ${body})`);
+  }
+
+  return (await response.json()) as User;
+}
+
 export async function getStorageUsage(token: string): Promise<UsageResponse> {
   const response = await fetch(`${getAPIURL()}/usage`, {
     headers: { Authorization: `Bearer ${token}` },

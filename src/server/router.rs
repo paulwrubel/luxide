@@ -145,6 +145,7 @@ fn build_admin_router() -> Router<LuxideState> {
     Router::new()
         .route("/users", get(handlers::get_admin_users))
         .route("/users/{id}/role", put(handlers::update_user_role))
+        .route("/users/{id}/quotas", put(handlers::update_user_quotas))
 }
 
 pub async fn serve(router: Router, address: &str, port: u16) -> Result<(), String> {

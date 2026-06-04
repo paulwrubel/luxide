@@ -14,9 +14,17 @@ import {
 } from 'flowbite-react';
 import type { Role, User } from '@/utils/api';
 import { useAllUsers } from '@/hooks/useAllUsers';
-import { useUpdateUserRole } from '@/hooks/useAdminMutations';
+import { useUpdateUserRole } from '@/hooks/useUserMutations';
 import { useAuth } from '@/providers/auth';
 import { RoleChangeModal } from './RoleChangeModal';
+import { QuotaEditModal } from './QuotaEditModal';
+
+function quotaDisplay(value: number | null): string {
+  if (value === null) {
+    return 'Unlimited';
+  }
+  return String(value);
+}
 
 export function UsersTable() {
   const { user: currentUser } = useAuth();
@@ -25,6 +33,7 @@ export function UsersTable() {
   const { mutate: updateUserRole, isPending: updateUserRoleIsPending } = useUpdateUserRole();
 
   const [confirmTarget, setConfirmTarget] = useState<{ user: User; newRole: Role } | null>(null);
+  const [quotaEditUser, setQuotaEditUser] = useState<User | null>(null);
 
   const handleConfirmRoleChange = () => {
     if (!confirmTarget) {
@@ -51,6 +60,9 @@ export function UsersTable() {
                 <TableHeadCell>User</TableHeadCell>
                 <TableHeadCell>Role</TableHeadCell>
                 <TableHeadCell>Created</TableHeadCell>
+                <TableHeadCell>Renders</TableHeadCell>
+                <TableHeadCell>Checkpoints</TableHeadCell>
+                <TableHeadCell>Pixels</TableHeadCell>
                 <TableHeadCell>Actions</TableHeadCell>
               </TableRow>
             </TableHead>
@@ -67,20 +79,28 @@ export function UsersTable() {
                     <Badge color={user.role === 'admin' ? 'green' : 'gray'}>{user.role}</Badge>
                   </TableCell>
                   <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
+                  <TableCell>{quotaDisplay(user.max_renders)}</TableCell>
+                  <TableCell>{quotaDisplay(user.max_checkpoints_per_render)}</TableCell>
+                  <TableCell>{quotaDisplay(user.max_render_pixel_count)}</TableCell>
                   <TableCell>
-                    <Button
-                      color="default"
-                      size="xs"
-                      disabled={user.id === currentUser!.id}
-                      onClick={() =>
-                        setConfirmTarget({
-                          user,
-                          newRole: user.role === 'admin' ? 'user' : 'admin',
-                        })
-                      }
-                    >
-                      {user.role === 'admin' ? 'Demote to User' : 'Promote to Admin'}
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        color="default"
+                        size="xs"
+                        disabled={user.id === currentUser!.id}
+                        onClick={() =>
+                          setConfirmTarget({
+                            user,
+                            newRole: user.role === 'admin' ? 'user' : 'admin',
+                          })
+                        }
+                      >
+                        {user.role === 'admin' ? 'Demote to User' : 'Promote to Admin'}
+                      </Button>
+                      <Button color="default" size="xs" onClick={() => setQuotaEditUser(user)}>
+                        Quotas
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -98,6 +118,10 @@ export function UsersTable() {
         onClose={() => setConfirmTarget(null)}
         onConfirm={handleConfirmRoleChange}
       />
+
+      {quotaEditUser && (
+        <QuotaEditModal user={quotaEditUser} onClose={() => setQuotaEditUser(null)} />
+      )}
     </section>
   );
 }
