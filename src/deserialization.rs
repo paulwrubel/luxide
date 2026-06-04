@@ -11,7 +11,7 @@ use crate::{
     camera::Camera,
     geometry::Geometric,
     shading::{Color, Texture, materials::Material},
-    tracing::{RenderParameters, Scene, User},
+    tracing::{RenderParameters, Scene},
     utils::Angle,
 };
 
@@ -69,25 +69,6 @@ impl RenderConfigBuilder {
         self.0.geometrics.append(&mut get_builtin_geometrics());
         self.0.cameras.append(&mut get_builtin_cameras());
         self.0.scenes.append(&mut get_builtin_scenes());
-
-        self
-    }
-
-    pub fn with_overriding_limits(mut self, user: &User) -> Self {
-        let render_limit = self.0.parameters.saved_checkpoint_limit;
-        let user_limit = user.max_checkpoints_per_render;
-
-        match (render_limit, user_limit) {
-            // user requested a limit that's higher than their permitted limit
-            (Some(render_limit), Some(user_limit)) if user_limit < render_limit => {
-                self.0.parameters.saved_checkpoint_limit = Some(user_limit);
-            }
-            // user requested no limit, but their permitted limit is non-zero
-            (None, Some(user_limit)) => {
-                self.0.parameters.saved_checkpoint_limit = Some(user_limit);
-            }
-            _ => {}
-        }
 
         self
     }

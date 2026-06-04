@@ -35,7 +35,9 @@ export function ControlsCardCamera(props: ControlsCardCameraProps) {
     <ControlsCard leftLabel={cameraName} onRename={handleRename} startExpanded>
       <div className="flex flex-col gap-2 p-4">
         <form.AppField name={`${formPath}.vertical_field_of_view_degrees`}>
-          {(field) => <field.RangeControl label="Vertical FOV (degrees)" min={10.0} max={170.0} step={1.0} />}
+          {(field) => (
+            <field.RangeControl label="Vertical FOV (degrees)" min={10.0} max={170.0} step={1.0} />
+          )}
         </form.AppField>
         <TextArrayInputControl
           form={form}
@@ -59,7 +61,15 @@ export function ControlsCardCamera(props: ControlsCardCameraProps) {
           type="number"
         />
         <form.AppField name={`${formPath}.defocus_angle_degrees`}>
-          {(field) => <field.RangeControl label="Defocus Angle (degrees)" min={0.0} max={180.0} step={1.0} labelPrefix={<WarningIconUnaffectedPreview />} />}
+          {(field) => (
+            <field.RangeControl
+              label="Defocus Angle (degrees)"
+              min={0.0}
+              max={180.0}
+              step={1.0}
+              labelPrefix={<WarningIconUnaffectedPreview />}
+            />
+          )}
         </form.AppField>
       </div>
     </ControlsCard>
