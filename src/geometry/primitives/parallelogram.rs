@@ -17,6 +17,7 @@ pub struct Parallelogram {
     w: Vector,
     material: Arc<dyn Material>,
     bounding_box: Aabb,
+    area: f64, // cache this because it's used quite often in sampling
 }
 
 impl Parallelogram {
@@ -39,6 +40,7 @@ impl Parallelogram {
             w: n / n.dot(n),
             material,
             bounding_box: Aabb::from_points(&[lower_left, lower_left + u + v]).pad(0.0001),
+            area: u.cross(v).length(),
         }
     }
 
@@ -105,8 +107,40 @@ impl Geometric for Parallelogram {
         })
     }
 
+    fn surface_area(&self) -> f64 {
+        self.area
+    }
+
     fn bounding_box(&self) -> Aabb {
         self.bounding_box
+    }
+
+    fn sample_direction_from(&self, origin: Point) -> Vector {
+        let alpha: f64 = rand::random();
+        let beta: f64 = rand::random();
+        let p = self.lower_left + alpha * self.u + beta * self.v;
+
+        origin.to(p).unit_vector()
+    }
+
+    fn direction_pdf(&self, origin: Point, direction: Vector) -> f64 {
+        // go from the origin to the hit point
+        let ray = Ray::new(origin, direction, 0.0);
+
+        // did we hit? we might not because it's not a guarantee that the direction was generated from our own sampler!
+        let Some(hit) = self.intersect(ray, Interval::new(0.001, f64::INFINITY)) else {
+            return 0.0;
+        };
+
+        // assuming we hit, convert the area density to solid angle density using the Jacobian:
+        let cos_theta = direction.dot(hit.normal).abs();
+        if cos_theta < 1e-8 {
+            return 0.0;
+        }
+
+        let area = self.surface_area();
+
+        (hit.t * hit.t) / (cos_theta * area)
     }
 }
 

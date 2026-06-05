@@ -17,6 +17,7 @@ pub struct Triangle {
     is_culled: bool,
     material: Arc<dyn Material>,
     bounding_box: Aabb,
+    area: f64, // cache this because it's used quite often in sampling
 }
 
 impl Triangle {
@@ -67,6 +68,9 @@ impl Triangle {
         material: Arc<dyn Material>,
     ) -> Self {
         let bounding_box = Aabb::from_points(&[a, b, c]).pad(0.0001);
+        let ab = a.to(b);
+        let ac = a.to(c);
+        let area = 0.5 * ab.cross(ac).length();
 
         Self {
             a,
@@ -78,6 +82,7 @@ impl Triangle {
             is_culled,
             material,
             bounding_box,
+            area,
         }
     }
 
@@ -159,7 +164,45 @@ impl Geometric for Triangle {
         self.intersect_moller_trumbore(ray, ray_t)
     }
 
+    fn surface_area(&self) -> f64 {
+        self.area
+    }
+
     fn bounding_box(&self) -> Aabb {
         self.bounding_box
+    }
+
+    fn sample_direction_from(&self, origin: Point) -> Vector {
+        // uniform sampling on a triangle using barycentric coordinates
+        // with sqrt to correct for area concentration
+        let r1: f64 = rand::random();
+        let r2: f64 = rand::random();
+        let sqrt_r1 = r1.sqrt();
+        let beta = sqrt_r1 * (1.0 - r2);
+        let gamma = sqrt_r1 * r2;
+
+        let to_b = self.a.to(self.b);
+        let to_c = self.a.to(self.c);
+
+        let p = self.a + to_b * beta + to_c * gamma;
+        origin.to(p).unit_vector()
+    }
+
+    fn direction_pdf(&self, origin: Point, dir: Vector) -> f64 {
+        // go from the origin to the hit point
+        let ray = Ray::new(origin, dir, 0.0);
+
+        // did we hit? we might not because it's not a guarantee that the direction was generated from our own sampler!
+        let Some(hit) = self.intersect(ray, Interval::new(0.001, f64::INFINITY)) else {
+            return 0.0;
+        };
+
+        // assuming we hit, convert the area density to solid angle density using the Jacobian:
+        let cos_theta = dir.dot(hit.normal).abs();
+        if cos_theta < 1e-8 {
+            return 0.0;
+        }
+
+        (hit.t * hit.t) / (cos_theta * self.area)
     }
 }

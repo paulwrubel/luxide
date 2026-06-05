@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{Aabb, Geometric, Ray, RayHit, Vector},
+    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector},
     utils::Interval,
 };
 
@@ -43,7 +43,23 @@ impl Geometric for Translate {
         })
     }
 
+    fn surface_area(&self) -> f64 {
+        self.geometric.surface_area()
+    }
+
     fn bounding_box(&self) -> Aabb {
         self.bounding_box
+    }
+
+    fn sample_direction_from(&self, origin: Point) -> Vector {
+        let local_origin = Point::from_vector(self.world_to_local(origin.0));
+        // direction is invariant under translation
+        self.geometric.sample_direction_from(local_origin)
+    }
+
+    fn direction_pdf(&self, origin: Point, dir: Vector) -> f64 {
+        let local_origin = Point::from_vector(self.world_to_local(origin.0));
+        // direction is invariant under translation; PDF is invariant
+        self.geometric.direction_pdf(local_origin, dir)
     }
 }

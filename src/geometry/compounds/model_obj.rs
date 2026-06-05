@@ -137,8 +137,20 @@ impl Geometric for ModelObj {
         self.geometric.intersect(ray, ray_t)
     }
 
+    fn surface_area(&self) -> f64 {
+        self.geometric.surface_area()
+    }
+
     fn bounding_box(&self) -> Aabb {
         self.geometric.bounding_box()
+    }
+
+    fn sample_direction_from(&self, origin: Point) -> Vector {
+        self.geometric.sample_direction_from(origin)
+    }
+
+    fn direction_pdf(&self, origin: Point, dir: Vector) -> f64 {
+        self.geometric.direction_pdf(origin, dir)
     }
 }
 
@@ -155,10 +167,31 @@ impl Geometric for ListOrBvh {
         }
     }
 
+    fn surface_area(&self) -> f64 {
+        match self {
+            ListOrBvh::List(list) => list.surface_area(),
+            ListOrBvh::Bvh(bvh) => bvh.surface_area(),
+        }
+    }
+
     fn bounding_box(&self) -> Aabb {
         match self {
             ListOrBvh::List(list) => list.bounding_box(),
             ListOrBvh::Bvh(bvh) => bvh.bounding_box(),
+        }
+    }
+
+    fn sample_direction_from(&self, origin: Point) -> Vector {
+        match self {
+            ListOrBvh::List(list) => list.sample_direction_from(origin),
+            ListOrBvh::Bvh(bvh) => bvh.sample_direction_from(origin),
+        }
+    }
+
+    fn direction_pdf(&self, origin: Point, dir: Vector) -> f64 {
+        match self {
+            ListOrBvh::List(list) => list.direction_pdf(origin, dir),
+            ListOrBvh::Bvh(bvh) => bvh.direction_pdf(origin, dir),
         }
     }
 }

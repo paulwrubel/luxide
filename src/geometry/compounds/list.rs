@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{Aabb, Geometric, Ray, RayHit},
+    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector},
     utils::Interval,
 };
 
@@ -84,7 +84,39 @@ impl Geometric for List {
         closest_hit_record
     }
 
+    fn surface_area(&self) -> f64 {
+        self.items.iter().map(|item| item.surface_area()).sum()
+    }
+
     fn bounding_box(&self) -> Aabb {
         self.bounding_box
+    }
+
+    fn sample_direction_from(&self, origin: Point) -> Vector {
+        let total_area = self.surface_area();
+        if total_area <= 0.0 {
+            return Vector::random_unit();
+        }
+        let mut threshold: f64 = rand::random::<f64>() * total_area;
+        for item in &self.items {
+            let area = item.surface_area();
+            if threshold <= area {
+                return item.sample_direction_from(origin);
+            }
+            threshold -= area;
+        }
+        // fallback (floating-point edge case)
+        self.items.last().unwrap().sample_direction_from(origin)
+    }
+
+    fn direction_pdf(&self, origin: Point, dir: Vector) -> f64 {
+        let total_area = self.surface_area();
+        if total_area <= 0.0 {
+            return 0.0;
+        }
+        self.items
+            .iter()
+            .map(|item| (item.surface_area() / total_area) * item.direction_pdf(origin, dir))
+            .sum()
     }
 }
