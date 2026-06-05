@@ -4,7 +4,7 @@ use crate::shading::materials::Material;
 
 use super::{Point, Vector};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct RayHit {
     pub t: f64,
     pub point: Point,

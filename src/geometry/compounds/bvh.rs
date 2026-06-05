@@ -7,14 +7,14 @@ use crate::{
 
 use super::List;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 enum BvhNode {
     Branch { left: Arc<Bvh>, right: Arc<Bvh> },
     Leaf(Arc<dyn Geometric>),
     Empty,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Bvh {
     tree: BvhNode,
     bounding_box: Aabb,

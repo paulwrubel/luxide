@@ -8,6 +8,7 @@ use crate::{
 
 use super::{Bvh, List};
 
+#[derive(Clone, Debug)]
 pub struct ModelObj {
     geometric: ListOrBvh,
 }
@@ -154,6 +155,7 @@ impl Geometric for ModelObj {
     }
 }
 
+#[derive(Clone, Debug)]
 enum ListOrBvh {
     List(List),
     Bvh(Bvh),

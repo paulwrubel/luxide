@@ -150,7 +150,11 @@ impl Camera {
             }
 
             // early termination: if the surface absorbs all light, skip scatter
-            if ray_hit.material.reflectance(ray_hit.u, ray_hit.v, ray_hit.point) == Color::BLACK {
+            if ray_hit
+                .material
+                .reflectance(ray_hit.u, ray_hit.v, ray_hit.point)
+                == Color::BLACK
+            {
                 return accumulated_color;
             }
 
@@ -176,9 +180,8 @@ impl Camera {
 
                     ray = scattered
                 }
-                ScatterRecord::Pdf { pdf, scattered } => {
-                    // unit vector from surface toward the light source (incident direction for BRDF)
-                    let incident_direction = scattered.direction.unit_vector();
+                ScatterRecord::Pdf { pdf } => {
+                    let incident_direction = pdf.sample();
                     let cos_theta = ray_hit.normal.dot(incident_direction);
 
                     let brdf_val = ray_hit.material.brdf(
@@ -189,9 +192,10 @@ impl Camera {
                         ray_hit.v,
                         ray_hit.point,
                     );
-                    attentuation_strength *= brdf_val * cos_theta / pdf;
+                    let pdf_val = pdf.density(incident_direction);
+                    attentuation_strength *= brdf_val * cos_theta / pdf_val;
 
-                    ray = scattered
+                    ray = Ray::new(ray_hit.point, incident_direction, ray.time)
                 }
             }
 

@@ -46,6 +46,7 @@ pub struct SceneData {
 impl Build<Scene> for SceneData {
     fn build(&self, builts: &Builts) -> Result<Scene, String> {
         let mut world = List::new();
+
         for geometric in &self.geometrics {
             let geometric = geometric.build(builts)?;
             world.push(geometric);

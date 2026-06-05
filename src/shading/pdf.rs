@@ -9,7 +9,7 @@ use crate::geometry::{Geometric, Onb, Point, Vector};
 /// - `sample()` draws a random direction distributed according to this PDF.
 /// - `density(dir)` returns the probability density that `sample()` would
 ///   have assigned to the given direction.
-pub trait Pdf {
+pub trait Pdf: std::fmt::Debug {
     /// Draw a random unit direction distributed according to this PDF.
     fn sample(&self) -> Vector;
 
@@ -26,6 +26,7 @@ pub trait Pdf {
 /// Internally uses [`Vector::random_cosine_weighted_direction`] and [`Onb`] to
 /// generate directions (Malley's method: uniform disk sample projected
 /// onto the hemisphere).
+#[derive(Debug)]
 pub struct CosineHemispherePdf {
     onb: Onb,
 }
@@ -60,6 +61,7 @@ impl Pdf for CosineHemispherePdf {
 ///
 /// `density(dir)` returns `1 / (2π)` if `dir` points above the hemisphere
 /// (i.e., `dot(dir, normal) > 0`), and `0.0` otherwise.
+#[derive(Debug)]
 pub struct UniformHemispherePdf {
     onb: Onb,
 }
@@ -98,6 +100,7 @@ impl Pdf for UniformHemispherePdf {
 ///
 /// `density(dir)` always returns `1 / (4π)`. Used for isotropic volume
 /// scattering materials.
+#[derive(Debug)]
 pub struct UniformSpherePdf;
 
 impl Pdf for UniformSpherePdf {
@@ -115,6 +118,7 @@ impl Pdf for UniformSpherePdf {
 /// Stores the geometric object and the origin point so `sample()` and
 /// `density()` can delegate to the object's `sample_direction_from` /
 /// `direction_pdf` methods without needing an explicit origin parameter.
+#[derive(Debug)]
 pub struct GeometricPdf {
     geometric: Arc<dyn Geometric>,
     origin: Point,
@@ -147,6 +151,7 @@ impl Pdf for GeometricPdf {
 /// of which one was used for sampling. This is correct because every
 /// direction that either PDF could have generated contributes to the
 /// denominator in the Monte Carlo estimator.
+#[derive(Debug)]
 pub struct MixturePdf {
     a: Box<dyn Pdf>,
     a_weight: f64,

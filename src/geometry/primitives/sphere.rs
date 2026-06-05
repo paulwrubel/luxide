@@ -6,7 +6,7 @@ use crate::{
     utils::Interval,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Sphere {
     center_1: Point,
     center_vector: Option<Vector>,

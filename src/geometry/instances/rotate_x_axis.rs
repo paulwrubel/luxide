@@ -5,7 +5,7 @@ use crate::{
     utils::{Angle, Interval},
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct RotateXAxis {
     geometric: Arc<dyn Geometric>,
     translation: Vector,

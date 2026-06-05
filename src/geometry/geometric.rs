@@ -5,7 +5,7 @@ use crate::{
 
 use super::{Aabb, Ray, RayHit};
 
-pub trait Geometric: Sync + Send {
+pub trait Geometric: std::fmt::Debug + Sync + Send {
     fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit>;
     fn surface_area(&self) -> f64;
     fn bounding_box(&self) -> Aabb;

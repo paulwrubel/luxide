@@ -6,7 +6,7 @@ use crate::{
     utils::Interval,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Triangle {
     a: Point,
     b: Point,

@@ -1,4 +1,5 @@
 use super::Color;
+use super::pdf::Pdf;
 use crate::geometry::{Point, Ray, RayHit, Vector};
 
 mod dielectric;
@@ -57,13 +58,11 @@ pub trait Material: std::fmt::Debug + Sync + Send {
 /// `Pdf` carries a sampling probability density for diffuse materials
 /// (Lambertian). `Delta` is for specular/dielectric materials that have
 /// a deterministic (delta-function) bounce — no finite PDF exists.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug)]
 pub enum ScatterRecord {
     Pdf {
-        /// The scattered ray to continue tracing.
-        scattered: Ray,
-        /// The solid-angle probability density of the chosen scatter direction.
-        pdf: f64,
+        /// The probability density function for the scatter direction.
+        pdf: Box<dyn Pdf>,
     },
     Delta {
         /// The scattered ray to continue tracing.
