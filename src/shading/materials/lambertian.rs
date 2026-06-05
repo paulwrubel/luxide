@@ -1,11 +1,12 @@
 use std::sync::Arc;
 
+use crate::shading::pdf::{CosineHemispherePdf, Pdf};
 use crate::{
     geometry::{Point, Ray, RayHit, Vector},
     shading::{Color, Texture, textures::SolidColor},
 };
 
-use super::Material;
+use super::{Material, ScatterRecord};
 
 #[derive(Debug, Clone)]
 pub struct Lambertian {
@@ -47,18 +48,26 @@ impl Material for Lambertian {
         self.emittance_texture.value(u, v, p)
     }
 
-    fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<Ray> {
-        let direction = ray_hit.normal + Vector::random_unit();
+    fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<ScatterRecord> {
+        let pdf = CosineHemispherePdf::new(ray_hit.normal);
+        let direction = pdf.sample();
 
-        // prevent degenerate rays from being generated
-        let direction = if direction.is_near_zero() {
-            ray_hit.normal
-        } else {
-            direction
-        };
+        Some(ScatterRecord::Pdf {
+            scattered: Ray::new(ray_hit.point, direction, ray.time),
+            pdf: pdf.density(direction),
+        })
+    }
 
-        let scattered = Ray::new(ray_hit.point, direction, ray.time);
-
-        Some(scattered)
+    fn brdf(
+        &self,
+        _outgoing_direction: Vector,
+        _incident_direction: Vector,
+        _normal: Vector,
+        u: f64,
+        v: f64,
+        p: Point,
+    ) -> Color {
+        let albedo = self.reflectance_texture.value(u, v, p);
+        albedo / std::f64::consts::PI
     }
 }

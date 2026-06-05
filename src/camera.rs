@@ -4,7 +4,7 @@ use rand::RngExt;
 
 use crate::{
     geometry::{Geometric, Point, Ray, Vector},
-    shading::Color,
+    shading::{Color, materials::ScatterRecord},
     tracing::{RenderParameters, Scene},
     utils::{Angle, Interval},
 };
@@ -145,29 +145,55 @@ impl Camera {
             // update our accumulated color
             accumulated_color += attentuation_strength * emittance;
 
-            let reflectance = ray_hit
-                .material
-                .reflectance(ray_hit.u, ray_hit.v, ray_hit.point);
-
-            // if the surface is black, it's not going to let any incoming light contribute to the outgoing color
-            // so we can safely say no light is reflected and simply return the accumulated color so far
-            if bounces >= max_bounces || reflectance == Color::BLACK {
+            if bounces >= max_bounces {
                 return accumulated_color;
             }
 
-            // get scattered ray, if possible
-            match ray_hit.material.scatter(ray, &ray_hit) {
-                Some(scatter) => {
-                    // redirect the ray
-                    ray = scatter;
-                    // update the attenuation by the effect this surface has on the light rays
-                    attentuation_strength *= reflectance;
-                }
-                None => {
-                    // the surface absorbed this ray, so we can return the accumulated color
-                    return accumulated_color;
-                }
+            // early termination: if the surface absorbs all light, skip scatter
+            if ray_hit.material.reflectance(ray_hit.u, ray_hit.v, ray_hit.point) == Color::BLACK {
+                return accumulated_color;
+            }
+
+            let Some(srec) = ray_hit.material.scatter(ray, &ray_hit) else {
+                return accumulated_color;
             };
+
+            // unit vector from surface toward the camera (outgoing direction for BRDF)
+            let outgoing_direction = (-ray.direction).unit_vector();
+            // ray = srec.scattered();
+
+            match srec {
+                ScatterRecord::Delta { scattered } => {
+                    // specular or dielectric materials, which really only have a discrete scatter direction, and not a distribution over 3D space.
+                    //
+                    // essentially, this is a special case that sidesteps the BRDF + PDF evaluation
+                    let reflectance =
+                        ray_hit
+                            .material
+                            .reflectance(ray_hit.u, ray_hit.v, ray_hit.point);
+
+                    attentuation_strength *= reflectance;
+
+                    ray = scattered
+                }
+                ScatterRecord::Pdf { pdf, scattered } => {
+                    // unit vector from surface toward the light source (incident direction for BRDF)
+                    let incident_direction = scattered.direction.unit_vector();
+                    let cos_theta = ray_hit.normal.dot(incident_direction);
+
+                    let brdf_val = ray_hit.material.brdf(
+                        outgoing_direction,
+                        incident_direction,
+                        ray_hit.normal,
+                        ray_hit.u,
+                        ray_hit.v,
+                        ray_hit.point,
+                    );
+                    attentuation_strength *= brdf_val * cos_theta / pdf;
+
+                    ray = scattered
+                }
+            }
 
             bounces += 1;
         }

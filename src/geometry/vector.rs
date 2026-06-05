@@ -120,6 +120,25 @@ impl Vector {
         }
     }
 
+    /// generates a random unit direction on the +Z hemisphere with a
+    /// cosine-weighted distribution.  the direction is relative to +Z
+    /// (`z > 0` by construction), not world-space.  use an `Onb` to orient
+    /// the result to an arbitrary surface normal.
+    ///
+    /// implemented via malley's method: uniformly sample the unit disk and
+    /// project onto the hemisphere.
+    pub fn random_cosine_weighted_direction() -> Self {
+        let r1 = rand::random::<f64>();
+        let r2 = rand::random::<f64>();
+        let phi = 2.0 * std::f64::consts::PI * r1;
+        let sqrt_r2 = r2.sqrt();
+        Self {
+            x: phi.cos() * sqrt_r2,
+            y: phi.sin() * sqrt_r2,
+            z: (1.0 - r2).sqrt(),
+        }
+    }
+
     pub fn length(&self) -> f64 {
         self.squared_length().sqrt()
     }

@@ -5,7 +5,7 @@ use crate::{
     shading::{Color, Texture},
 };
 
-use super::Material;
+use super::{Material, ScatterRecord};
 
 #[derive(Debug, Clone)]
 pub struct Isotropic {
@@ -31,8 +31,23 @@ impl Material for Isotropic {
         self.emittance_texture.value(u, v, p)
     }
 
-    fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<Ray> {
+    fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<ScatterRecord> {
         // always scatter, and always scatter in a random direction
-        Some(Ray::new(ray_hit.point, Vector::random_unit(), ray.time))
+        Some(ScatterRecord::Delta {
+            scattered: Ray::new(ray_hit.point, Vector::random_unit(), ray.time),
+        })
+    }
+
+    fn brdf(
+        &self,
+        _outgoing_direction: Vector,
+        _incident_direction: Vector,
+        _normal: Vector,
+        u: f64,
+        v: f64,
+        p: Point,
+    ) -> Color {
+        let albedo = self.reflectance_texture.value(u, v, p);
+        albedo / (4.0 * std::f64::consts::PI)
     }
 }

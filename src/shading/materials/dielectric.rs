@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{Ray, RayHit},
+    geometry::{Point, Ray, RayHit, Vector},
     shading::{Color, Texture},
 };
 
-use super::Material;
+use super::{Material, ScatterRecord};
 
 #[derive(Debug, Clone)]
 pub struct Dielectric {
@@ -35,15 +35,28 @@ impl Dielectric {
 }
 
 impl Material for Dielectric {
-    fn reflectance(&self, u: f64, v: f64, p: crate::geometry::Point) -> Color {
-        self.reflectance_texture.value(u, v, p)
-    }
-
     fn emittance(&self, u: f64, v: f64, p: crate::geometry::Point) -> Color {
         self.emittance_texture.value(u, v, p)
     }
 
-    fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<Ray> {
+    fn reflectance(&self, u: f64, v: f64, p: Point) -> Color {
+        self.reflectance_texture.value(u, v, p)
+    }
+
+    fn brdf(
+        &self,
+        _outgoing_direction: Vector,
+        _incident_direction: Vector,
+        _normal: Vector,
+        _u: f64,
+        _v: f64,
+        _p: Point,
+    ) -> Color {
+        // delta-function BRDF — never called, bypassed via ScatterRecord::Delta
+        Color::BLACK
+    }
+
+    fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<ScatterRecord> {
         let (refractive_normal, refraction_ratio) = if ray.direction.dot(ray_hit.normal) < 0.0 {
             (ray_hit.normal, 1.0 / self.index_of_refraction)
         } else {
@@ -66,6 +79,8 @@ impl Material for Dielectric {
         };
 
         let scattered = Ray::new(ray_hit.point, refracted, ray.time);
-        Some(scattered)
+        Some(ScatterRecord::Delta {
+            scattered,
+        })
     }
 }

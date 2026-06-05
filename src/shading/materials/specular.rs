@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{Ray, RayHit, Vector},
+    geometry::{Point, Ray, RayHit, Vector},
     shading::{Color, Texture},
 };
 
-use super::Material;
+use super::{Material, ScatterRecord};
 
 #[derive(Debug, Clone)]
 pub struct Specular {
@@ -29,15 +29,28 @@ impl Specular {
 }
 
 impl Material for Specular {
-    fn reflectance(&self, u: f64, v: f64, p: crate::geometry::Point) -> Color {
+    fn reflectance(&self, u: f64, v: f64, p: Point) -> Color {
         self.reflectance_texture.value(u, v, p)
     }
 
-    fn emittance(&self, u: f64, v: f64, p: crate::geometry::Point) -> Color {
+    fn emittance(&self, u: f64, v: f64, p: Point) -> Color {
         self.emittance_texture.value(u, v, p)
     }
 
-    fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<Ray> {
+    fn brdf(
+        &self,
+        _outgoing_direction: Vector,
+        _incident_direction: Vector,
+        _normal: Vector,
+        _u: f64,
+        _v: f64,
+        _p: Point,
+    ) -> Color {
+        // delta-function BRDF — never called, bypassed via ScatterRecord::Delta
+        Color::BLACK
+    }
+
+    fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<ScatterRecord> {
         let reflected = ray.direction.unit_vector().reflect_around(ray_hit.normal);
 
         let scattered = Ray::new(
@@ -47,7 +60,7 @@ impl Material for Specular {
         );
 
         if scattered.direction.dot(ray_hit.normal) > 0.0 {
-            Some(scattered)
+            Some(ScatterRecord::Delta { scattered })
         } else {
             None
         }
