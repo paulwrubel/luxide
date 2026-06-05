@@ -53,6 +53,45 @@ impl Pdf for CosineHemispherePdf {
     }
 }
 
+/// Uniform probability density over the hemisphere centered on a surface
+/// normal.
+///
+/// `density(dir)` returns `1 / (2π)` if `dir` points above the hemisphere
+/// (i.e., `dot(dir, normal) > 0`), and `0.0` otherwise.
+pub struct UniformHemispherePdf {
+    onb: Onb,
+}
+
+impl UniformHemispherePdf {
+    /// Create a uniform-hemisphere PDF centered on `normal` (the surface normal).
+    pub fn new(normal: Vector) -> Self {
+        Self {
+            onb: Onb::from_w(normal),
+        }
+    }
+}
+
+impl Pdf for UniformHemispherePdf {
+    fn sample(&self) -> Vector {
+        let mut dir = Vector::random_unit();
+        // map lower hemisphere to upper: negate the vector if z < 0.
+        // this doubles the density on +Z (from 1/4π to 1/2π) while
+        // preserving uniformity across the hemisphere.
+        if dir.z < 0.0 {
+            dir = -dir;
+        }
+        self.onb.to_world(dir)
+    }
+
+    fn density(&self, dir: Vector) -> f64 {
+        if self.onb.w.dot(dir) <= 0.0 {
+            0.0
+        } else {
+            1.0 / (2.0 * std::f64::consts::PI)
+        }
+    }
+}
+
 /// Uniform probability density over the full sphere.
 ///
 /// `density(dir)` always returns `1 / (4π)`. Used for isotropic volume

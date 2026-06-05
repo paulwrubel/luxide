@@ -1,7 +1,7 @@
 use std::{f64::consts::PI, sync::Arc};
 
 use crate::{
-    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector},
+    geometry::{Aabb, Geometric, Onb, Point, Ray, RayHit, Vector},
     shading::materials::{Lambertian, Material},
     utils::Interval,
 };
@@ -62,6 +62,19 @@ impl Sphere {
         }
     }
 
+    /// Generate a random direction within the cone that subtends the sphere
+    /// from a point at `distance_squared` away. The result is in the local
+    /// frame where +Z points toward the sphere center.
+    fn random_to_sphere(radius: f64, distance_squared: f64) -> Vector {
+        let r1: f64 = rand::random();
+        let r2: f64 = rand::random();
+        let cos_theta_max = (1.0 - radius * radius / distance_squared).sqrt();
+        let z = 1.0 + r2 * (cos_theta_max - 1.0);
+        let phi = 2.0 * PI * r1;
+        let sin_theta = (1.0 - z * z).sqrt();
+        Vector::new(phi.cos() * sin_theta, phi.sin() * sin_theta, z)
+    }
+
     fn uv(unit_point: Point) -> (f64, f64) {
         let theta = (-unit_point.0.y).acos();
         let phi = (-unit_point.0.z).atan2(unit_point.0.x) + PI;
@@ -119,5 +132,51 @@ impl Geometric for Sphere {
 
     fn bounding_box(&self) -> Aabb {
         self.bounding_box
+    }
+
+    fn sample_direction_from(&self, origin: Point) -> Vector {
+        // sample the sphere as a cone from origin:
+        // build an ONB with w pointing toward the sphere center,
+        // then sample a direction uniformly within the cone subtended
+        // by the sphere's visible disk
+        let center = self.center_1;
+        let to_center = origin.to(center);
+        let distance_squared = to_center.squared_length();
+
+        // degenerate: origin inside the sphere — sample the full sphere
+        if distance_squared <= self.radius * self.radius {
+            return Vector::random_unit();
+        }
+
+        let onb = Onb::from_w(to_center.unit_vector());
+        let local_dir = Self::random_to_sphere(self.radius, distance_squared);
+        onb.to_world(local_dir)
+    }
+
+    fn direction_pdf(&self, origin: Point, dir: Vector) -> f64 {
+        // go from origin to the hit point
+        let ray = Ray::new(origin, dir, 0.0);
+
+        // did we hit? we might not because it's not a guarantee that the
+        // direction was generated from our own sampler!
+        if self
+            .intersect(ray, Interval::new(0.001, f64::INFINITY))
+            .is_none()
+        {
+            return 0.0;
+        }
+
+        let distance_squared = origin.to(self.center_1).squared_length();
+
+        // if the origin is at or inside the sphere, the full sphere
+        // is visible — solid angle is 4π
+        if distance_squared <= self.radius * self.radius {
+            return 1.0 / (4.0 * PI);
+        }
+
+        // cone half-angle from origin: sin(θ_max) = radius / distance
+        let cos_theta_max = (1.0 - self.radius * self.radius / distance_squared).sqrt();
+        let solid_angle = 2.0 * PI * (1.0 - cos_theta_max);
+        1.0 / solid_angle
     }
 }
