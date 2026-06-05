@@ -104,4 +104,17 @@ impl Geometric for RotateZAxis {
     fn bounding_box(&self) -> Aabb {
         self.bounding_box
     }
+
+    fn sample_direction_from(&self, origin: Point) -> Vector {
+        let local_origin = self.world_to_local_point(origin);
+        let local_dir = self.geometric.sample_direction_from(local_origin);
+        self.local_to_world_vector(local_dir)
+    }
+
+    fn direction_pdf(&self, origin: Point, dir: Vector) -> f64 {
+        let local_origin = self.world_to_local_point(origin);
+        let local_dir = self.world_to_local_vector(dir);
+        // PDF is invariant under rigid transforms
+        self.geometric.direction_pdf(local_origin, local_dir)
+    }
 }
