@@ -101,6 +101,10 @@ impl Geometric for RotateXAxis {
         self.geometric.surface_area()
     }
 
+    fn is_emissive(&self) -> bool {
+        self.geometric.is_emissive()
+    }
+
     fn bounding_box(&self) -> Aabb {
         self.bounding_box
     }

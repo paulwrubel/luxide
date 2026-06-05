@@ -31,6 +31,10 @@ impl Material for Isotropic {
         self.emittance_texture.value(u, v, p)
     }
 
+    fn is_emissive(&self) -> bool {
+        self.emittance_texture.value(0.5, 0.5, Point::ORIGIN) != Color::BLACK
+    }
+
     fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<ScatterRecord> {
         // always scatter, and always scatter in a random direction
         Some(ScatterRecord::Delta {

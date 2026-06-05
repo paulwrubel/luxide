@@ -37,6 +37,10 @@ impl Material for Specular {
         self.emittance_texture.value(u, v, p)
     }
 
+    fn is_emissive(&self) -> bool {
+        self.emittance_texture.value(0.5, 0.5, Point::ORIGIN) != Color::BLACK
+    }
+
     fn brdf(
         &self,
         _outgoing_direction: Vector,

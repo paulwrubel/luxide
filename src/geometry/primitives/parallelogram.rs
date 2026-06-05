@@ -111,6 +111,10 @@ impl Geometric for Parallelogram {
         self.area
     }
 
+    fn is_emissive(&self) -> bool {
+        self.material.is_emissive()
+    }
+
     fn bounding_box(&self) -> Aabb {
         self.bounding_box
     }

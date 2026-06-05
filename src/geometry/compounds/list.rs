@@ -88,6 +88,10 @@ impl Geometric for List {
         self.items.iter().map(|item| item.surface_area()).sum()
     }
 
+    fn is_emissive(&self) -> bool {
+        self.items.iter().any(|item| item.is_emissive())
+    }
+
     fn bounding_box(&self) -> Aabb {
         self.bounding_box
     }

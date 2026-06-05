@@ -3,9 +3,13 @@ use std::f64::consts::PI;
 use rand::RngExt;
 
 use crate::{
-    geometry::{Geometric, Point, Ray, Vector},
-    shading::{Color, materials::ScatterRecord},
-    tracing::{RenderParameters, Scene},
+    geometry::{Point, Ray, Vector},
+    shading::{
+        Color,
+        materials::ScatterRecord,
+        pdf::{GeometricPdf, MixturePdf, Pdf},
+    },
+    tracing::{RenderParameters, Scene, SceneWorld},
     utils::{Angle, Interval},
 };
 
@@ -127,7 +131,9 @@ impl Camera {
         x_offset + y_offset
     }
 
-    pub fn ray_color(&self, mut ray: Ray, geometric: &dyn Geometric, max_bounces: u32) -> Color {
+    pub fn ray_color(&self, mut ray: Ray, world: &SceneWorld, max_bounces: u32) -> Color {
+        let SceneWorld { world, emissives } = world;
+
         // accumulated color contributions of each geometric we intersect along the rays' paths.
         let mut accumulated_color = Color::BLACK;
         // accumulated attentuation (color) of surfaces we encounter.
@@ -137,7 +143,7 @@ impl Camera {
 
         // iterate over geometrics until we fail to intersect, reach max bounces, or find a non-reflective surface
         let mut bounces = 0;
-        while let Some(ray_hit) = geometric.intersect(ray, Interval::new(0.001, f64::INFINITY)) {
+        while let Some(ray_hit) = world.intersect(ray, Interval::new(0.001, f64::INFINITY)) {
             let emittance = ray_hit
                 .material
                 .emittance(ray_hit.u, ray_hit.v, ray_hit.point);
@@ -180,7 +186,15 @@ impl Camera {
 
                     ray = scattered
                 }
-                ScatterRecord::Pdf { pdf } => {
+                ScatterRecord::Pdf { pdf: scatter_pdf } => {
+                    let emissives_pdf = &emissives
+                        .iter()
+                        .map(|e| GeometricPdf::new(e.to_owned(), ray_hit.point))
+                        .collect::<Vec<_>>()[0];
+
+                    let pdf =
+                        MixturePdf::new(scatter_pdf, 0.5, Box::new(emissives_pdf.to_owned()), 0.5);
+
                     let incident_direction = pdf.sample();
                     let cos_theta = ray_hit.normal.dot(incident_direction);
 

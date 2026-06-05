@@ -118,7 +118,7 @@ impl Pdf for UniformSpherePdf {
 /// Stores the geometric object and the origin point so `sample()` and
 /// `density()` can delegate to the object's `sample_direction_from` /
 /// `direction_pdf` methods without needing an explicit origin parameter.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct GeometricPdf {
     geometric: Arc<dyn Geometric>,
     origin: Point,

@@ -121,6 +121,14 @@ impl Geometric for Bvh {
         }
     }
 
+    fn is_emissive(&self) -> bool {
+        match &self.tree {
+            BvhNode::Branch { left, right } => left.is_emissive() || right.is_emissive(),
+            BvhNode::Leaf(item) => item.is_emissive(),
+            BvhNode::Empty => false,
+        }
+    }
+
     fn bounding_box(&self) -> Aabb {
         self.bounding_box
     }

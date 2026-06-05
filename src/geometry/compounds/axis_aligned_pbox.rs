@@ -83,6 +83,10 @@ impl Geometric for AxisAlignedPBox {
         self.0.surface_area()
     }
 
+    fn is_emissive(&self) -> bool {
+        self.0.is_emissive()
+    }
+
     fn bounding_box(&self) -> Aabb {
         self.0.bounding_box()
     }

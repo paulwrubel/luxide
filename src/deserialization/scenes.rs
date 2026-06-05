@@ -1,11 +1,6 @@
-use std::sync::Arc;
-
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    geometry::compounds::{Bvh, List},
-    tracing::Scene,
-};
+use crate::tracing::{Scene, SceneWorld};
 
 use super::{Build, Builts, cameras::CameraRefOrInline, geometrics::GeometricRefOrInline};
 
@@ -45,7 +40,7 @@ pub struct SceneData {
 
 impl Build<Scene> for SceneData {
     fn build(&self, builts: &Builts) -> Result<Scene, String> {
-        let mut world = List::new();
+        let mut world = Vec::new();
 
         for geometric in &self.geometrics {
             let geometric = geometric.build(builts)?;
@@ -53,11 +48,7 @@ impl Build<Scene> for SceneData {
         }
         let camera = self.camera.build(builts)?;
         let scene = Scene {
-            world: if self.use_bvh {
-                Arc::new(Bvh::from_list(world))
-            } else {
-                Arc::new(world)
-            },
+            world: SceneWorld::from_geometrics(&world, self.use_bvh),
             camera,
             background_color: self.background_color.into(),
         };

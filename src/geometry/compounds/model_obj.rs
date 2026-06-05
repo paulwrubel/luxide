@@ -142,6 +142,10 @@ impl Geometric for ModelObj {
         self.geometric.surface_area()
     }
 
+    fn is_emissive(&self) -> bool {
+        self.geometric.is_emissive()
+    }
+
     fn bounding_box(&self) -> Aabb {
         self.geometric.bounding_box()
     }
@@ -173,6 +177,13 @@ impl Geometric for ListOrBvh {
         match self {
             ListOrBvh::List(list) => list.surface_area(),
             ListOrBvh::Bvh(bvh) => bvh.surface_area(),
+        }
+    }
+
+    fn is_emissive(&self) -> bool {
+        match self {
+            ListOrBvh::List(list) => list.is_emissive(),
+            ListOrBvh::Bvh(bvh) => bvh.is_emissive(),
         }
     }
 

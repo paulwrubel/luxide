@@ -130,6 +130,10 @@ impl Geometric for Sphere {
         4.0 * PI * self.radius * self.radius
     }
 
+    fn is_emissive(&self) -> bool {
+        self.material.is_emissive()
+    }
+
     fn bounding_box(&self) -> Aabb {
         self.bounding_box
     }

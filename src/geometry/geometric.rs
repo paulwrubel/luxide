@@ -7,6 +7,9 @@ use super::{Aabb, Ray, RayHit};
 
 pub trait Geometric: std::fmt::Debug + Sync + Send {
     fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit>;
+    /// Whether any point on this geometric object emits light.
+    /// Delegates to the material for primitives, OR of children for compounds.
+    fn is_emissive(&self) -> bool;
     fn surface_area(&self) -> f64;
     fn bounding_box(&self) -> Aabb;
 

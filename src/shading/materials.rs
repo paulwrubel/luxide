@@ -17,6 +17,10 @@ pub use specular::Specular;
 pub trait Material: std::fmt::Debug + Sync + Send {
     fn emittance(&self, u: f64, v: f64, p: Point) -> Color;
 
+    /// Whether this material emits any light at any point on its surface.
+    /// Used to build the lights list for importance sampling.
+    fn is_emissive(&self) -> bool;
+
     /// The raw albedo (reflectance color) of this material at a surface point.
     ///
     /// For `Delta`-variant materials (Specular, Dielectric, Isotropic), this
