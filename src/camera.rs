@@ -195,6 +195,8 @@ impl Camera {
                     let pdf =
                         MixturePdf::new(scatter_pdf, 0.5, Box::new(emissives_pdf.to_owned()), 0.5);
 
+                    // let pdf = scatter_pdf;
+
                     let incident_direction = pdf.sample();
                     let cos_theta = ray_hit.normal.dot(incident_direction);
 
