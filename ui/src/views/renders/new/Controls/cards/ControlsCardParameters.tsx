@@ -1,10 +1,9 @@
 import { ControlsCard } from './ControlsCard';
 import { WarningIconAdvancedProperty } from '../icons/WarningIconAdvancedProperty';
-import { TextInputControl } from './form-controls/TextInputControl';
-import { TextArrayInputControl } from './form-controls/TextArrayInputControl';
-import { ToggleControl } from './form-controls/ToggleControl';
+import { TextInputControl } from '@/components/form-controls/TextInputControl';
+import { TextArrayInputControl } from '@/components/form-controls/TextArrayInputControl';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Tooltip, ToggleSwitch } from 'flowbite-react';
+import { HelperText, Tooltip, ToggleSwitch } from 'flowbite-react';
 import { useAuth } from '@/providers/auth';
 import { Separator } from '@/components/Separator';
 import { useState } from 'react';
@@ -43,13 +42,57 @@ export function ControlsCardParameters(props: ControlsCardParametersProps) {
       <div className="flex flex-col gap-2 p-4">
         <TextInputControl form={form} fieldName="name" label="Name" valueLabel="name" />
 
-        <TextArrayInputControl
-          form={form}
-          fieldName="parameters.image_dimensions"
-          label="Size"
-          valueLabels={['width', 'height']}
-          type="number"
-        />
+        <form.AppField name="parameters.image_dimensions">
+          {(arrayField) => (
+            <>
+              <TextArrayInputControl
+                form={form}
+                fieldName="parameters.image_dimensions"
+                label="Size"
+                valueLabels={['width', 'height']}
+                type="number"
+              />
+              {(() => {
+                const [w, h] = parameters.image_dimensions;
+                const pixelCount = w * h;
+                const maxPixels = user?.max_render_pixel_count ?? null;
+                const exceedsLimit = maxPixels !== null && pixelCount > maxPixels;
+
+                return (
+                  <div
+                    className={`pl-[40%] text-sm ${exceedsLimit ? 'font-semibold text-red-500' : 'text-zinc-400'}`}
+                  >
+                    {w.toLocaleString()} × {h.toLocaleString()} ={' '}
+                    {pixelCount.toLocaleString()} px
+                    {maxPixels !== null && (
+                      <>
+                        {' '}
+                        (limit: {maxPixels.toLocaleString()})
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
+              {arrayField.state.meta.errors.length > 0 && (
+                <HelperText color="failure" className="pl-[40%]">
+                  {arrayField.state.meta.errors
+                    .map((e) => {
+                      if (typeof e === 'string') {
+                        return e;
+                      }
+                      // TanStack Form includes undefined in array field error unions
+                      if (e === undefined) {
+                        return '';
+                      }
+                      return (e as { message?: string }).message ?? '';
+                    })
+                    .filter(Boolean)
+                    .join(', ')}
+                </HelperText>
+              )}
+            </>
+          )}
+        </form.AppField>
 
         <TextArrayInputControl
           form={form}
@@ -162,12 +205,9 @@ export function ControlsCardParameters(props: ControlsCardParametersProps) {
           labelSuffix={<WarningIconAdvancedProperty />}
         />
 
-        <ToggleControl
-          form={form}
-          fieldName="parameters.use_scaling_truncation"
-          label="Use Scaling Truncation"
-          labelSuffix={<WarningIconAdvancedProperty />}
-        />
+        <form.AppField name="parameters.use_scaling_truncation">
+          {(field) => <field.ToggleControl label="Use Scaling Truncation" labelSuffix={<WarningIconAdvancedProperty />} />}
+        </form.AppField>
       </div>
     </ControlsCard>
   );

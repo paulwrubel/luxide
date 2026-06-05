@@ -48,6 +48,10 @@ export type User = {
   max_render_pixel_count: number | null;
 };
 
+export type UsageResponse = {
+  bytes: number;
+};
+
 export async function fetchAuthTokenGitHub(code: string, state: string): Promise<string> {
   const response = await fetch(`${getAPIURL()}/auth/github/callback?code=${code}&state=${state}`, {
     credentials: 'include',
@@ -299,10 +303,17 @@ export async function getRenderStats(token: string, renderID: number): Promise<R
   return (await response.json()) as RenderStats;
 }
 
-export async function getLatestCheckpointImage(token: string, renderID: number): Promise<Blob> {
-  const response = await fetch(`${getAPIURL()}/renders/${renderID}/checkpoint/earliest`, {
+export async function getLatestCheckpointImage(
+  token: string,
+  renderID: number,
+): Promise<Blob | null> {
+  const response = await fetch(`${getAPIURL()}/renders/${renderID}/checkpoint/latest`, {
     headers: { Authorization: `Bearer ${token}` },
   });
+
+  if (response.status === 404) {
+    return null;
+  }
 
   if (!response.ok) {
     const body = await response.text();
@@ -310,4 +321,76 @@ export async function getLatestCheckpointImage(token: string, renderID: number):
   }
 
   return await response.blob();
+}
+
+export async function getAllUsers(token: string): Promise<User[]> {
+  const response = await fetch(`${getAPIURL()}/users`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`failed to get all users: (${response.status}: ${body})`);
+  }
+
+  return (await response.json()) as User[];
+}
+
+export async function updateUserRole(token: string, userID: number, role: Role): Promise<User> {
+  const response = await fetch(`${getAPIURL()}/users/${userID}/role`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ role }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`failed to update user role: (${response.status}: ${body})`);
+  }
+
+  return (await response.json()) as User;
+}
+
+export async function updateUserQuotas(
+  token: string,
+  userID: number,
+  maxRenders: number | null,
+  maxCheckpointsPerRender: number | null,
+  maxRenderPixelCount: number | null,
+): Promise<User> {
+  const response = await fetch(`${getAPIURL()}/users/${userID}/quotas`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      max_renders: maxRenders,
+      max_checkpoints_per_render: maxCheckpointsPerRender,
+      max_render_pixel_count: maxRenderPixelCount,
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`failed to update user quotas: (${response.status}: ${body})`);
+  }
+
+  return (await response.json()) as User;
+}
+
+export async function getStorageUsage(token: string): Promise<UsageResponse> {
+  const response = await fetch(`${getAPIURL()}/storage_usage`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`failed to get usage: (${response.status}: ${body})`);
+  }
+
+  return (await response.json()) as UsageResponse;
 }

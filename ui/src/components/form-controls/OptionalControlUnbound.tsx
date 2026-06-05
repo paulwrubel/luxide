@@ -2,7 +2,7 @@ import { ToggleControlUnbound } from './ToggleControlUnbound';
 import { Separator } from '@/components/Separator';
 import type { ChangeEvent, InputEvent } from 'react';
 
-interface OptionalControlUnboundProps {
+export type OptionalControlUnboundProps = {
   label: string;
   allowWrappingLabel?: boolean;
   labelPrefix?: React.ReactNode;
@@ -12,7 +12,7 @@ interface OptionalControlUnboundProps {
   onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
   disabled?: boolean;
   children: React.ReactNode;
-}
+};
 
 export function OptionalControlUnbound(props: OptionalControlUnboundProps) {
   const {

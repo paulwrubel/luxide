@@ -1,35 +1,31 @@
-import { FormTextInput } from './FormTextInput';
 import { getGridColumnsTemplateForPercentage } from './utils';
-import type { ChangeEvent, InputEvent } from 'react';
 import type { RenderForm, RenderFormPath } from '@/hooks/useRenderForm';
 
-interface TextInputControlProps {
+export type TextArrayInputControlProps = {
   form: RenderForm;
   fieldName: RenderFormPath;
-  onInput?: (e: InputEvent<HTMLInputElement>) => void;
-  onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
   type?: 'text' | 'number';
-  label: string;
+  label: string | React.ReactNode;
   labelSpacePercentage?: 0 | 10 | 20 | 30 | 40 | 50 | 60 | 70 | 80 | 90 | 100;
   allowWrappingLabel?: boolean;
   labelPrefix?: React.ReactNode;
   labelSuffix?: React.ReactNode;
-  valueLabel: string;
-}
+  valueLabels: string[];
+  unenforcedStep?: number;
+};
 
-export function TextInputControl(props: TextInputControlProps) {
+export function TextArrayInputControl(props: TextArrayInputControlProps) {
   const {
     form,
     fieldName,
-    onInput,
-    onChange,
     type = 'text',
     label,
     labelSpacePercentage = 40,
     allowWrappingLabel,
     labelPrefix,
     labelSuffix,
-    valueLabel,
+    valueLabels,
+    unenforcedStep,
   } = props;
 
   const gridStr = getGridColumnsTemplateForPercentage(labelSpacePercentage);
@@ -47,14 +43,22 @@ export function TextInputControl(props: TextInputControlProps) {
       </h6>
       <div className="flex flex-col">
         <div className="items-flex-end flex gap-2">
-          <FormTextInput
-            form={form}
-            fieldName={fieldName}
-            onInput={onInput}
-            onChange={onChange}
-            type={type}
-            valueLabel={valueLabel}
-          />
+          {valueLabels.map((valueLabel, i) => (
+            <div key={i} className="flex w-full flex-col">
+              <form.AppField
+                // template literal indexers aren't tracked to DeepKeys paths
+                name={`${fieldName}[${i}]` as RenderFormPath}
+              >
+                {(field) => (
+                  <field.FormTextField
+                    type={type}
+                    valueLabel={valueLabel}
+                    unenforcedStep={unenforcedStep}
+                  />
+                )}
+              </form.AppField>
+            </div>
+          ))}
         </div>
       </div>
     </div>

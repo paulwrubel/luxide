@@ -681,6 +681,37 @@ impl UserStorage for PostgresStorage {
         }
     }
 
+    async fn get_all_users(&self) -> Result<Vec<User>, StorageError> {
+        match sqlx::query!(
+            r#"
+                SELECT id, github_id, username, avatar_url, created_at, updated_at,
+                    role, max_renders, max_checkpoints_per_render, max_render_pixel_count
+                FROM users
+                ORDER BY id
+            "#,
+        )
+        .fetch_all(&self.pool)
+        .await
+        {
+            Ok(rows) => Ok(rows
+                .into_iter()
+                .map(|row| User {
+                    id: row.id as UserID,
+                    github_id: row.github_id as GithubID,
+                    username: row.username,
+                    avatar_url: row.avatar_url,
+                    created_at: row.created_at,
+                    updated_at: row.updated_at,
+                    role: row.role.into(),
+                    max_renders: row.max_renders.map(|r| r as u32),
+                    max_checkpoints_per_render: row.max_checkpoints_per_render.map(|c| c as u32),
+                    max_render_pixel_count: row.max_render_pixel_count.map(|p| p as u32),
+                })
+                .collect()),
+            Err(e) => Err(format!("Failed to get users: {}", e).into()),
+        }
+    }
+
     async fn get_user_by_github_id(
         &self,
         github_id: GithubID,
