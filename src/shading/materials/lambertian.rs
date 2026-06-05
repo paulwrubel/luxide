@@ -64,4 +64,17 @@ impl Material for Lambertian {
             pdf,
         })
     }
+
+    fn brdf(
+        &self,
+        _outgoing_direction: Vector,
+        _incident_direction: Vector,
+        _normal: Vector,
+        u: f64,
+        v: f64,
+        p: Point,
+    ) -> Color {
+        let albedo = self.reflectance_texture.value(u, v, p);
+        albedo / std::f64::consts::PI
+    }
 }

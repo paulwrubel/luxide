@@ -37,4 +37,17 @@ impl Material for Isotropic {
             scattered: Ray::new(ray_hit.point, Vector::random_unit(), ray.time),
         })
     }
+
+    fn brdf(
+        &self,
+        _outgoing_direction: Vector,
+        _incident_direction: Vector,
+        _normal: Vector,
+        u: f64,
+        v: f64,
+        p: Point,
+    ) -> Color {
+        let albedo = self.reflectance_texture.value(u, v, p);
+        albedo / (4.0 * std::f64::consts::PI)
+    }
 }
