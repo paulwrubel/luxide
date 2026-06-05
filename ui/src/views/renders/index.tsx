@@ -22,11 +22,7 @@ export function RendersPage() {
   return (
     <div className="flex w-full flex-col gap-6 overflow-y-auto p-12">
       {!canCreateNewRender && (
-        <Alert
-          color="warning"
-          icon={HiExclamationTriangle}
-          // className="mb-4 w-full text-sm [&>div]:!bg-yellow-900/20 [&>div]:!text-yellow-200"
-        >
+        <Alert color="warning" icon={HiExclamationTriangle}>
           You have reached your maximum number of renders ({allRendersQuery.data?.length}/
           {user?.max_renders}
           ). Please delete an existing render before creating a new one.
