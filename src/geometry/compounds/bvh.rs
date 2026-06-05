@@ -1,7 +1,7 @@
 use std::{cmp::Ordering, sync::Arc};
 
 use crate::{
-    geometry::{Aabb, Geometric, Ray, RayHit},
+    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector},
     utils::Interval,
 };
 
@@ -123,5 +123,41 @@ impl Geometric for Bvh {
 
     fn bounding_box(&self) -> Aabb {
         self.bounding_box
+    }
+
+    fn sample_direction_from(&self, origin: Point) -> Vector {
+        match &self.tree {
+            BvhNode::Branch { left, right } => {
+                let left_area = left.surface_area();
+                let right_area = right.surface_area();
+                let total = left_area + right_area;
+                if total <= 0.0 {
+                    return Vector::random_unit();
+                }
+                if rand::random::<f64>() * total <= left_area {
+                    left.sample_direction_from(origin)
+                } else {
+                    right.sample_direction_from(origin)
+                }
+            }
+            BvhNode::Leaf(item) => item.sample_direction_from(origin),
+            BvhNode::Empty => Vector::random_unit(),
+        }
+    }
+
+    fn direction_pdf(&self, origin: Point, dir: Vector) -> f64 {
+        match &self.tree {
+            BvhNode::Branch { left, right } => {
+                let total = left.surface_area() + right.surface_area();
+                if total <= 0.0 {
+                    return 0.0;
+                }
+                (left.surface_area() * left.direction_pdf(origin, dir)
+                    + right.surface_area() * right.direction_pdf(origin, dir))
+                    / total
+            }
+            BvhNode::Leaf(item) => item.direction_pdf(origin, dir),
+            BvhNode::Empty => 0.0,
+        }
     }
 }

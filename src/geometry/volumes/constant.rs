@@ -3,7 +3,7 @@ use std::sync::Arc;
 use rand::RngExt;
 
 use crate::{
-    geometry::{Aabb, Geometric, Ray, RayHit, Vector},
+    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector},
     shading::{
         Texture,
         materials::{Isotropic, Material},
@@ -90,5 +90,13 @@ impl Geometric for Constant {
 
     fn bounding_box(&self) -> Aabb {
         self.geometric.bounding_box()
+    }
+
+    fn sample_direction_from(&self, origin: Point) -> Vector {
+        self.geometric.sample_direction_from(origin)
+    }
+
+    fn direction_pdf(&self, origin: Point, dir: Vector) -> f64 {
+        self.geometric.direction_pdf(origin, dir)
     }
 }

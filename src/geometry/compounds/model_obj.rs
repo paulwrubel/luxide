@@ -144,6 +144,14 @@ impl Geometric for ModelObj {
     fn bounding_box(&self) -> Aabb {
         self.geometric.bounding_box()
     }
+
+    fn sample_direction_from(&self, origin: Point) -> Vector {
+        self.geometric.sample_direction_from(origin)
+    }
+
+    fn direction_pdf(&self, origin: Point, dir: Vector) -> f64 {
+        self.geometric.direction_pdf(origin, dir)
+    }
 }
 
 enum ListOrBvh {
@@ -170,6 +178,20 @@ impl Geometric for ListOrBvh {
         match self {
             ListOrBvh::List(list) => list.bounding_box(),
             ListOrBvh::Bvh(bvh) => bvh.bounding_box(),
+        }
+    }
+
+    fn sample_direction_from(&self, origin: Point) -> Vector {
+        match self {
+            ListOrBvh::List(list) => list.sample_direction_from(origin),
+            ListOrBvh::Bvh(bvh) => bvh.sample_direction_from(origin),
+        }
+    }
+
+    fn direction_pdf(&self, origin: Point, dir: Vector) -> f64 {
+        match self {
+            ListOrBvh::List(list) => list.direction_pdf(origin, dir),
+            ListOrBvh::Bvh(bvh) => bvh.direction_pdf(origin, dir),
         }
     }
 }

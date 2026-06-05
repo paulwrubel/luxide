@@ -86,4 +86,12 @@ impl Geometric for AxisAlignedPBox {
     fn bounding_box(&self) -> Aabb {
         self.0.bounding_box()
     }
+
+    fn sample_direction_from(&self, origin: Point) -> Vector {
+        self.0.sample_direction_from(origin)
+    }
+
+    fn direction_pdf(&self, origin: Point, dir: Vector) -> f64 {
+        self.0.direction_pdf(origin, dir)
+    }
 }
