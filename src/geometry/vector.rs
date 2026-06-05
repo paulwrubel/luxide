@@ -1,4 +1,7 @@
-use std::ops::{Index, IndexMut, Neg};
+use std::{
+    f64::consts::PI,
+    ops::{Index, IndexMut, Neg},
+};
 
 use auto_ops::{impl_op_ex, impl_op_ex_commutative};
 use bincode::{Decode, Encode};
@@ -130,7 +133,7 @@ impl Vector {
     pub fn random_cosine_weighted_direction() -> Self {
         let r1 = rand::random::<f64>();
         let r2 = rand::random::<f64>();
-        let phi = 2.0 * std::f64::consts::PI * r1;
+        let phi = 2.0 * PI * r1;
         let sqrt_r2 = r2.sqrt();
         Self {
             x: phi.cos() * sqrt_r2,

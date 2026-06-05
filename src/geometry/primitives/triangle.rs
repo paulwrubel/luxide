@@ -159,6 +159,10 @@ impl Geometric for Triangle {
         self.intersect_moller_trumbore(ray, ray_t)
     }
 
+    fn surface_area(&self) -> f64 {
+        0.5 * (self.b.to(self.a).cross(self.c.to(self.a))).length()
+    }
+
     fn bounding_box(&self) -> Aabb {
         self.bounding_box
     }

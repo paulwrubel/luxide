@@ -105,6 +105,10 @@ impl Geometric for Parallelogram {
         })
     }
 
+    fn surface_area(&self) -> f64 {
+        self.u.cross(self.v).length()
+    }
+
     fn bounding_box(&self) -> Aabb {
         self.bounding_box
     }

@@ -43,6 +43,10 @@ impl Geometric for Translate {
         })
     }
 
+    fn surface_area(&self) -> f64 {
+        self.geometric.surface_area()
+    }
+
     fn bounding_box(&self) -> Aabb {
         self.bounding_box
     }

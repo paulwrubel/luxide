@@ -113,6 +113,10 @@ impl Geometric for Sphere {
         })
     }
 
+    fn surface_area(&self) -> f64 {
+        4.0 * PI * self.radius * self.radius
+    }
+
     fn bounding_box(&self) -> Aabb {
         self.bounding_box
     }

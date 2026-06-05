@@ -78,6 +78,11 @@ impl Geometric for AxisAlignedPBox {
     fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit> {
         self.0.intersect(ray, ray_t)
     }
+
+    fn surface_area(&self) -> f64 {
+        self.0.surface_area()
+    }
+
     fn bounding_box(&self) -> Aabb {
         self.0.bounding_box()
     }

@@ -113,6 +113,14 @@ impl Geometric for Bvh {
         }
     }
 
+    fn surface_area(&self) -> f64 {
+        match &self.tree {
+            BvhNode::Branch { left, right } => left.surface_area() + right.surface_area(),
+            BvhNode::Leaf(item) => item.surface_area(),
+            BvhNode::Empty => 0.0,
+        }
+    }
+
     fn bounding_box(&self) -> Aabb {
         self.bounding_box
     }

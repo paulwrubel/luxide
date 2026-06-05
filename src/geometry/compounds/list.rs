@@ -84,6 +84,10 @@ impl Geometric for List {
         closest_hit_record
     }
 
+    fn surface_area(&self) -> f64 {
+        self.items.iter().map(|item| item.surface_area()).sum()
+    }
+
     fn bounding_box(&self) -> Aabb {
         self.bounding_box
     }

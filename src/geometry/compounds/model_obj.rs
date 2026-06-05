@@ -137,6 +137,10 @@ impl Geometric for ModelObj {
         self.geometric.intersect(ray, ray_t)
     }
 
+    fn surface_area(&self) -> f64 {
+        self.geometric.surface_area()
+    }
+
     fn bounding_box(&self) -> Aabb {
         self.geometric.bounding_box()
     }
@@ -152,6 +156,13 @@ impl Geometric for ListOrBvh {
         match self {
             ListOrBvh::List(list) => list.intersect(ray, ray_t),
             ListOrBvh::Bvh(bvh) => bvh.intersect(ray, ray_t),
+        }
+    }
+
+    fn surface_area(&self) -> f64 {
+        match self {
+            ListOrBvh::List(list) => list.surface_area(),
+            ListOrBvh::Bvh(bvh) => bvh.surface_area(),
         }
     }
 
