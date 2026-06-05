@@ -18,7 +18,7 @@ impl Onb {
     /// Picks an auxiliary vector that is not parallel to `normal`,
     /// then builds `u`, `v` via cross products so that `{u, v, w}`
     /// forms a right-handed orthonormal basis.
-    pub fn from_normal(normal: Vector) -> Self {
+    pub fn from_w(normal: Vector) -> Self {
         let w = normal.unit_vector();
         let a = if w.x.abs() > 0.9 {
             // normal is nearly parallel to +X — use +Y as auxiliary

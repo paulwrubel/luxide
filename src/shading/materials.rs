@@ -35,5 +35,5 @@ pub enum ScatterRecord {
 pub trait Material: std::fmt::Debug + Sync + Send {
     fn reflectance(&self, u: f64, v: f64, p: Point) -> Color;
     fn emittance(&self, u: f64, v: f64, p: Point) -> Color;
-    fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<Ray>;
+    fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<ScatterRecord>;
 }
