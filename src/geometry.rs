@@ -9,6 +9,9 @@ pub use aabb::Aabb;
 mod geometric;
 pub use geometric::Geometric;
 
+mod onb;
+pub use onb::Onb;
+
 mod point;
 pub use point::Point;
 

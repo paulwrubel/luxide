@@ -127,7 +127,7 @@ impl Vector {
     ///
     /// implemented via malley's method: uniformly sample the unit disk and
     /// project onto the hemisphere.
-    pub fn random_cosine_direction() -> Self {
+    pub fn random_cosine_weighted_direction() -> Self {
         let r1 = rand::random::<f64>();
         let r2 = rand::random::<f64>();
         let phi = 2.0 * std::f64::consts::PI * r1;
