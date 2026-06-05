@@ -50,14 +50,18 @@ impl Material for Lambertian {
     fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<ScatterRecord> {
         let onb = Onb::from_w(ray_hit.normal);
         let direction = onb.to_world(Vector::random_cosine_weighted_direction());
+
         let cos_theta = ray_hit.normal.dot(direction);
+        let pdf = if cos_theta < 0.0 {
+            // for rare degenerate floating-point related cases... this really should only happen incredibly rarely, if at all.
+            0.0
+        } else {
+            cos_theta / std::f64::consts::PI
+        };
+
         Some(ScatterRecord::Pdf {
             scattered: Ray::new(ray_hit.point, direction, ray.time),
-            pdf: if cos_theta < 0.0 {
-                0.0
-            } else {
-                cos_theta / std::f64::consts::PI
-            },
+            pdf,
         })
     }
 }
