@@ -70,10 +70,8 @@ pub trait Material: std::fmt::Debug + Sync + Send {
 /// a deterministic (delta-function) bounce — no finite PDF exists.
 #[derive(Debug)]
 pub enum ScatterRecord {
-    Pdf {
-        /// The probability density function for the scatter direction.
-        pdf: Box<dyn Pdf>,
-    },
+    /// The probability density function for the scatter direction.
+    Pdf(Pdf),
     Delta {
         /// The scattered ray to continue tracing.
         scattered: Ray,

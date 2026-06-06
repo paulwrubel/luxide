@@ -4,11 +4,7 @@ use rand::RngExt;
 
 use crate::{
     geometry::{Point, Ray, Vector},
-    shading::{
-        Color,
-        materials::ScatterRecord,
-        pdf::{GeometricPdf, MixturePdf, Pdf},
-    },
+    shading::{Color, materials::ScatterRecord, pdf::Pdf},
     tracing::{ImportanceSamplingConfig, RenderParameters, Scene, SceneWorld},
     utils::{Angle, Interval},
 };
@@ -188,7 +184,7 @@ impl Camera {
 
                     ray = scattered
                 }
-                ScatterRecord::Pdf { pdf: scatter_pdf } => {
+                ScatterRecord::Pdf(scatter_pdf) => {
                     let pdf = build_mixture_pdf(
                         scatter_pdf,
                         &self.importance_sampling,
@@ -236,12 +232,12 @@ impl Camera {
 /// Build a mixture PDF from the BRDF scatter PDF and any enabled importance
 /// sampling categories. Skips categories with zero weight or no objects.
 fn build_mixture_pdf(
-    scatter_pdf: Box<dyn Pdf>,
+    scatter_pdf: Pdf,
     config: &ImportanceSamplingConfig,
     scene_world: &SceneWorld,
     hit_point: Point,
-) -> Box<dyn Pdf> {
-    let mut entries: Vec<(Box<dyn Pdf>, f64)> = Vec::with_capacity(4);
+) -> Pdf {
+    let mut entries: Vec<(Pdf, f64)> = Vec::with_capacity(4);
 
     // material-provided BRDF category — always included as fallback;
     // zero weight means it won't be sampled unless all other
@@ -251,10 +247,10 @@ fn build_mixture_pdf(
     // emissive category
     if config.emissive_weight > 0.0 && !scene_world.emissive_list.is_empty() {
         entries.push((
-            Box::new(GeometricPdf::new(
-                Arc::clone(&scene_world.emissive_list),
-                hit_point,
-            )),
+            Pdf::Geometric {
+                geometric: Arc::clone(&scene_world.emissive_list),
+                origin: hit_point,
+            },
             config.emissive_weight,
         ));
     }
@@ -262,10 +258,10 @@ fn build_mixture_pdf(
     // transmissive category
     if config.transmissive_weight > 0.0 && !scene_world.transmissive_list.is_empty() {
         entries.push((
-            Box::new(GeometricPdf::new(
-                Arc::clone(&scene_world.transmissive_list),
-                hit_point,
-            )),
+            Pdf::Geometric {
+                geometric: Arc::clone(&scene_world.transmissive_list),
+                origin: hit_point,
+            },
             config.transmissive_weight,
         ));
     }
@@ -273,13 +269,13 @@ fn build_mixture_pdf(
     // specular category
     if config.specular_weight > 0.0 && !scene_world.specular_list.is_empty() {
         entries.push((
-            Box::new(GeometricPdf::new(
-                Arc::clone(&scene_world.specular_list),
-                hit_point,
-            )),
+            Pdf::Geometric {
+                geometric: Arc::clone(&scene_world.specular_list),
+                origin: hit_point,
+            },
             config.specular_weight,
         ));
     }
 
-    Box::new(MixturePdf::new(entries))
+    Pdf::mixture(entries)
 }

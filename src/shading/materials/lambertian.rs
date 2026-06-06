@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
-use crate::shading::pdf::CosineHemispherePdf;
+use crate::shading::pdf::Pdf;
 use crate::{
-    geometry::{Point, Ray, RayHit, Vector},
+    geometry::{Onb, Point, Ray, RayHit, Vector},
     shading::{Color, Texture, textures::SolidColor},
 };
 
@@ -61,9 +61,9 @@ impl Material for Lambertian {
     }
 
     fn scatter(&self, _ray: Ray, ray_hit: &RayHit) -> Option<ScatterRecord> {
-        Some(ScatterRecord::Pdf {
-            pdf: Box::new(CosineHemispherePdf::new(ray_hit.normal)),
-        })
+        Some(ScatterRecord::Pdf(Pdf::CosineHemisphere(Onb::from_w(
+            ray_hit.normal,
+        ))))
     }
 
     fn brdf(
