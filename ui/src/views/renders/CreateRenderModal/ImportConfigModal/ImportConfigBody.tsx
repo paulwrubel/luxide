@@ -3,6 +3,7 @@ import { Button, ModalHeader, ModalBody, ModalFooter } from 'flowbite-react';
 import { HiFolderOpen } from 'react-icons/hi2';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
 import { RenderConfigSchema, normalizeRenderConfig } from '@/utils/render/config';
+import { withDefaultResources } from '@/utils/render/templates';
 import { RenderConfigEditor } from './RenderConfigEditor';
 
 export type ImportConfigBodyProps = {
@@ -40,7 +41,11 @@ export function ImportConfigBody(props: ImportConfigBodyProps) {
     try {
       const parsed = JSON.parse(jsonText);
       const normalized = normalizeRenderConfig(parsed);
-      const result = RenderConfigSchema.safeParse(normalized);
+
+      // ensure default resources are present so new materials referencing __white/__black work correctly
+      const configWithDefaults = withDefaultResources(normalized);
+
+      const result = RenderConfigSchema.safeParse(configWithDefaults);
       if (!result.success) {
         setError('Configuration has validation errors — see inline markers above.');
         return;
