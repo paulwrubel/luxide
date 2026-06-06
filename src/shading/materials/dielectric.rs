@@ -39,6 +39,18 @@ impl Material for Dielectric {
         self.emittance_texture.value(u, v, p)
     }
 
+    fn is_emissive(&self) -> bool {
+        self.emittance_texture.value(0.5, 0.5, Point::ORIGIN) != Color::BLACK
+    }
+
+    fn is_transmissive(&self) -> bool {
+        true
+    }
+
+    fn is_specular(&self) -> bool {
+        false
+    }
+
     fn reflectance(&self, u: f64, v: f64, p: Point) -> Color {
         self.reflectance_texture.value(u, v, p)
     }
@@ -79,8 +91,6 @@ impl Material for Dielectric {
         };
 
         let scattered = Ray::new(ray_hit.point, refracted, ray.time);
-        Some(ScatterRecord::Delta {
-            scattered,
-        })
+        Some(ScatterRecord::Delta { scattered })
     }
 }

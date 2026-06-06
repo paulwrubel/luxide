@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::shading::pdf::{CosineHemispherePdf, Pdf};
+use crate::shading::pdf::CosineHemispherePdf;
 use crate::{
     geometry::{Point, Ray, RayHit, Vector},
     shading::{Color, Texture, textures::SolidColor},
@@ -48,13 +48,21 @@ impl Material for Lambertian {
         self.emittance_texture.value(u, v, p)
     }
 
-    fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<ScatterRecord> {
-        let pdf = CosineHemispherePdf::new(ray_hit.normal);
-        let direction = pdf.sample();
+    fn is_emissive(&self) -> bool {
+        self.emittance_texture.value(0.5, 0.5, Point::ORIGIN) != Color::BLACK
+    }
 
+    fn is_transmissive(&self) -> bool {
+        false
+    }
+
+    fn is_specular(&self) -> bool {
+        false
+    }
+
+    fn scatter(&self, _ray: Ray, ray_hit: &RayHit) -> Option<ScatterRecord> {
         Some(ScatterRecord::Pdf {
-            scattered: Ray::new(ray_hit.point, direction, ray.time),
-            pdf: pdf.density(direction),
+            pdf: Box::new(CosineHemispherePdf::new(ray_hit.normal)),
         })
     }
 

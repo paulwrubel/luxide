@@ -12,7 +12,7 @@ use crate::{
     utils::Interval,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Constant {
     geometric: Arc<dyn Geometric>,
     negative_inverse_density: f64,
@@ -86,6 +86,22 @@ impl Geometric for Constant {
 
     fn surface_area(&self) -> f64 {
         self.geometric.surface_area()
+    }
+
+    fn is_emissive(&self) -> bool {
+        self.geometric.is_emissive()
+    }
+
+    fn is_transmissive(&self) -> bool {
+        self.geometric.is_transmissive()
+    }
+
+    fn is_specular(&self) -> bool {
+        self.geometric.is_specular()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.geometric.is_empty()
     }
 
     fn bounding_box(&self) -> Aabb {

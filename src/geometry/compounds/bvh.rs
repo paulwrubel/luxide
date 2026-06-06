@@ -7,14 +7,14 @@ use crate::{
 
 use super::List;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 enum BvhNode {
     Branch { left: Arc<Bvh>, right: Arc<Bvh> },
     Leaf(Arc<dyn Geometric>),
     Empty,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Bvh {
     tree: BvhNode,
     bounding_box: Aabb,
@@ -118,6 +118,38 @@ impl Geometric for Bvh {
             BvhNode::Branch { left, right } => left.surface_area() + right.surface_area(),
             BvhNode::Leaf(item) => item.surface_area(),
             BvhNode::Empty => 0.0,
+        }
+    }
+
+    fn is_emissive(&self) -> bool {
+        match &self.tree {
+            BvhNode::Branch { left, right } => left.is_emissive() || right.is_emissive(),
+            BvhNode::Leaf(item) => item.is_emissive(),
+            BvhNode::Empty => false,
+        }
+    }
+
+    fn is_transmissive(&self) -> bool {
+        match &self.tree {
+            BvhNode::Branch { left, right } => left.is_transmissive() || right.is_transmissive(),
+            BvhNode::Leaf(item) => item.is_transmissive(),
+            BvhNode::Empty => false,
+        }
+    }
+
+    fn is_specular(&self) -> bool {
+        match &self.tree {
+            BvhNode::Branch { left, right } => left.is_specular() || right.is_specular(),
+            BvhNode::Leaf(item) => item.is_specular(),
+            BvhNode::Empty => false,
+        }
+    }
+
+    fn is_empty(&self) -> bool {
+        match &self.tree {
+            BvhNode::Branch { left, right } => left.is_empty() && right.is_empty(),
+            BvhNode::Leaf(item) => item.is_empty(),
+            BvhNode::Empty => true,
         }
     }
 

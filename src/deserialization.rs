@@ -111,10 +111,24 @@ impl RenderConfig {
 
         let active_scene = self.active_scene.build(&builts)?;
 
+        self.validate(&active_scene)?;
+
+        let mut parameters = self.parameters;
+        parameters.importance_sampling.normalize();
+
         Ok(RenderData {
-            parameters: self.parameters,
+            parameters,
             scene: active_scene,
         })
+    }
+
+    // mostly for handling validation that isn't covered by the `build` functions above
+    pub fn validate(&self, active_scene: &Scene) -> Result<(), String> {
+        self.parameters
+            .importance_sampling
+            .validate(&active_scene.world)?;
+
+        Ok(())
     }
 }
 

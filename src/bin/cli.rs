@@ -16,7 +16,7 @@ use luxide::{
         materials::{Dielectric, Lambertian, Material, Specular},
         textures::{Checker, Image8Bit, Noise, SolidColor},
     },
-    tracing::{FileStorage, RenderManager, RenderState, RenderStorage, Scene, User},
+    tracing::{FileStorage, RenderManager, RenderState, RenderStorage, Scene, SceneWorld, User},
     utils::Angle,
 };
 use noise::{Perlin, Turbulence};
@@ -319,7 +319,7 @@ fn final_scene() -> Scene {
     Scene {
         // name: "final_scene".to_string(),
         camera,
-        world,
+        world: SceneWorld::from_world_without_importance_sampling(world),
         background_color: Color::BLACK,
     }
 }
@@ -469,7 +469,7 @@ fn cornell_box() -> Scene {
     Scene {
         // name: "cornell_box".to_string(),
         camera,
-        world: Arc::new(world),
+        world: SceneWorld::from_world_without_importance_sampling(Arc::new(world)),
         background_color: Color::BLACK,
     }
 }
@@ -552,7 +552,7 @@ fn simple_light() -> Scene {
     Scene {
         // name: "simple_light".to_string(),
         camera,
-        world: Arc::new(world),
+        world: SceneWorld::from_world_without_importance_sampling(Arc::new(world)),
         background_color: Color::BLACK,
     }
 }
@@ -649,7 +649,7 @@ fn quads() -> Scene {
     Scene {
         // name: "quads".to_string(),
         camera,
-        world: Arc::new(world),
+        world: SceneWorld::from_world_without_importance_sampling(Arc::new(world)),
         background_color: Color::new(0.7, 0.8, 1.0),
     }
 }
@@ -715,7 +715,7 @@ fn two_perlin_spheres() -> Scene {
     Scene {
         // name: "two_perlin_spheres".to_string(),
         camera,
-        world: Arc::new(world),
+        world: SceneWorld::from_world_without_importance_sampling(Arc::new(world)),
         background_color: Color::new(0.7, 0.8, 1.0),
     }
 }
@@ -793,7 +793,7 @@ fn earth() -> Scene {
     Scene {
         // name: "earth".to_string(),
         camera,
-        world: Arc::new(world),
+        world: SceneWorld::from_world_without_importance_sampling(Arc::new(world)),
         background_color: Color::new(0.7, 0.8, 1.0),
     }
 }
@@ -845,7 +845,7 @@ fn two_spheres() -> Scene {
 
     Scene {
         // name: "two_spheres".to_string(),
-        world: Arc::new(world),
+        world: SceneWorld::from_world_without_importance_sampling(Arc::new(world)),
         camera,
         background_color: Color::new(0.7, 0.8, 1.0),
     }
@@ -982,7 +982,7 @@ fn random_spheres() -> Scene {
 
     Scene {
         // name: "random_spheres".to_string(),
-        world,
+        world: SceneWorld::from_world_without_importance_sampling(world),
         camera,
         background_color: Color::new(0.7, 0.8, 1.0),
     }

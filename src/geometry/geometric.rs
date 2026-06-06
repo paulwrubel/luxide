@@ -5,8 +5,22 @@ use crate::{
 
 use super::{Aabb, Ray, RayHit};
 
-pub trait Geometric: Sync + Send {
+pub trait Geometric: std::fmt::Debug + Sync + Send {
     fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit>;
+    /// Whether any point on this geometric object emits light.
+    /// Delegates to the material for primitives, OR of children for compounds.
+    fn is_emissive(&self) -> bool;
+
+    /// Whether this geometric object transmits light (glass / dielectric).
+    fn is_transmissive(&self) -> bool;
+
+    /// Whether this geometric object reflects specularly (mirror / metal).
+    fn is_specular(&self) -> bool;
+
+    /// Whether this geometric object contains no primitives.
+    /// Defaults to `false` — overridden by compound types like `List`.
+    fn is_empty(&self) -> bool;
+
     fn surface_area(&self) -> f64;
     fn bounding_box(&self) -> Aabb;
 

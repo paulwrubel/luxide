@@ -6,7 +6,7 @@ use crate::{
     utils::Interval,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Triangle {
     a: Point,
     b: Point,
@@ -166,6 +166,22 @@ impl Geometric for Triangle {
 
     fn surface_area(&self) -> f64 {
         self.area
+    }
+
+    fn is_emissive(&self) -> bool {
+        self.material.is_emissive()
+    }
+
+    fn is_transmissive(&self) -> bool {
+        self.material.is_transmissive()
+    }
+
+    fn is_specular(&self) -> bool {
+        self.material.is_specular()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.surface_area() <= 0.0
     }
 
     fn bounding_box(&self) -> Aabb {

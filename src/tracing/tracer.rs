@@ -60,7 +60,6 @@ impl Tracer {
     ) -> PixelData {
         let RenderData { parameters, scene } = render_data;
 
-        let world = &scene.world;
         let mut cam = scene.camera.clone();
 
         cam.initialize(parameters, scene);
@@ -83,7 +82,7 @@ impl Tracer {
                                 |acc, _| {
                                     let ray = cam.get_ray(x, y);
 
-                                    acc + cam.ray_color(ray, world.as_ref(), parameters.max_bounces)
+                                    acc + cam.ray_color(ray, &scene.world, parameters.max_bounces)
                                 },
                             );
                             // done with pixel!

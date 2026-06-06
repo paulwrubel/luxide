@@ -8,6 +8,7 @@ use crate::{
 
 use super::{Bvh, List};
 
+#[derive(Clone, Debug)]
 pub struct ModelObj {
     geometric: ListOrBvh,
 }
@@ -141,6 +142,22 @@ impl Geometric for ModelObj {
         self.geometric.surface_area()
     }
 
+    fn is_emissive(&self) -> bool {
+        self.geometric.is_emissive()
+    }
+
+    fn is_transmissive(&self) -> bool {
+        self.geometric.is_transmissive()
+    }
+
+    fn is_specular(&self) -> bool {
+        self.geometric.is_specular()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.geometric.is_empty()
+    }
+
     fn bounding_box(&self) -> Aabb {
         self.geometric.bounding_box()
     }
@@ -154,6 +171,7 @@ impl Geometric for ModelObj {
     }
 }
 
+#[derive(Clone, Debug)]
 enum ListOrBvh {
     List(List),
     Bvh(Bvh),
@@ -171,6 +189,34 @@ impl Geometric for ListOrBvh {
         match self {
             ListOrBvh::List(list) => list.surface_area(),
             ListOrBvh::Bvh(bvh) => bvh.surface_area(),
+        }
+    }
+
+    fn is_emissive(&self) -> bool {
+        match self {
+            ListOrBvh::List(list) => list.is_emissive(),
+            ListOrBvh::Bvh(bvh) => bvh.is_emissive(),
+        }
+    }
+
+    fn is_transmissive(&self) -> bool {
+        match self {
+            ListOrBvh::List(list) => list.is_transmissive(),
+            ListOrBvh::Bvh(bvh) => bvh.is_transmissive(),
+        }
+    }
+
+    fn is_specular(&self) -> bool {
+        match self {
+            ListOrBvh::List(list) => list.is_specular(),
+            ListOrBvh::Bvh(bvh) => bvh.is_specular(),
+        }
+    }
+
+    fn is_empty(&self) -> bool {
+        match self {
+            ListOrBvh::List(list) => list.is_empty(),
+            ListOrBvh::Bvh(bvh) => bvh.is_empty(),
         }
     }
 

@@ -1,4 +1,5 @@
 use super::Color;
+use super::pdf::Pdf;
 use crate::geometry::{Point, Ray, RayHit, Vector};
 
 mod dielectric;
@@ -15,6 +16,16 @@ pub use specular::Specular;
 
 pub trait Material: std::fmt::Debug + Sync + Send {
     fn emittance(&self, u: f64, v: f64, p: Point) -> Color;
+
+    /// Whether this material emits any light at any point on its surface.
+    /// Used to build the lights list for importance sampling.
+    fn is_emissive(&self) -> bool;
+
+    /// Whether this material transmits light (glass / dielectric).
+    fn is_transmissive(&self) -> bool;
+
+    /// Whether this material reflects specularly (mirror / metal).
+    fn is_specular(&self) -> bool;
 
     /// The raw albedo (reflectance color) of this material at a surface point.
     ///
@@ -57,13 +68,11 @@ pub trait Material: std::fmt::Debug + Sync + Send {
 /// `Pdf` carries a sampling probability density for diffuse materials
 /// (Lambertian). `Delta` is for specular/dielectric materials that have
 /// a deterministic (delta-function) bounce — no finite PDF exists.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug)]
 pub enum ScatterRecord {
     Pdf {
-        /// The scattered ray to continue tracing.
-        scattered: Ray,
-        /// The solid-angle probability density of the chosen scatter direction.
-        pdf: f64,
+        /// The probability density function for the scatter direction.
+        pdf: Box<dyn Pdf>,
     },
     Delta {
         /// The scattered ray to continue tracing.

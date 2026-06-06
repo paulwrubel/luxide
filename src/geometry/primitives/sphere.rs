@@ -6,7 +6,7 @@ use crate::{
     utils::Interval,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Sphere {
     center_1: Point,
     center_vector: Option<Vector>,
@@ -128,6 +128,22 @@ impl Geometric for Sphere {
 
     fn surface_area(&self) -> f64 {
         4.0 * PI * self.radius * self.radius
+    }
+
+    fn is_emissive(&self) -> bool {
+        self.material.is_emissive()
+    }
+
+    fn is_transmissive(&self) -> bool {
+        self.material.is_transmissive()
+    }
+
+    fn is_specular(&self) -> bool {
+        self.material.is_specular()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.radius <= 0.0
     }
 
     fn bounding_box(&self) -> Aabb {
