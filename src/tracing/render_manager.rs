@@ -26,7 +26,7 @@ pub struct RenderManager {
     running_renders: Arc<Mutex<HashSet<RenderID>>>,
 }
 
-const POLLING_INTERVAL_MS: u64 = 1000;
+const POLLING_INTERVAL_MS: u64 = 100;
 
 impl RenderManager {
     pub async fn new(storage: Arc<dyn RenderStorage>) -> Result<Self, String> {

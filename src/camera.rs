@@ -4,11 +4,7 @@ use rand::RngExt;
 
 use crate::{
     geometry::{Point, Ray, Vector},
-    shading::{
-        Color,
-        materials::ScatterRecord,
-        pdf::{GeometricPdf, MixturePdf, Pdf},
-    },
+    shading::{Color, materials::ScatterRecord, pdf::Pdf},
     tracing::{ImportanceSamplingConfig, RenderParameters, Scene, SceneWorld},
     utils::{Angle, Interval},
 };
@@ -188,7 +184,7 @@ impl Camera {
 
                     ray = scattered
                 }
-                ScatterRecord::Pdf { pdf: scatter_pdf } => {
+                ScatterRecord::Pdf(scatter_pdf) => {
                     let pdf = build_mixture_pdf(
                         scatter_pdf,
                         &self.importance_sampling,
@@ -196,9 +192,9 @@ impl Camera {
                         ray_hit.point,
                     );
 
-                    let incident_direction = pdf.sample();
-                    let cos_theta = ray_hit.normal.dot(incident_direction);
+                    let (incident_direction, index_of_strategy) = pdf.sample();
 
+                    let cos_theta = ray_hit.normal.dot(incident_direction);
                     let brdf_val = ray_hit.material.brdf(
                         outgoing_direction,
                         incident_direction,
@@ -207,8 +203,17 @@ impl Camera {
                         ray_hit.v,
                         ray_hit.point,
                     );
-                    let pdf_val = pdf.density(incident_direction);
-                    attentuation_strength *= brdf_val * cos_theta / pdf_val;
+
+                    if self.importance_sampling.use_multiple_importance_sampling {
+                        let pdf_val = pdf.strategy_density(incident_direction, index_of_strategy);
+                        let mis_weight = pdf.power_heuristic(incident_direction, index_of_strategy);
+
+                        attentuation_strength *= brdf_val * cos_theta * mis_weight / pdf_val;
+                    } else {
+                        let pdf_val = pdf.density(incident_direction);
+
+                        attentuation_strength *= brdf_val * cos_theta / pdf_val;
+                    }
 
                     ray = Ray::new(ray_hit.point, incident_direction, ray.time)
                 }
@@ -236,12 +241,12 @@ impl Camera {
 /// Build a mixture PDF from the BRDF scatter PDF and any enabled importance
 /// sampling categories. Skips categories with zero weight or no objects.
 fn build_mixture_pdf(
-    scatter_pdf: Box<dyn Pdf>,
+    scatter_pdf: Pdf,
     config: &ImportanceSamplingConfig,
     scene_world: &SceneWorld,
     hit_point: Point,
-) -> Box<dyn Pdf> {
-    let mut entries: Vec<(Box<dyn Pdf>, f64)> = Vec::with_capacity(4);
+) -> Pdf {
+    let mut entries: Vec<(Pdf, f64)> = Vec::with_capacity(4);
 
     // material-provided BRDF category — always included as fallback;
     // zero weight means it won't be sampled unless all other
@@ -251,10 +256,10 @@ fn build_mixture_pdf(
     // emissive category
     if config.emissive_weight > 0.0 && !scene_world.emissive_list.is_empty() {
         entries.push((
-            Box::new(GeometricPdf::new(
-                Arc::clone(&scene_world.emissive_list),
-                hit_point,
-            )),
+            Pdf::Geometric {
+                geometric: Arc::clone(&scene_world.emissive_list),
+                origin: hit_point,
+            },
             config.emissive_weight,
         ));
     }
@@ -262,10 +267,10 @@ fn build_mixture_pdf(
     // transmissive category
     if config.transmissive_weight > 0.0 && !scene_world.transmissive_list.is_empty() {
         entries.push((
-            Box::new(GeometricPdf::new(
-                Arc::clone(&scene_world.transmissive_list),
-                hit_point,
-            )),
+            Pdf::Geometric {
+                geometric: Arc::clone(&scene_world.transmissive_list),
+                origin: hit_point,
+            },
             config.transmissive_weight,
         ));
     }
@@ -273,13 +278,13 @@ fn build_mixture_pdf(
     // specular category
     if config.specular_weight > 0.0 && !scene_world.specular_list.is_empty() {
         entries.push((
-            Box::new(GeometricPdf::new(
-                Arc::clone(&scene_world.specular_list),
-                hit_point,
-            )),
+            Pdf::Geometric {
+                geometric: Arc::clone(&scene_world.specular_list),
+                origin: hit_point,
+            },
             config.specular_weight,
         ));
     }
 
-    Box::new(MixturePdf::new(entries))
+    Pdf::mixture(entries)
 }
