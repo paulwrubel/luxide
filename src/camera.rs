@@ -203,7 +203,7 @@ impl Camera {
                         ray_hit.v,
                         ray_hit.point,
                     );
-                    let pdf_val = pdf.density(incident_direction);
+                    let pdf_val = pdf.strategy_density(incident_direction, strategy_index);
                     let mis_weight = pdf.power_heuristic(incident_direction, strategy_index);
                     attentuation_strength *= brdf_val * cos_theta * mis_weight / pdf_val;
 

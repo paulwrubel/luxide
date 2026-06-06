@@ -110,6 +110,21 @@ impl Pdf {
         }
     }
 
+    /// The probability density of the specific strategy at `strategy_idx`
+    /// generating `direction`: `weight × density(direction)`.
+    ///
+    /// For Mixture, this is the joint density `w_s × p_s(dir)`.
+    /// For all other variants, this is just `density(dir)`.
+    pub fn strategy_density(&self, direction: Vector, strategy_idx: usize) -> f64 {
+        match self {
+            Pdf::Mixture { entries } => {
+                let (pdf, weight) = &entries[strategy_idx];
+                weight * pdf.density(direction)
+            }
+            _ => self.density(direction),
+        }
+    }
+
     /// Build a mixture from weighted entries. Weights are normalized internally.
     pub fn mixture(entries: Vec<(Pdf, f64)>) -> Self {
         assert!(!entries.is_empty(), "Mixture requires at least one entry");
