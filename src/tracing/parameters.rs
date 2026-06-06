@@ -1,3 +1,4 @@
+use crate::tracing::SceneWorld;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug, Clone)]
@@ -61,7 +62,7 @@ impl ImportanceSamplingConfig {
         self.emissive_weight + self.transmissive_weight + self.specular_weight + self.brdf_weight
     }
 
-    pub fn validate(&self) -> Result<(), String> {
+    pub fn validate(&self, world: &SceneWorld) -> Result<(), String> {
         if self.emissive_weight < 0.0
             || self.transmissive_weight < 0.0
             || self.specular_weight < 0.0
@@ -76,7 +77,28 @@ impl ImportanceSamplingConfig {
             );
         }
 
+        self.validate_against_world(world)?;
+
         Ok(())
+    }
+
+    /// Validate that at least one non-zero weight category has matching
+    /// geometric objects in the scene.
+    fn validate_against_world(&self, world: &SceneWorld) -> Result<(), String> {
+        if self.emissive_weight > 0.0 && !world.emissive_list.is_empty() {
+            return Ok(());
+        }
+        if self.transmissive_weight > 0.0 && !world.transmissive_list.is_empty() {
+            return Ok(());
+        }
+        if self.specular_weight > 0.0 && !world.specular_list.is_empty() {
+            return Ok(());
+        }
+        // the BRDF always matches — any Lambertian material uses it
+        if self.brdf_weight > 0.0 {
+            return Ok(());
+        }
+        Err("at least one importance sampling category must have a non-zero weight with matching objects in the scene".to_string())
     }
 }
 

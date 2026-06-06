@@ -102,8 +102,6 @@ impl RenderConfig {
     pub fn compile(&self) -> Result<RenderData, String> {
         let mut builts = Builts::new();
 
-        self.validate()?;
-
         // setup named properties
         build_textures(&self.textures, &mut builts)?;
         build_materials(&self.materials, &mut builts)?;
@@ -112,6 +110,8 @@ impl RenderConfig {
         build_scenes(&self.scenes, &mut builts)?;
 
         let active_scene = self.active_scene.build(&builts)?;
+
+        self.validate(&active_scene)?;
 
         let mut parameters = self.parameters;
         parameters.importance_sampling.normalize();
@@ -123,8 +123,10 @@ impl RenderConfig {
     }
 
     // mostly for handling validation that isn't covered by the `build` functions above
-    pub fn validate(&self) -> Result<(), String> {
-        self.parameters.importance_sampling.validate()?;
+    pub fn validate(&self, active_scene: &Scene) -> Result<(), String> {
+        self.parameters
+            .importance_sampling
+            .validate(&active_scene.world)?;
 
         Ok(())
     }

@@ -187,7 +187,14 @@ export function getCornellBoxGlassSpheresRenderConfig(): NormalizedRenderConfig 
   const scenes = base.scenes!;
   return {
     ...base,
-    name: 'Cornell Box — Mirror Spheres',
+    name: 'Cornell Box — Glass Spheres',
+    parameters: {
+      ...base.parameters,
+      importance_sampling: {
+        ...base.parameters.importance_sampling,
+        emissive_weight: 1.0,
+      },
+    },
     scenes: {
       ...scenes,
       'Cornell Box': {
@@ -235,10 +242,10 @@ export function getCornellBoxBaseRenderConfig(): NormalizedRenderConfig {
       max_bounces: 50,
       use_scaling_truncation: true,
       importance_sampling: {
-        emissive_weight: 0.0,
+        emissive_weight: 1.0,
         transmissive_weight: 0.0,
-        specular_weight: 1.0,
-        brdf_weight: 0.0,
+        specular_weight: 0.0,
+        brdf_weight: 1.0,
       },
     },
     active_scene: 'Cornell Box',

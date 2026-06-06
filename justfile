@@ -25,6 +25,10 @@ run-postgres:
     docker compose up -d postgres
     sqlx migrate run
 
+[group('run')]
+view-logs:
+    docker compose logs -f luxide
+
 [group('build')]
 build: build-api-cli
 
