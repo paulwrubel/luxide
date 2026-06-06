@@ -1,4 +1,4 @@
-use std::f64::consts::PI;
+use std::{f64::consts::PI, sync::Arc};
 
 use rand::RngExt;
 
@@ -9,7 +9,7 @@ use crate::{
         materials::ScatterRecord,
         pdf::{GeometricPdf, MixturePdf, Pdf},
     },
-    tracing::{RenderParameters, Scene, SceneWorld},
+    tracing::{ImportanceSamplingConfig, RenderParameters, Scene, SceneWorld},
     utils::{Angle, Interval},
 };
 
@@ -28,6 +28,7 @@ pub struct Camera {
     background_color: Color,
     image_height: u32,
     center: Point,
+    importance_sampling: ImportanceSamplingConfig,
     pixel_00_location: Point,
     pixel_delta_u: Vector,
     pixel_delta_v: Vector,
@@ -61,6 +62,7 @@ impl Camera {
     pub fn initialize(&mut self, parameters: &RenderParameters, scene: &Scene) {
         self.center = self.eye_location;
         self.background_color = scene.background_color;
+        self.importance_sampling = parameters.importance_sampling;
 
         let (width, height) = parameters.image_dimensions;
 
@@ -131,9 +133,7 @@ impl Camera {
         x_offset + y_offset
     }
 
-    pub fn ray_color(&self, mut ray: Ray, world: &SceneWorld, max_bounces: u32) -> Color {
-        let SceneWorld { world, emissives } = world;
-
+    pub fn ray_color(&self, mut ray: Ray, scene_world: &SceneWorld, max_bounces: u32) -> Color {
         // accumulated color contributions of each geometric we intersect along the rays' paths.
         let mut accumulated_color = Color::BLACK;
         // accumulated attentuation (color) of surfaces we encounter.
@@ -143,7 +143,10 @@ impl Camera {
 
         // iterate over geometrics until we fail to intersect, reach max bounces, or find a non-reflective surface
         let mut bounces = 0;
-        while let Some(ray_hit) = world.intersect(ray, Interval::new(0.001, f64::INFINITY)) {
+        while let Some(ray_hit) = scene_world
+            .world
+            .intersect(ray, Interval::new(0.001, f64::INFINITY))
+        {
             let emittance = ray_hit
                 .material
                 .emittance(ray_hit.u, ray_hit.v, ray_hit.point);
@@ -170,7 +173,6 @@ impl Camera {
 
             // unit vector from surface toward the camera (outgoing direction for BRDF)
             let outgoing_direction = (-ray.direction).unit_vector();
-            // ray = srec.scattered();
 
             match srec {
                 ScatterRecord::Delta { scattered } => {
@@ -187,15 +189,12 @@ impl Camera {
                     ray = scattered
                 }
                 ScatterRecord::Pdf { pdf: scatter_pdf } => {
-                    let emissives_pdf = &emissives
-                        .iter()
-                        .map(|e| GeometricPdf::new(e.to_owned(), ray_hit.point))
-                        .collect::<Vec<_>>()[0];
-
-                    let pdf =
-                        MixturePdf::new(scatter_pdf, 0.5, Box::new(emissives_pdf.to_owned()), 0.5);
-
-                    // let pdf = scatter_pdf;
+                    let pdf = build_mixture_pdf(
+                        scatter_pdf,
+                        &self.importance_sampling,
+                        scene_world,
+                        ray_hit.point,
+                    );
 
                     let incident_direction = pdf.sample();
                     let cos_theta = ray_hit.normal.dot(incident_direction);
@@ -232,4 +231,55 @@ impl Camera {
         // then, we can finally return the accumulated color
         accumulated_color
     }
+}
+
+/// Build a mixture PDF from the BRDF scatter PDF and any enabled importance
+/// sampling categories. Skips categories with zero weight or no objects.
+fn build_mixture_pdf(
+    scatter_pdf: Box<dyn Pdf>,
+    config: &ImportanceSamplingConfig,
+    scene_world: &SceneWorld,
+    hit_point: Point,
+) -> Box<dyn Pdf> {
+    let mut entries: Vec<(Box<dyn Pdf>, f64)> = Vec::with_capacity(4);
+
+    // material-provided BRDF category
+    if config.brdf_weight > 0.0 {
+        entries.push((scatter_pdf, config.brdf_weight));
+    }
+
+    // emissive category
+    if config.emissive_weight > 0.0 && !scene_world.emissive_list.is_empty() {
+        entries.push((
+            Box::new(GeometricPdf::new(
+                Arc::clone(&scene_world.emissive_list),
+                hit_point,
+            )),
+            config.emissive_weight,
+        ));
+    }
+
+    // transmissive category
+    if config.transmissive_weight > 0.0 && !scene_world.transmissive_list.is_empty() {
+        entries.push((
+            Box::new(GeometricPdf::new(
+                Arc::clone(&scene_world.transmissive_list),
+                hit_point,
+            )),
+            config.transmissive_weight,
+        ));
+    }
+
+    // specular category
+    if config.specular_weight > 0.0 && !scene_world.specular_list.is_empty() {
+        entries.push((
+            Box::new(GeometricPdf::new(
+                Arc::clone(&scene_world.specular_list),
+                hit_point,
+            )),
+            config.specular_weight,
+        ));
+    }
+
+    Box::new(MixturePdf::new(entries))
 }

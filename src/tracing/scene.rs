@@ -21,12 +21,23 @@ pub struct Scene {
 pub struct SceneWorld {
     pub world: Arc<dyn Geometric>,
 
-    pub emissives: Vec<Arc<dyn Geometric>>,
-    // pub transmissives: Arc<dyn Geometric>,
-    // pub speculars: Arc<dyn Geometric>,
+    pub emissive_list: Arc<dyn Geometric>,
+    pub transmissive_list: Arc<dyn Geometric>,
+    pub specular_list: Arc<dyn Geometric>,
 }
 
 impl SceneWorld {
+    /// Create a SceneWorld from an already-built world geometry,
+    /// with empty category lists (no importance sampling).
+    pub fn from_world_without_importance_sampling(world: Arc<dyn Geometric>) -> Self {
+        SceneWorld {
+            world,
+            emissive_list: Arc::new(List::from_vec(Vec::new())),
+            transmissive_list: Arc::new(List::from_vec(Vec::new())),
+            specular_list: Arc::new(List::from_vec(Vec::new())),
+        }
+    }
+
     pub fn from_geometrics(geometrics: &Vec<Arc<dyn Geometric>>, use_bvh: bool) -> Self {
         let list = List::from_vec(geometrics.clone());
         let world: Arc<dyn Geometric> = if use_bvh {
@@ -36,26 +47,26 @@ impl SceneWorld {
         };
 
         let mut emissives = Vec::new();
-        // let transmissives = Vec::new();
-        // let speculars = Vec::new();
+        let mut transmissives = Vec::new();
+        let mut speculars = Vec::new();
 
         for geometric in geometrics {
             if geometric.is_emissive() {
                 emissives.push(geometric.clone());
             }
-            // if geometric.is_transmissive() {
-            //     transmissives.push(geometric.clone());
-            // }
-            // if geometric.is_specular() {
-            //     speculars.push(geometric.clone());
-            // }
+            if geometric.is_transmissive() {
+                transmissives.push(geometric.clone());
+            }
+            if geometric.is_specular() {
+                speculars.push(geometric.clone());
+            }
         }
 
         SceneWorld {
             world,
-            emissives,
-            // transmissives,
-            // speculars,
+            emissive_list: Arc::new(List::from_vec(emissives)),
+            transmissive_list: Arc::new(List::from_vec(transmissives)),
+            specular_list: Arc::new(List::from_vec(speculars)),
         }
     }
 }

@@ -134,6 +134,18 @@ impl Geometric for Sphere {
         self.material.is_emissive()
     }
 
+    fn is_transmissive(&self) -> bool {
+        self.material.is_transmissive()
+    }
+
+    fn is_specular(&self) -> bool {
+        self.material.is_specular()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.radius <= 0.0
+    }
+
     fn bounding_box(&self) -> Aabb {
         self.bounding_box
     }

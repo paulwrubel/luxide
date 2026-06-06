@@ -59,13 +59,11 @@ impl List {
     pub fn take_items(self) -> Vec<Arc<dyn Geometric>> {
         self.items
     }
+}
 
-    pub fn len(&self) -> usize {
-        self.items.len()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.items.is_empty()
+impl From<Vec<Arc<dyn Geometric>>> for List {
+    fn from(geometrics: Vec<Arc<dyn Geometric>>) -> Self {
+        Self::from_vec(geometrics)
     }
 }
 
@@ -90,6 +88,18 @@ impl Geometric for List {
 
     fn is_emissive(&self) -> bool {
         self.items.iter().any(|item| item.is_emissive())
+    }
+
+    fn is_transmissive(&self) -> bool {
+        self.items.iter().any(|item| item.is_transmissive())
+    }
+
+    fn is_specular(&self) -> bool {
+        self.items.iter().any(|item| item.is_specular())
+    }
+
+    fn is_empty(&self) -> bool {
+        self.items.is_empty()
     }
 
     fn bounding_box(&self) -> Aabb {

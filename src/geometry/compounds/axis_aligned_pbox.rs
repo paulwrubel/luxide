@@ -87,6 +87,18 @@ impl Geometric for AxisAlignedPBox {
         self.0.is_emissive()
     }
 
+    fn is_transmissive(&self) -> bool {
+        self.0.is_transmissive()
+    }
+
+    fn is_specular(&self) -> bool {
+        self.0.is_specular()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
     fn bounding_box(&self) -> Aabb {
         self.0.bounding_box()
     }

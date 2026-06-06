@@ -129,6 +129,30 @@ impl Geometric for Bvh {
         }
     }
 
+    fn is_transmissive(&self) -> bool {
+        match &self.tree {
+            BvhNode::Branch { left, right } => left.is_transmissive() || right.is_transmissive(),
+            BvhNode::Leaf(item) => item.is_transmissive(),
+            BvhNode::Empty => false,
+        }
+    }
+
+    fn is_specular(&self) -> bool {
+        match &self.tree {
+            BvhNode::Branch { left, right } => left.is_specular() || right.is_specular(),
+            BvhNode::Leaf(item) => item.is_specular(),
+            BvhNode::Empty => false,
+        }
+    }
+
+    fn is_empty(&self) -> bool {
+        match &self.tree {
+            BvhNode::Branch { left, right } => left.is_empty() && right.is_empty(),
+            BvhNode::Leaf(item) => item.is_empty(),
+            BvhNode::Empty => true,
+        }
+    }
+
     fn bounding_box(&self) -> Aabb {
         self.bounding_box
     }

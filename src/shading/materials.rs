@@ -21,6 +21,12 @@ pub trait Material: std::fmt::Debug + Sync + Send {
     /// Used to build the lights list for importance sampling.
     fn is_emissive(&self) -> bool;
 
+    /// Whether this material transmits light (glass / dielectric).
+    fn is_transmissive(&self) -> bool;
+
+    /// Whether this material reflects specularly (mirror / metal).
+    fn is_specular(&self) -> bool;
+
     /// The raw albedo (reflectance color) of this material at a surface point.
     ///
     /// For `Delta`-variant materials (Specular, Dielectric, Isotropic), this

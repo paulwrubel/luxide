@@ -140,52 +140,49 @@ impl Pdf for GeometricPdf {
     }
 }
 
-// ---------------------------------------------------------------------------
-// MixturePdf
-// ---------------------------------------------------------------------------
-
-/// Blends two PDFs with equal weight (50/50).
+/// Blends any number of PDFs with configurable weights.
 ///
-/// `sample()` flips a fair coin to choose which distribution to draw from.
-/// `density()` returns the weighted average of both densities, regardless
-/// of which one was used for sampling. This is correct because every
-/// direction that either PDF could have generated contributes to the
-/// denominator in the Monte Carlo estimator.
+/// `sample()` picks an entry by its normalized weight (CDF),
+/// then delegates to that PDF.
+/// `density()` returns the weighted sum of all densities, regardless
+/// of which entry was used for sampling — each direction that any
+/// constituent PDF could have generated contributes to the denominator.
 #[derive(Debug)]
 pub struct MixturePdf {
-    a: Box<dyn Pdf>,
-    a_weight: f64,
-    b: Box<dyn Pdf>,
-    b_weight: f64,
+    entries: Vec<(Box<dyn Pdf>, f64)>,
 }
 
 impl MixturePdf {
-    pub fn new(a: Box<dyn Pdf>, a_weight: f64, b: Box<dyn Pdf>, b_weight: f64) -> Self {
-        let total = a_weight + b_weight;
-
-        Self {
-            a,
-            a_weight: a_weight / total,
-            b,
-            b_weight: b_weight / total,
-        }
-    }
-
-    pub fn new_equal(a: Box<dyn Pdf>, b: Box<dyn Pdf>) -> Self {
-        Self::new(a, 0.5, b, 0.5)
+    /// Build a mixture from weighted entries. Weights are normalized
+    /// internally — raw values are fine.
+    pub fn new(entries: Vec<(Box<dyn Pdf>, f64)>) -> Self {
+        let total: f64 = entries.iter().map(|(_, w)| w).sum();
+        let entries = entries
+            .into_iter()
+            .map(|(pdf, w)| (pdf, w / total))
+            .collect();
+        Self { entries }
     }
 }
 
 impl Pdf for MixturePdf {
     fn sample(&self) -> Vector {
-        if rand::random::<f64>() < self.a_weight {
-            self.a.sample()
-        } else {
-            self.b.sample()
+        let threshold: f64 = rand::random();
+        let mut cumulative = 0.0;
+        for (pdf, weight) in &self.entries {
+            cumulative += weight;
+            if threshold <= cumulative {
+                return pdf.sample();
+            }
         }
+        // floating-point fallback
+        self.entries.last().unwrap().0.sample()
     }
 
     fn density(&self, direction: Vector) -> f64 {
-        self.a_weight * self.a.density(direction) + self.b_weight * self.b.density(direction)
+        self.entries
+            .iter()
+            .map(|(pdf, weight)| weight * pdf.density(direction))
+            .sum()
     }
 }

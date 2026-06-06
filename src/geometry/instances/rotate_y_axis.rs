@@ -105,6 +105,18 @@ impl Geometric for RotateYAxis {
         self.geometric.is_emissive()
     }
 
+    fn is_transmissive(&self) -> bool {
+        self.geometric.is_transmissive()
+    }
+
+    fn is_specular(&self) -> bool {
+        self.geometric.is_specular()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.geometric.is_empty()
+    }
+
     fn bounding_box(&self) -> Aabb {
         self.bounding_box
     }

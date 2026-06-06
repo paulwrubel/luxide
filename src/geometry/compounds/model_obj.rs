@@ -146,6 +146,18 @@ impl Geometric for ModelObj {
         self.geometric.is_emissive()
     }
 
+    fn is_transmissive(&self) -> bool {
+        self.geometric.is_transmissive()
+    }
+
+    fn is_specular(&self) -> bool {
+        self.geometric.is_specular()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.geometric.is_empty()
+    }
+
     fn bounding_box(&self) -> Aabb {
         self.geometric.bounding_box()
     }
@@ -184,6 +196,27 @@ impl Geometric for ListOrBvh {
         match self {
             ListOrBvh::List(list) => list.is_emissive(),
             ListOrBvh::Bvh(bvh) => bvh.is_emissive(),
+        }
+    }
+
+    fn is_transmissive(&self) -> bool {
+        match self {
+            ListOrBvh::List(list) => list.is_transmissive(),
+            ListOrBvh::Bvh(bvh) => bvh.is_transmissive(),
+        }
+    }
+
+    fn is_specular(&self) -> bool {
+        match self {
+            ListOrBvh::List(list) => list.is_specular(),
+            ListOrBvh::Bvh(bvh) => bvh.is_specular(),
+        }
+    }
+
+    fn is_empty(&self) -> bool {
+        match self {
+            ListOrBvh::List(list) => list.is_empty(),
+            ListOrBvh::Bvh(bvh) => bvh.is_empty(),
         }
     }
 
