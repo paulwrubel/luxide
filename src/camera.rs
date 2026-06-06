@@ -192,7 +192,7 @@ impl Camera {
                         ray_hit.point,
                     );
 
-                    let incident_direction = pdf.sample();
+                    let (incident_direction, strategy_index) = pdf.sample();
                     let cos_theta = ray_hit.normal.dot(incident_direction);
 
                     let brdf_val = ray_hit.material.brdf(
@@ -204,7 +204,8 @@ impl Camera {
                         ray_hit.point,
                     );
                     let pdf_val = pdf.density(incident_direction);
-                    attentuation_strength *= brdf_val * cos_theta / pdf_val;
+                    let mis_weight = pdf.power_heuristic(incident_direction, strategy_index);
+                    attentuation_strength *= brdf_val * cos_theta * mis_weight / pdf_val;
 
                     ray = Ray::new(ray_hit.point, incident_direction, ray.time)
                 }

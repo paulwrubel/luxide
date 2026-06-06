@@ -29,30 +29,33 @@ pub enum Pdf {
 }
 
 impl Pdf {
-    /// Draw a random unit direction distributed according to this PDF.
-    pub fn sample(&self) -> Vector {
+    /// Draw a random unit direction and the index of the strategy that produced it.
+    /// For non-Mixture variants, the index is always 0.
+    pub fn sample(&self) -> (Vector, usize) {
         match self {
-            Pdf::CosineHemisphere(onb) => onb.to_world(Vector::random_cosine_weighted_direction()),
+            Pdf::CosineHemisphere(onb) => {
+                (onb.to_world(Vector::random_cosine_weighted_direction()), 0)
+            }
             Pdf::UniformHemisphere(onb) => {
                 let mut direction = Vector::random_unit();
                 if direction.z < 0.0 {
                     direction = -direction;
                 }
-                onb.to_world(direction)
+                (onb.to_world(direction), 0)
             }
-            Pdf::UniformSphere => Vector::random_unit(),
-            Pdf::Geometric { geometric, origin } => geometric.sample_direction_from(*origin),
+            Pdf::UniformSphere => (Vector::random_unit(), 0),
+            Pdf::Geometric { geometric, origin } => (geometric.sample_direction_from(*origin), 0),
             Pdf::Mixture { entries } => {
                 let threshold: f64 = rand::random();
                 let mut cumulative = 0.0;
-                for (pdf, weight) in entries {
-                    cumulative += weight;
+                for (i, (pdf, _weight)) in entries.iter().enumerate() {
+                    cumulative += entries[i].1; // pre-normalized weight
                     if threshold <= cumulative {
-                        return pdf.sample();
+                        return (pdf.sample().0, i);
                     }
                 }
-                // floating-point fallback
-                entries.last().unwrap().0.sample()
+                let last = entries.last().unwrap();
+                (last.0.sample().0, entries.len() - 1)
             }
         }
     }
@@ -84,9 +87,33 @@ impl Pdf {
         }
     }
 
+    /// The MIS power-heuristic weight for the strategy at `strategy_idx`.
+    ///
+    /// For Mixture: `p_idx² / Σ p_i²`, where `p_i = weight_i × density_i(direction)`.
+    /// For all other variants: 1.0 (single strategy, no MIS needed).
+    pub fn power_heuristic(&self, direction: Vector, strategy_idx: usize) -> f64 {
+        match self {
+            Pdf::Mixture { entries } => {
+                // un-normalized densities: p_i = weight_i × density_i(dir)
+                let densities: Vec<f64> = entries
+                    .iter()
+                    .map(|(pdf, weight)| weight * pdf.density(direction))
+                    .collect();
+                let sum_sq: f64 = densities.iter().map(|d| d * d).sum();
+                if sum_sq <= 0.0 {
+                    return 0.0;
+                }
+                let p_chosen = densities[strategy_idx];
+                (p_chosen * p_chosen) / sum_sq
+            }
+            _ => 1.0,
+        }
+    }
+
     /// Build a mixture from weighted entries. Weights are normalized internally.
     pub fn mixture(entries: Vec<(Pdf, f64)>) -> Self {
         assert!(!entries.is_empty(), "Mixture requires at least one entry");
+
         let total: f64 = entries.iter().map(|(_, w)| w).sum();
         let entries = entries
             .into_iter()
