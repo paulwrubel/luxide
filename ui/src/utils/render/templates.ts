@@ -58,6 +58,12 @@ export function getEmptyRenderConfig(): NormalizedRenderConfig {
       saved_checkpoint_limit: 1,
       max_bounces: 50,
       use_scaling_truncation: true,
+      importance_sampling: {
+        emissive_weight: 1.0,
+        transmissive_weight: 0.0,
+        specular_weight: 0.0,
+        brdf_weight: 1.0,
+      },
     },
     active_scene: 'Scene 1',
     scenes: {
@@ -96,6 +102,12 @@ export function getCornellBoxBaseRenderConfig(): NormalizedRenderConfig {
       saved_checkpoint_limit: 1,
       max_bounces: 50,
       use_scaling_truncation: true,
+      importance_sampling: {
+        emissive_weight: 1.0,
+        transmissive_weight: 0.0,
+        specular_weight: 0.0,
+        brdf_weight: 1.0,
+      },
     },
     active_scene: 'Cornell Box',
     scenes: {
