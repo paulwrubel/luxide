@@ -3,6 +3,7 @@ import { Button, ModalHeader, ModalBody, ModalFooter, Spinner, Alert } from 'flo
 import { HiArrowLeft } from 'react-icons/hi2';
 import { useRenders } from '@/hooks/useRenders';
 import { normalizeRenderConfig, type NormalizedRenderConfig } from '@/utils/render/config';
+import { withDefaultResources } from '@/utils/render/templates';
 import {
   isRenderStateCreated,
   isRenderStateRunning,
@@ -38,7 +39,10 @@ export function ExistingRenderPicker(props: ExistingRenderPickerProps) {
   const handleUseConfig = () => {
     if (!selectedRender) return;
     const normalizedConfig = normalizeRenderConfig(selectedRender.config);
-    onSelect(normalizedConfig);
+    const configWithDefaults = withDefaultResources(normalizedConfig);
+
+    // ensure default resources are present so new materials referencing __white/__black work correctly
+    onSelect(configWithDefaults);
   };
 
   const getStateBadgeClasses = (state: RenderState): string => {
@@ -65,9 +69,7 @@ export function ExistingRenderPicker(props: ExistingRenderPickerProps) {
             <Spinner />
           </div>
         )}
-        {isError && (
-          <Alert color="failure">Failed to load renders. Please try again.</Alert>
-        )}
+        {isError && <Alert color="failure">Failed to load renders. Please try again.</Alert>}
         {!isLoading && !isError && renders && renders.length === 0 && (
           <p className="py-8 text-center text-zinc-400">No existing renders to clone.</p>
         )}

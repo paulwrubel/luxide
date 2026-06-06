@@ -191,10 +191,12 @@ export function getCornellBoxGlassSpheresRenderConfig(): NormalizedRenderConfig 
     name: 'Cornell Box — Glass Spheres',
     parameters: {
       ...base.parameters,
-      importance_sampling: {
-        ...base.parameters.importance_sampling,
-        emissive_weight: 1.0,
-      },
+      importance_sampling: base.parameters.importance_sampling
+        ? {
+            ...base.parameters.importance_sampling,
+            emissive_weight: 1.0,
+          }
+        : undefined,
     },
     scenes: {
       ...scenes,
@@ -382,7 +384,7 @@ export function getCornellBoxBaseRenderConfig(): NormalizedRenderConfig {
   });
 }
 
-function withDefaultResources(config: NormalizedRenderConfig): NormalizedRenderConfig {
+export function withDefaultResources(config: NormalizedRenderConfig): NormalizedRenderConfig {
   return {
     ...config,
     geometrics: {

@@ -46,7 +46,9 @@ export function useRenderForm(options: UseRenderFormOptions) {
     .refine(
       ({ parameters }) => {
         const cfg = parameters.importance_sampling;
+
         return (
+          !cfg ||
           cfg.emissive_weight + cfg.transmissive_weight + cfg.specular_weight + cfg.brdf_weight > 0
         );
       },
