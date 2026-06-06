@@ -1,11 +1,17 @@
 import { z } from 'zod';
 
-export const ImportanceSamplingConfigSchema = z.object({
-  emissive_weight: z.number().min(0).default(1.0),
-  transmissive_weight: z.number().min(0).default(0.0),
-  specular_weight: z.number().min(0).default(0.0),
-  brdf_weight: z.number().min(0).default(1.0),
-});
+export const ImportanceSamplingConfigSchema = z
+  .object({
+    emissive_weight: z.number().min(0).default(1.0),
+    transmissive_weight: z.number().min(0).default(0.0),
+    specular_weight: z.number().min(0).default(0.0),
+    brdf_weight: z.number().min(0).default(1.0),
+  })
+  .refine(
+    (cfg) =>
+      cfg.emissive_weight + cfg.transmissive_weight + cfg.specular_weight + cfg.brdf_weight > 0,
+    { message: 'At least one importance sampling category must have a non-zero weight' },
+  );
 
 export type ImportanceSamplingConfig = z.infer<typeof ImportanceSamplingConfigSchema>;
 
@@ -20,7 +26,7 @@ export const RenderParametersSchema = z
     max_bounces: z.number().int().min(1).max(200),
     use_scaling_truncation: z.boolean(),
     importance_sampling: ImportanceSamplingConfigSchema.default({
-      emissive_weight: 1.0,
+      emissive_weight: 0.0,
       transmissive_weight: 0.0,
       specular_weight: 0.0,
       brdf_weight: 1.0,
