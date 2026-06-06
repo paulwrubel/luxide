@@ -113,8 +113,11 @@ impl RenderConfig {
 
         let active_scene = self.active_scene.build(&builts)?;
 
+        let mut parameters = self.parameters;
+        parameters.importance_sampling.normalize();
+
         Ok(RenderData {
-            parameters: self.parameters,
+            parameters,
             scene: active_scene,
         })
     }

@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const ImportanceSamplingConfigSchema = z
   .object({
-    emissive_weight: z.number().min(0).default(1.0),
+    emissive_weight: z.number().min(0).default(0.0),
     transmissive_weight: z.number().min(0).default(0.0),
     specular_weight: z.number().min(0).default(0.0),
     brdf_weight: z.number().min(0).default(1.0),
