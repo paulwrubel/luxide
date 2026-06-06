@@ -5,6 +5,7 @@ export const ImportanceSamplingConfigSchema = z.object({
   transmissive_weight: z.number().min(0),
   specular_weight: z.number().min(0),
   brdf_weight: z.number().min(0),
+  use_multiple_importance_sampling: z.boolean(),
 });
 
 export type ImportanceSamplingConfig = z.infer<typeof ImportanceSamplingConfigSchema>;

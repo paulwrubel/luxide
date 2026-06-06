@@ -192,9 +192,9 @@ impl Camera {
                         ray_hit.point,
                     );
 
-                    let (incident_direction, strategy_index) = pdf.sample();
-                    let cos_theta = ray_hit.normal.dot(incident_direction);
+                    let (incident_direction, index_of_strategy) = pdf.sample();
 
+                    let cos_theta = ray_hit.normal.dot(incident_direction);
                     let brdf_val = ray_hit.material.brdf(
                         outgoing_direction,
                         incident_direction,
@@ -203,9 +203,17 @@ impl Camera {
                         ray_hit.v,
                         ray_hit.point,
                     );
-                    let pdf_val = pdf.strategy_density(incident_direction, strategy_index);
-                    let mis_weight = pdf.power_heuristic(incident_direction, strategy_index);
-                    attentuation_strength *= brdf_val * cos_theta * mis_weight / pdf_val;
+
+                    if self.importance_sampling.use_multiple_importance_sampling {
+                        let pdf_val = pdf.strategy_density(incident_direction, index_of_strategy);
+                        let mis_weight = pdf.power_heuristic(incident_direction, index_of_strategy);
+
+                        attentuation_strength *= brdf_val * cos_theta * mis_weight / pdf_val;
+                    } else {
+                        let pdf_val = pdf.density(incident_direction);
+
+                        attentuation_strength *= brdf_val * cos_theta / pdf_val;
+                    }
 
                     ray = Ray::new(ray_hit.point, incident_direction, ray.time)
                 }

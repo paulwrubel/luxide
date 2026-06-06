@@ -40,6 +40,10 @@ pub struct ImportanceSamplingConfig {
     /// Weight for the material's own BRDF-based PDF (diffuse/Lambertian).
     #[serde(default)]
     pub brdf_weight: f64,
+    /// Whether to use Multiple Importance Sampling to blend
+    /// BRDF and light sampling strategies (power heuristic).
+    #[serde(default)]
+    pub use_multiple_importance_sampling: bool,
 }
 
 impl ImportanceSamplingConfig {
@@ -109,6 +113,7 @@ impl Default for ImportanceSamplingConfig {
             transmissive_weight: 0.0,
             specular_weight: 0.0,
             brdf_weight: 1.0,
+            use_multiple_importance_sampling: false,
         }
     }
 }
