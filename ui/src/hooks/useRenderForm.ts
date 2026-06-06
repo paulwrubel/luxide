@@ -27,21 +27,34 @@ export function useRenderForm(options: UseRenderFormOptions) {
       message: 'Image dimensions are too large',
       path: ['parameters', 'image_dimensions'],
     },
-  ).refine(
-    ({ parameters }) => {
-      if ((user?.max_checkpoints_per_render ?? null) !== null) {
+  )
+    .refine(
+      ({ parameters }) => {
+        if ((user?.max_checkpoints_per_render ?? null) !== null) {
+          return (
+            parameters.saved_checkpoint_limit !== undefined &&
+            parameters.saved_checkpoint_limit <= (user?.max_checkpoints_per_render ?? Infinity)
+          );
+        }
+        return true;
+      },
+      {
+        message: 'Saved checkpoint limit is too large',
+        path: ['parameters', 'saved_checkpoint_limit'],
+      },
+    )
+    .refine(
+      ({ parameters }) => {
+        const cfg = parameters.importance_sampling;
         return (
-          parameters.saved_checkpoint_limit !== undefined &&
-          parameters.saved_checkpoint_limit <= (user?.max_checkpoints_per_render ?? Infinity)
+          cfg.emissive_weight + cfg.transmissive_weight + cfg.specular_weight + cfg.brdf_weight > 0
         );
-      }
-      return true;
-    },
-    {
-      message: 'Saved checkpoint limit is too large',
-      path: ['parameters', 'saved_checkpoint_limit'],
-    },
-  );
+      },
+      {
+        message: 'At least one importance sampling weight must be non-zero',
+        path: ['parameters', 'importance_sampling'],
+      },
+    );
 
   return useAppForm({
     defaultValues: initialValues ?? getDefaultRenderConfig(),
