@@ -156,6 +156,10 @@ impl MixturePdf {
     /// Build a mixture from weighted entries. Weights are normalized
     /// internally — raw values are fine.
     pub fn new(entries: Vec<(Box<dyn Pdf>, f64)>) -> Self {
+        assert!(
+            !entries.is_empty(),
+            "MixturePdf requires at least one entry"
+        );
         let total: f64 = entries.iter().map(|(_, w)| w).sum();
         let entries = entries
             .into_iter()

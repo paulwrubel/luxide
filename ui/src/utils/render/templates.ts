@@ -235,10 +235,10 @@ export function getCornellBoxBaseRenderConfig(): NormalizedRenderConfig {
       max_bounces: 50,
       use_scaling_truncation: true,
       importance_sampling: {
-        emissive_weight: 1.0,
+        emissive_weight: 0.0,
         transmissive_weight: 0.0,
-        specular_weight: 0.0,
-        brdf_weight: 1.0,
+        specular_weight: 1.0,
+        brdf_weight: 0.0,
       },
     },
     active_scene: 'Cornell Box',

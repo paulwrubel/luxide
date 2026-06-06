@@ -243,10 +243,10 @@ fn build_mixture_pdf(
 ) -> Box<dyn Pdf> {
     let mut entries: Vec<(Box<dyn Pdf>, f64)> = Vec::with_capacity(4);
 
-    // material-provided BRDF category
-    if config.brdf_weight > 0.0 {
-        entries.push((scatter_pdf, config.brdf_weight));
-    }
+    // material-provided BRDF category — always included as fallback;
+    // zero weight means it won't be sampled unless all other
+    // categories are also empty
+    entries.push((scatter_pdf, config.brdf_weight));
 
     // emissive category
     if config.emissive_weight > 0.0 && !scene_world.emissive_list.is_empty() {
