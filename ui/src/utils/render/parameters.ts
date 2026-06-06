@@ -20,7 +20,7 @@ export const RenderParametersSchema = z
     saved_checkpoint_limit: z.number().int().min(0).max(1000).optional(),
     max_bounces: z.number().int().min(1).max(200),
     use_scaling_truncation: z.boolean(),
-    importance_sampling: ImportanceSamplingConfigSchema,
+    importance_sampling: ImportanceSamplingConfigSchema.optional(),
   })
   .refine((params) => params.tile_dimensions[0] <= params.image_dimensions[0], {
     message: 'Cannot be larger than image dimensions',
