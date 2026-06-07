@@ -1,19 +1,16 @@
 import { getMaterialDataSafe } from '@/utils/render/material';
 import { getTextureDataSafe } from '@/utils/render/texture';
-import { getCenterPoint } from '@/utils/render/geometric';
-import { getGeometricDataSafe } from '@/utils/render/geometric';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
 
 export type MaterialResolverProps = {
   config: NormalizedRenderConfig;
-  materialRef: string;
-  geometricName: string;
+  materialName: string;
 };
 
 export function MaterialResolver(props: MaterialResolverProps) {
-  const { config, materialRef, geometricName } = props;
+  const { config, materialName } = props;
 
-  const { data: materialData } = getMaterialDataSafe(config, materialRef);
+  const { data: materialData } = getMaterialDataSafe(config, materialName);
   const { data: reflectanceTexture } = getTextureDataSafe(config, materialData.reflectance_texture);
   const { data: emittanceTexture } = getTextureDataSafe(config, materialData.emittance_texture);
 
@@ -22,43 +19,36 @@ export function MaterialResolver(props: MaterialResolverProps) {
       ? emittanceTexture.color
       : undefined;
 
-  const { data: geometricData } = getGeometricDataSafe(config, geometricName);
-
-  // material
-  let materialElement: React.ReactNode = null;
-
   switch (materialData.type) {
     case 'dielectric': {
       console.warn('Dielectric material not yet supported');
-      break;
+      return null;
     }
     case 'lambertian': {
       switch (reflectanceTexture.type) {
         case 'color': {
-          materialElement = (
+          return (
             <meshLambertMaterial
               attach="material"
               color={reflectanceTexture.color}
               {...(emissiveColor ? { emissive: emissiveColor } : {})}
             />
           );
-          break;
         }
         case 'checker':
         case 'image': {
           console.warn(
             `${reflectanceTexture.type} texture not yet supported for lambertian material`,
           );
-          materialElement = <meshLambertMaterial attach="material" color={[1, 1, 1]} />;
-          break;
+          return <meshLambertMaterial attach="material" color={[1, 1, 1]} />;
         }
       }
-      break;
     }
+    // eslint-disable-next-line no-fallthrough -- all inner branches return, TS confirms exhaustive
     case 'specular': {
       switch (reflectanceTexture.type) {
         case 'color': {
-          materialElement = (
+          return (
             <meshStandardMaterial
               attach="material"
               color={reflectanceTexture.color}
@@ -67,14 +57,13 @@ export function MaterialResolver(props: MaterialResolverProps) {
               roughness={materialData.roughness}
             />
           );
-          break;
         }
         case 'checker':
         case 'image': {
           console.warn(
             `${reflectanceTexture.type} texture not yet supported for specular material`,
           );
-          materialElement = (
+          return (
             <meshStandardMaterial
               attach="material"
               color={[1, 1, 1]}
@@ -82,26 +71,8 @@ export function MaterialResolver(props: MaterialResolverProps) {
               roughness={materialData.roughness}
             />
           );
-          break;
         }
       }
-      break;
     }
   }
-
-  const shouldCreatePointLight = emissiveColor && geometricData.type !== 'constant_volume';
-
-  return (
-    <>
-      {materialElement}
-      {shouldCreatePointLight && (
-        <pointLight
-          position={getCenterPoint(config, geometricData)}
-          intensity={Math.max(...emissiveColor)}
-          color={emissiveColor}
-          castShadow
-        />
-      )}
-    </>
-  );
 }
