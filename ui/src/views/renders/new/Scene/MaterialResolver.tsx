@@ -27,42 +27,63 @@ export function MaterialResolver(props: MaterialResolverProps) {
   // material
   let materialElement: React.ReactNode = null;
 
-  if (materialData.type === 'dielectric') {
-    console.warn('Dielectric material not yet supported');
-  } else if (materialData.type === 'lambertian') {
-    if (reflectanceTexture.type === 'color') {
-      materialElement = (
-        <meshLambertMaterial
-          attach="material"
-          color={reflectanceTexture.color}
-          {...(emissiveColor ? { emissive: emissiveColor } : {})}
-        />
-      );
-    } else if (reflectanceTexture.type === 'checker' || reflectanceTexture.type === 'image') {
-      console.warn(`${reflectanceTexture.type} texture not yet supported for lambertian material`);
-      materialElement = <meshLambertMaterial attach="material" color={[1, 1, 1]} />;
+  switch (materialData.type) {
+    case 'dielectric': {
+      console.warn('Dielectric material not yet supported');
+      break;
     }
-  } else if (materialData.type === 'specular') {
-    if (reflectanceTexture.type === 'color') {
-      materialElement = (
-        <meshStandardMaterial
-          attach="material"
-          color={reflectanceTexture.color}
-          {...(emissiveColor ? { emissive: emissiveColor } : {})}
-          metalness={1.0}
-          roughness={materialData.roughness}
-        />
-      );
-    } else if (reflectanceTexture.type === 'checker' || reflectanceTexture.type === 'image') {
-      console.warn(`${reflectanceTexture.type} texture not yet supported for specular material`);
-      materialElement = (
-        <meshStandardMaterial
-          attach="material"
-          color={[1, 1, 1]}
-          metalness={1.0}
-          roughness={materialData.roughness}
-        />
-      );
+    case 'lambertian': {
+      switch (reflectanceTexture.type) {
+        case 'color': {
+          materialElement = (
+            <meshLambertMaterial
+              attach="material"
+              color={reflectanceTexture.color}
+              {...(emissiveColor ? { emissive: emissiveColor } : {})}
+            />
+          );
+          break;
+        }
+        case 'checker':
+        case 'image': {
+          console.warn(
+            `${reflectanceTexture.type} texture not yet supported for lambertian material`,
+          );
+          materialElement = <meshLambertMaterial attach="material" color={[1, 1, 1]} />;
+          break;
+        }
+      }
+      break;
+    }
+    case 'specular': {
+      switch (reflectanceTexture.type) {
+        case 'color': {
+          materialElement = (
+            <meshStandardMaterial
+              attach="material"
+              color={reflectanceTexture.color}
+              {...(emissiveColor ? { emissive: emissiveColor } : {})}
+              metalness={1.0}
+              roughness={materialData.roughness}
+            />
+          );
+          break;
+        }
+        case 'checker':
+        case 'image': {
+          console.warn(`${reflectanceTexture.type} texture not yet supported for specular material`);
+          materialElement = (
+            <meshStandardMaterial
+              attach="material"
+              color={[1, 1, 1]}
+              metalness={1.0}
+              roughness={materialData.roughness}
+            />
+          );
+          break;
+        }
+      }
+      break;
     }
   }
 
