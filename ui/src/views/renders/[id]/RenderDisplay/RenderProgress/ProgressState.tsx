@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Progress, type ProgressTheme } from 'flowbite-react';
 import type { DeepPartial } from 'flowbite-react/types';
 
@@ -9,8 +10,18 @@ export type ProgressStateProps = {
 export function ProgressState(props: ProgressStateProps) {
   const { progress, color } = props;
 
+  // disable the CSS width transition when progress decreases
+  // (new checkpoint started), so the bar snaps instead of animating backwards.
+  // a 2-element array preserves history so the re-render after setState still
+  // sees the previous value and can compute the correct direction.
+  const [stack, setStack] = useState([progress, progress]);
+  const increasing = stack[1] >= stack[0];
+  if (stack[1] !== progress) {
+    setStack([stack[1], progress]);
+  }
+
   const progressTheme: DeepPartial<ProgressTheme> = {
-    bar: 'transition-[width] duration-1000 ease-linear',
+    bar: increasing ? 'transition-[width] duration-1000 ease-linear' : '',
   };
 
   return (

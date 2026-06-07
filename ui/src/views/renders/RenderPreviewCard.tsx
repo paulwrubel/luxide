@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card, Progress, Spinner, type CardTheme } from 'flowbite-react';
 import { Link } from 'react-router-dom';
 import type { DeepPartial } from 'flowbite-react/types';
@@ -26,6 +27,16 @@ export function RenderPreviewCard(props: RenderPreviewCardProps) {
     : pausing
       ? state.pausing.progress_info.progress
       : 0;
+
+  // disable the CSS width transition when progress decreases
+  // (new checkpoint started), so the bar snaps instead of animating backwards.
+  // a 2-element array preserves history so the re-render after setState still
+  // sees the previous value and can compute the correct direction.
+  const [stack, setStack] = useState([progress, progress]);
+  const increasing = stack[1] >= stack[0];
+  if (stack[1] !== progress) {
+    setStack([stack[1], progress]);
+  }
 
   const cardTheme: DeepPartial<CardTheme> = {
     root: {
@@ -83,7 +94,9 @@ export function RenderPreviewCard(props: RenderPreviewCardProps) {
               size="sm"
               theme={{
                 base: 'rounded-none',
-                bar: 'rounded-none transition-[width] duration-1000 ease-linear',
+                bar: increasing
+                  ? 'rounded-none transition-[width] duration-1000 ease-linear'
+                  : 'rounded-none',
               }}
             />
           )}
