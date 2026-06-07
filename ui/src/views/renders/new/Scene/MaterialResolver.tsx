@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import * as THREE from 'three';
 import { getMaterialDataSafe } from '@/utils/render/material';
 import { getTextureDataSafe } from '@/utils/render/texture';
-import { isComposite, getCenterPoint } from '@/utils/render/geometric';
+import { getCenterPoint } from '@/utils/render/geometric';
 import { getGeometricDataSafe } from '@/utils/render/geometric';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
 
@@ -85,14 +85,6 @@ export function MaterialResolver(props: MaterialResolverProps) {
 
     const { data: geometricData } = getGeometricDataSafe(config, geometricName);
     if (geometricData.type === 'constant_volume') {
-      return null;
-    }
-    // allow list and translate composites through
-    if (
-      isComposite(geometricData) &&
-      geometricData.type !== 'list' &&
-      geometricData.type !== 'translate'
-    ) {
       return null;
     }
 
