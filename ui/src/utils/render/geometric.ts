@@ -1,7 +1,14 @@
 import type { NormalizedRenderConfig, RenderConfig } from './config';
 import { normalizeMaterialData, type RawMaterialData } from './material';
 import { normalizeTextureData, type RawTextureData } from './texture';
-import { AngleSchema, capitalize, getNextUniqueName, isTypedObject, toRadians, type Angle } from './utils';
+import {
+  AngleSchema,
+  capitalize,
+  getNextUniqueName,
+  isTypedObject,
+  toRadians,
+  type Angle,
+} from './utils';
 import { z } from 'zod';
 
 // geometric types
@@ -504,7 +511,7 @@ export const GeometricInstanceRotateXSchema = z
   .object({
     type: z.literal('rotate_x'),
     geometric: z.string().nonempty(),
-    around: z.tuple([z.number(), z.number(), z.number()]).nullish(),
+    around: z.tuple([z.number(), z.number(), z.number()]),
   })
   .and(AngleSchema);
 
@@ -512,7 +519,7 @@ export const GeometricInstanceRotateYSchema = z
   .object({
     type: z.literal('rotate_y'),
     geometric: z.string().nonempty(),
-    around: z.tuple([z.number(), z.number(), z.number()]).nullish(),
+    around: z.tuple([z.number(), z.number(), z.number()]),
   })
   .and(AngleSchema);
 
@@ -520,7 +527,7 @@ export const GeometricInstanceRotateZSchema = z
   .object({
     type: z.literal('rotate_z'),
     geometric: z.string().nonempty(),
-    around: z.tuple([z.number(), z.number(), z.number()]).nullish(),
+    around: z.tuple([z.number(), z.number(), z.number()]),
   })
   .and(AngleSchema);
 
@@ -559,7 +566,7 @@ export type NormalizedGeometricInstanceRotate = DistributiveOmit<
 export type RawGeometricInstanceRotate = {
   type: 'rotate_x' | 'rotate_y' | 'rotate_z';
   geometric: string | RawGeometricData;
-  around?: [number, number, number];
+  around: [number, number, number];
 } & Angle;
 
 export const GeometricInstanceTranslateSchema = z.object({
