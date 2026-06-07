@@ -28,6 +28,33 @@ jobs:
       - name: checkout code
         uses: actions/checkout@v4
 
+      - name: detect changed files
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            rust:
+              - 'src/**'
+              - 'Cargo.toml'
+              - 'Cargo.lock'
+              - 'migrations/**'
+              - 'benches/**'
+              - '.sqlx/**'
+              - 'justfile'
+              - '.github/workflows/**'
+            ui:
+              - 'ui/src/**'
+              - 'ui/public/**'
+              - 'ui/package.json'
+              - 'ui/package-lock.json'
+              - 'ui/tsconfig*.json'
+              - 'ui/vite.config.ts'
+              - 'ui/eslint.config.*'
+              - 'ui/.nvmrc'
+              - 'ui/index.html'
+              - 'justfile'
+              - '.github/workflows/**'
+
       - name: install just
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
@@ -40,6 +67,7 @@ jobs:
           cache-dependency-path: 'ui/package-lock.json'
 
       - name: set up rust
+        if: github.event_name != 'pull_request' || steps.filter.outputs.rust == 'true'
         run: |
           rustup toolchain install stable --profile minimal
           rustup default stable
@@ -48,32 +76,33 @@ jobs:
           cargo --version
 
       - name: cache rust dependencies
+        if: github.event_name != 'pull_request' || steps.filter.outputs.rust == 'true'
         uses: Swatinem/rust-cache@v2
 
       ## PR-ONLY STEPS (lightweight checks) ##
 
       - name: install npm dependencies
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.filter.outputs.ui == 'true'
         run: cd ui && npm ci
 
       - name: cargo check
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.filter.outputs.rust == 'true'
         run: just cargo-check-ci
 
       - name: cargo test
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.filter.outputs.rust == 'true'
         run: just cargo-test-ci
 
       - name: cargo clippy
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.filter.outputs.rust == 'true'
         run: just cargo-clippy-ci
 
       - name: eslint
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.filter.outputs.ui == 'true'
         run: just lint-ui-ci
 
       - name: tsc type-check
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.filter.outputs.ui == 'true'
         run: just typecheck-ui-ci
 
       ## MAIN/TAG-ONLY STEPS (full build + publish) ##
