@@ -1,5 +1,5 @@
 import { Canvas } from '@react-three/fiber';
-import { PerspectiveCamera } from '@react-three/drei';
+import { Environment, PerspectiveCamera } from '@react-three/drei';
 import { useRef, useEffect } from 'react';
 import { useSelector } from '@tanstack/react-store';
 import * as THREE from 'three';
@@ -45,7 +45,7 @@ export function Scene(props: SceneProps) {
   return (
     <Canvas>
       <CameraUpdater cameraData={cameraData} />
-      <ambientLight intensity={0.05} />
+      <Environment preset="lobby" environmentIntensity={0.05} />
       {activeScene.geometrics.map((geoName: string) => (
         <GeometricRenderer key={geoName} config={renderConfig} name={geoName} />
       ))}
