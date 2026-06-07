@@ -60,12 +60,10 @@ export function isTypedObject(x: unknown): x is Record<string, unknown> & { type
   return isNonNullObject(x) && 'type' in x && typeof x.type === 'string';
 }
 
-export function getNextUniqueName<T>(collection: Record<string, T>, baseName: string): string {
-  let cardinal = 1;
-  let name = `${baseName} ${cardinal}`;
-  while (name in collection) {
-    cardinal++;
-    name = `${baseName} ${cardinal}`;
+export function getNextUniqueName<_T>(collection: Record<string, _T>, baseName: string): string {
+  let name = baseName;
+  for (let i = 1; name in collection; i++) {
+    name = `${baseName} ${i}`;
   }
   return name;
 }
@@ -208,7 +206,11 @@ function moveKey<T>(
  * renames a camera and updates all scene references
  * throughout the config to point to the new name.
  */
-export function renameCamera(config: NormalizedRenderConfig, oldName: string, newName: string): NormalizedRenderConfig {
+export function renameCamera(
+  config: NormalizedRenderConfig,
+  oldName: string,
+  newName: string,
+): NormalizedRenderConfig {
   const newConfig = { ...config };
   newConfig.cameras = moveKey(newConfig.cameras, oldName, newName);
 
