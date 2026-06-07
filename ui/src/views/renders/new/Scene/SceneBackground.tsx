@@ -11,6 +11,7 @@ export function SceneBackground(props: SceneBackgroundProps) {
 
   const { scene } = useThree();
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/immutability -- scene mutation is the standard R3F pattern
     scene.background = new THREE.Color(...color);
   }, [scene, color]);
   return null;
