@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import * as THREE from 'three';
 import { getMaterialDataSafe } from '@/utils/render/material';
 import { getTextureDataSafe } from '@/utils/render/texture';
-import { isComposite, getCenterPoint } from '@/utils/render/geometric';
+import { getCenterPoint } from '@/utils/render/geometric';
 import { getGeometricDataSafe } from '@/utils/render/geometric';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
 
@@ -84,10 +84,12 @@ export function MaterialResolver(props: MaterialResolverProps) {
     if (!emissiveColor) return null;
 
     const { data: geometricData } = getGeometricDataSafe(config, geometricName);
-    if (isComposite(geometricData) || geometricData.type === 'constant_volume') return null;
+    if (geometricData.type === 'constant_volume') {
+      return null;
+    }
 
     const center = getCenterPoint(config, geometricData);
-    const intensity = emissiveColor.reduce((a, b) => a + b, 0) / 3;
+    const intensity = Math.max(...emissiveColor);
 
     return (
       <pointLight

@@ -1,7 +1,7 @@
 import type { NormalizedRenderConfig, RenderConfig } from './config';
 import { normalizeMaterialData, type RawMaterialData } from './material';
 import { normalizeTextureData, type RawTextureData } from './texture';
-import { AngleSchema, capitalize, getNextUniqueName, isTypedObject, type Angle } from './utils';
+import { AngleSchema, capitalize, getNextUniqueName, isTypedObject, toRadians, type Angle } from './utils';
 import { z } from 'zod';
 
 // geometric types
@@ -123,6 +123,49 @@ export function getReferencedMaterialNames(
   return [...new Set(materials)];
 }
 
+// rotate a point around a pivot by angleRad radians on the given axis.
+// matches the Rust backend's RotateXAxis / RotateYAxis / RotateZAxis conventions.
+function rotatePoint(
+  point: [number, number, number],
+  axis: 'rotate_x' | 'rotate_y' | 'rotate_z',
+  angleRad: number,
+  pivot: [number, number, number],
+): [number, number, number] {
+  const [px, py, pz] = pivot;
+  const vx = point[0] - px;
+  const vy = point[1] - py;
+  const vz = point[2] - pz;
+  const cosA = Math.cos(angleRad);
+  const sinA = Math.sin(angleRad);
+
+  let rx: number;
+  let ry: number;
+  let rz: number;
+
+  switch (axis) {
+    case 'rotate_x':
+      // rotation in YZ plane: y' = y*cos - z*sin, z' = y*sin + z*cos
+      rx = vx;
+      ry = vy * cosA - vz * sinA;
+      rz = vy * sinA + vz * cosA;
+      break;
+    case 'rotate_y':
+      // rotation in XZ plane: x' = x*cos + z*sin, z' = -x*sin + z*cos
+      rx = vx * cosA + vz * sinA;
+      ry = vy;
+      rz = -vx * sinA + vz * cosA;
+      break;
+    case 'rotate_z':
+      // rotation in XY plane: x' = x*cos - y*sin, y' = x*sin + y*cos
+      rx = vx * cosA - vy * sinA;
+      ry = vx * sinA + vy * cosA;
+      rz = vz;
+      break;
+  }
+
+  return [rx + px, ry + py, rz + pz];
+}
+
 export function getCenterPoint(
   config: NormalizedRenderConfig,
   data: GeometricData,
@@ -149,11 +192,27 @@ export function getCenterPoint(
       return data.origin ?? [0, 0, 0];
     case 'rotate_x':
     case 'rotate_y':
-    case 'rotate_z':
-    case 'translate':
+    case 'rotate_z': {
+      const { data: subData } = getGeometricDataSafe(config, data.geometric);
+      const childCenter = getCenterPoint(config, subData);
+      const angleRad = toRadians(data);
+      // default to origin if around pivot is not specified,
+      // matching Rust backend: around.unwrap_or([0.0, 0.0, 0.0])
+      const pivot = data.around ?? [0, 0, 0];
+      return rotatePoint(childCenter, data.type, angleRad, pivot);
+    }
     case 'constant_volume': {
       const { data: subData } = getGeometricDataSafe(config, data.geometric);
       return getCenterPoint(config, subData);
+    }
+    case 'translate': {
+      const { data: subData } = getGeometricDataSafe(config, data.geometric);
+      const childCenter = getCenterPoint(config, subData);
+      return [
+        childCenter[0] + data.translation[0],
+        childCenter[1] + data.translation[1],
+        childCenter[2] + data.translation[2],
+      ];
     }
     case 'parallelogram':
       return [
