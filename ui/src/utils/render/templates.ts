@@ -73,17 +73,17 @@ export function getEmptyRenderConfig(): NormalizedRenderConfig {
         use_multiple_importance_sampling: false,
       },
     },
-    active_scene: 'Scene 1',
+    active_scene: 'Main',
     scenes: {
-      'Scene 1': {
+      Main: {
         geometrics: [],
         use_bvh: true,
-        camera: 'Camera 1',
+        camera: 'Main Camera',
         background_color: [0.0, 0.0, 0.0],
       },
     },
     cameras: {
-      'Camera 1': {
+      'Main Camera': {
         vertical_field_of_view_degrees: 40.0,
         eye_location: [0.0, 0.0, -10.0],
         target_location: [0.0, 0.0, 0.0],
@@ -265,12 +265,12 @@ export function getCornellBoxBaseRenderConfig(): NormalizedRenderConfig {
           'Near Wall',
         ],
         use_bvh: true,
-        camera: 'Camera 1',
+        camera: 'Main Camera',
         background_color: [0.0, 0.0, 0.0],
       },
     },
     cameras: {
-      'Camera 1': {
+      'Main Camera': {
         vertical_field_of_view_degrees: 40.0,
         eye_location: [5.0, 5.0, 14.4144],
         target_location: [5.0, 5.0, 0.0],
