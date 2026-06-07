@@ -30,35 +30,31 @@ export function TemplatePicker(props: TemplatePickerProps) {
       <ModalHeader>Choose a Template</ModalHeader>
       <ModalBody>
         <div className="flex flex-wrap items-start gap-4">
-          {TEMPLATES.map((template) => {
-            // const isSelected = selectedId === template.id;
-
-            return (
-              <Card
-                key={template.id}
-                theme={cardTheme}
-                className={
-                  'w-60 cursor-pointer border-solid border-zinc-400 bg-zinc-800 hover:bg-zinc-900'
+          {TEMPLATES.map((template) => (
+            <Card
+              key={template.id}
+              theme={cardTheme}
+              className={
+                'w-60 cursor-pointer border-solid border-zinc-400 bg-zinc-800 hover:bg-zinc-900'
+              }
+              imgAlt={template.thumbnail ? template.name : undefined}
+              imgSrc={template.thumbnail}
+              role="button"
+              tabIndex={0}
+              onClick={() => setSelectedId(template.id)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setSelectedId(template.id);
                 }
-                imgAlt={template.thumbnail ? template.name : undefined}
-                imgSrc={template.thumbnail}
-                role="button"
-                tabIndex={0}
-                onClick={() => setSelectedId(template.id)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    setSelectedId(template.id);
-                  }
-                }}
-              >
-                <div className="flex h-full w-full flex-col items-center justify-end gap-1 p-4 text-wrap text-zinc-200">
-                  <span className="text-base font-normal">{template.name}</span>
-                  <span className="text-sm text-zinc-400">{template.description}</span>
-                </div>
-              </Card>
-            );
-          })}
+              }}
+            >
+              <div className="flex h-full w-full flex-col items-center justify-end gap-1 p-4 text-wrap text-zinc-200">
+                <span className="text-base font-normal">{template.name}</span>
+                <span className="text-sm text-zinc-400">{template.description}</span>
+              </div>
+            </Card>
+          ))}
         </div>
 
         {selectedTemplate && (
