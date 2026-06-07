@@ -1,101 +1,125 @@
-import * as THREE from 'three';
 import type { GeometricTriangle, GeometricParallelogram } from './render/geometric';
 
+export type TriangleGeometry = {
+  vertices: Float32Array;
+  indices: Uint16Array;
+  normals: Float32Array;
+};
+
 /**
- * Creates a mesh representing a triangle with custom vertices.
- * Automatically computes normals if custom vertex normals are not provided.
+ * Returns raw vertex/index/normal data for a triangle.
+ * Computes the face normal if per-vertex normals are not provided.
  */
-export function createTriangleMesh(geometricData: GeometricTriangle): THREE.Mesh {
+export function createTriangleGeometry(geometricData: GeometricTriangle): TriangleGeometry {
   const { a, b, c, a_normal, b_normal, c_normal } = geometricData;
 
-  const geometry = new THREE.BufferGeometry();
-
-  // calculate the three corners
   const vertices = new Float32Array([
     a[0],
     a[1],
-    a[2], // vertex a
+    a[2],
     b[0],
     b[1],
-    b[2], // vertex b
+    b[2],
     c[0],
     c[1],
-    c[2], // vertex c
+    c[2],
   ]);
 
-  const hasCustomNormals = !!(a_normal && b_normal && c_normal);
+  const indices = new Uint16Array([0, 1, 2]);
 
-  // create faces (one triangle)
-  const indices = [0, 1, 2];
-
-  // set geometry attributes
-  if (hasCustomNormals) {
-    geometry.setAttribute(
-      'normal',
-      new THREE.BufferAttribute(
-        new Float32Array([
-          a_normal[0],
-          a_normal[1],
-          a_normal[2],
-          b_normal[0],
-          b_normal[1],
-          b_normal[2],
-          c_normal[0],
-          c_normal[1],
-          c_normal[2],
-        ]),
-        3,
-      ),
-    );
+  let normals: Float32Array;
+  if (a_normal && b_normal && c_normal) {
+    normals = new Float32Array([
+      a_normal[0],
+      a_normal[1],
+      a_normal[2],
+      b_normal[0],
+      b_normal[1],
+      b_normal[2],
+      c_normal[0],
+      c_normal[1],
+      c_normal[2],
+    ]);
   } else {
-    geometry.computeVertexNormals();
+    // compute face normal: (b - a) × (c - a), normalized
+    const abx = b[0] - a[0];
+    const aby = b[1] - a[1];
+    const abz = b[2] - a[2];
+    const acx = c[0] - a[0];
+    const acy = c[1] - a[1];
+    const acz = c[2] - a[2];
+    const nx = aby * acz - abz * acy;
+    const ny = abz * acx - abx * acz;
+    const nz = abx * acy - aby * acx;
+    const len = Math.sqrt(nx * nx + ny * ny + nz * nz);
+    normals = new Float32Array([
+      nx / len,
+      ny / len,
+      nz / len,
+      nx / len,
+      ny / len,
+      nz / len,
+      nx / len,
+      ny / len,
+      nz / len,
+    ]);
   }
 
-  geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-  geometry.setIndex(indices);
-
-  return new THREE.Mesh(geometry);
+  return { vertices, indices, normals };
 }
 
+export type ParallelogramGeometry = {
+  vertices: Float32Array;
+  indices: Uint16Array;
+  normals: Float32Array;
+};
+
 /**
- * Creates a mesh representing a parallelogram based on lower_left corner
- * and u, v vectors. More direct than transforming a PlaneGeometry.
+ * Returns raw vertex/index/normal data for a parallelogram (quad).
+ * Normal is cross(u, v) normalized, same for all four vertices.
  */
-export function createParallelogramMesh(geometricData: GeometricParallelogram): THREE.Mesh {
+export function createParallelogramGeometry(
+  geometricData: GeometricParallelogram,
+): ParallelogramGeometry {
   const { lower_left, u, v } = geometricData;
-
-  const geometry = new THREE.BufferGeometry();
-
-  // calculate the four corners
   const ll = lower_left;
+
   const vertices = new Float32Array([
     ll[0],
     ll[1],
-    ll[2], // lower left
+    ll[2],
     ll[0] + u[0],
     ll[1] + u[1],
-    ll[2] + u[2], // lower right
+    ll[2] + u[2],
     ll[0] + v[0],
     ll[1] + v[1],
-    ll[2] + v[2], // upper left
+    ll[2] + v[2],
     ll[0] + u[0] + v[0],
     ll[1] + u[1] + v[1],
-    ll[2] + u[2] + v[2], // upper right
+    ll[2] + u[2] + v[2],
   ]);
 
-  // create faces (two triangles)
-  const indices = [
-    0,
-    1,
-    2, // first triangle
-    1,
-    3,
-    2, // second triangle
-  ];
+  const indices = new Uint16Array([0, 1, 2, 1, 3, 2]);
 
-  geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-  geometry.setIndex(indices);
-  geometry.computeVertexNormals();
+  // normal = cross(u, v) normalized
+  const nx = u[1] * v[2] - u[2] * v[1];
+  const ny = u[2] * v[0] - u[0] * v[2];
+  const nz = u[0] * v[1] - u[1] * v[0];
+  const len = Math.sqrt(nx * nx + ny * ny + nz * nz);
+  const normals = new Float32Array([
+    nx / len,
+    ny / len,
+    nz / len,
+    nx / len,
+    ny / len,
+    nz / len,
+    nx / len,
+    ny / len,
+    nz / len,
+    nx / len,
+    ny / len,
+    nz / len,
+  ]);
 
-  return new THREE.Mesh(geometry);
+  return { vertices, indices, normals };
 }
