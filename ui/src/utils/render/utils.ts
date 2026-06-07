@@ -100,6 +100,30 @@ export function toDegrees(angle: Angle): number {
   return angle.degrees;
 }
 
+/* AROUND */
+
+export type Around = AroundCenter | AroundOrigin | AroundPoint;
+
+export type AroundCenter = 'center';
+export type AroundOrigin = 'origin';
+export type AroundPoint = { point: [number, number, number] };
+
+export function isAroundCenter(around: Around): around is AroundCenter {
+  return around === 'center';
+}
+export function isAroundOrigin(around: Around): around is AroundOrigin {
+  return around === 'origin';
+}
+export function isAroundPoint(around: Around): around is AroundPoint {
+  return typeof around === 'object' && 'point' in around;
+}
+
+export const AroundSchema = z.union([
+  z.literal('center'),
+  z.literal('origin'),
+  z.object({ point: z.tuple([z.number(), z.number(), z.number()]) }),
+]);
+
 /**
  * fixes dangling references after a geometric, material, or texture is deleted.
  * replaces broken references with default values (__white, __black, __lambertian_white, __unit_box).

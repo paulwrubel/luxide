@@ -3,11 +3,15 @@ import { normalizeMaterialData, type RawMaterialData } from './material';
 import { normalizeTextureData, type RawTextureData } from './texture';
 import {
   AngleSchema,
+  AroundSchema,
   capitalize,
   getNextUniqueName,
+  isAroundCenter,
+  isAroundOrigin,
   isTypedObject,
   toRadians,
   type Angle,
+  type Around,
 } from './utils';
 import { z } from 'zod';
 
@@ -173,6 +177,23 @@ function rotatePoint(
   return [rx + px, ry + py, rz + pz];
 }
 
+// resolve an Around variant to a concrete [x, y, z] pivot point.
+// for Center, computes the child geometric's center.
+export function getAroundPoint(
+  around: Around,
+  config: NormalizedRenderConfig,
+  childGeometricName: string,
+): [number, number, number] {
+  if (isAroundCenter(around)) {
+    const { data: childData } = getGeometricDataSafe(config, childGeometricName);
+    return getCenterPoint(config, childData);
+  }
+  if (isAroundOrigin(around)) {
+    return [0, 0, 0];
+  }
+  return around.point;
+}
+
 export function getCenterPoint(
   config: NormalizedRenderConfig,
   data: GeometricData,
@@ -203,9 +224,7 @@ export function getCenterPoint(
       const { data: subData } = getGeometricDataSafe(config, data.geometric);
       const childCenter = getCenterPoint(config, subData);
       const angleRad = toRadians(data);
-      // default to origin if around pivot is not specified,
-      // matching Rust backend: around.unwrap_or([0.0, 0.0, 0.0])
-      const pivot = data.around ?? [0, 0, 0];
+      const pivot = getAroundPoint(data.around, config, data.geometric);
       return rotatePoint(childCenter, data.type, angleRad, pivot);
     }
     case 'constant_volume': {
@@ -327,21 +346,21 @@ export function defaultGeometricForType(
         type: 'rotate_x',
         geometric: '__unit_box',
         degrees: 0,
-        around: [0, 0, 0],
+        around: 'center',
       };
     case 'rotate_y':
       return {
         type: 'rotate_y',
         geometric: '__unit_box',
         degrees: 0,
-        around: [0, 0, 0],
+        around: 'center',
       };
     case 'rotate_z':
       return {
         type: 'rotate_z',
         geometric: '__unit_box',
         degrees: 0,
-        around: [0, 0, 0],
+        around: 'center',
       };
     case 'translate':
       return {
@@ -511,7 +530,7 @@ export const GeometricInstanceRotateXSchema = z
   .object({
     type: z.literal('rotate_x'),
     geometric: z.string().nonempty(),
-    around: z.tuple([z.number(), z.number(), z.number()]),
+    around: AroundSchema,
   })
   .and(AngleSchema);
 
@@ -519,7 +538,7 @@ export const GeometricInstanceRotateYSchema = z
   .object({
     type: z.literal('rotate_y'),
     geometric: z.string().nonempty(),
-    around: z.tuple([z.number(), z.number(), z.number()]),
+    around: AroundSchema,
   })
   .and(AngleSchema);
 
@@ -527,7 +546,7 @@ export const GeometricInstanceRotateZSchema = z
   .object({
     type: z.literal('rotate_z'),
     geometric: z.string().nonempty(),
-    around: z.tuple([z.number(), z.number(), z.number()]),
+    around: AroundSchema,
   })
   .and(AngleSchema);
 
@@ -566,7 +585,7 @@ export type NormalizedGeometricInstanceRotate = DistributiveOmit<
 export type RawGeometricInstanceRotate = {
   type: 'rotate_x' | 'rotate_y' | 'rotate_z';
   geometric: string | RawGeometricData;
-  around: [number, number, number];
+  around: Around;
 } & Angle;
 
 export const GeometricInstanceTranslateSchema = z.object({

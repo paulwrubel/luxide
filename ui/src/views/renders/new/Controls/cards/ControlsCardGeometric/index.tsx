@@ -1,5 +1,6 @@
 import { ControlsCard } from '../ControlsCard';
 import { NestedGeometricHeader } from './NestedGeometricHeader';
+import { AroundVariantControls } from './AroundVariantControls';
 import { TextArrayInputControl } from '@/components/form-controls/TextArrayInputControl';
 import { TextInputControl } from '@/components/form-controls/TextInputControl';
 import { getGeometricData, getGeometricDataSafe } from '@/utils/render/geometric';
@@ -128,12 +129,10 @@ export function ControlsCardGeometric(props: ControlsCardGeometricProps) {
                 />
               )}
             </form.AppField>
-            <TextArrayInputControl
+            <AroundVariantControls
               form={form}
-              fieldName={`geometrics.${name}.around`}
-              label="Rotation Point"
-              valueLabels={['x', 'y', 'z']}
-              type="number"
+              geometricName={name}
+              around={data.around}
             />
             <NestedGeometricHeader
               geometricName={embedddedGeometricName}

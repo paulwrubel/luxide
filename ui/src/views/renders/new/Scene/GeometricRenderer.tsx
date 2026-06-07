@@ -1,4 +1,4 @@
-import { getGeometricDataSafe } from '@/utils/render/geometric';
+import { getAroundPoint, getGeometricDataSafe } from '@/utils/render/geometric';
 import { toRadians } from '@/utils/render/utils';
 import { createParallelogramGeometry, createTriangleGeometry } from '@/utils/three';
 import { MaterialResolver } from './MaterialResolver';
@@ -101,7 +101,7 @@ export function GeometricRenderer(props: GeometricRendererProps) {
 
     case 'rotate_x': {
       const angleRad = toRadians(data);
-      const pivot = data.around ?? [0, 0, 0];
+      const pivot = getAroundPoint(data.around, config, data.geometric);
       return (
         <group rotation={rotation}>
           <group position={pivot}>
@@ -117,7 +117,7 @@ export function GeometricRenderer(props: GeometricRendererProps) {
 
     case 'rotate_y': {
       const angleRad = toRadians(data);
-      const pivot = data.around ?? [0, 0, 0];
+      const pivot = getAroundPoint(data.around, config, data.geometric);
       return (
         <group rotation={rotation}>
           <group position={pivot}>
@@ -133,7 +133,7 @@ export function GeometricRenderer(props: GeometricRendererProps) {
 
     case 'rotate_z': {
       const angleRad = toRadians(data);
-      const pivot = data.around ?? [0, 0, 0];
+      const pivot = getAroundPoint(data.around, config, data.geometric);
       return (
         <group rotation={rotation}>
           <group position={pivot}>
