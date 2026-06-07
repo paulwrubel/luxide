@@ -99,7 +99,10 @@ export function ExistingRenderPicker(props: ExistingRenderPickerProps) {
                   >
                     <div className="flex min-w-0 items-center justify-between gap-2">
                       <div className="flex min-w-0 items-center gap-2">
-                        <span className="truncate font-medium text-zinc-200" title={render.config.name}>
+                        <span
+                          className="truncate font-medium text-zinc-200"
+                          title={render.config.name}
+                        >
                           {render.config.name}
                         </span>
                         <span className="shrink-0 text-sm text-zinc-500">#{render.id}</span>

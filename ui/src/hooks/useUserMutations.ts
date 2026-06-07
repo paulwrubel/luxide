@@ -35,8 +35,7 @@ export function useUpdateUserQuotas() {
       maxRenders: number | null;
       maxCheckpointsPerRender: number | null;
       maxRenderPixelCount: number | null;
-    }) =>
-      updateUserQuotas(token, userID, maxRenders, maxCheckpointsPerRender, maxRenderPixelCount),
+    }) => updateUserQuotas(token, userID, maxRenders, maxCheckpointsPerRender, maxRenderPixelCount),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
     },

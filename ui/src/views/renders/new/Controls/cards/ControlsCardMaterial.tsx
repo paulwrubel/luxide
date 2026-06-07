@@ -74,7 +74,9 @@ export function ControlsCardMaterial(props: ControlsCardMaterialProps) {
         return (
           <>
             <form.AppField name={`materials.${name}.index_of_refraction`}>
-              {(field) => <field.RangeControl label="Index of Refraction" min={1.0} max={10.0} step={0.01} />}
+              {(field) => (
+                <field.RangeControl label="Index of Refraction" min={1.0} max={10.0} step={0.01} />
+              )}
             </form.AppField>
             <TextureSelects name={name} />
           </>
