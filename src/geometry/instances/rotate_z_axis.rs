@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::{
     geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector},
-    utils::{Angle, Interval},
+    utils::{Angle, Around, Interval},
 };
 
 #[derive(Clone, Debug)]
@@ -15,8 +15,8 @@ pub struct RotateZAxis {
 }
 
 impl RotateZAxis {
-    pub fn new(geometric: Arc<dyn Geometric>, angle: Angle, around: Point) -> Self {
-        let translation = around.0;
+    pub fn new(geometric: Arc<dyn Geometric>, angle: Angle, around: Around) -> Self {
+        let translation = around.point(&geometric).0;
         let geometric_bbox = geometric.bounding_box() - translation;
 
         let sin_theta = angle.as_radians().sin();

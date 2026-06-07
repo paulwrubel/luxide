@@ -105,6 +105,14 @@ impl Aabb {
         }
         true
     }
+
+    pub fn center(&self) -> Point {
+        Point::new(
+            (self.x_interval.minimum + self.x_interval.maximum) / 2.0,
+            (self.y_interval.minimum + self.y_interval.maximum) / 2.0,
+            (self.z_interval.minimum + self.z_interval.maximum) / 2.0,
+        )
+    }
 }
 
 impl Index<usize> for Aabb {

@@ -17,7 +17,7 @@ use luxide::{
         textures::{Checker, Image8Bit, Noise, SolidColor},
     },
     tracing::{FileStorage, RenderManager, RenderState, RenderStorage, Scene, SceneWorld, User},
-    utils::Angle,
+    utils::{Angle, Around},
 };
 use noise::{Perlin, Turbulence};
 use rand::RngExt;
@@ -287,7 +287,7 @@ fn final_scene() -> Scene {
     let sphere_box = Arc::new(RotateYAxis::new(
         sphere_box,
         Angle::Degrees(15.0),
-        Point::ORIGIN,
+        Around::Origin,
     ));
     let sphere_box = Arc::new(Translate::new(
         sphere_box,
@@ -412,7 +412,7 @@ fn cornell_box() -> Scene {
     let far_left_box = Arc::new(RotateYAxis::new(
         far_left_box,
         Angle::Degrees(15.0),
-        Point::ORIGIN,
+        Around::Origin,
     ));
     let far_left_box = Arc::new(Translate::new(
         far_left_box,
@@ -435,7 +435,7 @@ fn cornell_box() -> Scene {
     let near_right_box = Arc::new(RotateYAxis::new(
         near_right_box,
         Angle::Degrees(-18.0),
-        Point::ORIGIN,
+        Around::Origin,
     ));
     let near_right_box = Arc::new(Translate::new(
         near_right_box,

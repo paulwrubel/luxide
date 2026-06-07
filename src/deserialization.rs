@@ -12,7 +12,7 @@ use crate::{
     geometry::Geometric,
     shading::{Color, Texture, materials::Material},
     tracing::{RenderParameters, Scene},
-    utils::Angle,
+    utils::{Angle, Around},
 };
 
 mod scenes;
@@ -530,7 +530,7 @@ fn get_builtin_geometrics() -> IndexMap<String, GeometricData> {
                 material: material_fn("lambertian_cornell_box_white"),
              })),
             angle: Angle::Degrees(15.0),
-            around: Some([0.35, 0.0, -0.65]),
+            around: Around::Point([0.35, 0.0, -0.65]),
         },
         prefix_builtin_key("cornell_box_near_right_box") => GeometricData::InstanceRotateYAxis {
             geometric: GeometricRefOrInline::Inline(Box::new(GeometricData::CompoundAxisAlignedPBox {
@@ -540,7 +540,7 @@ fn get_builtin_geometrics() -> IndexMap<String, GeometricData> {
                 material: material_fn("lambertian_cornell_box_white"),
             })),
             angle: Angle::Degrees(-18.0),
-            around: Some([0.65, 0.0, -0.35]),
+            around: Around::Point([0.65, 0.0, -0.35]),
         },
     }
 }
