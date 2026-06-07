@@ -13,17 +13,7 @@ export type TriangleGeometry = {
 export function createTriangleGeometry(geometricData: GeometricTriangle): TriangleGeometry {
   const { a, b, c, a_normal, b_normal, c_normal } = geometricData;
 
-  const vertices = new Float32Array([
-    a[0],
-    a[1],
-    a[2],
-    b[0],
-    b[1],
-    b[2],
-    c[0],
-    c[1],
-    c[2],
-  ]);
+  const vertices = new Float32Array([a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1], c[2]]);
 
   const indices = new Uint16Array([0, 1, 2]);
 

@@ -55,15 +55,7 @@ export function CheckpointLimitForm(props: CheckpointLimitFormProps) {
         )}
       </form.AppField>
 
-      <Button
-        color="default"
-        outline
-        onClick={handleSubmit}
-        disabled={
-          isUpdating ||
-          !isFormValid
-        }
-      >
+      <Button color="default" outline onClick={handleSubmit} disabled={isUpdating || !isFormValid}>
         {isUpdating ? (
           <span className="flex items-center justify-center">
             <Spinner size="sm" className="mr-2" />

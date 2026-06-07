@@ -23,9 +23,7 @@ export function ExpandableSection(props: ExpandableSectionProps) {
         }
       }}
     >
-      <div style={{ overflow: 'hidden' }}>
-        {children}
-      </div>
+      <div style={{ overflow: 'hidden' }}>{children}</div>
     </div>
   );
 }
