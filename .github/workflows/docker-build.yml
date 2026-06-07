@@ -50,6 +50,8 @@ jobs:
               - 'ui/tsconfig*.json'
               - 'ui/vite.config.ts'
               - 'ui/eslint.config.*'
+              - 'ui/.prettierrc'
+              - 'ui/.prettierignore'
               - 'ui/.nvmrc'
               - 'ui/index.html'
               - 'justfile'
@@ -100,6 +102,10 @@ jobs:
       - name: eslint
         if: github.event_name == 'pull_request' && steps.filter.outputs.ui == 'true'
         run: just lint-ui-ci
+
+      - name: prettier
+        if: github.event_name == 'pull_request' && steps.filter.outputs.ui == 'true'
+        run: just prettier-check-ui-ci
 
       - name: tsc type-check
         if: github.event_name == 'pull_request' && steps.filter.outputs.ui == 'true'

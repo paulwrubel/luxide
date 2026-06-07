@@ -62,27 +62,27 @@ export function RenderControls(props: RenderControlsProps) {
 
   return (
     <div className="flex justify-evenly gap-2">
-        <Button
-          color={isPaused || isPausing ? 'default' : 'yellow'}
-          outline
-          onClick={handlePauseOrResume}
-          disabled={isPausingOrResuming || !(isPaused || isPausing || isRunning)}
-        >
-          {isPausingOrResuming ? (
-            <span className="flex items-center justify-center">
-              <Spinner size="sm" className="mr-2" />
-              Processing...
-            </span>
-          ) : isPaused || isPausing ? (
-            'Resume Render'
-          ) : (
-            'Pause Render'
-          )}
-        </Button>
+      <Button
+        color={isPaused || isPausing ? 'default' : 'yellow'}
+        outline
+        onClick={handlePauseOrResume}
+        disabled={isPausingOrResuming || !(isPaused || isPausing || isRunning)}
+      >
+        {isPausingOrResuming ? (
+          <span className="flex items-center justify-center">
+            <Spinner size="sm" className="mr-2" />
+            Processing...
+          </span>
+        ) : isPaused || isPausing ? (
+          'Resume Render'
+        ) : (
+          'Pause Render'
+        )}
+      </Button>
 
-        <Button color="red" onClick={handleDelete} disabled={isPausing || isRunning}>
-          Delete Render
-        </Button>
+      <Button color="red" onClick={handleDelete} disabled={isPausing || isRunning}>
+        Delete Render
+      </Button>
     </div>
   );
 }

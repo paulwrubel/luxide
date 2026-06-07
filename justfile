@@ -56,6 +56,7 @@ build-cli:
 validate: cargo-check cargo-test cargo-clippy
     cd ui \
     && npm run lint \
+    && npm run prettier-check \
     && npm run type-check
 
 [group('validate')]
@@ -85,6 +86,13 @@ lint-ui: setup-ui-env
 [group('validate')]
 lint-ui-ci:
     cd ui && npm run lint -- --max-warnings 0
+
+[group('validate')]
+prettier-check-ui: setup-ui-env
+    cd ui && npm run prettier-check
+[group('validate')]
+prettier-check-ui-ci:
+    cd ui && npm run prettier-check
 
 [group('validate')]
 typecheck-ui: setup-ui-env
