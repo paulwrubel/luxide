@@ -87,7 +87,7 @@ export function MaterialResolver(props: MaterialResolverProps) {
     if (isComposite(geometricData) || geometricData.type === 'constant_volume') return null;
 
     const center = getCenterPoint(config, geometricData);
-    const intensity = emissiveColor.reduce((a, b) => a + b, 0) / 3;
+    const intensity = Math.max(...emissiveColor);
 
     return (
       <pointLight
