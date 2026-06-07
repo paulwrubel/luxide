@@ -4,7 +4,7 @@ Luxide is a **ray tracing render manager** — a multi-tenant platform where use
 - A **Rust backend** (HTTP API server + CLI renderer) with a custom path tracing engine
 - A **React SPA frontend** for creating render configurations and monitoring progress
 
-The project was recently migrated from Svelte to React. The `ui/` directory is the active React frontend. `ui-svelte/` is deprecated and kept only for reference.
+The `ui/` directory is the React frontend.
 
 ---
 
@@ -47,7 +47,6 @@ The project was recently migrated from Svelte to React. The `ui/` directory is t
   - `ui/src/hooks/` — React Query hooks (useRenders, useRender, useLatestCheckpointImage) + TanStack Form hook (useRenderForm)
   - `ui/src/utils/` — API client (api.ts), Zod schemas for render config domain model, THREE.js helpers
   - `ui/src/providers/` — AuthProvider (React Context + localStorage token management)
-- `ui-svelte/` — ⚠️ DEPRECATED Svelte frontend (kept for reference only, not in use)
 - `migrations/` — SQLx PostgreSQL migrations (7 migration pairs)
 - `models/` — 3D model files (teapot.obj, teapot_normals.obj)
 - `configs/` — Example render configurations (JSON + YAML, Cornell box variants)
