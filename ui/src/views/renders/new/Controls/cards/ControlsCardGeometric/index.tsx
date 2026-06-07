@@ -119,8 +119,22 @@ export function ControlsCardGeometric(props: ControlsCardGeometricProps) {
         return (
           <>
             <form.AppField name={`geometrics.${name}.${hasDegrees ? 'degrees' : 'radians'}`}>
-              {(field) => <field.RangeControl label={hasDegrees ? 'Degrees of Rotation' : 'Radians of Rotation'} min={0} max={hasDegrees ? 360 : 2 * Math.PI} step={hasDegrees ? 1.0 : 0.01} />}
+              {(field) => (
+                <field.RangeControl
+                  label={hasDegrees ? 'Degrees of Rotation' : 'Radians of Rotation'}
+                  min={0}
+                  max={hasDegrees ? 360 : 2 * Math.PI}
+                  step={hasDegrees ? 1.0 : 0.01}
+                />
+              )}
             </form.AppField>
+            <TextArrayInputControl
+              form={form}
+              fieldName={`geometrics.${name}.around`}
+              label="Rotation Point"
+              valueLabels={['x', 'y', 'z']}
+              type="number"
+            />
             <NestedGeometricHeader
               geometricName={embedddedGeometricName}
               renderConfig={renderConfig}

@@ -99,32 +99,53 @@ export function GeometricRenderer(props: GeometricRendererProps) {
         </>
       );
 
-    case 'rotate_x':
+    case 'rotate_x': {
+      const angleRad = toRadians(data);
+      const pivot = data.around ?? [0, 0, 0];
       return (
-        <GeometricRenderer
-          config={config}
-          name={data.geometric}
-          rotation={[rotation[0] + toRadians(data), rotation[1], rotation[2]]}
-        />
+        <group rotation={rotation}>
+          <group position={pivot}>
+            <group rotation={[angleRad, 0, 0]}>
+              <group position={[-pivot[0], -pivot[1], -pivot[2]]}>
+                <GeometricRenderer config={config} name={data.geometric} />
+              </group>
+            </group>
+          </group>
+        </group>
       );
+    }
 
-    case 'rotate_y':
+    case 'rotate_y': {
+      const angleRad = toRadians(data);
+      const pivot = data.around ?? [0, 0, 0];
       return (
-        <GeometricRenderer
-          config={config}
-          name={data.geometric}
-          rotation={[rotation[0], rotation[1] + toRadians(data), rotation[2]]}
-        />
+        <group rotation={rotation}>
+          <group position={pivot}>
+            <group rotation={[0, angleRad, 0]}>
+              <group position={[-pivot[0], -pivot[1], -pivot[2]]}>
+                <GeometricRenderer config={config} name={data.geometric} />
+              </group>
+            </group>
+          </group>
+        </group>
       );
+    }
 
-    case 'rotate_z':
+    case 'rotate_z': {
+      const angleRad = toRadians(data);
+      const pivot = data.around ?? [0, 0, 0];
       return (
-        <GeometricRenderer
-          config={config}
-          name={data.geometric}
-          rotation={[rotation[0], rotation[1], rotation[2] + toRadians(data)]}
-        />
+        <group rotation={rotation}>
+          <group position={pivot}>
+            <group rotation={[0, 0, angleRad]}>
+              <group position={[-pivot[0], -pivot[1], -pivot[2]]}>
+                <GeometricRenderer config={config} name={data.geometric} />
+              </group>
+            </group>
+          </group>
+        </group>
       );
+    }
 
     case 'translate':
       return (
