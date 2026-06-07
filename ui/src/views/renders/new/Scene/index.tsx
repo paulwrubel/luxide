@@ -43,7 +43,7 @@ export function Scene(props: SceneProps) {
   const { data: cameraData } = getCameraData(renderConfig, activeScene.camera);
 
   return (
-    <Canvas shadows>
+    <Canvas shadows="soft">
       <CameraUpdater cameraData={cameraData} />
       <Environment preset="lobby" environmentIntensity={0.05} />
       {activeScene.geometrics.map((geoName: string) => (
