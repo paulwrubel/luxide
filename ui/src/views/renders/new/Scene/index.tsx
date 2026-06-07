@@ -1,6 +1,6 @@
 import { Canvas } from '@react-three/fiber';
 import { Environment, PerspectiveCamera } from '@react-three/drei';
-import { useRef, useEffect } from 'react';
+import { useMemo, useRef, useEffect } from 'react';
 import { useSelector } from '@tanstack/react-store';
 import * as THREE from 'three';
 import { GeometricRenderer } from './GeometricRenderer';
@@ -42,8 +42,13 @@ export function Scene(props: SceneProps) {
   const activeScene = getSceneData(renderConfig, renderConfig.active_scene);
   const { data: cameraData } = getCameraData(renderConfig, activeScene.camera);
 
+  const sceneProps = useMemo(
+    () => ({ background: new THREE.Color(...activeScene.background_color) }),
+    [activeScene.background_color],
+  );
+
   return (
-    <Canvas shadows="soft">
+    <Canvas shadows="soft" scene={sceneProps}>
       <CameraUpdater cameraData={cameraData} />
       <Environment preset="lobby" environmentIntensity={0.05} />
       {activeScene.geometrics.map((geoName: string) => (
