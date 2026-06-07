@@ -1,16 +1,14 @@
-import { useMemo } from 'react';
-import * as THREE from 'three';
 import { getMaterialDataSafe } from '@/utils/render/material';
 import { getTextureDataSafe } from '@/utils/render/texture';
 import { getCenterPoint } from '@/utils/render/geometric';
 import { getGeometricDataSafe } from '@/utils/render/geometric';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
 
-interface MaterialResolverProps {
+export type MaterialResolverProps = {
   config: NormalizedRenderConfig;
   materialRef: string;
   geometricName: string;
-}
+};
 
 export function MaterialResolver(props: MaterialResolverProps) {
   const { config, materialRef, geometricName } = props;
@@ -24,87 +22,86 @@ export function MaterialResolver(props: MaterialResolverProps) {
       ? emittanceTexture.color
       : undefined;
 
-  const emissive = useMemo(
-    () => (emissiveColor ? new THREE.Color(...emissiveColor) : undefined),
-    [emissiveColor],
-  );
+  const { data: geometricData } = getGeometricDataSafe(config, geometricName);
 
-  // build material
-  const material = useMemo(() => {
-    if (materialData.type === 'dielectric') {
+  // material
+  let materialElement: React.ReactNode = null;
+
+  switch (materialData.type) {
+    case 'dielectric': {
       console.warn('Dielectric material not yet supported');
-      return null;
+      break;
     }
-
-    if (materialData.type === 'lambertian') {
-      if (reflectanceTexture.type === 'color') {
-        const mat = new THREE.MeshLambertMaterial({
-          color: new THREE.Color(...reflectanceTexture.color),
-        });
-        if (emissive) {
-          mat.emissive = emissive;
+    case 'lambertian': {
+      switch (reflectanceTexture.type) {
+        case 'color': {
+          materialElement = (
+            <meshLambertMaterial
+              attach="material"
+              color={reflectanceTexture.color}
+              {...(emissiveColor ? { emissive: emissiveColor } : {})}
+            />
+          );
+          break;
         }
-        return mat;
+        case 'checker':
+        case 'image': {
+          console.warn(
+            `${reflectanceTexture.type} texture not yet supported for lambertian material`,
+          );
+          materialElement = <meshLambertMaterial attach="material" color={[1, 1, 1]} />;
+          break;
+        }
       }
-      if (reflectanceTexture.type === 'checker' || reflectanceTexture.type === 'image') {
-        console.warn(
-          `${reflectanceTexture.type} texture not yet supported for lambertian material`,
-        );
-        // fallback to white material if texture type not supported
-        return new THREE.MeshLambertMaterial({ color: new THREE.Color(1, 1, 1) });
-      }
-      return null;
+      break;
     }
-
-    if (materialData.type === 'specular') {
-      if (reflectanceTexture.type === 'color') {
-        return new THREE.MeshStandardMaterial({
-          color: new THREE.Color(...reflectanceTexture.color),
-          emissive: emissiveColor ? new THREE.Color(...emissiveColor) : undefined,
-          metalness: 1.0,
-          roughness: materialData.roughness,
-        });
+    case 'specular': {
+      switch (reflectanceTexture.type) {
+        case 'color': {
+          materialElement = (
+            <meshStandardMaterial
+              attach="material"
+              color={reflectanceTexture.color}
+              {...(emissiveColor ? { emissive: emissiveColor } : {})}
+              metalness={1.0}
+              roughness={materialData.roughness}
+            />
+          );
+          break;
+        }
+        case 'checker':
+        case 'image': {
+          console.warn(
+            `${reflectanceTexture.type} texture not yet supported for specular material`,
+          );
+          materialElement = (
+            <meshStandardMaterial
+              attach="material"
+              color={[1, 1, 1]}
+              metalness={1.0}
+              roughness={materialData.roughness}
+            />
+          );
+          break;
+        }
       }
-      if (reflectanceTexture.type === 'checker' || reflectanceTexture.type === 'image') {
-        console.warn(`${reflectanceTexture.type} texture not yet supported for specular material`);
-        return new THREE.MeshStandardMaterial({
-          color: new THREE.Color(1, 1, 1),
-          metalness: 1.0,
-          roughness: materialData.roughness,
-        });
-      }
-      return null;
+      break;
     }
+  }
 
-    return null;
-  }, [materialData, reflectanceTexture, emissive, emissiveColor]);
-
-  // emissive light
-  const light = useMemo(() => {
-    if (!emissiveColor) return null;
-
-    const { data: geometricData } = getGeometricDataSafe(config, geometricName);
-    if (geometricData.type === 'constant_volume') {
-      return null;
-    }
-
-    const center = getCenterPoint(config, geometricData);
-    const intensity = Math.max(...emissiveColor);
-
-    return (
-      <pointLight
-        position={center}
-        intensity={intensity}
-        color={new THREE.Color(...emissiveColor)}
-        castShadow
-      />
-    );
-  }, [emissiveColor, config, geometricName]);
+  const shouldCreatePointLight = emissiveColor && geometricData.type !== 'constant_volume';
 
   return (
     <>
-      {material && <primitive object={material} attach="material" />}
-      {light}
+      {materialElement}
+      {shouldCreatePointLight && (
+        <pointLight
+          position={getCenterPoint(config, geometricData)}
+          intensity={Math.max(...emissiveColor)}
+          color={emissiveColor}
+          castShadow
+        />
+      )}
     </>
   );
 }

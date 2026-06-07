@@ -1,6 +1,6 @@
 import { getGeometricDataSafe } from '@/utils/render/geometric';
 import { toRadians } from '@/utils/render/utils';
-import { createParallelogramMesh, createTriangleMesh } from '@/utils/three';
+import { createParallelogramGeometry, createTriangleGeometry } from '@/utils/three';
 import { MaterialResolver } from './MaterialResolver';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
 
@@ -85,20 +85,30 @@ export function GeometricRenderer(props: GeometricRendererProps) {
       );
 
     case 'parallelogram': {
-      const mesh = createParallelogramMesh(data);
+      const geom = createParallelogramGeometry(data);
       return (
-        <primitive object={mesh} rotation={rotation} castShadow receiveShadow>
+        <mesh rotation={rotation} castShadow receiveShadow>
+          <bufferGeometry>
+            <bufferAttribute attach="attributes-position" args={[geom.vertices, 3]} />
+            <bufferAttribute attach="attributes-normal" args={[geom.normals, 3]} />
+            <bufferAttribute attach="index" args={[geom.indices, 1]} />
+          </bufferGeometry>
           <MaterialResolver config={config} materialRef={data.material} geometricName={name} />
-        </primitive>
+        </mesh>
       );
     }
 
     case 'triangle': {
-      const mesh = createTriangleMesh(data);
+      const geom = createTriangleGeometry(data);
       return (
-        <primitive object={mesh} rotation={rotation} castShadow receiveShadow>
+        <mesh rotation={rotation} castShadow receiveShadow>
+          <bufferGeometry>
+            <bufferAttribute attach="attributes-position" args={[geom.vertices, 3]} />
+            <bufferAttribute attach="attributes-normal" args={[geom.normals, 3]} />
+            <bufferAttribute attach="index" args={[geom.indices, 1]} />
+          </bufferGeometry>
           <MaterialResolver config={config} materialRef={data.material} geometricName={name} />
-        </primitive>
+        </mesh>
       );
     }
 
