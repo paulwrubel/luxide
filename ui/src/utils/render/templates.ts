@@ -37,8 +37,8 @@ export const TEMPLATES: Template[] = [
   {
     id: 'cornell-box-glass-spheres',
     name: 'Cornell Box — Glass Spheres',
-    description: 'Cornell Box scene with two dielectroc glass spheres instead of boxes',
-    // thumbnail: '/templates/cornell-box-glass-spheres.png',
+    description: 'Cornell Box scene with two dielectric glass spheres instead of boxes',
+    thumbnail: '/templates/cornell-box-glass-spheres.png',
     config: getCornellBoxGlassSpheresRenderConfig(),
   },
   {
