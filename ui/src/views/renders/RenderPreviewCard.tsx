@@ -54,10 +54,15 @@ export function RenderPreviewCard(props: RenderPreviewCardProps) {
                 className="h-full w-full object-contain"
               />
             )}
-            {isCheckpointImageSuccess && checkpointImage === null && (
+            {isCheckpointImageSuccess && checkpointImage === null && (running || pausing) && (
               <div className="flex flex-col items-center justify-center">
                 <Spinner size="xl" color="info" />
                 <span className="mt-2 text-sm">Rendering initial checkpoint...</span>
+              </div>
+            )}
+            {isCheckpointImageSuccess && checkpointImage === null && !running && !pausing && (
+              <div className="flex flex-col items-center justify-center">
+                <span className="text-sm text-zinc-400">No checkpoints yet</span>
               </div>
             )}
             {isCheckpointImageSuccess && checkpointImage !== null && (

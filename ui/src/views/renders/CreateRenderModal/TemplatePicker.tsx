@@ -1,4 +1,4 @@
-import { useState, type HTMLAttributes } from 'react';
+import { useState } from 'react';
 import { Card, Button, ModalHeader, ModalBody, ModalFooter } from 'flowbite-react';
 import { HiArrowLeft } from 'react-icons/hi2';
 import type { DeepPartial } from 'flowbite-react/types';
@@ -25,36 +25,36 @@ export function TemplatePicker(props: TemplatePickerProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selectedTemplate = selectedId ? (TEMPLATES.find((t) => t.id === selectedId) ?? null) : null;
 
-  const buttonClassName: HTMLAttributes<HTMLButtonElement>['className'] =
-    'flex h-full w-full flex-col justify-end items-center gap-1 p-4 text-zinc-200 hover:bg-zinc-900 text-wrap hover:rounded-lg';
-
   return (
     <>
       <ModalHeader>Choose a Template</ModalHeader>
       <ModalBody>
-        <div className="flex flex-wrap gap-4">
-          {TEMPLATES.map((template) => {
-            const isSelected = selectedId === template.id;
-
-            return (
-              <Card
-                key={template.id}
-                theme={cardTheme}
-                className={isSelected ? 'w-60 border-solid border-zinc-400 bg-zinc-800' : 'w-60'}
-                imgAlt={template.thumbnail ? template.name : undefined}
-                imgSrc={template.thumbnail}
-              >
-                <button
-                  type="button"
-                  onClick={() => setSelectedId(template.id)}
-                  className={buttonClassName}
-                >
-                  <span className="text-base font-normal">{template.name}</span>
-                  <span className="text-sm text-zinc-400">{template.description}</span>
-                </button>
-              </Card>
-            );
-          })}
+        <div className="flex flex-wrap items-start gap-4">
+          {TEMPLATES.map((template) => (
+            <Card
+              key={template.id}
+              theme={cardTheme}
+              className={
+                'w-60 cursor-pointer border-solid border-zinc-400 bg-zinc-800 hover:bg-zinc-900'
+              }
+              imgAlt={template.thumbnail ? template.name : undefined}
+              imgSrc={template.thumbnail}
+              role="button"
+              tabIndex={0}
+              onClick={() => setSelectedId(template.id)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setSelectedId(template.id);
+                }
+              }}
+            >
+              <div className="flex h-full w-full flex-col items-center justify-end gap-1 p-4 text-wrap text-zinc-200">
+                <span className="text-base font-normal">{template.name}</span>
+                <span className="text-sm text-zinc-400">{template.description}</span>
+              </div>
+            </Card>
+          ))}
         </div>
 
         {selectedTemplate && (
@@ -70,7 +70,7 @@ export function TemplatePicker(props: TemplatePickerProps) {
               )}
               <div>
                 <h3 className="text-sm font-medium text-zinc-200">
-                  Preview: {selectedTemplate.name}
+                  Selected: <em>{selectedTemplate.name}</em>
                 </h3>
                 <p className="mt-1 text-sm text-zinc-400">{selectedTemplate.description}</p>
               </div>

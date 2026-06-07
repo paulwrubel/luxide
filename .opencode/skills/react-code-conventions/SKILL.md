@@ -1,11 +1,11 @@
 ---
-name: react-component-conventions
-description: Use when creating, editing, or refactoring React components and hooks in ui/src/. Enforces the repo's nine formatting rules: export type props, function declaration with props parameter, first-line destructure, blank line after, hook return destructuring, mandatory block braces, component size/folder structure, and one component per file.
+name: react-code-conventions
+description: Code conventions for all TypeScript files in ui/src/.
 ---
 
-# React Component Conventions
+# Code Conventions
 
-Every React component and hook in `ui/src/` must follow these nine rules.
+All TypeScript code in `ui/src/` must follow these conventions.
 
 ## Rules
 
@@ -14,7 +14,7 @@ Every React component and hook in `ui/src/` must follow these nine rules.
 3. **Component signature** — `export function Foo(props: FooProps) {`
 4. **Destructure first line** — `const { x, y } = props;` followed by a blank newline
 
-5. **Destructure hook returns at the call site** — when calling `useQuery`, `useMutation`, `useState`, `useRef`, or any other hook, destructure the needed values at the call site. Do NOT assign the result to a variable and then access properties via dot notation. This applies to ALL hooks but is especially important for react-query hooks.
+5. **Destructure hook returns at the call site** — when calling `useQuery`, `useMutation`, `useState`, `useRef`, or any other hook, destructure the needed values at the call site. Do NOT assign the result to a variable and then access properties via dot notation.
 
    ✅ Correct:
    ```tsx
@@ -44,7 +44,7 @@ Every React component and hook in `ui/src/` must follow these nine rules.
    if (!file) return;
    ```
 
-7. **Component size and folder structure** — Components approaching or exceeding ~500 lines should be broken up into a folder named after the component (instead of a single file). The folder contains an `index.tsx` and any child components that are ONLY used by that component as separate files in the folder. This is the same naming pattern as a view directory.
+7. **Component size and folder structure** — Components approaching or exceeding ~500 lines should be broken up into a folder named after the component (instead of a single file). The folder contains an `index.tsx` and any child components that are ONLY used by that component as separate files in the folder.
 
    Structure example — when `MyComponent.tsx` grows too large, refactor to:
    ```
@@ -100,9 +100,9 @@ export function Foo(props: FooProps) {
 
 Apply all nine rules from the start. If the component will likely exceed 500 lines, start it as a folder with `index.tsx` from the beginning.
 
-## When editing an existing component
+## When editing an existing file
 
-If the file already conforms, don't restructure it. If it doesn't, fix the violations while editing. When adding new hook calls, destructure the result — do NOT use dot-notation access on the returned object.
+If the file already conforms, don't restructure it. If it doesn't, fix the violations while editing. When adding new hook calls in a component, destructure the result — do NOT use dot-notation access on the returned object.
 
 ## Verification
 
@@ -111,7 +111,7 @@ The checklist is:
 2. Function signature uses `(props: ComponentNameProps)`, never inline destructure
 3. First line is `const { ... } = props;`
 4. A blank line follows the destructure line
-5. All hook calls destructure their needed values at the call site (no `const x = useX(); x.data` patterns)
+5. All hook calls destructure their needed values at the call site
 6. All `if`/`for`/`while` blocks use curly braces, even for single-line bodies
 7. The component is under ~500 lines; if approaching that threshold, it is a folder with `index.tsx` and child component files
 8. The file contains at most one React component (sub-components are separate files within a folder)

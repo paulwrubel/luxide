@@ -19,11 +19,21 @@ export type ExistingRenderPickerProps = {
 };
 
 function getStateLabel(state: RenderState): string {
-  if (isRenderStateCreated(state)) return 'created';
-  if (isRenderStateRunning(state)) return 'running';
-  if (isRenderStatePausing(state)) return 'pausing';
-  if (isRenderStatePaused(state)) return 'paused';
-  if (isRenderStateFinishedCheckpointIteration(state)) return 'finished';
+  if (isRenderStateCreated(state)) {
+    return 'created';
+  }
+  if (isRenderStateRunning(state)) {
+    return 'running';
+  }
+  if (isRenderStatePausing(state)) {
+    return 'pausing';
+  }
+  if (isRenderStatePaused(state)) {
+    return 'paused';
+  }
+  if (isRenderStateFinishedCheckpointIteration(state)) {
+    return 'finished';
+  }
   return 'unknown';
 }
 
@@ -87,12 +97,14 @@ export function ExistingRenderPicker(props: ExistingRenderPickerProps) {
                     }`}
                     onClick={() => setSelectedRenderId(render.id)}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-zinc-200">{render.config.name}</span>
-                        <span className="text-sm text-zinc-500">#{render.id}</span>
+                    <div className="flex min-w-0 items-center justify-between gap-2">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <span className="truncate font-medium text-zinc-200" title={render.config.name}>
+                          {render.config.name}
+                        </span>
+                        <span className="shrink-0 text-sm text-zinc-500">#{render.id}</span>
                       </div>
-                      <span className={getStateBadgeClasses(render.state)}>
+                      <span className={`shrink-0 ${getStateBadgeClasses(render.state)}`}>
                         {getStateLabel(render.state)}
                       </span>
                     </div>

@@ -41,70 +41,30 @@ export const RenderConfigSchema = z.object({
 
 export type RenderConfig = RawRenderConfig | NormalizedRenderConfig;
 
-function pruneNormalizedConfig(config: NormalizedRenderConfig): void {
-  const activeScene = config.scenes?.[config.active_scene];
-  if (!activeScene) return;
+function removeDefaultResources(config: NormalizedRenderConfig): void {
+  const isNotDefault = (name: string) => !name.startsWith('__');
+  config.scenes = filterRecord(config.scenes, isNotDefault);
+  config.cameras = filterRecord(config.cameras, isNotDefault);
+  config.geometrics = filterRecord(config.geometrics, isNotDefault);
+  config.materials = filterRecord(config.materials, isNotDefault);
+  config.textures = filterRecord(config.textures, isNotDefault);
+}
 
-  const reachableCameras = new Set<string>([activeScene.camera]);
-  const reachableGeometrics = new Set<string>();
-  const reachableMaterials = new Set<string>();
-  const reachableTextures = new Set<string>();
-
-  // walk geometrics reachable from the active scene
-  const geoStack = [...activeScene.geometrics];
-  while (geoStack.length > 0) {
-    const geoName = geoStack.pop()!;
-    if (reachableGeometrics.has(geoName)) continue;
-    const geo = config.geometrics?.[geoName];
-    if (!geo) continue;
-    reachableGeometrics.add(geoName);
-
-    switch (geo.type) {
-      case 'box':
-      case 'parallelogram':
-      case 'sphere':
-      case 'triangle':
-      case 'obj_model':
-        reachableMaterials.add(geo.material);
-        break;
-      case 'translate':
-      case 'rotate_x':
-      case 'rotate_y':
-      case 'rotate_z':
-        geoStack.push(geo.geometric);
-        break;
-      case 'constant_volume':
-        geoStack.push(geo.geometric);
-        reachableTextures.add(geo.reflectance_texture);
-        break;
-      case 'list':
-        for (const childName of geo.geometrics) {
-          geoStack.push(childName);
-        }
-        break;
-    }
+function filterRecord<T>(
+  record: Record<string, T> | undefined,
+  keep: (key: string) => boolean,
+): Record<string, T> | undefined {
+  if (!record) {
+    return record;
   }
 
-  // walk materials to collect textures, then walk textures for checker sub-textures
-  const matStack = [...reachableMaterials];
-  while (matStack.length > 0) {
-    const matName = matStack.pop()!;
-    const mat = config.materials?.[matName];
-    if (!mat) continue;
-    for (const texName of [mat.reflectance_texture, mat.emittance_texture]) {
-      if (!reachableTextures.has(texName)) {
-        reachableTextures.add(texName);
-        collectTextureRefs(config, texName, reachableTextures);
-      }
+  const result: Record<string, T> = {};
+  for (const [key, value] of Object.entries(record)) {
+    if (keep(key)) {
+      result[key] = value;
     }
   }
-
-  // prune maps to reachable entries only
-  config.scenes = pick(config.scenes, new Set([config.active_scene]));
-  config.cameras = pick(config.cameras, reachableCameras);
-  config.geometrics = pick(config.geometrics, reachableGeometrics);
-  config.materials = pick(config.materials, reachableMaterials);
-  config.textures = pick(config.textures, reachableTextures);
+  return result;
 }
 
 export function normalizeRenderConfig(config: RenderConfig): NormalizedRenderConfig {
@@ -135,40 +95,10 @@ export function normalizeRenderConfig(config: RenderConfig): NormalizedRenderCon
     normalizeTextureData(renderConfig, tex);
   }
 
-  // PASS 3: prune unreferenced entries
-  // After normalization, the config is effectively normalized — cast at this boundary
-  pruneNormalizedConfig(renderConfig as NormalizedRenderConfig);
+  // PASS 3: remove default fallback resources
+  removeDefaultResources(renderConfig as NormalizedRenderConfig);
 
   return renderConfig as NormalizedRenderConfig;
-}
-
-function pick<T>(
-  record: Record<string, T> | undefined,
-  keys: Set<string>,
-): Record<string, T> | undefined {
-  if (!record) return record;
-  const result: Record<string, T> = {};
-  for (const key of keys) {
-    if (key in record) {
-      result[key] = record[key];
-    }
-  }
-  return result;
-}
-
-function collectTextureRefs(
-  config: NormalizedRenderConfig,
-  texName: string,
-  reachableTextures: Set<string>,
-): void {
-  const tex = config.textures?.[texName];
-  if (!tex || tex.type !== 'checker') return;
-  for (const subName of [tex.even_texture, tex.odd_texture]) {
-    if (!reachableTextures.has(subName)) {
-      reachableTextures.add(subName);
-      collectTextureRefs(config, subName, reachableTextures);
-    }
-  }
 }
 
 // NormalizedRenderConfig is the same as a RenderConfig, but with all the

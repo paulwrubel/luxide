@@ -129,6 +129,5 @@ Dark mode requires THREE things simultaneously:
 
 ## 7. React Component Conventions
 
-When modifying or creating React components, load the `react-component-conventions` skill
-(`.opencode/skills/react-component-conventions/`). All UI components must use
+Load the `react-code-conventions` skill (`.opencode/skills/react-code-conventions/`) when editing any TypeScript file in `ui/src/`. All UI components must use
 `export type` props, function declaration, and first-line destructure.
