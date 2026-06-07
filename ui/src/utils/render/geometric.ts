@@ -150,10 +150,18 @@ export function getCenterPoint(
     case 'rotate_x':
     case 'rotate_y':
     case 'rotate_z':
-    case 'translate':
     case 'constant_volume': {
       const { data: subData } = getGeometricDataSafe(config, data.geometric);
       return getCenterPoint(config, subData);
+    }
+    case 'translate': {
+      const { data: subData } = getGeometricDataSafe(config, data.geometric);
+      const childCenter = getCenterPoint(config, subData);
+      return [
+        childCenter[0] + data.translation[0],
+        childCenter[1] + data.translation[1],
+        childCenter[2] + data.translation[2],
+      ];
     }
     case 'parallelogram':
       return [

@@ -84,7 +84,17 @@ export function MaterialResolver(props: MaterialResolverProps) {
     if (!emissiveColor) return null;
 
     const { data: geometricData } = getGeometricDataSafe(config, geometricName);
-    if (isComposite(geometricData) || geometricData.type === 'constant_volume') return null;
+    if (geometricData.type === 'constant_volume') {
+      return null;
+    }
+    // allow list and translate composites through
+    if (
+      isComposite(geometricData) &&
+      geometricData.type !== 'list' &&
+      geometricData.type !== 'translate'
+    ) {
+      return null;
+    }
 
     const center = getCenterPoint(config, geometricData);
     const intensity = Math.max(...emissiveColor);
