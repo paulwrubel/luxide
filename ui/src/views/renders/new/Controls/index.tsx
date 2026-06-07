@@ -5,6 +5,7 @@ import { ControlsCardParameters } from './cards/ControlsCardParameters';
 import { ControlsCardGeometric } from './cards/ControlsCardGeometric';
 import { ControlsCardMaterial } from './cards/ControlsCardMaterial';
 import { ControlsCardTexture } from './cards/ControlsCardTexture';
+import { ControlsCardScene } from './cards/ControlsCardScene';
 import { AddEntityDropdown } from './AddEntityDropdown';
 import { defaultGeometricForType, type GeometricData } from '@/utils/render/geometric';
 import { defaultMaterialForType, type MaterialData } from '@/utils/render/material';
@@ -76,8 +77,9 @@ export function Controls(props: ControlsProps) {
         </div>
       </TabItem>
 
-      <TabItem title="Camera">
+      <TabItem title="Scene">
         <div className="flex flex-col items-stretch gap-4 p-2">
+          <ControlsCardScene form={form} />
           <ControlsCardCamera form={form} cameraName={activeScene.camera} />
         </div>
       </TabItem>
