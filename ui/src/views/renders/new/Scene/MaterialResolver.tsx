@@ -71,7 +71,9 @@ export function MaterialResolver(props: MaterialResolverProps) {
         }
         case 'checker':
         case 'image': {
-          console.warn(`${reflectanceTexture.type} texture not yet supported for specular material`);
+          console.warn(
+            `${reflectanceTexture.type} texture not yet supported for specular material`,
+          );
           materialElement = (
             <meshStandardMaterial
               attach="material"
