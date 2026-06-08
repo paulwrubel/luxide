@@ -79,9 +79,9 @@ export function RenderProgress({ renderID }: { renderID: number }) {
 
   const wholeRenderTiming = renderStats
     ? {
-        elapsed: renderStats.elapsed,
-        remaining: renderStats.estimated_remaining,
-        total: renderStats.estimated_total,
+        elapsed: formatDuration(renderStats.elapsed),
+        remaining: formatDuration(renderStats.estimated_remaining),
+        total: formatDuration(renderStats.estimated_total),
       }
     : null;
 
@@ -97,7 +97,7 @@ export function RenderProgress({ renderID }: { renderID: number }) {
   } else if (isRenderStatePaused(state)) {
     statusText = `Paused at checkpoint ${state.paused} of ${totalCheckpoints}`;
   } else if (isRenderStateFinishedCheckpointIteration(state)) {
-    const timeInfo = renderStats ? ` — Total time: ${renderStats.elapsed}` : '';
+    const timeInfo = renderStats ? ` — Total time: ${formatDuration(renderStats.elapsed)}` : '';
     statusText = `Finished checkpoint ${state.finished_checkpoint_iteration} of ${totalCheckpoints}${timeInfo}`;
   } else {
     statusText = 'Unknown state';

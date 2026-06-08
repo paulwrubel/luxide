@@ -272,9 +272,9 @@ export async function updateRenderTotalCheckpoints(
 }
 
 export type RenderCheckpointStats = {
-  average_elapsed: string;
-  min_elapsed: string;
-  max_elapsed: string;
+  average_elapsed: Duration;
+  min_elapsed: Duration;
+  max_elapsed: Duration;
 };
 
 export type RenderStats = {
@@ -284,14 +284,14 @@ export type RenderStats = {
   completed_iterations: number;
   pixel_samples_per_checkpoint: number;
   total_samples_taken: number;
-  elapsed: string;
-  estimated_remaining: string;
-  estimated_total: string;
+  elapsed: Duration;
+  estimated_remaining: Duration;
+  estimated_total: Duration;
   checkpoint_stats: RenderCheckpointStats;
 };
 
 export async function getRenderStats(token: string, renderID: number): Promise<RenderStats> {
-  const response = await fetch(`${getAPIURL()}/renders/${renderID}/stats`, {
+  const response = await fetch(`${getAPIURL()}/renders/${renderID}/stats?format=precise`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 

@@ -1,6 +1,6 @@
 use axum::{
     Json,
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::StatusCode,
     response::{IntoResponse, Response},
 };
@@ -11,7 +11,7 @@ use crate::{
     utils::format_duration,
 };
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Serialize)]
 pub struct FormattedRenderStats {
@@ -61,16 +61,38 @@ impl From<RenderCheckpointStats> for FormattedRenderCheckpointStats {
     }
 }
 
+#[derive(Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+#[derive(Default)]
+pub enum StatsFormat {
+    #[default]
+    Precise,
+    Pretty,
+}
+
+#[derive(Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub struct StatsFormatQueryParameters {
+    pub format: Option<StatsFormat>,
+}
+
 pub async fn get_render_stats(
     State(state): State<LuxideState>,
     claims: Claims,
     Path(id): Path<RenderID>,
+    Query(stats_format): Query<StatsFormatQueryParameters>,
 ) -> Response {
     println!("Handing request for get_render_stats (id: {})...", id);
 
     match state.render_manager.get_render_stats(id, claims.sub).await {
         Ok(Some(stats)) => {
-            (StatusCode::OK, Json(FormattedRenderStats::from(stats))).into_response()
+            let format = stats_format.format.unwrap_or_default();
+            match format {
+                StatsFormat::Precise => (StatusCode::OK, Json(stats)).into_response(),
+                StatsFormat::Pretty => {
+                    (StatusCode::OK, Json(FormattedRenderStats::from(stats))).into_response()
+                }
+            }
         }
         Ok(None) => StatusCode::NOT_FOUND.into_response(),
         Err(e) => e.into(),
