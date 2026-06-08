@@ -49,7 +49,7 @@ export function ControlsCardMaterial(props: ControlsCardMaterialProps) {
 
   // texture select items
   const textureItems = Object.keys(renderConfig.textures ?? {}).map((key) => ({
-    name: key,
+    label: key,
     value: key,
   }));
 

@@ -1,8 +1,9 @@
 import { useFieldContext } from '@/hooks/formContext';
+import React from 'react';
 import { Label, Select } from 'flowbite-react';
 
 interface SelectItem {
-  name: string;
+  label: string;
   value: string;
 }
 
@@ -11,17 +12,18 @@ export type SelectControlProps = {
   labelPrefix?: React.ReactNode;
   labelSuffix?: React.ReactNode;
   items: SelectItem[];
+  onChange?: (value: string) => void;
+  mapValue?: (value: string) => string;
 };
 
 export function SelectControl(props: SelectControlProps) {
-  const { label, labelPrefix, labelSuffix, items } = props;
+  const { label, labelPrefix, labelSuffix, items, onChange, mapValue } = props;
 
   const field = useFieldContext<string>();
 
   const currentValue = field.state.value;
-  const valueLabel = items.some((item) => item.value === currentValue)
-    ? currentValue
-    : '__MISSING__';
+  const controlValue = mapValue ? mapValue(currentValue) : currentValue;
+  const valueLabel = items.find((item) => item.value === controlValue)?.label ?? '__MISSING__';
 
   return (
     <Label className="mb-2 flex flex-col gap-1.5">
@@ -33,10 +35,19 @@ export function SelectControl(props: SelectControlProps) {
         </span>
         <span>{valueLabel}</span>
       </span>
-      <Select value={currentValue} onChange={(e) => field.handleChange(e.target.value)}>
-        {items.map((item) => (
-          <option key={item.value} value={item.value}>
-            {item.name}
+      <Select
+        value={controlValue}
+        onChange={(e) => {
+          if (onChange) {
+            onChange(e.target.value);
+          } else {
+            field.handleChange(e.target.value);
+          }
+        }}
+      >
+        {items.map(({ value, label: itemValue }) => (
+          <option key={value} value={value}>
+            {itemValue}
           </option>
         ))}
       </Select>

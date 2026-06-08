@@ -1,5 +1,6 @@
 import { ControlsCard } from '../ControlsCard';
 import { NestedGeometricHeader } from './NestedGeometricHeader';
+import { AroundVariantControls } from './AroundVariantControls';
 import { TextArrayInputControl } from '@/components/form-controls/TextArrayInputControl';
 import { TextInputControl } from '@/components/form-controls/TextInputControl';
 import { getGeometricData, getGeometricDataSafe } from '@/utils/render/geometric';
@@ -16,7 +17,7 @@ function GeometricMaterialSelect({
 }: {
   form: RenderForm;
   name: string;
-  items: { name: string; value: string }[];
+  items: { label: string; value: string }[];
 }) {
   return (
     <form.AppField name={`geometrics.${name}.material`}>
@@ -69,7 +70,7 @@ export function ControlsCardGeometric(props: ControlsCardGeometricProps) {
 
   // build material select items
   const materialItems = Object.keys(renderConfig.materials ?? {}).map((key) => ({
-    name: key,
+    label: key,
     value: key,
   }));
 
@@ -128,13 +129,7 @@ export function ControlsCardGeometric(props: ControlsCardGeometricProps) {
                 />
               )}
             </form.AppField>
-            <TextArrayInputControl
-              form={form}
-              fieldName={`geometrics.${name}.around`}
-              label="Rotation Point"
-              valueLabels={['x', 'y', 'z']}
-              type="number"
-            />
+            <AroundVariantControls form={form} geometricName={name} />
             <NestedGeometricHeader
               geometricName={embedddedGeometricName}
               renderConfig={renderConfig}

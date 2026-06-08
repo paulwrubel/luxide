@@ -117,7 +117,7 @@ export function getCornellBoxRenderConfig(): NormalizedRenderConfig {
         type: 'rotate_y',
         geometric: 'Far Left Box - Unrotated',
         degrees: 15.0,
-        around: [3.5, 0.0, -6.5],
+        around: 'center',
       },
       'Far Left Box - Unrotated': {
         type: 'box',
@@ -130,7 +130,7 @@ export function getCornellBoxRenderConfig(): NormalizedRenderConfig {
         type: 'rotate_y',
         geometric: 'Near Right Box - Unrotated',
         degrees: 342.0,
-        around: [6.5, 0.0, -3.5],
+        around: 'center',
       },
       'Near Right Box - Unrotated': {
         type: 'box',

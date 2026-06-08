@@ -1,6 +1,6 @@
 use sqlx::{Pool, Postgres};
 
-use crate::utils::{ProgressInfo, decode_pixel_data, encode_pixel_data};
+use crate::utils::{ProgressInfo, decode_pixel_data, encode_pixel_data, upgrade_legacy_around};
 
 use super::{
     GithubID, Render, RenderCheckpoint, RenderCheckpointMeta, RenderID, RenderState, RenderStorage,
@@ -45,11 +45,12 @@ impl RenderStorage for PostgresStorage {
         .fetch_optional(&self.pool)
         .await
         {
-            Ok(Some(row)) => {
+            Ok(Some(mut row)) => {
                 let state = serde_json::from_value(row.state).map_err(|e| {
                     format!("Failed to deserialize render state for id {}: {}", id, e)
                 })?;
 
+                upgrade_legacy_around(&mut row.config);
                 let config = serde_json::from_value(row.config).map_err(|e| {
                     format!("Failed to deserialize render config for id {}: {}", id, e)
                 })?;
@@ -144,13 +145,14 @@ impl RenderStorage for PostgresStorage {
         .map_err(|e| format!("Failed to get all renders: {}", e))?;
 
         let mut renders = Vec::with_capacity(rows.len());
-        for row in rows {
+        for mut row in rows {
             let state = serde_json::from_value(row.state).map_err(|e| {
                 format!(
                     "Failed to deserialize render state for id {}: {}",
                     row.id, e
                 )
             })?;
+            upgrade_legacy_around(&mut row.config);
             let config = serde_json::from_value(row.config).map_err(|e| {
                 format!(
                     "Failed to deserialize render config for id {}: {}",
@@ -192,13 +194,14 @@ impl RenderStorage for PostgresStorage {
         .map_err(|e| format!("Failed to get all renders for user id {}: {}", user_id, e))?;
 
         let mut renders = Vec::with_capacity(rows.len());
-        for row in rows {
+        for mut row in rows {
             let state = serde_json::from_value(row.state).map_err(|e| {
                 format!(
                     "Failed to deserialize render state for id {}: {}",
                     row.id, e
                 )
             })?;
+            upgrade_legacy_around(&mut row.config);
             let config = serde_json::from_value(row.config).map_err(|e| {
                 format!(
                     "Failed to deserialize render config for id {}: {}",
