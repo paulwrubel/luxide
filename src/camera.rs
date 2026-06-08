@@ -208,9 +208,19 @@ impl Camera {
                         let pdf_val = pdf.strategy_density(incident_direction, index_of_strategy);
                         let mis_weight = pdf.power_heuristic(incident_direction, index_of_strategy);
 
+                        // degenerate sample from grazing-angle/proximity rejection in geometric direction_pdf
+                        if pdf_val <= 0.0 {
+                            return accumulated_color;
+                        }
+
                         attentuation_strength *= brdf_val * cos_theta * mis_weight / pdf_val;
                     } else {
                         let pdf_val = pdf.density(incident_direction);
+
+                        // degenerate sample from grazing-angle/proximity rejection in geometric direction_pdf
+                        if pdf_val <= 0.0 {
+                            return accumulated_color;
+                        }
 
                         attentuation_strength *= brdf_val * cos_theta / pdf_val;
                     }

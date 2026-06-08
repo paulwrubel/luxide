@@ -150,6 +150,14 @@ impl Vector {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
 
+    pub fn de_nan(&self) -> Self {
+        Self {
+            x: if self.x.is_nan() { 0.0 } else { self.x },
+            y: if self.y.is_nan() { 0.0 } else { self.y },
+            z: if self.z.is_nan() { 0.0 } else { self.z },
+        }
+    }
+
     pub fn normalize(&mut self) {
         *self /= self.length();
     }
