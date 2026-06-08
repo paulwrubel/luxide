@@ -17,7 +17,7 @@ function GeometricMaterialSelect({
 }: {
   form: RenderForm;
   name: string;
-  items: { name: string; value: string }[];
+  items: { label: string; value: string }[];
 }) {
   return (
     <form.AppField name={`geometrics.${name}.material`}>
@@ -70,7 +70,7 @@ export function ControlsCardGeometric(props: ControlsCardGeometricProps) {
 
   // build material select items
   const materialItems = Object.keys(renderConfig.materials ?? {}).map((key) => ({
-    name: key,
+    label: key,
     value: key,
   }));
 
@@ -129,11 +129,7 @@ export function ControlsCardGeometric(props: ControlsCardGeometricProps) {
                 />
               )}
             </form.AppField>
-            <AroundVariantControls
-              form={form}
-              geometricName={name}
-              around={data.around}
-            />
+            <AroundVariantControls form={form} geometricName={name} />
             <NestedGeometricHeader
               geometricName={embedddedGeometricName}
               renderConfig={renderConfig}
