@@ -50,20 +50,26 @@ impl Color {
         Self(self.0.scale_down(scale))
     }
 
+    pub fn de_nan(&self) -> Self {
+        Self(self.0.de_nan())
+    }
+
     pub fn as_rgba_u8(&self) -> image::Rgba<u8> {
+        let vec = self.0.de_nan();
         image::Rgba([
-            (self.0.x.clamp(0.0, 1.0) * u8::MAX as f64).round() as u8,
-            (self.0.y.clamp(0.0, 1.0) * u8::MAX as f64).round() as u8,
-            (self.0.z.clamp(0.0, 1.0) * u8::MAX as f64).round() as u8,
+            (vec.x.clamp(0.0, 1.0) * u8::MAX as f64).round() as u8,
+            (vec.y.clamp(0.0, 1.0) * u8::MAX as f64).round() as u8,
+            (vec.z.clamp(0.0, 1.0) * u8::MAX as f64).round() as u8,
             u8::MAX,
         ])
     }
 
     pub fn as_gamma_corrected_rgba_u8(&self, encoding_gamma: f64) -> image::Rgba<u8> {
+        let vec = self.0.de_nan();
         image::Rgba([
-            (self.0.x.powf(encoding_gamma).clamp(0.0, 1.0) * u8::MAX as f64).round() as u8,
-            (self.0.y.powf(encoding_gamma).clamp(0.0, 1.0) * u8::MAX as f64).round() as u8,
-            (self.0.z.powf(encoding_gamma).clamp(0.0, 1.0) * u8::MAX as f64).round() as u8,
+            (vec.x.powf(encoding_gamma).clamp(0.0, 1.0) * u8::MAX as f64).round() as u8,
+            (vec.y.powf(encoding_gamma).clamp(0.0, 1.0) * u8::MAX as f64).round() as u8,
+            (vec.z.powf(encoding_gamma).clamp(0.0, 1.0) * u8::MAX as f64).round() as u8,
             u8::MAX,
         ])
     }

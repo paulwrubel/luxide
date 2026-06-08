@@ -103,8 +103,11 @@ impl Tracer {
                                 + scaled_color)
                                 / checkpoint as f64;
 
+                            // guard against NaNs
+                            let safe_color = weighted_color.de_nan();
+
                             // send final pixel color
-                            ((x, y), weighted_color)
+                            ((x, y), safe_color)
                         })
                         .collect();
 
