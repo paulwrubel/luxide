@@ -2,6 +2,41 @@ import { useRender } from '@/hooks/useRender';
 import { Spinner } from 'flowbite-react';
 import { PropertyRow } from './PropertyRow';
 import { ViewRenderJSONButton } from '@/components/ViewRenderJSONButton';
+import { useRenderStats } from '@/hooks/useRenderStats';
+
+/**
+ * Formats a pixel sample count for display.
+ * - Under 10M: comma-separated (e.g., "3,125,000")
+ * - 10M-999M: abbreviated with one decimal (e.g., "12.5M")
+ * - 1B+: abbreviated with one decimal (e.g., "1.3B")
+ */
+function formatPixelCount(count: number): string {
+  if (count >= 1_000_000_000) {
+    return `${(count / 1_000_000_000).toFixed(1)} billion`;
+  }
+  if (count >= 10_000_000) {
+    return `${(count / 1_000_000).toFixed(1)} million`;
+  }
+  return count.toLocaleString();
+}
+
+function formatPercentage(percentage: number): string {
+  // convert to fixed-point with 4 decimal places (e.g. 0.4257 → 4257)
+  const significand = Math.round(percentage * 10_000);
+
+  // determine precision by checking trailing digits
+  let precision: number;
+  if (significand % 100 === 0) {
+    precision = 0;
+  } else if (significand % 10 === 0) {
+    precision = 1;
+  } else {
+    precision = 2;
+  }
+
+  // convert back to percentage
+  return `${(significand / 100).toFixed(precision)}%`;
+}
 
 export type RenderInfoProps = {
   renderID: number;
@@ -16,6 +51,16 @@ export function RenderInfo(props: RenderInfoProps) {
     isError: isRenderError,
     error: renderError,
   } = useRender({ renderID });
+
+  const { data: renderStats } = useRenderStats({ renderID });
+
+  const totalSamples = renderStats
+    ? renderStats.total_iterations * renderStats.pixel_samples_per_checkpoint
+    : undefined;
+
+  const totalProgressPercentage = renderStats
+    ? renderStats.total_samples_taken / totalSamples!
+    : undefined;
 
   return (
     <div className="rounded border border-zinc-700 p-3">
@@ -44,6 +89,30 @@ export function RenderInfo(props: RenderInfoProps) {
             label="Total checkpoints"
             value={render.config.parameters.total_checkpoints}
           />
+          {renderStats && totalSamples && totalProgressPercentage && (
+            <>
+              <PropertyRow
+                label="Samples taken"
+                value={
+                  <span title={renderStats.total_samples_taken.toLocaleString()}>
+                    {formatPixelCount(renderStats.total_samples_taken)}
+                  </span>
+                }
+              />
+              <PropertyRow
+                label="Total samples"
+                value={
+                  <span title={totalSamples.toLocaleString()}>
+                    {formatPixelCount(totalSamples)}
+                  </span>
+                }
+              />{' '}
+              <PropertyRow
+                label="Overall progress"
+                value={formatPercentage(totalProgressPercentage)}
+              />
+            </>
+          )}
           <PropertyRow
             label="Created"
             value={new Date(render.created_at).toLocaleDateString('en-US', {

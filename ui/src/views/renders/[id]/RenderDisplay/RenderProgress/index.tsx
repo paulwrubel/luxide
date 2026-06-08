@@ -10,7 +10,7 @@ import { useRender } from '@/hooks/useRender';
 import { useRenderStats } from '@/hooks/useRenderStats';
 import { Spinner } from 'flowbite-react';
 import { ProgressState } from './ProgressState';
-import { RenderTiming } from './RenderTiming';
+import { RenderTiming, type RenderTimingData } from './RenderTiming';
 
 export function RenderProgress({ renderID }: { renderID: number }) {
   const {
@@ -63,27 +63,30 @@ export function RenderProgress({ renderID }: { renderID: number }) {
 
   // ---- checkpoint timing (from ProgressInfo, needs formatDuration) ----
 
-  let checkpointTiming = null;
+  let checkpointTiming: RenderTimingData | undefined;
   if (showProgress) {
     const progressInfo = isRenderStateRunning(state)
       ? state.running.progress_info
       : state.pausing.progress_info;
+
     checkpointTiming = {
       elapsed: formatDuration(progressInfo.elapsed),
       remaining: formatDuration(progressInfo.estimated_remaining),
       total: formatDuration(progressInfo.estimated_total),
+      remainingSeconds: progressInfo.estimated_remaining.secs,
     };
   }
 
-  // ---- whole render timing (from /stats, already formatted strings) ----
+  // ---- whole render timing (from /stats) ----
 
-  const wholeRenderTiming = renderStats
+  const wholeRenderTiming: RenderTimingData | undefined = renderStats
     ? {
-        elapsed: renderStats.elapsed,
-        remaining: renderStats.estimated_remaining,
-        total: renderStats.estimated_total,
+        elapsed: formatDuration(renderStats.elapsed),
+        remaining: formatDuration(renderStats.estimated_remaining),
+        total: formatDuration(renderStats.estimated_total),
+        remainingSeconds: renderStats.estimated_remaining.secs,
       }
-    : null;
+    : undefined;
 
   // ---- status text ----
 
@@ -97,7 +100,7 @@ export function RenderProgress({ renderID }: { renderID: number }) {
   } else if (isRenderStatePaused(state)) {
     statusText = `Paused at checkpoint ${state.paused} of ${totalCheckpoints}`;
   } else if (isRenderStateFinishedCheckpointIteration(state)) {
-    const timeInfo = renderStats ? ` — Total time: ${renderStats.elapsed}` : '';
+    const timeInfo = renderStats ? ` — Total time: ${formatDuration(renderStats.elapsed)}` : '';
     statusText = `Finished checkpoint ${state.finished_checkpoint_iteration} of ${totalCheckpoints}${timeInfo}`;
   } else {
     statusText = 'Unknown state';
