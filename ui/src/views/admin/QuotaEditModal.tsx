@@ -1,4 +1,12 @@
-import { Button, Label, Modal, ModalHeader, ModalBody, ModalFooter, ToggleSwitch } from 'flowbite-react';
+import {
+  Button,
+  Label,
+  Modal,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  ToggleSwitch,
+} from 'flowbite-react';
 import { useSelector } from '@tanstack/react-store';
 import { useAppForm } from '@/hooks/useAppForm';
 import { z } from 'zod';
@@ -123,12 +131,7 @@ export function QuotaEditModal(props: QuotaEditModalProps) {
             {!isMaxRendersUnlimited && (
               <form.AppField name="max_renders">
                 {(field) => (
-                  <field.FormTextField
-                    type="number"
-                    valueLabel=""
-                    required
-                    className="w-full"
-                  />
+                  <field.FormTextField type="number" valueLabel="" required className="w-full" />
                 )}
               </form.AppField>
             )}
@@ -151,12 +154,7 @@ export function QuotaEditModal(props: QuotaEditModalProps) {
             {!isMaxCheckpointsUnlimited && (
               <form.AppField name="max_checkpoints_per_render">
                 {(field) => (
-                  <field.FormTextField
-                    type="number"
-                    valueLabel=""
-                    required
-                    className="w-full"
-                  />
+                  <field.FormTextField type="number" valueLabel="" required className="w-full" />
                 )}
               </form.AppField>
             )}
@@ -179,12 +177,7 @@ export function QuotaEditModal(props: QuotaEditModalProps) {
             {!isMaxPixelsUnlimited && (
               <form.AppField name="max_render_pixel_count">
                 {(field) => (
-                  <field.FormTextField
-                    type="number"
-                    valueLabel=""
-                    required
-                    className="w-full"
-                  />
+                  <field.FormTextField type="number" valueLabel="" required className="w-full" />
                 )}
               </form.AppField>
             )}
