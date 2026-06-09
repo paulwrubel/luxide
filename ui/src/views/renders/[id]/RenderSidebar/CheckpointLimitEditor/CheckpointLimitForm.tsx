@@ -1,10 +1,11 @@
-import { Button, Spinner } from 'flowbite-react';
+import { HiExclamation } from 'react-icons/hi';
 import { useState } from 'react';
+
+import { Button, Spinner, Toast, ToastToggle } from 'flowbite-react';
 import { useSelector } from '@tanstack/react-store';
 import { useAppForm } from '@/hooks/useAppForm';
+import { useUpdateRenderTotalCheckpoints } from '@/hooks/useRenderMutations';
 import { z } from 'zod';
-import { useAuth } from '@/providers/auth';
-import { updateRenderTotalCheckpoints } from '@/utils/api';
 
 export type CheckpointLimitFormProps = {
   currentValue: number;
@@ -15,8 +16,8 @@ export type CheckpointLimitFormProps = {
 export function CheckpointLimitForm(props: CheckpointLimitFormProps) {
   const { currentValue, currentCheckpointIteration, renderID } = props;
 
-  const { mustGetToken } = useAuth();
-  const [isUpdating, setIsUpdating] = useState(false);
+  const { mutate: updateCheckpoints, isPending } = useUpdateRenderTotalCheckpoints();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const form = useAppForm({
     defaultValues: { total_checkpoints: currentValue },
@@ -35,11 +36,16 @@ export function CheckpointLimitForm(props: CheckpointLimitFormProps) {
 
   const isFormValid = useSelector(form.store, (state) => state.isValid);
 
-  async function handleSubmit() {
+  function handleSubmit() {
     const value = form.state.values.total_checkpoints;
-    setIsUpdating(true);
-    await updateRenderTotalCheckpoints(mustGetToken(), renderID, value);
-    setIsUpdating(false);
+    updateCheckpoints(
+      { renderId: renderID, newTotalCheckpoints: value },
+      {
+        onError: (error) => {
+          setErrorMessage(error.message);
+        },
+      },
+    );
   }
 
   return (
@@ -55,8 +61,8 @@ export function CheckpointLimitForm(props: CheckpointLimitFormProps) {
         )}
       </form.AppField>
 
-      <Button color="default" outline onClick={handleSubmit} disabled={isUpdating || !isFormValid}>
-        {isUpdating ? (
+      <Button color="default" outline onClick={handleSubmit} disabled={isPending || !isFormValid}>
+        {isPending ? (
           <span className="flex items-center justify-center">
             <Spinner size="sm" className="mr-2" />
             Updating...
@@ -65,6 +71,19 @@ export function CheckpointLimitForm(props: CheckpointLimitFormProps) {
           'Update'
         )}
       </Button>
+
+      {errorMessage !== null && (
+        <Toast className="fixed right-4 bottom-4 z-50 max-w-md">
+          {' '}
+          <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-100 text-orange-500 dark:bg-orange-700 dark:text-orange-200">
+            <HiExclamation className="h-5 w-5" />
+          </div>
+          <div className="ml-3 text-sm font-normal text-red-600 dark:text-red-400">
+            {errorMessage}
+          </div>
+          <ToastToggle onDismiss={() => setErrorMessage(null)} />
+        </Toast>
+      )}
     </>
   );
 }
