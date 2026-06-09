@@ -13,7 +13,13 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export type AuthProviderProps = {
+  children: React.ReactNode;
+};
+
+export function AuthProvider(props: AuthProviderProps) {
+  const { children } = props;
+
   const [token, setTokenState] = useState<string | undefined>(() => {
     return localStorage?.getItem('auth_token') ?? undefined;
   });

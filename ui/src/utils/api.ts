@@ -394,3 +394,31 @@ export async function getStorageUsage(token: string): Promise<UsageResponse> {
 
   return (await response.json()) as UsageResponse;
 }
+
+/**
+ * Extract a human-readable error message from an API error.
+ *
+ * The backend returns structured JSON like `{"code": 403, "message": "..."}`
+ * but the API client embeds it in a thrown Error: `"failed to ...: (403: {json})"`.
+ * This function parses the JSON body out of the Error message and returns the
+ * backend's `message` field. Falls back to the raw Error message if parsing fails.
+ */
+export function extractErrorMessage(error: unknown): string {
+  if (!(error instanceof Error)) {
+    return 'An unknown error occurred';
+  }
+  // try to extract the JSON body from the API client's error format:
+  // "failed to ...: (STATUS: {json body})"
+  const match = error.message.match(/\{.*\}/);
+  if (match) {
+    try {
+      const parsed = JSON.parse(match[0]);
+      if (typeof parsed.message === 'string') {
+        return parsed.message;
+      }
+    } catch {
+      // JSON parse failed — fall through to raw message
+    }
+  }
+  return error.message;
+}

@@ -1,10 +1,10 @@
-import { Button, Spinner } from 'flowbite-react';
-import { useState } from 'react';
 import { useSelector } from '@tanstack/react-store';
+import { Button, Spinner } from 'flowbite-react';
 import { useAppForm } from '@/hooks/useAppForm';
+import { useUpdateRenderTotalCheckpoints } from '@/hooks/useRenderMutations';
 import { z } from 'zod';
-import { useAuth } from '@/providers/auth';
-import { updateRenderTotalCheckpoints } from '@/utils/api';
+import { extractErrorMessage } from '@/utils/api';
+import toast from 'react-hot-toast';
 
 export type CheckpointLimitFormProps = {
   currentValue: number;
@@ -15,8 +15,7 @@ export type CheckpointLimitFormProps = {
 export function CheckpointLimitForm(props: CheckpointLimitFormProps) {
   const { currentValue, currentCheckpointIteration, renderID } = props;
 
-  const { mustGetToken } = useAuth();
-  const [isUpdating, setIsUpdating] = useState(false);
+  const { mutate: updateCheckpoints, isPending } = useUpdateRenderTotalCheckpoints();
 
   const form = useAppForm({
     defaultValues: { total_checkpoints: currentValue },
@@ -35,11 +34,16 @@ export function CheckpointLimitForm(props: CheckpointLimitFormProps) {
 
   const isFormValid = useSelector(form.store, (state) => state.isValid);
 
-  async function handleSubmit() {
+  function handleSubmit() {
     const value = form.state.values.total_checkpoints;
-    setIsUpdating(true);
-    await updateRenderTotalCheckpoints(mustGetToken(), renderID, value);
-    setIsUpdating(false);
+    updateCheckpoints(
+      { renderId: renderID, newTotalCheckpoints: value },
+      {
+        onError: (error) => {
+          toast.error(extractErrorMessage(error));
+        },
+      },
+    );
   }
 
   return (
@@ -55,8 +59,8 @@ export function CheckpointLimitForm(props: CheckpointLimitFormProps) {
         )}
       </form.AppField>
 
-      <Button color="default" outline onClick={handleSubmit} disabled={isUpdating || !isFormValid}>
-        {isUpdating ? (
+      <Button color="default" outline onClick={handleSubmit} disabled={isPending || !isFormValid}>
+        {isPending ? (
           <span className="flex items-center justify-center">
             <Spinner size="sm" className="mr-2" />
             Updating...

@@ -1,16 +1,10 @@
 import { Button, Spinner } from 'flowbite-react';
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRender } from '@/hooks/useRender';
-import { useAuth } from '@/providers/auth';
-import {
-  pauseRender,
-  resumeRender,
-  deleteRender,
-  isRenderStatePausing,
-  isRenderStatePaused,
-  isRenderStateRunning,
-} from '@/utils/api';
+import { usePauseRender, useResumeRender, useDeleteRender } from '@/hooks/useRenderMutations';
+import { isRenderStatePausing, isRenderStatePaused, isRenderStateRunning } from '@/utils/api';
+import toast from 'react-hot-toast';
+import { extractErrorMessage } from '@/utils/api';
 export type RenderControlsProps = {
   renderID: number;
 };
@@ -19,8 +13,6 @@ export function RenderControls(props: RenderControlsProps) {
   const { renderID } = props;
 
   const navigate = useNavigate();
-  const { mustGetToken } = useAuth();
-  const token = mustGetToken();
 
   const {
     data: render,
@@ -29,7 +21,9 @@ export function RenderControls(props: RenderControlsProps) {
     error: renderError,
   } = useRender({ renderID });
 
-  const [isPausingOrResuming, setIsPausingOrResuming] = useState(false);
+  const { mutate: pauseRender, isPending: isPausePending } = usePauseRender();
+  const { mutate: resumeRender, isPending: isResumePending } = useResumeRender();
+  const { mutate: deleteRender, isPending: isDeletePending } = useDeleteRender();
 
   if (isRenderLoading || !render) {
     return <Spinner size="md" className="fill-zinc-400" />;
@@ -45,19 +39,32 @@ export function RenderControls(props: RenderControlsProps) {
   const isPausing = isRenderStatePausing(render.state);
   const isRunning = isRenderStateRunning(render.state);
 
-  async function handlePauseOrResume() {
-    setIsPausingOrResuming(true);
+  function handlePauseOrResume() {
     if (isPaused || isPausing) {
-      await resumeRender(token, renderID);
+      resumeRender(renderID, {
+        onError: (error) => {
+          toast.error(extractErrorMessage(error));
+        },
+      });
     } else if (isRunning) {
-      await pauseRender(token, renderID);
+      pauseRender(renderID, {
+        onError: (error) => {
+          toast.error(extractErrorMessage(error));
+        },
+      });
     }
-    setIsPausingOrResuming(false);
   }
 
-  async function handleDelete() {
-    await deleteRender(token, renderID);
-    navigate('/renders');
+  function handleDelete() {
+    deleteRender(renderID, {
+      onSuccess: () => {
+        toast.success('Render deleted');
+        navigate('/renders');
+      },
+      onError: (error) => {
+        toast.error(extractErrorMessage(error));
+      },
+    });
   }
 
   return (
@@ -66,9 +73,9 @@ export function RenderControls(props: RenderControlsProps) {
         color={isPaused || isPausing ? 'default' : 'yellow'}
         outline
         onClick={handlePauseOrResume}
-        disabled={isPausingOrResuming || !(isPaused || isPausing || isRunning)}
+        disabled={isPausePending || isResumePending || !(isPaused || isPausing || isRunning)}
       >
-        {isPausingOrResuming ? (
+        {isPausePending || isResumePending ? (
           <span className="flex items-center justify-center">
             <Spinner size="sm" className="mr-2" />
             Processing...
@@ -80,8 +87,19 @@ export function RenderControls(props: RenderControlsProps) {
         )}
       </Button>
 
-      <Button color="red" onClick={handleDelete} disabled={isPausing || isRunning}>
-        Delete Render
+      <Button
+        color="red"
+        onClick={handleDelete}
+        disabled={isDeletePending || isPausing || isRunning}
+      >
+        {isDeletePending ? (
+          <span className="flex items-center justify-center">
+            <Spinner size="sm" className="mr-2" />
+            Deleting...
+          </span>
+        ) : (
+          'Delete Render'
+        )}
       </Button>
     </div>
   );
