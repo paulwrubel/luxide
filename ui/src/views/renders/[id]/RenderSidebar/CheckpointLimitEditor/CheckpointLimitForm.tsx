@@ -2,8 +2,8 @@ import { useSelector } from '@tanstack/react-store';
 import { Button, Spinner } from 'flowbite-react';
 import { useAppForm } from '@/hooks/useAppForm';
 import { useUpdateRenderTotalCheckpoints } from '@/hooks/useRenderMutations';
-import { useToast } from '@/providers/toast';
 import { z } from 'zod';
+import toast from 'react-hot-toast';
 
 export type CheckpointLimitFormProps = {
   currentValue: number;
@@ -15,7 +15,6 @@ export function CheckpointLimitForm(props: CheckpointLimitFormProps) {
   const { currentValue, currentCheckpointIteration, renderID } = props;
 
   const { mutate: updateCheckpoints, isPending } = useUpdateRenderTotalCheckpoints();
-  const { createToast } = useToast();
 
   const form = useAppForm({
     defaultValues: { total_checkpoints: currentValue },
@@ -40,7 +39,7 @@ export function CheckpointLimitForm(props: CheckpointLimitFormProps) {
       { renderId: renderID, newTotalCheckpoints: value },
       {
         onError: (error) => {
-          createToast(error.message);
+          toast.error(error.message);
         },
       },
     );

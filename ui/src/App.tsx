@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from 'flowbite-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './providers/auth';
-import { ToastProvider } from './providers/toast';
+import { LuxideToaster } from './providers/toast';
 import { Layout } from './layouts/Layout';
 import { AuthenticatedRouteLayout } from './layouts/AuthenticatedRouteLayout';
 import { HomePage } from './views';
@@ -25,34 +25,33 @@ const queryClient = new QueryClient({
 export default function App() {
   return (
     <ThemeProvider>
-      <ToastProvider>
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <BrowserRouter>
-              <Routes>
-                <Route element={<Layout />}>
-                  {/* public routes */}
-                  <Route path="/" element={<HomePage />} />
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/auth/github/callback" element={<AuthCallbackPage />} />
+      <LuxideToaster />
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route element={<Layout />}>
+                {/* public routes */}
+                <Route path="/" element={<HomePage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/auth/github/callback" element={<AuthCallbackPage />} />
 
-                  {/* authenticated routes — nested inside authenticated layout to redirect to /login if not logged in */}
-                  <Route element={<AuthenticatedRouteLayout />}>
-                    <Route path="/renders" element={<RendersPage />} />
-                    <Route path="/renders/:id" element={<RenderDetailPage />} />
-                    <Route path="/renders/new" element={<NewRenderPage />} />
-                  </Route>
-
-                  {/* admin routes — nested inside admin layout to redirect non-admins */}
-                  <Route element={<AdminRouteLayout />}>
-                    <Route path="/admin" element={<AdminPage />} />
-                  </Route>
+                {/* authenticated routes — nested inside authenticated layout to redirect to /login if not logged in */}
+                <Route element={<AuthenticatedRouteLayout />}>
+                  <Route path="/renders" element={<RendersPage />} />
+                  <Route path="/renders/:id" element={<RenderDetailPage />} />
+                  <Route path="/renders/new" element={<NewRenderPage />} />
                 </Route>
-              </Routes>
-            </BrowserRouter>
-          </AuthProvider>
-        </QueryClientProvider>
-      </ToastProvider>
+
+                {/* admin routes — nested inside admin layout to redirect non-admins */}
+                <Route element={<AdminRouteLayout />}>
+                  <Route path="/admin" element={<AdminPage />} />
+                </Route>
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+      </QueryClientProvider>
     </ThemeProvider>
   );
 }
