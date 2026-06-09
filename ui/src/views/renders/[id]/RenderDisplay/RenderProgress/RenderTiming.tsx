@@ -15,8 +15,6 @@ export type RenderTimingProps = {
   timings?: RenderTimingData;
 };
 
-const SECONDS_PER_YEAR = 365.25 * 24 * 60 * 60;
-
 function formatCompletionTime(now: number, remainingSeconds: number): string {
   const dt = DateTime.fromMillis(now + remainingSeconds * 1000);
   if (remainingSeconds < 86400) {
@@ -25,7 +23,7 @@ function formatCompletionTime(now: number, remainingSeconds: number): string {
   return dt.toLocaleString({
     month: 'long',
     day: 'numeric',
-    year: remainingSeconds >= SECONDS_PER_YEAR ? 'numeric' : undefined,
+    year: dt.year !== DateTime.now().year ? 'numeric' : undefined,
     hour: 'numeric',
     minute: '2-digit',
   });
