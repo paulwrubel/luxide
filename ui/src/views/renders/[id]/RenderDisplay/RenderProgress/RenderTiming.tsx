@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
+import { DateTime } from 'luxon';
+import type { Duration as ApiDuration } from '@/utils/api';
+import { formatDuration } from '@/utils/duration';
 
 export type RenderTimingData = {
-  elapsed: string;
-  remaining: string;
-  total: string;
+  elapsed: ApiDuration;
+  remaining: ApiDuration;
+  total: ApiDuration;
   remainingSeconds?: number;
 };
 
@@ -11,6 +14,20 @@ export type RenderTimingProps = {
   title: string;
   timings?: RenderTimingData;
 };
+
+function formatCompletionTime(now: number, remainingSeconds: number): string {
+  const dt = DateTime.fromMillis(now + remainingSeconds * 1000);
+  if (remainingSeconds < 86400) {
+    return dt.toLocaleString(DateTime.TIME_SIMPLE);
+  }
+  return dt.toLocaleString({
+    month: 'long',
+    day: 'numeric',
+    year: dt.year !== DateTime.now().year ? 'numeric' : undefined,
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
 
 export function RenderTiming(props: RenderTimingProps) {
   const { title, timings } = props;
@@ -28,13 +45,14 @@ export function RenderTiming(props: RenderTimingProps) {
     };
   }, []);
 
-  const localCompletion =
+  const localCompletionTime =
     timings?.remainingSeconds && timings.remainingSeconds > 0
-      ? new Date(now + timings.remainingSeconds * 1000).toLocaleTimeString([], {
-          hour: 'numeric',
-          minute: '2-digit',
-        })
+      ? formatCompletionTime(now, timings.remainingSeconds)
       : null;
+
+  const elapsedFormatted = timings?.elapsed ? formatDuration(timings.elapsed) : '—';
+  const remainingFormatted = timings?.remaining ? formatDuration(timings.remaining) : '—';
+  const totalFormatted = timings?.total ? formatDuration(timings.total) : '—';
 
   return (
     <div className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800/30 p-3">
@@ -42,18 +60,18 @@ export function RenderTiming(props: RenderTimingProps) {
       <div className="flex flex-col gap-1 text-sm">
         <div className="flex justify-between">
           <span className="text-zinc-500">Elapsed</span>
-          <span className="text-zinc-300">{timings?.elapsed ?? '—'}</span>
+          <span className="text-zinc-300">{elapsedFormatted}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-zinc-500">Remaining</span>
           <span className="flex gap-2 text-zinc-300">
-            {localCompletion && <span className="text-zinc-500">(~{localCompletion}) </span>}
-            {timings?.remaining ?? '—'}
+            {localCompletionTime && <span className="text-zinc-500">({localCompletionTime}) </span>}
+            {remainingFormatted}
           </span>
         </div>
         <div className="flex justify-between">
           <span className="text-zinc-500">Total</span>
-          <span className="text-zinc-300">{timings?.total ?? '—'}</span>
+          <span className="text-zinc-300">{totalFormatted}</span>
         </div>
       </div>
     </div>
