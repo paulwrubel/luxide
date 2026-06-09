@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useCallback } from 'react';
-import type { ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toast, ToastToggle, type ToastTheme } from 'flowbite-react';
 import { HiExclamation } from 'react-icons/hi';
@@ -25,7 +24,13 @@ const toastTheme: DeepPartial<ToastTheme> = {
   root: { base: 'max-w-lg' },
 };
 
-export function ToastProvider({ children }: { children: ReactNode }) {
+export type ToastProviderProps = {
+  children: React.ReactNode;
+};
+
+export function ToastProvider(props: ToastProviderProps) {
+  const { children } = props;
+
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   const createToast = useCallback((message: string) => {
@@ -59,9 +64,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                   {toast.message}
                 </div>
                 <ToastToggle
-                  onDismiss={() =>
-                    setToasts((prev) => prev.filter((t) => t.id !== toast.id))
-                  }
+                  onDismiss={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
                 />
               </Toast>
             </motion.div>

@@ -2,7 +2,7 @@ import { useSelector } from '@tanstack/react-store';
 import { Button, Spinner } from 'flowbite-react';
 import { useAppForm } from '@/hooks/useAppForm';
 import { useUpdateRenderTotalCheckpoints } from '@/hooks/useRenderMutations';
-import { useToast } from '@/providers/ToastProvider';
+import { useToast } from '@/providers/toast';
 import { z } from 'zod';
 
 export type CheckpointLimitFormProps = {

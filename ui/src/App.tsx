@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from 'flowbite-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './providers/auth';
-import { ToastProvider } from './providers/ToastProvider';
+import { ToastProvider } from './providers/toast';
 import { Layout } from './layouts/Layout';
 import { AuthenticatedRouteLayout } from './layouts/AuthenticatedRouteLayout';
 import { HomePage } from './views';
