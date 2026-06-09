@@ -1,5 +1,6 @@
 import { useSelector } from '@tanstack/react-store';
 import { Button, Spinner } from 'flowbite-react';
+import { HiCheck } from 'react-icons/hi2';
 import { useAppForm } from '@/hooks/useAppForm';
 import { useUpdateRenderTotalCheckpoints } from '@/hooks/useRenderMutations';
 import { z } from 'zod';
@@ -50,25 +51,26 @@ export function CheckpointLimitForm(props: CheckpointLimitFormProps) {
     <>
       <form.AppField name="total_checkpoints">
         {(field) => (
-          <field.FormTextField
-            type="number"
-            valueLabel="Checkpoint Limit"
-            required
-            className="w-full"
-          />
+          <div className="flex items-end gap-2">
+            <field.FormTextField
+              type="number"
+              valueLabel="Checkpoint Limit"
+              required
+              className="flex-1"
+            />
+            <Button
+              title="Update Checkpoint Limit"
+              size="sm"
+              outline
+              color="gray"
+              onClick={handleSubmit}
+              disabled={isPending || !isFormValid}
+            >
+              {isPending ? <Spinner size="sm" /> : <HiCheck className="h-4 w-4" />}
+            </Button>
+          </div>
         )}
       </form.AppField>
-
-      <Button color="default" outline onClick={handleSubmit} disabled={isPending || !isFormValid}>
-        {isPending ? (
-          <span className="flex items-center justify-center">
-            <Spinner size="sm" className="mr-2" />
-            Updating...
-          </span>
-        ) : (
-          'Update'
-        )}
-      </Button>
     </>
   );
 }
