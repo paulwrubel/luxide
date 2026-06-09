@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { DateTime } from 'luxon';
 
 export type RenderTimingData = {
   elapsed: string;
@@ -11,6 +12,22 @@ export type RenderTimingProps = {
   title: string;
   timings?: RenderTimingData;
 };
+
+const SECONDS_PER_YEAR = 365.25 * 24 * 60 * 60;
+
+function formatCompletionTime(now: number, remainingSeconds: number): string {
+  const dt = DateTime.fromMillis(now + remainingSeconds * 1000);
+  if (remainingSeconds < 86400) {
+    return dt.toLocaleString(DateTime.TIME_SIMPLE);
+  }
+  return dt.toLocaleString({
+    month: 'long',
+    day: 'numeric',
+    year: remainingSeconds >= SECONDS_PER_YEAR ? 'numeric' : undefined,
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
 
 export function RenderTiming(props: RenderTimingProps) {
   const { title, timings } = props;
@@ -30,10 +47,7 @@ export function RenderTiming(props: RenderTimingProps) {
 
   const localCompletion =
     timings?.remainingSeconds && timings.remainingSeconds > 0
-      ? new Date(now + timings.remainingSeconds * 1000).toLocaleTimeString([], {
-          hour: 'numeric',
-          minute: '2-digit',
-        })
+      ? formatCompletionTime(now, timings.remainingSeconds)
       : null;
 
   return (
@@ -47,7 +61,7 @@ export function RenderTiming(props: RenderTimingProps) {
         <div className="flex justify-between">
           <span className="text-zinc-500">Remaining</span>
           <span className="flex gap-2 text-zinc-300">
-            {localCompletion && <span className="text-zinc-500">(~{localCompletion}) </span>}
+            {localCompletion && <span className="text-zinc-500">({localCompletion}) </span>}
             {timings?.remaining ?? '—'}
           </span>
         </div>
