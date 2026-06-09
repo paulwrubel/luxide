@@ -3,6 +3,7 @@ import { Button, Spinner } from 'flowbite-react';
 import { useAppForm } from '@/hooks/useAppForm';
 import { useUpdateRenderTotalCheckpoints } from '@/hooks/useRenderMutations';
 import { z } from 'zod';
+import { extractErrorMessage } from '@/utils/api';
 import toast from 'react-hot-toast';
 
 export type CheckpointLimitFormProps = {
@@ -39,7 +40,7 @@ export function CheckpointLimitForm(props: CheckpointLimitFormProps) {
       { renderId: renderID, newTotalCheckpoints: value },
       {
         onError: (error) => {
-          toast.error(error.message);
+          toast.error(extractErrorMessage(error));
         },
       },
     );

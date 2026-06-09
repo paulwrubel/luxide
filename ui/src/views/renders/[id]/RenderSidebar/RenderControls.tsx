@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useRender } from '@/hooks/useRender';
 import { usePauseRender, useResumeRender, useDeleteRender } from '@/hooks/useRenderMutations';
 import { isRenderStatePausing, isRenderStatePaused, isRenderStateRunning } from '@/utils/api';
+import toast from 'react-hot-toast';
+import { extractErrorMessage } from '@/utils/api';
 export type RenderControlsProps = {
   renderID: number;
 };
@@ -39,16 +41,28 @@ export function RenderControls(props: RenderControlsProps) {
 
   function handlePauseOrResume() {
     if (isPaused || isPausing) {
-      resumeRender(renderID);
+      resumeRender(renderID, {
+        onError: (error) => {
+          toast.error(extractErrorMessage(error));
+        },
+      });
     } else if (isRunning) {
-      pauseRender(renderID);
+      pauseRender(renderID, {
+        onError: (error) => {
+          toast.error(extractErrorMessage(error));
+        },
+      });
     }
   }
 
   function handleDelete() {
     deleteRender(renderID, {
       onSuccess: () => {
+        toast.success('Render deleted');
         navigate('/renders');
+      },
+      onError: (error) => {
+        toast.error(extractErrorMessage(error));
       },
     });
   }

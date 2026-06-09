@@ -19,6 +19,8 @@ import { useRenders } from '@/hooks/useRenders';
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { ViewConfigJSONButton } from './ViewConfigJSONButton';
 import { ConfigJSONModal } from '@/components/ViewRenderJSONButton/ConfigJSONModal';
+import toast from 'react-hot-toast';
+import { extractErrorMessage } from '@/utils/api';
 
 export interface NewRenderSidebarProps {
   form: RenderForm;
@@ -67,6 +69,9 @@ export function NewRenderSidebar({ form }: NewRenderSidebarProps) {
     createRender(form.state.values, {
       onSuccess: (response) => {
         navigate(`/renders/${response.id}`);
+      },
+      onError: (error) => {
+        toast.error(extractErrorMessage(error));
       },
     });
   };
