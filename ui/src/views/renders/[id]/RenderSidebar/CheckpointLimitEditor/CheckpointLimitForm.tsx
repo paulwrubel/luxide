@@ -1,12 +1,14 @@
 import { HiExclamation } from 'react-icons/hi';
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 
-import { Button, Spinner, Toast, ToastToggle } from 'flowbite-react';
+import { Button, Spinner, Toast, ToastToggle, type ToastTheme } from 'flowbite-react';
 import { useSelector } from '@tanstack/react-store';
 import { useAppForm } from '@/hooks/useAppForm';
 import { useUpdateRenderTotalCheckpoints } from '@/hooks/useRenderMutations';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
+import type { DeepPartial } from 'flowbite-react/types';
 
 export type CheckpointLimitFormProps = {
   currentValue: number;
@@ -49,6 +51,12 @@ export function CheckpointLimitForm(props: CheckpointLimitFormProps) {
     );
   }
 
+  const toastTheme: DeepPartial<ToastTheme> = {
+    root: {
+      base: 'max-w-lg',
+    },
+  };
+
   return (
     <>
       <form.AppField name="total_checkpoints">
@@ -82,7 +90,7 @@ export function CheckpointLimitForm(props: CheckpointLimitFormProps) {
             exit={{ x: '100%', opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
           >
-            <Toast>
+            <Toast theme={toastTheme}>
               <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-100 text-orange-500 dark:bg-orange-700 dark:text-orange-200">
                 <HiExclamation className="h-5 w-5" />
               </div>
