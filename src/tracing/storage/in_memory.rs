@@ -168,6 +168,18 @@ impl RenderStorage for InMemoryStorage {
         Ok(())
     }
 
+    async fn update_render_name(&self, id: RenderID, new_name: String) -> Result<(), StorageError> {
+        let renders = self.renders.read().await;
+        let render = match renders.get(&id) {
+            Some(r) => r,
+            None => return Err(format!("render {id} not found").into()),
+        };
+        let mut render = render.write().await;
+        render.config.name = new_name;
+        render.mark_updated();
+        Ok(())
+    }
+
     async fn get_render_checkpoint(
         &self,
         id: RenderID,

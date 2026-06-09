@@ -879,6 +879,28 @@ impl RenderManager {
             .map_err(|e| e.into())
     }
 
+    pub async fn update_render_name(
+        &self,
+        id: RenderID,
+        new_name: String,
+        user_id: UserID,
+    ) -> Result<(), RenderManagerError> {
+        let _render = match self.get_render(id, user_id).await? {
+            Some(r) => r,
+            None => {
+                return Err(RenderManagerError::ClientError(
+                    StatusCode::NOT_FOUND,
+                    "Render not found".to_string(),
+                ));
+            }
+        };
+
+        self.storage
+            .update_render_name(id, new_name)
+            .await
+            .map_err(|e| e.into())
+    }
+
     pub async fn get_render_checkpoint_as_image(
         &self,
         id: RenderID,

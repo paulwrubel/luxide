@@ -212,6 +212,23 @@ impl RenderStorage for FileStorage {
         }
     }
 
+    async fn update_render_name(&self, id: RenderID, new_name: String) -> Result<(), StorageError> {
+        match self
+            .renders
+            .write()
+            .await
+            .iter_mut()
+            .find_map(|(r, _)| if r.id == id { Some(r) } else { None })
+        {
+            Some(render) => {
+                render.config.name = new_name;
+                render.mark_updated();
+                Ok(())
+            }
+            None => Err(format!("Render with id {id} not found").into()),
+        }
+    }
+
     async fn get_render_checkpoint(
         &self,
         id: RenderID,

@@ -242,6 +242,12 @@ pub trait RenderStorage: Send + Sync + 'static {
         new_total_checkpoints: u32,
     ) -> Result<(), StorageError>;
 
+    async fn update_render_name(
+        &self,
+        render_id: RenderID,
+        new_name: String,
+    ) -> Result<(), StorageError>;
+
     async fn get_render_checkpoint(
         &self,
         render_id: RenderID,

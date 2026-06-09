@@ -347,6 +347,26 @@ impl RenderStorage for PostgresStorage {
         Ok(())
     }
 
+    async fn update_render_name(&self, id: RenderID, new_name: String) -> Result<(), StorageError> {
+        sqlx::query!(
+            r#"
+                UPDATE renders
+                SET config = jsonb_set(config, '{name}', $2::jsonb),
+                updated_at = $3
+                WHERE id = $1
+            "#,
+            id as i32,
+            serde_json::to_value(&new_name)
+                .map_err(|e| format!("Failed to serialize render name for id {}: {}", id, e))?,
+            chrono::Utc::now(),
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|e| format!("Failed to update render name for id {}: {}", id, e))?;
+
+        Ok(())
+    }
+
     async fn get_render_checkpoint(
         &self,
         id: RenderID,

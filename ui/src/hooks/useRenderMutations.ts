@@ -5,6 +5,7 @@ import {
   resumeRender,
   deleteRender,
   updateRenderTotalCheckpoints,
+  updateRenderName,
 } from '../utils/api';
 import { useAuth } from '../providers/auth';
 import type { NormalizedRenderConfig } from '../utils/render/config';
@@ -81,6 +82,21 @@ export function useUpdateRenderTotalCheckpoints() {
       renderId: number;
       newTotalCheckpoints: number;
     }) => updateRenderTotalCheckpoints(token, renderId, newTotalCheckpoints),
+    onSuccess: (_data, { renderId }) => {
+      queryClient.invalidateQueries({ queryKey: ['renders'] });
+      queryClient.invalidateQueries({ queryKey: ['render', renderId] });
+    },
+  });
+}
+
+export function useUpdateRenderName() {
+  const { mustGetToken } = useAuth();
+  const token = mustGetToken();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ renderId, newName }: { renderId: number; newName: string }) =>
+      updateRenderName(token, renderId, newName),
     onSuccess: (_data, { renderId }) => {
       queryClient.invalidateQueries({ queryKey: ['renders'] });
       queryClient.invalidateQueries({ queryKey: ['render', renderId] });

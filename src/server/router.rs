@@ -132,6 +132,7 @@ fn build_renders_router() -> Router<LuxideState> {
             "/{id}/parameters/total_checkpoints",
             put(handlers::update_render_total_checkpoints),
         )
+        .route("/{id}/name", put(handlers::update_render_name))
 }
 
 fn build_auth_router() -> Router<LuxideState> {
