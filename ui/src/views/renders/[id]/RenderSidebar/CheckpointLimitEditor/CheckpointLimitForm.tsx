@@ -6,6 +6,7 @@ import { useSelector } from '@tanstack/react-store';
 import { useAppForm } from '@/hooks/useAppForm';
 import { useUpdateRenderTotalCheckpoints } from '@/hooks/useRenderMutations';
 import { z } from 'zod';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export type CheckpointLimitFormProps = {
   currentValue: number;
@@ -72,18 +73,27 @@ export function CheckpointLimitForm(props: CheckpointLimitFormProps) {
         )}
       </Button>
 
-      {errorMessage !== null && (
-        <Toast className="fixed right-4 bottom-4 z-50 max-w-md">
-          {' '}
-          <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-100 text-orange-500 dark:bg-orange-700 dark:text-orange-200">
-            <HiExclamation className="h-5 w-5" />
-          </div>
-          <div className="ml-3 text-sm font-normal text-red-600 dark:text-red-400">
-            {errorMessage}
-          </div>
-          <ToastToggle onDismiss={() => setErrorMessage(null)} />
-        </Toast>
-      )}
+      <AnimatePresence>
+        {errorMessage !== null && (
+          <motion.div
+            className="fixed right-4 bottom-4 z-50"
+            initial={{ x: '100%', opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: '100%', opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          >
+            <Toast>
+              <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-100 text-orange-500 dark:bg-orange-700 dark:text-orange-200">
+                <HiExclamation className="h-5 w-5" />
+              </div>
+              <div className="ml-3 text-sm font-normal text-red-600 dark:text-red-400">
+                {errorMessage}
+              </div>
+              <ToastToggle onDismiss={() => setErrorMessage(null)} />
+            </Toast>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
