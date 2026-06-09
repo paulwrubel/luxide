@@ -49,6 +49,9 @@ pub use resume_render::*;
 mod update_render_total_checkpoints;
 pub use update_render_total_checkpoints::*;
 
+mod update_render_name;
+pub use update_render_name::*;
+
 use axum::{
     Json,
     http::StatusCode,

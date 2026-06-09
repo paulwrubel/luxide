@@ -271,6 +271,26 @@ export async function updateRenderTotalCheckpoints(
   }
 }
 
+export async function updateRenderName(
+  token: string,
+  renderID: number,
+  newName: string,
+): Promise<void> {
+  const response = await fetch(`${getAPIURL()}/renders/${renderID}/name`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    method: 'PUT',
+    body: JSON.stringify({ name: newName }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Error updating render name: ${response.status} ${body}`);
+  }
+}
+
 export type RenderCheckpointStats = {
   average_elapsed: Duration;
   min_elapsed: Duration;
