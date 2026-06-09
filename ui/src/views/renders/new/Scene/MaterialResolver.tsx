@@ -1,3 +1,4 @@
+import { MeshTransmissionMaterial } from '@react-three/drei';
 import { getMaterialDataSafe } from '@/utils/render/material';
 import { getTextureDataSafe } from '@/utils/render/texture';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
@@ -21,9 +22,39 @@ export function MaterialResolver(props: MaterialResolverProps) {
 
   switch (materialData.type) {
     case 'dielectric': {
-      console.warn('Dielectric material not yet supported');
-      return null;
+      const ior = materialData.index_of_refraction || 1.5;
+      switch (reflectanceTexture.type) {
+        case 'color': {
+          return (
+            <MeshTransmissionMaterial
+              attach="material"
+              color={reflectanceTexture.color}
+              thickness={0.5}
+              transmission={1.0}
+              ior={ior}
+              roughness={0}
+              {...(emissiveColor ? { emissive: emissiveColor } : {})}
+            />
+          );
+        }
+        case 'checker':
+        case 'image': {
+          console.warn(
+            `${reflectanceTexture.type} texture not yet supported for dielectric material`,
+          );
+          return (
+            <MeshTransmissionMaterial
+              attach="material"
+              color={[1, 1, 1]}
+              transmission={1.0}
+              ior={ior}
+              roughness={0}
+            />
+          );
+        }
+      }
     }
+    // eslint-disable-next-line no-fallthrough -- all inner branches return, TS confirms exhaustive
     case 'lambertian': {
       switch (reflectanceTexture.type) {
         case 'color': {

@@ -167,8 +167,6 @@ export function Controls(props: ControlsProps) {
                   subtype: 'dielectric',
                   label: 'Dielectric Material',
                   description: 'Transparent material with refraction (glass, water).',
-                  disabled: true,
-                  disabledReason: 'Dielectric materials are not yet supported in the 3D preview.',
                 },
               ]}
               type="materials"

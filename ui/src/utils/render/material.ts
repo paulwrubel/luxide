@@ -98,7 +98,7 @@ export function defaultMaterialForType(type: MaterialData['type']): MaterialData
         type: 'dielectric',
         reflectance_texture: '__white',
         emittance_texture: '__black',
-        index_of_refraction: 1,
+        index_of_refraction: 1.5,
       };
     case 'lambertian':
       return {
