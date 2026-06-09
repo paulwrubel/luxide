@@ -50,6 +50,7 @@ export function ToastProvider(props: ToastProviderProps) {
           {toasts.map((toast) => (
             <motion.div
               key={toast.id}
+              layout
               className="max-w-lg"
               initial={{ x: '100%', opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
