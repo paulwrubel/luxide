@@ -1,8 +1,13 @@
 import { useRender } from '@/hooks/useRender';
-import { Spinner } from 'flowbite-react';
+import { Button, Spinner } from 'flowbite-react';
 import { PropertyRow } from './PropertyRow';
 import { ViewRenderJSONButton } from '@/components/ViewRenderJSONButton';
+import { Separator } from '@/components/Separator';
 import { useRenderStats } from '@/hooks/useRenderStats';
+import { useNavigate } from 'react-router-dom';
+import { HiDocumentDuplicate } from 'react-icons/hi2';
+import { normalizeRenderConfig } from '@/utils/render/config';
+import { withDefaultResources } from '@/utils/render/templates';
 
 /**
  * Formats a pixel sample count for display.
@@ -54,6 +59,18 @@ export function RenderInfo(props: RenderInfoProps) {
 
   const { data: renderStats } = useRenderStats({ renderID });
 
+  const navigate = useNavigate();
+
+  function handleClone() {
+    if (!render) {
+      return;
+    }
+    const normalizedConfig = normalizeRenderConfig(render.config);
+    const configWithDefaults = withDefaultResources(normalizedConfig);
+    const modifiedConfig = { ...configWithDefaults, name: `${configWithDefaults.name} (copy)` };
+    navigate('/renders/new', { replace: true, state: { importedConfig: modifiedConfig } });
+  }
+
   const totalSamples = renderStats
     ? renderStats.total_iterations * renderStats.pixel_samples_per_checkpoint
     : undefined;
@@ -66,7 +83,6 @@ export function RenderInfo(props: RenderInfoProps) {
     <div className="rounded border border-zinc-700 p-3">
       <div className="mb-2 flex items-center justify-between">
         <h3 className="text-sm font-semibold text-zinc-300">Render Info</h3>
-        {render && <ViewRenderJSONButton config={render.config} size="xs" />}
       </div>
       {isRenderLoading || !render ? (
         <div className="flex justify-center">
@@ -75,7 +91,7 @@ export function RenderInfo(props: RenderInfoProps) {
       ) : isRenderError ? (
         <p className="text-sm text-red-500">Error loading render info: {renderError.message}</p>
       ) : (
-        <div className="flex flex-col gap-1 text-sm text-zinc-400">
+        <div className="mb-2 flex flex-col gap-1 text-sm text-zinc-400">
           <PropertyRow
             label="Image"
             value={`${render.config.parameters.image_dimensions[0]} × ${render.config.parameters.image_dimensions[1]}`}
@@ -138,6 +154,18 @@ export function RenderInfo(props: RenderInfoProps) {
             }
           />
         </div>
+      )}
+      {render && (
+        <>
+          <Separator />
+          <div className="flex items-center gap-2 pt-3 *:flex-1">
+            <ViewRenderJSONButton config={render.config} size="xs" />
+            <Button color="default" size="xs" onClick={handleClone}>
+              <HiDocumentDuplicate />
+              Clone
+            </Button>
+          </div>
+        </>
       )}
     </div>
   );
