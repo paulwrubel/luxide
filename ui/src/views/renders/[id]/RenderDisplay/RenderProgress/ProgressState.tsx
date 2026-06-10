@@ -28,7 +28,8 @@ export function ProgressState(props: ProgressStateProps) {
     <div className="w-full rounded-lg border border-zinc-700 bg-zinc-800/50 p-4">
       <div className="w-full">
         <Progress
-          progress={Math.round(progress * 100)}
+          // @ts-expect-error — toFixed returns a string but Flowbite handles the numeric coercion internally
+          progress={(Math.round(progress * 1_000) / 10).toFixed(1)}
           color={color}
           size="lg"
           labelProgress
