@@ -15,7 +15,7 @@ export function useRenderStatsStream(options: UseRenderStatsStreamOptions) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    const url = `${window.location.origin}/api/v1/renders/${renderID}/stats/stream`;
+    const url = `${window.location.origin}/api/v1/renders/${renderID}/stats/stream?interval_ms=500`;
 
     const es = new EventSource(url, {
       fetch: (input, init) => {

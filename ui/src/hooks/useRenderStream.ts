@@ -15,7 +15,7 @@ export function useRenderStream(options: UseRenderStreamOptions) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    const url = `${window.location.origin}/api/v1/renders/${renderID}/state/stream`;
+    const url = `${window.location.origin}/api/v1/renders/${renderID}/state/stream?interval_ms=50`;
 
     const es = new EventSource(url, {
       fetch: (input, init) => {

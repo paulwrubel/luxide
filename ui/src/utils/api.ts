@@ -177,6 +177,12 @@ export function isRenderStatePaused(state: RenderState): state is RenderStatePau
   return typeof state === 'object' && 'paused' in state;
 }
 
+export type RenderStateSnapshot = {
+  render_id: number;
+  state: RenderState;
+  updated_at: Render['updated_at'];
+};
+
 export type ProgressInfoPrecise = {
   progress: number;
   elapsed: Duration;

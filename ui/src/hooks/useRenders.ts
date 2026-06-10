@@ -9,6 +9,6 @@ export function useRenders() {
   return useQuery({
     queryKey: ['renders', token],
     queryFn: () => getAllRenders(token),
-    refetchInterval: 1000,
+    staleTime: Infinity,
   });
 }
