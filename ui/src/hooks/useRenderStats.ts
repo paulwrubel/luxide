@@ -1,9 +1,9 @@
-import { useEffect } from 'react';
+import { useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { EventSource } from 'eventsource';
 import { getRenderStats } from '../utils/api';
 import type { RenderStats } from '../utils/api';
 import { useAuth } from '../providers/auth';
+import { useEventSource } from './useEventSource';
 
 export type UseRenderStatsOptions = {
   renderID: number;
@@ -23,40 +23,27 @@ export function useRenderStats(options: UseRenderStatsOptions) {
     staleTime: Infinity,
   });
 
-  useEffect(() => {
-    if (!streaming) {
-      return;
-    }
-
-    const url = `${window.location.origin}/api/v1/renders/${renderID}/stats/stream?interval_ms=500`;
-
-    const es = new EventSource(url, {
-      fetch: (input, init) => {
-        return fetch(input, {
-          ...init,
-          headers: {
-            ...init.headers,
-            Authorization: `Bearer ${token}`,
-          },
-        });
-      },
-    });
-
-    es.addEventListener('update', (event: MessageEvent) => {
+  const handleUpdate = useCallback(
+    (event: MessageEvent) => {
       // JSON.parse returns any; the SSE endpoint always sends RenderStats-shaped data
       const stats = JSON.parse(event.data) as RenderStats;
       queryClient.setQueryData<RenderStats>(['renderStats', renderID, token], stats);
-    });
+    },
+    [renderID, token, queryClient],
+  );
 
-    es.addEventListener('error', () => {
-      // the library handles reconnection; just log for debugging
-      console.warn(`SSE stats connection error for render ${renderID}`);
-    });
+  const handleError = useCallback(() => {
+    console.warn(`SSE stats connection error for render ${renderID}`);
+  }, [renderID]);
 
-    return () => {
-      es.close();
-    };
-  }, [streaming, renderID, token, queryClient]);
+  useEventSource({
+    enabled: streaming ?? false,
+    path: `/renders/${renderID}/stats/stream`,
+    token,
+    intervalMillis: 500,
+    onUpdateEvent: handleUpdate,
+    onErrorEvent: handleError,
+  });
 
   return queryResult;
 }

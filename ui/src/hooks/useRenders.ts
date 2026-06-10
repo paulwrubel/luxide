@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { EventSource } from 'eventsource';
+import { useEventSource } from './useEventSource';
 import { getAllRenders } from '../utils/api';
 import type { Render, RenderState, RenderStateSnapshot } from '../utils/api';
 import { useAuth } from '../providers/auth';
@@ -29,26 +29,8 @@ export function useRenders(options: UseRendersOptions = {}) {
     staleTime: Infinity,
   });
 
-  useEffect(() => {
-    if (!streaming) {
-      return;
-    }
-
-    const url = `${window.location.origin}/api/v1/renders/state/stream?interval_ms=100`;
-
-    const es = new EventSource(url, {
-      fetch: (input, init) => {
-        return fetch(input, {
-          ...init,
-          headers: {
-            ...init.headers,
-            Authorization: `Bearer ${token}`,
-          },
-        });
-      },
-    });
-
-    es.addEventListener('update', (event: MessageEvent) => {
+  const handleUpdate = useCallback(
+    (event: MessageEvent) => {
       // JSON.parse returns any; the SSE endpoint always sends RenderStateSnapshot-shaped data
       const snapshot = JSON.parse(event.data) as RenderStateSnapshot;
       queryClient.setQueryData<Render[]>(['renders', token], (old) => {
@@ -66,9 +48,12 @@ export function useRenders(options: UseRendersOptions = {}) {
       if (newKey === 'finished_checkpoint_iteration' || newKey === 'paused') {
         queryClient.invalidateQueries({ queryKey: ['checkpointImage', snapshot.render_id, token] });
       }
-    });
+    },
+    [token, queryClient],
+  );
 
-    es.addEventListener('removed', (event: MessageEvent) => {
+  const handleRemoved = useCallback(
+    (event: MessageEvent) => {
       // JSON.parse returns any; the SSE endpoint always sends RenderStateSnapshot-shaped data
       const { render_id } = JSON.parse(event.data) as RenderStateSnapshot;
       queryClient.setQueryData<Render[]>(['renders', token], (old) => {
@@ -77,16 +62,23 @@ export function useRenders(options: UseRendersOptions = {}) {
         }
         return old.filter((r) => r.id !== render_id);
       });
-    });
+    },
+    [token, queryClient],
+  );
 
-    es.addEventListener('error', () => {
-      console.warn('SSE renders stream connection error');
-    });
+  const handleError = useCallback(() => {
+    console.warn('SSE renders stream connection error');
+  }, []);
 
-    return () => {
-      es.close();
-    };
-  }, [streaming, token, queryClient]);
+  useEventSource({
+    enabled: streaming ?? false,
+    path: `/renders/state/stream`,
+    token,
+    intervalMillis: 100,
+    onUpdateEvent: handleUpdate,
+    onRemovedEvent: handleRemoved,
+    onErrorEvent: handleError,
+  });
 
   return queryResult;
 }

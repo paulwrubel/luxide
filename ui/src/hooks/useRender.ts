@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { EventSource } from 'eventsource';
+import { useEventSource } from './useEventSource';
 import { getRender } from '../utils/api';
 import type { Render, RenderState, RenderStateSnapshot } from '../utils/api';
 import { useAuth } from '../providers/auth';
@@ -30,26 +30,8 @@ export function useRender(options: UseRenderOptions) {
     staleTime: Infinity,
   });
 
-  useEffect(() => {
-    if (!streaming) {
-      return;
-    }
-
-    const url = `${window.location.origin}/api/v1/renders/${renderID}/state/stream?interval_ms=50`;
-
-    const es = new EventSource(url, {
-      fetch: (input, init) => {
-        return fetch(input, {
-          ...init,
-          headers: {
-            ...init.headers,
-            Authorization: `Bearer ${token}`,
-          },
-        });
-      },
-    });
-
-    es.addEventListener('update', (event: MessageEvent) => {
+  const handleUpdate = useCallback(
+    (event: MessageEvent) => {
       // JSON.parse returns any; the SSE endpoint always sends RenderStateSnapshot-shaped data
       const snapshot = JSON.parse(event.data) as RenderStateSnapshot;
       queryClient.setQueryData<Render>(['render', renderID, token], (old) => {
@@ -67,17 +49,22 @@ export function useRender(options: UseRenderOptions) {
       if (newKey === 'finished_checkpoint_iteration' || newKey === 'paused') {
         queryClient.invalidateQueries({ queryKey: ['checkpointImage', renderID, token] });
       }
-    });
+    },
+    [renderID, token, queryClient],
+  );
 
-    es.addEventListener('error', () => {
-      // the library handles reconnection; just log for debugging
-      console.warn(`SSE connection error for render ${renderID}`);
-    });
+  const handleError = useCallback(() => {
+    console.warn(`SSE connection error for render ${renderID}`);
+  }, [renderID]);
 
-    return () => {
-      es.close();
-    };
-  }, [streaming, renderID, token, queryClient]);
+  useEventSource({
+    enabled: streaming ?? false,
+    path: `/renders/${renderID}/state/stream`,
+    token,
+    intervalMillis: 50,
+    onUpdateEvent: handleUpdate,
+    onErrorEvent: handleError,
+  });
 
   return queryResult;
 }
