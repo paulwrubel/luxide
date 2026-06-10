@@ -109,10 +109,19 @@ fn build_api_router() -> Router<LuxideState> {
 
 fn build_renders_router() -> Router<LuxideState> {
     Router::new()
-        .route("/{id}", get(handlers::get_render))
-        .route("/{id}/stats", get(handlers::get_render_stats))
         .route("/", get(handlers::get_all_renders))
         .route("/", post(handlers::create_render))
+        .route(
+            "/state/stream",
+            get(handlers::render_state_stream_multiplexed),
+        )
+        .route("/{id}", get(handlers::get_render))
+        .route("/{id}", delete(handlers::delete_render))
+        .route(
+            "/{id}/state/stream",
+            get(handlers::render_state_stream_single),
+        )
+        .route("/{id}/stats", get(handlers::get_render_stats))
         .route(
             "/{id}/checkpoint/earliest",
             get(handlers::get_earliest_render_checkpoint_image),
@@ -125,7 +134,6 @@ fn build_renders_router() -> Router<LuxideState> {
             "/{id}/checkpoint/{checkpoint_iteration}",
             get(handlers::get_render_checkpoint_image),
         )
-        .route("/{id}", delete(handlers::delete_render))
         .route("/{id}/pause", post(handlers::pause_render))
         .route("/{id}/resume", post(handlers::resume_render))
         .route(

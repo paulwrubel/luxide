@@ -43,6 +43,12 @@ pub use not_found::*;
 mod pause_render;
 pub use pause_render::*;
 
+mod render_stream_multi;
+pub use render_stream_multi::*;
+
+mod render_stream_single;
+pub use render_stream_single::*;
+
 mod resume_render;
 pub use resume_render::*;
 

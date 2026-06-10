@@ -15,6 +15,8 @@ use crate::{
     utils::{ProgressInfo, ProgressTracker},
 };
 
+use crate::server::{RenderStateSnapshot, RenderStreamRegistry};
+
 use super::{Render, RenderCheckpoint, RenderID, RenderStorage, Role, StorageError, User, UserID};
 
 use std::collections::HashSet;
@@ -24,6 +26,7 @@ pub struct RenderManager {
     storage: Arc<dyn RenderStorage>,
     global_thread_pool: Option<Arc<rayon::ThreadPool>>,
     running_renders: Arc<Mutex<HashSet<RenderID>>>,
+    render_state_streams: Arc<RenderStreamRegistry>,
 }
 
 const POLLING_INTERVAL_MS: u64 = 100;
@@ -82,6 +85,7 @@ impl RenderManager {
             storage,
             global_thread_pool: thread_pool,
             running_renders: Arc::new(Mutex::new(HashSet::new())),
+            render_state_streams: Arc::new(RenderStreamRegistry::default()),
         })
     }
 
@@ -156,6 +160,7 @@ impl RenderManager {
         let running_renders = Arc::clone(&self.running_renders);
         let storage = Arc::clone(&self.storage);
         let thread_pool = self.global_thread_pool.as_ref().cloned();
+        let render_state_streams = Arc::clone(&self.render_state_streams);
 
         tokio::spawn(async move {
             let tracer = match thread_pool {
@@ -183,6 +188,16 @@ impl RenderManager {
                 running_renders.lock().unwrap().remove(&render.id);
                 return;
             }
+
+            // send initial Running state to stream subscribers
+            render_state_streams.send(RenderStateSnapshot {
+                render_id: render.id,
+                state: RenderState::Running {
+                    checkpoint_iteration: iteration,
+                    progress_info: ProgressInfo::empty(),
+                },
+                updated_at: chrono::Utc::now(),
+            });
 
             let initial_pixel_data = match previous_checkpoint {
                 Some(rcp) => match rcp.pixel_data {
@@ -217,6 +232,7 @@ impl RenderManager {
             let started_at = chrono::Utc::now();
             let new_pixel_data = {
                 let storage = Arc::clone(&storage);
+                let render_state_streams = Arc::clone(&render_state_streams);
 
                 let (_, new_pixel_data) = tokio::join!(
                     async move {
@@ -225,7 +241,17 @@ impl RenderManager {
                             total,
                             50,
                             (total / 1000).max(1),
-                            |progress_info| storage.update_progress(render.id, progress_info),
+                            |progress_info| {
+                                render_state_streams.send(RenderStateSnapshot {
+                                    render_id: render.id,
+                                    state: RenderState::Running {
+                                        checkpoint_iteration: iteration,
+                                        progress_info,
+                                    },
+                                    updated_at: chrono::Utc::now(),
+                                });
+                                storage.update_progress(render.id, progress_info)
+                            },
                         );
                         while receiver.recv().await.is_some() {
                             progress_tracker.mark().await;
@@ -352,6 +378,11 @@ impl RenderManager {
                         .await
                     {
                         Ok(_) => {
+                            render_state_streams.send(RenderStateSnapshot {
+                                render_id: render.id,
+                                state: RenderState::FinishedCheckpointIteration(iteration),
+                                updated_at: chrono::Utc::now(),
+                            });
                             // remove render from running set
                             println!(
                                 "Render {} completed checkpoint iteration {}",
@@ -371,6 +402,11 @@ impl RenderManager {
                         .await
                     {
                         Ok(_) => {
+                            render_state_streams.send(RenderStateSnapshot {
+                                render_id: render.id,
+                                state: RenderState::Paused(iteration),
+                                updated_at: chrono::Utc::now(),
+                            });
                             println!("Render {} paused at checkpoint {}", render.id, iteration);
                         }
                         Err(e) => {
@@ -715,6 +751,7 @@ impl RenderManager {
         }
 
         // delete the render and its checkpoints
+        self.render_state_streams.remove(id);
         self.storage
             .delete_render_and_checkpoints(id)
             .await
@@ -940,6 +977,10 @@ impl RenderManager {
             .get_render_checkpoint_storage_usage_bytes()
             .await
             .map_err(|e| e.into())
+    }
+
+    pub fn render_state_streams(&self) -> &Arc<RenderStreamRegistry> {
+        &self.render_state_streams
     }
 }
 
