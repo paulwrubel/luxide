@@ -1,8 +1,7 @@
 use std::convert::Infallible;
-use std::time::Duration;
 
 use axum::{
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::StatusCode,
     response::sse::Event,
     response::{IntoResponse, Response},
@@ -11,15 +10,18 @@ use axum::{
 use tokio::sync::{mpsc, watch};
 
 use crate::server::render_state_streams::{
-    RenderStateSnapshot, sse_response, update_event,
+    RenderStateSnapshot, StreamIntervalQueryParams, parse_interval, sse_response, update_event,
 };
 use crate::server::{Claims, LuxideState};
 use crate::tracing::RenderID;
+
+const DEFAULT_INTERVAL_MS: u64 = 50;
 
 pub async fn render_state_stream_single(
     State(state): State<LuxideState>,
     claims: Claims,
     Path(render_id): Path<RenderID>,
+    Query(params): Query<StreamIntervalQueryParams>,
 ) -> Response {
     match state.render_manager.get_render(render_id, claims.sub).await {
         Ok(Some(render)) => {
@@ -31,11 +33,16 @@ pub async fn render_state_stream_single(
                 )
                 .subscribe();
 
+            let interval = match parse_interval(params.interval_ms, DEFAULT_INTERVAL_MS) {
+                Ok(i) => i,
+                Err(message) => return (StatusCode::BAD_REQUEST, message).into_response(),
+            };
+
             let (tx, rx) = mpsc::unbounded_channel::<Result<Event, Infallible>>();
             let (cancel_tx, mut cancel_rx) = watch::channel(());
 
             tokio::spawn(async move {
-                let mut interval = tokio::time::interval(Duration::from_millis(50));
+                let mut interval = tokio::time::interval(interval);
 
                 loop {
                     tokio::select! {

@@ -1,29 +1,38 @@
+use axum::extract::Query;
+use axum::extract::State;
+use axum::http::StatusCode;
+use axum::response::sse::Event;
+use axum::response::{IntoResponse, Response};
 use std::collections::HashSet;
 use std::convert::Infallible;
-use std::time::Duration;
-
-use axum::response::sse::Event;
-use axum::{extract::State, response::Sse};
-use futures::Stream;
 
 use tokio::sync::{mpsc, watch};
 
 use crate::server::render_state_streams::{
-    RenderStateSnapshot, removed_event, sse_response, update_event,
+    RenderStateSnapshot, StreamIntervalQueryParams, parse_interval, removed_event, sse_response,
+    update_event,
 };
 use crate::server::{Claims, LuxideState};
 use crate::tracing::RenderID;
 
+const DEFAULT_INTERVAL_MS: u64 = 100;
+
 pub async fn render_state_stream_multiplexed(
     State(state): State<LuxideState>,
     claims: Claims,
-) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
+    Query(params): Query<StreamIntervalQueryParams>,
+) -> Response {
     let user_id = claims.sub;
     let manager = state.render_manager.clone();
     let registry = manager.render_state_streams().clone();
 
     let (tx, rx) = mpsc::unbounded_channel::<Result<Event, Infallible>>();
     let (cancel_tx, mut cancel_rx) = watch::channel(());
+
+    let interval = match parse_interval(params.interval_ms, DEFAULT_INTERVAL_MS) {
+        Ok(i) => i,
+        Err(message) => return (StatusCode::BAD_REQUEST, message).into_response(),
+    };
 
     tokio::spawn(async move {
         let mut receivers: Vec<(RenderID, watch::Receiver<RenderStateSnapshot>)> = Vec::new();
@@ -41,7 +50,7 @@ pub async fn render_state_stream_multiplexed(
             }
         }
 
-        let mut interval = tokio::time::interval(Duration::from_millis(100));
+        let mut interval = tokio::time::interval(interval);
         let mut tick_count: u64 = 0;
 
         loop {
@@ -96,5 +105,5 @@ pub async fn render_state_stream_multiplexed(
         }
     });
 
-    sse_response(rx, cancel_tx)
+    sse_response(rx, cancel_tx).into_response()
 }

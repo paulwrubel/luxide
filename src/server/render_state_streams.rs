@@ -1,5 +1,5 @@
 use dashmap::DashMap;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::convert::Infallible;
 use std::pin::Pin;
 use std::task::{Context, Poll};
@@ -80,7 +80,7 @@ impl Default for RenderStreamRegistry {
     }
 }
 
-pub(crate) struct ShutdownStream<S> {
+pub struct ShutdownStream<S> {
     inner: S,
     _cancel_tx: watch::Sender<()>,
 }
@@ -102,19 +102,19 @@ impl<S: Stream + Unpin> Stream for ShutdownStream<S> {
     }
 }
 
-pub(crate) fn update_event(snapshot: &RenderStateSnapshot) -> Event {
+pub fn update_event(snapshot: &RenderStateSnapshot) -> Event {
     Event::default()
         .event("update")
         .data(serde_json::to_string(snapshot).unwrap())
 }
 
-pub(crate) fn removed_event(render_id: RenderID) -> Event {
+pub fn removed_event(render_id: RenderID) -> Event {
     Event::default()
         .event("removed")
         .data(serde_json::json!({"render_id": render_id}).to_string())
 }
 
-pub(crate) fn sse_response(
+pub fn sse_response(
     rx: mpsc::UnboundedReceiver<Result<Event, Infallible>>,
     cancel_tx: watch::Sender<()>,
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
@@ -127,4 +127,22 @@ pub(crate) fn sse_response(
             .interval(Duration::from_secs(15))
             .text("keepalive"),
     )
+}
+
+const MIN_INTERVAL_MS: u64 = 50;
+
+#[derive(Deserialize)]
+pub struct StreamIntervalQueryParams {
+    pub interval_ms: Option<u64>,
+}
+
+pub fn parse_interval(requested: Option<u64>, default_ms: u64) -> Result<Duration, String> {
+    match requested {
+        Some(ms) if ms < MIN_INTERVAL_MS => Err(format!(
+            "interval_ms must be at least {}ms, got {}ms",
+            MIN_INTERVAL_MS, ms
+        )),
+        Some(ms) => Ok(Duration::from_millis(ms)),
+        None => Ok(Duration::from_millis(default_ms)),
+    }
 }
