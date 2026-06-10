@@ -177,6 +177,10 @@ export function isRenderStatePaused(state: RenderState): state is RenderStatePau
   return typeof state === 'object' && 'paused' in state;
 }
 
+export function stateKey(state: RenderState): string {
+  return typeof state === 'string' ? state : Object.keys(state)[0];
+}
+
 export type RenderStateSnapshot = {
   render_id: number;
   state: RenderState;

@@ -1,8 +1,8 @@
 import { useParams } from 'react-router-dom';
 import { Sidebar, SidebarItems, SidebarItemGroup, type SidebarTheme } from 'flowbite-react';
 import type { DeepPartial } from 'flowbite-react/types';
-import { useRender } from '../../../hooks/useRender';
-import { useRenderStats } from '../../../hooks/useRenderStats';
+import { useRender } from '@/hooks/useRender';
+import { useRenderStats } from '@/hooks/useRenderStats';
 import { RenderSidebar } from './RenderSidebar';
 import { RenderDisplay } from './RenderDisplay';
 

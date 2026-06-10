@@ -1,16 +1,10 @@
 import { useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEventSource } from './useEventSource';
-import { getRender } from '../utils/api';
-import type { Render, RenderState, RenderStateSnapshot } from '../utils/api';
-import { useAuth } from '../providers/auth';
-
-function stateKey(state: RenderState): string {
-  if (typeof state === 'string') {
-    return state;
-  }
-  return Object.keys(state)[0];
-}
+import { useEventSource } from '@/hooks/useEventSource';
+import { getRender } from '@/utils/api';
+import { stateKey } from '@/utils/api';
+import type { Render, RenderStateSnapshot } from '@/utils/api';
+import { useAuth } from '@/providers/auth';
 
 export type UseRenderOptions = {
   renderID: number;

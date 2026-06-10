@@ -1,9 +1,9 @@
 import { useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getRenderStats } from '../utils/api';
-import type { RenderStats } from '../utils/api';
-import { useAuth } from '../providers/auth';
-import { useEventSource } from './useEventSource';
+import { getRenderStats } from '@/utils/api';
+import type { RenderStats } from '@/utils/api';
+import { useAuth } from '@/providers/auth';
+import { useEventSource } from '@/hooks/useEventSource';
 
 export type UseRenderStatsOptions = {
   renderID: number;
