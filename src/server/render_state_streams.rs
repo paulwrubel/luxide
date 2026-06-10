@@ -37,12 +37,14 @@ impl RenderStateSnapshot {
 
 pub struct RenderStreamRegistry {
     channels: DashMap<RenderID, watch::Sender<RenderStateSnapshot>>,
+    pausing: DashMap<RenderID, ()>,
 }
 
 impl RenderStreamRegistry {
     pub fn new() -> Self {
         Self {
             channels: DashMap::new(),
+            pausing: DashMap::new(),
         }
     }
 
@@ -71,6 +73,18 @@ impl RenderStreamRegistry {
 
     pub fn remove(&self, render_id: RenderID) {
         self.channels.remove(&render_id);
+    }
+
+    pub fn mark_pausing(&self, render_id: RenderID) {
+        self.pausing.insert(render_id, ());
+    }
+
+    pub fn unmark_pausing(&self, render_id: RenderID) {
+        self.pausing.remove(&render_id);
+    }
+
+    pub fn is_pausing(&self, render_id: RenderID) -> bool {
+        self.pausing.contains_key(&render_id)
     }
 }
 

@@ -242,12 +242,20 @@ impl RenderManager {
                             50,
                             (total / 1000).max(1),
                             |progress_info| {
-                                render_state_streams.send(RenderStateSnapshot {
-                                    render_id: render.id,
-                                    state: RenderState::Running {
+                                let state = if render_state_streams.is_pausing(render.id) {
+                                    RenderState::Pausing {
                                         checkpoint_iteration: iteration,
                                         progress_info,
-                                    },
+                                    }
+                                } else {
+                                    RenderState::Running {
+                                        checkpoint_iteration: iteration,
+                                        progress_info,
+                                    }
+                                };
+                                render_state_streams.send(RenderStateSnapshot {
+                                    render_id: render.id,
+                                    state,
                                     updated_at: chrono::Utc::now(),
                                 });
                                 storage.update_progress(render.id, progress_info)
@@ -402,6 +410,7 @@ impl RenderManager {
                         .await
                     {
                         Ok(_) => {
+                            render_state_streams.unmark_pausing(render.id);
                             render_state_streams.send(RenderStateSnapshot {
                                 render_id: render.id,
                                 state: RenderState::Paused(iteration),
@@ -783,6 +792,7 @@ impl RenderManager {
                 // when pausing, we first mark it as Pausing at the current checkpoint
                 // the render thread will see this and transition to Paused when done
                 println!("Pausing render {id} at checkpoint {checkpoint_iteration}");
+                self.render_state_streams.mark_pausing(id);
                 self.storage
                     .update_render_state(
                         id,
@@ -824,6 +834,7 @@ impl RenderManager {
                 //
                 // if it has more checkpoints to complete, the main loop will pick it up
                 println!("Resuming render {id} at checkpoint {checkpoint_iteration}");
+                self.render_state_streams.unmark_pausing(id);
                 self.storage
                     .update_render_state(
                         id,
@@ -839,6 +850,7 @@ impl RenderManager {
                 // if the render is pausing, that means the render thread for it is still running,
                 // so we can just seamlessly roll it back to Running and nothing will have changed
                 println!("Resuming render {id}");
+                self.render_state_streams.unmark_pausing(id);
                 self.storage
                     .update_render_state(
                         id,

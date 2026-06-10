@@ -15,6 +15,6 @@ export function useRender(options: UseRenderOptions) {
   return useQuery({
     queryKey: ['render', renderID, token],
     queryFn: () => getRender(token, renderID),
-    refetchInterval: 1000,
+    staleTime: Infinity,
   });
 }
