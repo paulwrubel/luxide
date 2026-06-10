@@ -5,6 +5,7 @@ import { usePauseRender, useResumeRender, useDeleteRender } from '@/hooks/useRen
 import { isRenderStatePausing, isRenderStatePaused, isRenderStateRunning } from '@/utils/api';
 import toast from 'react-hot-toast';
 import { extractErrorMessage } from '@/utils/api';
+
 export type RenderControlsProps = {
   renderID: number;
 };

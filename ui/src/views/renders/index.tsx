@@ -10,7 +10,7 @@ import { HiExclamationTriangle } from 'react-icons/hi2';
 
 export function RendersPage() {
   const { user } = useAuth();
-  const allRendersQuery = useRenders();
+  const allRendersQuery = useRenders({ streaming: true });
 
   const canCreateNewRender =
     (user?.max_renders ?? null) === null ||

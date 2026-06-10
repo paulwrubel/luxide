@@ -1,6 +1,6 @@
 import type { RawRenderConfig, NormalizedRenderConfig } from './render/config';
 
-function getAPIURL(): string {
+export function getAPIURL(): string {
   // in production, the UI and API are served from the same origin (Rust embeds both)
   //
   // in dev, Vite proxies /api -> localhost:8080 transparently
@@ -176,6 +176,16 @@ export type RenderStatePaused = {
 export function isRenderStatePaused(state: RenderState): state is RenderStatePaused {
   return typeof state === 'object' && 'paused' in state;
 }
+
+export function stateKey(state: RenderState): string {
+  return typeof state === 'string' ? state : Object.keys(state)[0];
+}
+
+export type RenderStateSnapshot = {
+  render_id: number;
+  state: RenderState;
+  updated_at: Render['updated_at'];
+};
 
 export type ProgressInfoPrecise = {
   progress: number;

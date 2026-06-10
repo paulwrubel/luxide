@@ -21,7 +21,7 @@ export function ProgressState(props: ProgressStateProps) {
   }
 
   const progressTheme: DeepPartial<ProgressTheme> = {
-    bar: increasing ? 'transition-[width] duration-1000 ease-linear' : '',
+    bar: increasing ? 'transition-[width] duration-50 ease-linear' : '',
   };
 
   return (

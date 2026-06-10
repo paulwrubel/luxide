@@ -95,7 +95,7 @@ export function RenderPreviewCard(props: RenderPreviewCardProps) {
               theme={{
                 base: 'rounded-none',
                 bar: increasing
-                  ? 'rounded-none transition-[width] duration-1000 ease-linear'
+                  ? 'rounded-none transition-[width] duration-100 ease-linear'
                   : 'rounded-none',
               }}
             />
