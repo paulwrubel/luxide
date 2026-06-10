@@ -49,6 +49,9 @@ pub use render_stream_multi::*;
 mod render_stream_single;
 pub use render_stream_single::*;
 
+mod render_stats_stream;
+pub use render_stats_stream::*;
+
 mod resume_render;
 pub use resume_render::*;
 

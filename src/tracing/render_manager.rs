@@ -286,23 +286,38 @@ impl RenderManager {
             let ended_at = chrono::Utc::now();
 
             println!("Saving pixel_data...");
-            if let Err(e) = storage
-                .create_render_checkpoint(RenderCheckpoint {
-                    render_id: render.id,
-                    iteration,
-                    pixel_data: Some(new_pixel_data),
-                    started_at,
-                    ended_at,
-                    pixel_data_cleared: false,
-                })
-                .await
-            {
-                println!("Failed to create render checkpoint: {e}");
-                // remove from running set on error
-                running_renders.lock().unwrap().remove(&render.id);
-                return;
+            match storage.render_checkpoint_exists(render.id, iteration).await {
+                Ok(true) => {
+                    println!(
+                        "Checkpoint for render {}, iteration {} unexpectedly already exists! Skipping save, proceeding to state transition.",
+                        render.id, iteration
+                    );
+                }
+                Ok(false) => {
+                    if let Err(e) = storage
+                        .create_render_checkpoint(RenderCheckpoint {
+                            render_id: render.id,
+                            iteration,
+                            pixel_data: Some(new_pixel_data),
+                            started_at,
+                            ended_at,
+                            pixel_data_cleared: false,
+                        })
+                        .await
+                    {
+                        println!("Failed to create render checkpoint: {e}");
+                        // remove from running set on error
+                        running_renders.lock().unwrap().remove(&render.id);
+                        return;
+                    }
+                    println!("Finished saving pixel_data");
+                }
+                Err(e) => {
+                    println!("Failed to check if render checkpoint exists: {e}");
+                    running_renders.lock().unwrap().remove(&render.id);
+                    return;
+                }
             }
-            println!("Finished saving pixel_data");
 
             println!("Checking if old checkpoints' pixel data needs to be cleared...");
             let total_checkpoints_saved = match storage.get_render_checkpoint_count(render.id).await

@@ -123,6 +123,10 @@ fn build_renders_router() -> Router<LuxideState> {
         )
         .route("/{id}/stats", get(handlers::get_render_stats))
         .route(
+            "/{id}/stats/stream",
+            get(handlers::render_stats_stream_single),
+        )
+        .route(
             "/{id}/checkpoint/earliest",
             get(handlers::get_earliest_render_checkpoint_image),
         )

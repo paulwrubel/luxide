@@ -15,6 +15,6 @@ export function useRenderStats(options: UseRenderStatsOptions) {
   return useQuery({
     queryKey: ['renderStats', renderID, token],
     queryFn: () => getRenderStats(token, renderID),
-    refetchInterval: 1000,
+    staleTime: Infinity,
   });
 }
