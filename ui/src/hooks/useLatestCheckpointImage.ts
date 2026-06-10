@@ -23,7 +23,7 @@ export function useLatestCheckpointImage(options: UseLatestCheckpointImageOption
       }
       return URL.createObjectURL(blob);
     },
-    refetchInterval: 1000,
+    staleTime: 60 * 1000,
     enabled: enabled ?? true,
   });
 
