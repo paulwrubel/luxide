@@ -12,6 +12,7 @@ use crate::server::render_state_streams::{
     RenderStateSnapshot, StreamIntervalQueryParams, parse_interval, removed_event, sse_response,
     update_event,
 };
+use crate::server::resolve_effective_user_id;
 use crate::server::{Claims, LuxideState};
 use crate::tracing::RenderID;
 
@@ -22,7 +23,12 @@ pub async fn render_state_stream_multiplexed(
     claims: Claims,
     Query(params): Query<StreamIntervalQueryParams>,
 ) -> Response {
-    let user_id = claims.sub;
+    let effective_user_id =
+        match resolve_effective_user_id(&state.auth_manager, &claims, params.user_id).await {
+            Ok(id) => id,
+            Err((status, message)) => return (status, message).into_response(),
+        };
+    let user_id = effective_user_id;
     let manager = state.render_manager.clone();
     let registry = manager.render_state_streams().clone();
 

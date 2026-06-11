@@ -12,7 +12,7 @@ use futures::Stream;
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::UnboundedReceiverStream;
 
-use crate::tracing::{RenderID, RenderState};
+use crate::tracing::{RenderID, RenderState, UserID};
 
 #[derive(Copy, Clone, Debug, PartialEq, Serialize)]
 pub struct RenderStateSnapshot {
@@ -148,6 +148,7 @@ const MIN_INTERVAL_MS: u64 = 50;
 #[derive(Deserialize)]
 pub struct StreamIntervalQueryParams {
     pub interval_ms: Option<u64>,
+    pub user_id: Option<UserID>,
 }
 
 pub fn parse_interval(requested: Option<u64>, default_ms: u64) -> Result<Duration, String> {

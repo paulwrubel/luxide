@@ -12,6 +12,7 @@ use tokio::sync::{mpsc, watch};
 use crate::server::render_state_streams::{
     StreamIntervalQueryParams, parse_interval, sse_response,
 };
+use crate::server::resolve_effective_user_id;
 use crate::server::{Claims, LuxideState};
 use crate::tracing::RenderID;
 
@@ -24,7 +25,16 @@ pub async fn render_stats_stream_single(
     Query(params): Query<StreamIntervalQueryParams>,
 ) -> Response {
     // Validate ownership
-    match state.render_manager.get_render(render_id, claims.sub).await {
+    let effective_user_id =
+        match resolve_effective_user_id(&state.auth_manager, &claims, params.user_id).await {
+            Ok(id) => id,
+            Err((status, message)) => return (status, message).into_response(),
+        };
+    match state
+        .render_manager
+        .get_render(render_id, effective_user_id)
+        .await
+    {
         Ok(Some(_)) => {
             let interval = match parse_interval(params.interval_ms, DEFAULT_INTERVAL_MS) {
                 Ok(i) => i,
@@ -32,7 +42,7 @@ pub async fn render_stats_stream_single(
             };
 
             let manager = state.render_manager.clone();
-            let user_id = claims.sub;
+            let user_id = effective_user_id;
 
             let (tx, rx) = mpsc::unbounded_channel::<Result<Event, Infallible>>();
             let (cancel_tx, mut cancel_rx) = watch::channel(());
