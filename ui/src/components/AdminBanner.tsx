@@ -5,16 +5,16 @@ import { Badge, Tooltip } from 'flowbite-react';
 import { HiXMark } from 'react-icons/hi2';
 
 export function AdminBanner() {
-  const { targetUserID, clearTargetUserId } = useAdminUserOverride();
+  const { targetUserID, clearTargetUserID } = useAdminUserOverride();
   const { user: currentUser } = useAuth();
 
   const isAdmin = currentUser?.role === 'admin';
 
   // only fetch users when impersonating AND the current user is an admin
-  const { data: allUsers } = useAllUsers({ enabled: isAdmin && targetUserID !== null });
+  const { data: allUsers } = useAllUsers({ enabled: isAdmin && targetUserID !== undefined });
 
   // don't render if not impersonating or not an admin
-  if (targetUserID === null || !isAdmin) {
+  if (targetUserID === undefined || !isAdmin) {
     return null;
   }
 
@@ -30,7 +30,7 @@ export function AdminBanner() {
         <Tooltip content="Switch back to my renders">
           <button
             type="button"
-            onClick={clearTargetUserId}
+            onClick={clearTargetUserID}
             className="flex cursor-pointer items-center justify-center rounded p-0.5 text-red-900 hover:text-black"
           >
             <HiXMark className="h-4 w-4" />
