@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getRenderStats } from '@/utils/api';
 import type { RenderStats } from '@/utils/api';
 import { useAuth } from '@/providers/auth';
+import { useAdminUserOverride } from '@/providers/AdminUserOverride';
 import { useEventSource } from '@/hooks/useEventSource';
 
 export type UseRenderStatsOptions = {
@@ -15,11 +16,12 @@ export function useRenderStats(options: UseRenderStatsOptions) {
 
   const { mustGetToken } = useAuth();
   const token = mustGetToken();
+  const { targetUserID } = useAdminUserOverride();
   const queryClient = useQueryClient();
 
   const queryResult = useQuery({
-    queryKey: ['renderStats', renderID, token],
-    queryFn: () => getRenderStats(token, renderID),
+    queryKey: ['renderStats', renderID, token, targetUserID],
+    queryFn: () => getRenderStats(token, renderID, targetUserID),
     staleTime: Infinity,
   });
 
@@ -27,9 +29,9 @@ export function useRenderStats(options: UseRenderStatsOptions) {
     (event: MessageEvent) => {
       // JSON.parse returns any; the SSE endpoint always sends RenderStats-shaped data
       const stats = JSON.parse(event.data) as RenderStats;
-      queryClient.setQueryData<RenderStats>(['renderStats', renderID, token], stats);
+      queryClient.setQueryData<RenderStats>(['renderStats', renderID, token, targetUserID], stats);
     },
-    [renderID, token, queryClient],
+    [renderID, token, targetUserID, queryClient],
   );
 
   const handleError = useCallback(() => {
@@ -40,6 +42,7 @@ export function useRenderStats(options: UseRenderStatsOptions) {
     enabled: streaming ?? false,
     path: `/renders/${renderID}/stats/stream`,
     token,
+    targetUserID,
     intervalMillis: 500,
     onUpdateEvent: handleUpdate,
     onErrorEvent: handleError,

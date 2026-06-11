@@ -24,6 +24,7 @@ The `ui/` directory is the React frontend.
 - **State/Data**: @tanstack/react-query ^5.100 (server state, 1s polling), @tanstack/react-form ^1.32 + @tanstack/zod-form-adapter (form state)
 - **3D Preview**: @react-three/fiber ^9.6 + @react-three/drei ^10.7 + three ^0.184
 - **UI Kit**: flowbite-react ^0.12
+- **UI Kit Reference**: https://flowbite-react.com/llms.txt
 - **Animation**: framer-motion ^12.40
 - **Validation**: zod ^3.25
 - **CSS**: Tailwind CSS v4 (configured entirely in CSS, no config file; dark mode via `.dark` class)

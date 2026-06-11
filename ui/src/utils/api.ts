@@ -9,6 +9,14 @@ export function getAPIURL(): string {
   return `${window.location.origin}/api/v1`;
 }
 
+function appendUserId(url: string, targetUserID?: number): string {
+  if (targetUserID === undefined) {
+    return url;
+  }
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}user_id=${targetUserID}`;
+}
+
 export type LoginResponse = {
   redirect_url: string;
 };
@@ -98,8 +106,9 @@ export type PostRenderResponse = Render & {
 export async function postRender(
   token: string,
   renderConfig: NormalizedRenderConfig,
+  targetUserID?: number,
 ): Promise<PostRenderResponse> {
-  const response = await fetch(`${getAPIURL()}/renders`, {
+  const response = await fetch(appendUserId(`${getAPIURL()}/renders`, targetUserID), {
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -199,10 +208,13 @@ export type Duration = {
   nanos: number;
 };
 
-export async function getAllRenders(token: string): Promise<Render[]> {
-  const response = await fetch(`${getAPIURL()}/renders?format=precise`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+export async function getAllRenders(token: string, targetUserID?: number): Promise<Render[]> {
+  const response = await fetch(
+    appendUserId(`${getAPIURL()}/renders?format=precise`, targetUserID),
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
 
   if (!response.ok) {
     const body = await response.text();
@@ -212,10 +224,17 @@ export async function getAllRenders(token: string): Promise<Render[]> {
   return (await response.json()) as Render[];
 }
 
-export async function getRender(token: string, renderID: number): Promise<Render> {
-  const response = await fetch(`${getAPIURL()}/renders/${renderID}?format=precise`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+export async function getRender(
+  token: string,
+  renderID: number,
+  targetUserID?: number,
+): Promise<Render> {
+  const response = await fetch(
+    appendUserId(`${getAPIURL()}/renders/${renderID}?format=precise`, targetUserID),
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
 
   if (!response.ok) {
     const body = await response.text();
@@ -225,11 +244,18 @@ export async function getRender(token: string, renderID: number): Promise<Render
   return (await response.json()) as Render;
 }
 
-export async function pauseRender(token: string, renderID: number): Promise<void> {
-  const response = await fetch(`${getAPIURL()}/renders/${renderID}/pause`, {
-    headers: { Authorization: `Bearer ${token}` },
-    method: 'POST',
-  });
+export async function pauseRender(
+  token: string,
+  renderID: number,
+  targetUserID?: number,
+): Promise<void> {
+  const response = await fetch(
+    appendUserId(`${getAPIURL()}/renders/${renderID}/pause`, targetUserID),
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      method: 'POST',
+    },
+  );
 
   if (!response.ok) {
     const body = await response.text();
@@ -237,11 +263,18 @@ export async function pauseRender(token: string, renderID: number): Promise<void
   }
 }
 
-export async function resumeRender(token: string, renderID: number): Promise<void> {
-  const response = await fetch(`${getAPIURL()}/renders/${renderID}/resume`, {
-    headers: { Authorization: `Bearer ${token}` },
-    method: 'POST',
-  });
+export async function resumeRender(
+  token: string,
+  renderID: number,
+  targetUserID?: number,
+): Promise<void> {
+  const response = await fetch(
+    appendUserId(`${getAPIURL()}/renders/${renderID}/resume`, targetUserID),
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      method: 'POST',
+    },
+  );
 
   if (!response.ok) {
     const body = await response.text();
@@ -249,8 +282,12 @@ export async function resumeRender(token: string, renderID: number): Promise<voi
   }
 }
 
-export async function deleteRender(token: string, renderID: number): Promise<void> {
-  const response = await fetch(`${getAPIURL()}/renders/${renderID}`, {
+export async function deleteRender(
+  token: string,
+  renderID: number,
+  targetUserID?: number,
+): Promise<void> {
+  const response = await fetch(appendUserId(`${getAPIURL()}/renders/${renderID}`, targetUserID), {
     headers: { Authorization: `Bearer ${token}` },
     method: 'DELETE',
   });
@@ -265,15 +302,19 @@ export async function updateRenderTotalCheckpoints(
   token: string,
   renderID: number,
   newTotalCheckpoints: number,
+  targetUserID?: number,
 ): Promise<void> {
-  const response = await fetch(`${getAPIURL()}/renders/${renderID}/parameters/total_checkpoints`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
+  const response = await fetch(
+    appendUserId(`${getAPIURL()}/renders/${renderID}/parameters/total_checkpoints`, targetUserID),
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      method: 'PUT',
+      body: JSON.stringify({ new_total_checkpoints: newTotalCheckpoints }),
     },
-    method: 'PUT',
-    body: JSON.stringify({ new_total_checkpoints: newTotalCheckpoints }),
-  });
+  );
 
   if (!response.ok) {
     const body = await response.text();
@@ -285,15 +326,19 @@ export async function updateRenderName(
   token: string,
   renderID: number,
   newName: string,
+  targetUserID?: number,
 ): Promise<void> {
-  const response = await fetch(`${getAPIURL()}/renders/${renderID}/name`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
+  const response = await fetch(
+    appendUserId(`${getAPIURL()}/renders/${renderID}/name`, targetUserID),
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      method: 'PUT',
+      body: JSON.stringify({ name: newName }),
     },
-    method: 'PUT',
-    body: JSON.stringify({ name: newName }),
-  });
+  );
 
   if (!response.ok) {
     const body = await response.text();
@@ -320,10 +365,17 @@ export type RenderStats = {
   checkpoint_stats: RenderCheckpointStats;
 };
 
-export async function getRenderStats(token: string, renderID: number): Promise<RenderStats> {
-  const response = await fetch(`${getAPIURL()}/renders/${renderID}/stats?format=precise`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+export async function getRenderStats(
+  token: string,
+  renderID: number,
+  targetUserID?: number,
+): Promise<RenderStats> {
+  const response = await fetch(
+    appendUserId(`${getAPIURL()}/renders/${renderID}/stats?format=precise`, targetUserID),
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
 
   if (!response.ok) {
     const body = await response.text();
@@ -336,10 +388,14 @@ export async function getRenderStats(token: string, renderID: number): Promise<R
 export async function getLatestCheckpointImage(
   token: string,
   renderID: number,
+  targetUserID?: number,
 ): Promise<Blob | null> {
-  const response = await fetch(`${getAPIURL()}/renders/${renderID}/checkpoint/latest`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await fetch(
+    appendUserId(`${getAPIURL()}/renders/${renderID}/checkpoint/latest`, targetUserID),
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
 
   if (response.status === 404) {
     return null;

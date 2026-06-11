@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Card, Progress, Spinner, type CardTheme } from 'flowbite-react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import type { DeepPartial } from 'flowbite-react/types';
 import { isRenderStateRunning, isRenderStatePausing, type Render } from '@/utils/api';
 import { useLatestCheckpointImage } from '@/hooks/useLatestCheckpointImage';
@@ -28,6 +28,9 @@ export function RenderPreviewCard(props: RenderPreviewCardProps) {
       ? state.pausing.progress_info.progress
       : 0;
 
+  const [searchParams] = useSearchParams();
+  const searchString = searchParams.toString();
+
   // disable the CSS width transition when progress decreases
   // (new checkpoint started), so the bar snaps instead of animating backwards.
   // a 2-element array preserves history so the re-render after setState still
@@ -46,7 +49,7 @@ export function RenderPreviewCard(props: RenderPreviewCardProps) {
   };
 
   return (
-    <Link to={`/renders/${render.id}`}>
+    <Link to={`/renders/${render.id}${searchString ? `?${searchString}` : ''}`}>
       <Card
         className="text-zinc-200 hover:bg-zinc-700"
         theme={cardTheme}

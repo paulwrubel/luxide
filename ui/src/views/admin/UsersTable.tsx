@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Alert,
   Avatar,
@@ -28,6 +29,8 @@ function quotaDisplay(value: number | null): string {
 
 export function UsersTable() {
   const { user: currentUser } = useAuth();
+
+  const navigate = useNavigate();
 
   const { data: users, isPending, isError, error } = useAllUsers();
   const { mutate: updateUserRole, isPending: updateUserRoleIsPending } = useUpdateUserRole();
@@ -86,6 +89,13 @@ export function UsersTable() {
                   <TableCell>{quotaDisplay(user.max_render_pixel_count)}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
+                      <Button
+                        color="default"
+                        size="xs"
+                        onClick={() => navigate(`/renders?user_id=${user.id}`)}
+                      >
+                        View Renders
+                      </Button>
                       <Button
                         color="default"
                         size="xs"

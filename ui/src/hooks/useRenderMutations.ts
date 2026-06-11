@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAdminUserOverride } from '@/providers/AdminUserOverride';
 import {
   postRender,
   pauseRender,
@@ -13,11 +14,12 @@ import type { NormalizedRenderConfig } from '../utils/render/config';
 export function useCreateRender() {
   const { mustGetToken } = useAuth();
   const token = mustGetToken();
+  const { targetUserID } = useAdminUserOverride();
 
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (config: NormalizedRenderConfig) => postRender(token, config),
+    mutationFn: (config: NormalizedRenderConfig) => postRender(token, config, targetUserID),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['renders'] });
     },
@@ -27,11 +29,12 @@ export function useCreateRender() {
 export function usePauseRender() {
   const { mustGetToken } = useAuth();
   const token = mustGetToken();
+  const { targetUserID } = useAdminUserOverride();
 
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (renderId: number) => pauseRender(token, renderId),
+    mutationFn: (renderId: number) => pauseRender(token, renderId, targetUserID),
     onSuccess: (_data, renderId) => {
       queryClient.invalidateQueries({ queryKey: ['renders'] });
       queryClient.invalidateQueries({ queryKey: ['render', renderId] });
@@ -42,11 +45,12 @@ export function usePauseRender() {
 export function useResumeRender() {
   const { mustGetToken } = useAuth();
   const token = mustGetToken();
+  const { targetUserID } = useAdminUserOverride();
 
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (renderId: number) => resumeRender(token, renderId),
+    mutationFn: (renderId: number) => resumeRender(token, renderId, targetUserID),
     onSuccess: (_data, renderId) => {
       queryClient.invalidateQueries({ queryKey: ['renders'] });
       queryClient.invalidateQueries({ queryKey: ['render', renderId] });
@@ -57,11 +61,12 @@ export function useResumeRender() {
 export function useDeleteRender() {
   const { mustGetToken } = useAuth();
   const token = mustGetToken();
+  const { targetUserID } = useAdminUserOverride();
 
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (renderId: number) => deleteRender(token, renderId),
+    mutationFn: (renderId: number) => deleteRender(token, renderId, targetUserID),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['renders'] });
     },
@@ -71,6 +76,7 @@ export function useDeleteRender() {
 export function useUpdateRenderTotalCheckpoints() {
   const { mustGetToken } = useAuth();
   const token = mustGetToken();
+  const { targetUserID } = useAdminUserOverride();
 
   const queryClient = useQueryClient();
 
@@ -81,7 +87,7 @@ export function useUpdateRenderTotalCheckpoints() {
     }: {
       renderId: number;
       newTotalCheckpoints: number;
-    }) => updateRenderTotalCheckpoints(token, renderId, newTotalCheckpoints),
+    }) => updateRenderTotalCheckpoints(token, renderId, newTotalCheckpoints, targetUserID),
     onSuccess: (_data, { renderId }) => {
       queryClient.invalidateQueries({ queryKey: ['renders'] });
       queryClient.invalidateQueries({ queryKey: ['render', renderId] });
@@ -92,11 +98,12 @@ export function useUpdateRenderTotalCheckpoints() {
 export function useUpdateRenderName() {
   const { mustGetToken } = useAuth();
   const token = mustGetToken();
+  const { targetUserID } = useAdminUserOverride();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ renderId, newName }: { renderId: number; newName: string }) =>
-      updateRenderName(token, renderId, newName),
+      updateRenderName(token, renderId, newName, targetUserID),
     onSuccess: (_data, { renderId }) => {
       queryClient.invalidateQueries({ queryKey: ['renders'] });
       queryClient.invalidateQueries({ queryKey: ['render', renderId] });

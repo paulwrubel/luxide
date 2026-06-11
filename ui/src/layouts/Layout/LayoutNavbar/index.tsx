@@ -7,6 +7,7 @@ import {
   type NavbarTheme,
 } from 'flowbite-react';
 import type { DeepPartial } from 'flowbite-react/types';
+import { AdminBanner } from '@/components/AdminBanner';
 import { UserBadge } from './UserBadge';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/providers/auth';
@@ -36,6 +37,7 @@ export function LayoutNavbar() {
           {__APP_VERSION__}
         </span>
       </div>
+      <AdminBanner />
       <div className="flex flex-1 justify-end md:order-2">
         <UserBadge />
         <NavbarToggle />

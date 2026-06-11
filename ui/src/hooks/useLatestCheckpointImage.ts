@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getLatestCheckpointImage } from '../utils/api';
 import { useAuth } from '../providers/auth';
+import { useAdminUserOverride } from '@/providers/AdminUserOverride';
 
 export type UseLatestCheckpointImageOptions = {
   renderID: number;
@@ -14,10 +15,12 @@ export function useLatestCheckpointImage(options: UseLatestCheckpointImageOption
   const { mustGetToken } = useAuth();
   const token = mustGetToken();
 
+  const { targetUserID } = useAdminUserOverride();
+
   const { data: checkpointData, ...queryRest } = useQuery({
-    queryKey: ['checkpointImage', renderID, token],
+    queryKey: ['checkpointImage', renderID, token, targetUserID],
     queryFn: async () => {
-      const blob = await getLatestCheckpointImage(token, renderID);
+      const blob = await getLatestCheckpointImage(token, renderID, targetUserID);
       if (blob === null) {
         return null;
       }

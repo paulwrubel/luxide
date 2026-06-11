@@ -1,0 +1,42 @@
+import { useAuth } from '@/providers/auth';
+import { useAdminUserOverride } from '@/providers/AdminUserOverride';
+import { useAllUsers } from '@/hooks/useAllUsers';
+import { Badge, Tooltip } from 'flowbite-react';
+import { HiXMark } from 'react-icons/hi2';
+
+export function AdminBanner() {
+  const { targetUserID, clearTargetUserId } = useAdminUserOverride();
+  const { user: currentUser } = useAuth();
+
+  const isAdmin = currentUser?.role === 'admin';
+
+  // only fetch users when impersonating AND the current user is an admin
+  const { data: allUsers } = useAllUsers({ enabled: isAdmin && targetUserID !== null });
+
+  // don't render if not impersonating or not an admin
+  if (targetUserID === null || !isAdmin) {
+    return null;
+  }
+
+  const targetUser = allUsers?.find((u) => u.id === targetUserID);
+  const displayName = targetUser?.username ?? `#${targetUserID}`;
+
+  return (
+    <Badge size="sm" color="red" className="rounded-full p-2 dark:hover:bg-red-200!">
+      <span className="flex items-center gap-2">
+        <span className="select-none">
+          viewing as <em>{displayName}</em>
+        </span>
+        <Tooltip content="Switch back to my renders">
+          <button
+            type="button"
+            onClick={clearTargetUserId}
+            className="flex cursor-pointer items-center justify-center rounded p-0.5 text-red-900 hover:text-black"
+          >
+            <HiXMark className="h-4 w-4" />
+          </button>
+        </Tooltip>
+      </span>
+    </Badge>
+  );
+}
