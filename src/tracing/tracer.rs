@@ -77,10 +77,23 @@ impl Tracer {
                 .flat_map(|tile| {
                     let tile_colors: PixelData = tile
                         .map(|(x, y)| {
+                            let grid_size =
+                                (parameters.samples_per_checkpoint as f64).sqrt().floor() as u32;
+                            let stratified_count = grid_size * grid_size;
+
                             let color = (0..parameters.samples_per_checkpoint).fold(
                                 Color::BLACK,
-                                |acc, _| {
-                                    let ray = cam.get_ray(x, y);
+                                |acc, i| {
+                                    let ray = if i < stratified_count {
+                                        cam.get_ray_stratified(
+                                            x,
+                                            y,
+                                            i,
+                                            parameters.samples_per_checkpoint,
+                                        )
+                                    } else {
+                                        cam.get_ray(x, y)
+                                    };
 
                                     acc + cam.ray_color(ray, &scene.world, parameters.max_bounces)
                                 },
