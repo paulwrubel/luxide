@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEventSource } from '@/hooks/useEventSource';
 import { getRender } from '@/utils/api';
@@ -21,7 +21,10 @@ export function useRenderQuery(options: UseRenderOptions) {
   const { targetUserID } = useAdminUserOverride();
   const queryClient = useQueryClient();
 
-  const queryKey = renderQueryKey(renderID, token, targetUserID);
+  const queryKey = useMemo(
+    () => renderQueryKey(renderID, token, targetUserID),
+    [renderID, token, targetUserID],
+  );
 
   const queryResult = useQuery({
     queryKey,
