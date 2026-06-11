@@ -6,6 +6,7 @@ export type UseEventSourceOptions = {
   enabled?: boolean;
   path: string;
   token: string;
+  targetUserID?: number;
   intervalMillis: number;
   onUpdateEvent?: (event: MessageEvent) => void;
   onRemovedEvent?: (event: MessageEvent) => void;
@@ -17,6 +18,7 @@ export function useEventSource(options: UseEventSourceOptions) {
     enabled = true,
     path,
     token,
+    targetUserID,
     intervalMillis,
     onUpdateEvent,
     onErrorEvent,
@@ -28,7 +30,8 @@ export function useEventSource(options: UseEventSourceOptions) {
       return;
     }
 
-    const url = `${getAPIURL()}${path}?interval_ms=${intervalMillis}`;
+    const userParam = targetUserID !== undefined ? `&user_id=${targetUserID}` : '';
+    const url = `${getAPIURL()}${path}?interval_ms=${intervalMillis}${userParam}`;
 
     const eventSource = new EventSource(url, {
       fetch: (input, init) => {
@@ -55,5 +58,14 @@ export function useEventSource(options: UseEventSourceOptions) {
     return () => {
       eventSource.close();
     };
-  }, [token, enabled, path, intervalMillis, onUpdateEvent, onErrorEvent, onRemovedEvent]);
+  }, [
+    token,
+    enabled,
+    path,
+    intervalMillis,
+    targetUserID,
+    onUpdateEvent,
+    onErrorEvent,
+    onRemovedEvent,
+  ]);
 }

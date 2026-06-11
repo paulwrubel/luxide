@@ -6,8 +6,8 @@ use axum::{
 };
 
 use crate::{
-    server::{Claims, LuxideState},
-    tracing::{RenderCheckpointStats, RenderID, RenderStats},
+    server::{Claims, LuxideState, resolve_effective_user_id},
+    tracing::{RenderCheckpointStats, RenderID, RenderStats, UserID},
     utils::format_duration,
 };
 
@@ -74,6 +74,7 @@ pub enum StatsFormat {
 #[serde(rename_all = "snake_case")]
 pub struct StatsFormatQueryParameters {
     pub format: Option<StatsFormat>,
+    pub user_id: Option<UserID>,
 }
 
 pub async fn get_render_stats(
@@ -84,7 +85,17 @@ pub async fn get_render_stats(
 ) -> Response {
     println!("Handing request for get_render_stats (id: {})...", id);
 
-    match state.render_manager.get_render_stats(id, claims.sub).await {
+    let effective_user_id =
+        match resolve_effective_user_id(&state.auth_manager, &claims, stats_format.user_id).await {
+            Ok(id) => id,
+            Err((status, message)) => return (status, message).into_response(),
+        };
+
+    match state
+        .render_manager
+        .get_render_stats(id, effective_user_id)
+        .await
+    {
         Ok(Some(stats)) => {
             let format = stats_format.format.unwrap_or_default();
             match format {

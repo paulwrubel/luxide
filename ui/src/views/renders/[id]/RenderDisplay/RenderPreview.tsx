@@ -1,5 +1,5 @@
-import { useLatestCheckpointImage } from '@/hooks/useLatestCheckpointImage';
-import { useRender } from '@/hooks/useRender';
+import { useLatestCheckpointImageQuery } from '@/hooks/useLatestCheckpointImage';
+import { useRenderQuery } from '@/hooks/useRender';
 import { isRenderStateCreated, isRenderStateRunning, isRenderStatePausing } from '@/utils/api';
 import { Spinner } from 'flowbite-react';
 
@@ -10,7 +10,7 @@ export type RenderPreviewProps = {
 export function RenderPreview(props: RenderPreviewProps) {
   const { renderID } = props;
 
-  const { data: render } = useRender({ renderID });
+  const { data: render } = useRenderQuery({ renderID });
   const renderState = render?.state;
 
   const checkpointEnabled = renderState ? !isRenderStateCreated(renderState) : true;
@@ -23,7 +23,7 @@ export function RenderPreview(props: RenderPreviewProps) {
     isPending: isCheckpointImagePending,
     isError: isCheckpointImageError,
     error: checkpointImageError,
-  } = useLatestCheckpointImage({
+  } = useLatestCheckpointImageQuery({
     renderID,
     enabled: checkpointEnabled,
   });

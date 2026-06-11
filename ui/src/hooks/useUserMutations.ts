@@ -3,7 +3,7 @@ import { updateUserRole, updateUserQuotas } from '../utils/api';
 import { useAuth } from '../providers/auth';
 import type { Role } from '../utils/api';
 
-export function useUpdateUserRole() {
+export function useUpdateUserRoleMutation() {
   const { mustGetToken } = useAuth();
   const token = mustGetToken();
 
@@ -18,7 +18,7 @@ export function useUpdateUserRole() {
   });
 }
 
-export function useUpdateUserQuotas() {
+export function useUpdateUserQuotasMutation() {
   const { mustGetToken } = useAuth();
   const token = mustGetToken();
 

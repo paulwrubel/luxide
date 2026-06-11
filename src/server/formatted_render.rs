@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     deserialization::RenderConfig,
-    tracing::{Render, RenderID, RenderParameters, RenderState},
+    tracing::{Render, RenderID, RenderParameters, RenderState, UserID},
     utils::FormattedProgressInfo,
 };
 
@@ -21,6 +21,7 @@ pub enum RenderFormat {
 #[serde(rename_all = "snake_case")]
 pub struct RenderFormatQueryParameters {
     pub format: Option<RenderFormat>,
+    pub user_id: Option<UserID>,
 }
 
 #[derive(Debug, Clone, Serialize)]

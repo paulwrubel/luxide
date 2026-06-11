@@ -5,22 +5,27 @@ import { getRender } from '@/utils/api';
 import { stateKey } from '@/utils/api';
 import type { Render, RenderStateSnapshot } from '@/utils/api';
 import { useAuth } from '@/providers/auth';
+import { useAdminUserOverride } from '@/providers/AdminUserOverride';
+import { checkpointImageQueryKey } from './useLatestCheckpointImage';
 
 export type UseRenderOptions = {
   renderID: number;
   streaming?: boolean;
 };
 
-export function useRender(options: UseRenderOptions) {
+export function useRenderQuery(options: UseRenderOptions) {
   const { renderID, streaming } = options;
 
   const { mustGetToken } = useAuth();
   const token = mustGetToken();
+  const { targetUserID } = useAdminUserOverride();
   const queryClient = useQueryClient();
 
+  const queryKey = renderQueryKey(renderID, token, targetUserID);
+
   const queryResult = useQuery({
-    queryKey: ['render', renderID, token],
-    queryFn: () => getRender(token, renderID),
+    queryKey,
+    queryFn: () => getRender(token, renderID, targetUserID),
     staleTime: Infinity,
   });
 
@@ -28,7 +33,7 @@ export function useRender(options: UseRenderOptions) {
     (event: MessageEvent) => {
       // JSON.parse returns any; the SSE endpoint always sends RenderStateSnapshot-shaped data
       const snapshot = JSON.parse(event.data) as RenderStateSnapshot;
-      queryClient.setQueryData<Render>(['render', renderID, token], (old) => {
+      queryClient.setQueryData<Render>(queryKey, (old) => {
         if (!old) {
           return old;
         }
@@ -41,10 +46,12 @@ export function useRender(options: UseRenderOptions) {
       // only fetch a new checkpoint image when a checkpoint was actually saved
       const newKey = stateKey(snapshot.state);
       if (newKey === 'finished_checkpoint_iteration' || newKey === 'paused') {
-        queryClient.invalidateQueries({ queryKey: ['checkpointImage', renderID, token] });
+        queryClient.invalidateQueries({
+          queryKey: checkpointImageQueryKey(renderID, token, targetUserID),
+        });
       }
     },
-    [renderID, token, queryClient],
+    [queryClient, queryKey, renderID, token, targetUserID],
   );
 
   const handleError = useCallback(() => {
@@ -55,10 +62,15 @@ export function useRender(options: UseRenderOptions) {
     enabled: streaming ?? false,
     path: `/renders/${renderID}/state/stream`,
     token,
+    targetUserID,
     intervalMillis: 50,
     onUpdateEvent: handleUpdate,
     onErrorEvent: handleError,
   });
 
   return queryResult;
+}
+
+export function renderQueryKey(renderID: number, token: string, targetUserID: number | undefined) {
+  return ['render', renderID, token, targetUserID] as const;
 }

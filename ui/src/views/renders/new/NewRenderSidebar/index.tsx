@@ -14,8 +14,8 @@ import { Separator } from '@/components/Separator';
 import type { DeepPartial } from 'flowbite-react/types';
 import { Controls } from '../Controls';
 import { useAuth } from '@/providers/auth';
-import { useCreateRender } from '@/hooks/useRenderMutations';
-import { useRenders } from '@/hooks/useRenders';
+import { useCreateRenderMutation } from '@/hooks/useRenderMutations';
+import { useRendersQuery } from '@/hooks/useRenders';
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { ViewConfigJSONButton } from './ViewConfigJSONButton';
 import { ConfigJSONModal } from '@/components/ViewRenderJSONButton/ConfigJSONModal';
@@ -35,8 +35,8 @@ export function NewRenderSidebar({ form }: NewRenderSidebarProps) {
 
   const jsonString = JSON.stringify(formValues, null, 2);
 
-  const { mutate: createRender, isPending: isCreatingRender } = useCreateRender();
-  const { data: renders } = useRenders();
+  const { mutate: createRender, isPending: isCreatingRender } = useCreateRenderMutation();
+  const { data: renders } = useRendersQuery();
 
   const handleDownload = useCallback(() => {
     const blob = new Blob([jsonString], { type: 'application/json' });

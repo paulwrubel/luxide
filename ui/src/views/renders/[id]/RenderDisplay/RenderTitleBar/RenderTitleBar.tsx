@@ -1,4 +1,4 @@
-import { useRender } from '@/hooks/useRender';
+import { useRenderQuery } from '@/hooks/useRender';
 import { Spinner, Button } from 'flowbite-react';
 import { HiArrowDownTray } from 'react-icons/hi2';
 import { getLatestCheckpointImage } from '@/utils/api';
@@ -17,7 +17,7 @@ export function RenderTitleBar(props: RenderTitleBarProps) {
     isPending: isRenderPending,
     isError: isRenderError,
     error: renderError,
-  } = useRender({ renderID });
+  } = useRenderQuery({ renderID });
 
   const handleDownload = async () => {
     if (!render) return;

@@ -3,9 +3,10 @@ use axum::{
     http::{StatusCode, request::Parts},
     response::{IntoResponse, Response},
 };
+use serde::Deserialize;
 
-use crate::server::{Claims, LuxideState};
-use crate::tracing::{Role, User};
+use crate::server::{AuthManager, Claims, LuxideState};
+use crate::tracing::{Role, User, UserID};
 
 /// Extractor that validates the user is an admin.
 /// Wraps the existing Claims extractor, fetches the full User from DB,
@@ -40,5 +41,74 @@ impl FromRequestParts<LuxideState> for AdminUser {
         }
 
         Ok(AdminUser { user })
+    }
+}
+
+/// Optional query parameter struct for admin user override.
+/// Parses `?user_id=N` from the URL query string.
+#[derive(Deserialize)]
+#[serde()]
+pub struct RequestedUserID {
+    pub user_id: Option<UserID>,
+}
+
+/// Resolves the effective user ID for a request, handling the admin `?user_id=` override.
+///
+/// When `override_user_id` is `Some(id)`, verifies the requestor is an admin and the
+/// target user exists. Returns the target ID on success. Non-admins receive 403.
+/// When `None`, returns `claims.sub` (the authenticated user's own ID).
+pub async fn resolve_effective_user_id(
+    auth_manager: &AuthManager,
+    claims: &Claims,
+    requested_user_id: Option<UserID>,
+) -> Result<UserID, (StatusCode, String)> {
+    let requested_user_id = match requested_user_id {
+        Some(user_id) => user_id,
+        None => return Ok(claims.sub), // if no query parameter was set, just return from the token
+    };
+
+    // if a user_id parameter was added, we need to make sure that either...
+    //
+    // - the user_id matches the claims.sub field, or
+    // - the user making the request (claims.sub) is an admin
+    //
+    // first we check if we even NEED to pull user info, by seeing if the QP matches the token's subject
+    if claims.sub == requested_user_id {
+        return Ok(claims.sub);
+    }
+
+    // if not, the user needs to be an admin to "simulate" another user
+    let requestor_user = match auth_manager.get_user(claims.sub).await {
+        Ok(Some(user)) => user,
+        Ok(None) => {
+            return Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "User not found".to_string(),
+            ));
+        }
+        Err(_) => {
+            return Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Failed to look up user".to_string(),
+            ));
+        }
+    };
+
+    // verify admin status
+    if requestor_user.role != Role::Admin {
+        return Err((
+            StatusCode::FORBIDDEN,
+            "Only admins can use user_id parameter".to_string(),
+        ));
+    }
+
+    // if we got here, we just need to make sure the requested user exists, and then we're good
+    match auth_manager.get_user(requested_user_id).await {
+        Ok(Some(user)) => Ok(user.id),
+        Ok(None) => Err((StatusCode::NOT_FOUND, "Target user not found".to_string())),
+        Err(_) => Err((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Failed to look up target user".to_string(),
+        )),
     }
 }

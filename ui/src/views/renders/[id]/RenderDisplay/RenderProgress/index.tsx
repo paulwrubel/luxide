@@ -5,8 +5,8 @@ import {
   isRenderStateFinishedCheckpointIteration,
   isRenderStatePaused,
 } from '@/utils/api';
-import { useRender } from '@/hooks/useRender';
-import { useRenderStats } from '@/hooks/useRenderStats';
+import { useRenderQuery } from '@/hooks/useRender';
+import { useRenderStatsQuery } from '@/hooks/useRenderStats';
 import { Spinner } from 'flowbite-react';
 import { ProgressState } from './ProgressState';
 import { RenderTiming, type RenderTimingData } from './RenderTiming';
@@ -17,14 +17,14 @@ export function RenderProgress({ renderID }: { renderID: number }) {
     isPending: isRenderPending,
     isError: isRenderError,
     error: renderError,
-  } = useRender({ renderID });
+  } = useRenderQuery({ renderID });
 
   const {
     data: renderStats,
     isPending: isStatsPending,
     isError: isStatsError,
     error: statsError,
-  } = useRenderStats({ renderID });
+  } = useRenderStatsQuery({ renderID });
 
   if (isRenderPending || isStatsPending) {
     return (

@@ -1,5 +1,5 @@
 import { Spinner } from 'flowbite-react';
-import { useRender } from '@/hooks/useRender';
+import { useRenderQuery } from '@/hooks/useRender';
 import {
   isRenderStateRunning,
   isRenderStatePausing,
@@ -21,7 +21,7 @@ export function CheckpointLimitEditor(props: CheckpointLimitEditorProps) {
     isLoading: isRenderLoading,
     isError: isRenderError,
     error: renderError,
-  } = useRender({ renderID });
+  } = useRenderQuery({ renderID });
 
   if (isRenderLoading) {
     return <Spinner size="md" className="fill-zinc-400" />;

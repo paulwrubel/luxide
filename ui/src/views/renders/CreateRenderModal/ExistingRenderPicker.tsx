@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button, ModalHeader, ModalBody, ModalFooter, Spinner, Alert } from 'flowbite-react';
 import { HiArrowLeft } from 'react-icons/hi2';
-import { useRenders } from '@/hooks/useRenders';
+import { useRendersQuery } from '@/hooks/useRenders';
 import { normalizeRenderConfig, type NormalizedRenderConfig } from '@/utils/render/config';
 import { withDefaultResources } from '@/utils/render/templates';
 import {
@@ -40,7 +40,7 @@ function getStateLabel(state: RenderState): string {
 export function ExistingRenderPicker(props: ExistingRenderPickerProps) {
   const { onSelect, onBack } = props;
 
-  const { data: renders, isLoading, isError } = useRenders();
+  const { data: renders, isLoading, isError } = useRendersQuery();
   const [selectedRenderId, setSelectedRenderId] = useState<number | null>(null);
   const selectedRender = selectedRenderId
     ? (renders?.find((r) => r.id === selectedRenderId) ?? null)

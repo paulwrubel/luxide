@@ -1,5 +1,5 @@
 import { Alert, Spinner } from 'flowbite-react';
-import { useStorageUsage } from '@/hooks/useStorageUsage';
+import { useStorageUsageQuery } from '@/hooks/useStorageUsage';
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) {
@@ -13,7 +13,7 @@ function formatBytes(bytes: number): string {
 }
 
 export function StorageUsagePanel() {
-  const { data: storageUsage, isPending, isError, error } = useStorageUsage();
+  const { data: storageUsage, isPending, isError, error } = useStorageUsageQuery();
 
   return (
     <section>

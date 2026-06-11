@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Alert,
   Avatar,
@@ -13,8 +14,8 @@ import {
   TableRow,
 } from 'flowbite-react';
 import type { Role, User } from '@/utils/api';
-import { useAllUsers } from '@/hooks/useAllUsers';
-import { useUpdateUserRole } from '@/hooks/useUserMutations';
+import { useAllUsersQuery } from '@/hooks/useAllUsers';
+import { useUpdateUserRoleMutation } from '@/hooks/useUserMutations';
 import { useAuth } from '@/providers/auth';
 import { RoleChangeModal } from './RoleChangeModal';
 import { QuotaEditModal } from './QuotaEditModal';
@@ -29,8 +30,11 @@ function quotaDisplay(value: number | null): string {
 export function UsersTable() {
   const { user: currentUser } = useAuth();
 
-  const { data: users, isPending, isError, error } = useAllUsers();
-  const { mutate: updateUserRole, isPending: updateUserRoleIsPending } = useUpdateUserRole();
+  const navigate = useNavigate();
+
+  const { data: users, isPending, isError, error } = useAllUsersQuery();
+  const { mutate: updateUserRole, isPending: updateUserRoleIsPending } =
+    useUpdateUserRoleMutation();
 
   const [confirmTarget, setConfirmTarget] = useState<{ user: User; newRole: Role } | null>(null);
   const [quotaEditUser, setQuotaEditUser] = useState<User | null>(null);
@@ -57,6 +61,7 @@ export function UsersTable() {
           <Table theme={{ root: { base: 'w-full text-left text-sm text-zinc-300' } }}>
             <TableHead>
               <TableRow>
+                <TableHeadCell>ID</TableHeadCell>
                 <TableHeadCell>User</TableHeadCell>
                 <TableHeadCell>Role</TableHeadCell>
                 <TableHeadCell>Created</TableHeadCell>
@@ -69,6 +74,7 @@ export function UsersTable() {
             <TableBody>
               {users.map((user) => (
                 <TableRow key={user.id}>
+                  <TableCell>{user.id}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar img={user.avatar_url} size="sm" rounded />
@@ -84,6 +90,13 @@ export function UsersTable() {
                   <TableCell>{quotaDisplay(user.max_render_pixel_count)}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
+                      <Button
+                        color="default"
+                        size="xs"
+                        onClick={() => navigate(`/renders?user_id=${user.id}`)}
+                      >
+                        View Renders
+                      </Button>
                       <Button
                         color="default"
                         size="xs"

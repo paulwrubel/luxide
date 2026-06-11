@@ -10,6 +10,8 @@ use crate::{
     tracing::RenderID,
 };
 
+use crate::server::resolve_effective_user_id;
+
 use crate::server::LuxideState;
 
 pub async fn get_render(
@@ -20,7 +22,15 @@ pub async fn get_render(
 ) -> Response {
     println!("Handing request for get_render (id: {})...", id);
 
-    match state.render_manager.get_render(id, claims.sub).await {
+    let effective_user_id =
+        match resolve_effective_user_id(&state.auth_manager, &claims, query_parameters.user_id)
+            .await
+        {
+            Ok(id) => id,
+            Err((status, message)) => return (status, message).into_response(),
+        };
+
+    match state.render_manager.get_render(id, effective_user_id).await {
         Ok(Some(render)) => Json(FormattedRender::from((
             query_parameters.format.unwrap_or_default(),
             render,

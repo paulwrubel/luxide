@@ -2,7 +2,7 @@ import { useSelector } from '@tanstack/react-store';
 import { Button, Spinner } from 'flowbite-react';
 import { HiCheck } from 'react-icons/hi2';
 import { useAppForm } from '@/hooks/useAppForm';
-import { useUpdateRenderName } from '@/hooks/useRenderMutations';
+import { useUpdateRenderNameMutation } from '@/hooks/useRenderMutations';
 import { z } from 'zod';
 import { extractErrorMessage } from '@/utils/api';
 import toast from 'react-hot-toast';
@@ -15,7 +15,7 @@ export type RenameFormProps = {
 export function RenameForm(props: RenameFormProps) {
   const { currentName, renderID } = props;
 
-  const { mutate: updateName, isPending } = useUpdateRenderName();
+  const { mutate: updateName, isPending } = useUpdateRenderNameMutation();
 
   const form = useAppForm({
     defaultValues: { name: currentName },

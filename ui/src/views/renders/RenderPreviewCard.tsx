@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Card, Progress, Spinner, type CardTheme } from 'flowbite-react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import type { DeepPartial } from 'flowbite-react/types';
 import { isRenderStateRunning, isRenderStatePausing, type Render } from '@/utils/api';
-import { useLatestCheckpointImage } from '@/hooks/useLatestCheckpointImage';
+import { useLatestCheckpointImageQuery } from '@/hooks/useLatestCheckpointImage';
 
 export type RenderPreviewCardProps = {
   render: Render;
@@ -16,7 +16,7 @@ export function RenderPreviewCard(props: RenderPreviewCardProps) {
     isPending: isCheckpointImagePending,
     isError: isCheckpointImageError,
     isSuccess: isCheckpointImageSuccess,
-  } = useLatestCheckpointImage({ renderID: render.id });
+  } = useLatestCheckpointImageQuery({ renderID: render.id });
   const renderSize = render.config.parameters.image_dimensions;
   const state = render.state;
   const running = isRenderStateRunning(state);
@@ -27,6 +27,9 @@ export function RenderPreviewCard(props: RenderPreviewCardProps) {
     : pausing
       ? state.pausing.progress_info.progress
       : 0;
+
+  const [searchParams] = useSearchParams();
+  const searchString = searchParams.toString();
 
   // disable the CSS width transition when progress decreases
   // (new checkpoint started), so the bar snaps instead of animating backwards.
@@ -46,7 +49,7 @@ export function RenderPreviewCard(props: RenderPreviewCardProps) {
   };
 
   return (
-    <Link to={`/renders/${render.id}`}>
+    <Link to={`/renders/${render.id}${searchString ? `?${searchString}` : ''}`}>
       <Card
         className="text-zinc-200 hover:bg-zinc-700"
         theme={cardTheme}

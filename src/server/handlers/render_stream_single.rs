@@ -12,6 +12,7 @@ use tokio::sync::{mpsc, watch};
 use crate::server::render_state_streams::{
     RenderStateSnapshot, StreamIntervalQueryParams, parse_interval, sse_response, update_event,
 };
+use crate::server::resolve_effective_user_id;
 use crate::server::{Claims, LuxideState};
 use crate::tracing::RenderID;
 
@@ -23,7 +24,16 @@ pub async fn render_state_stream_single(
     Path(render_id): Path<RenderID>,
     Query(params): Query<StreamIntervalQueryParams>,
 ) -> Response {
-    match state.render_manager.get_render(render_id, claims.sub).await {
+    let effective_user_id =
+        match resolve_effective_user_id(&state.auth_manager, &claims, params.user_id).await {
+            Ok(id) => id,
+            Err((status, message)) => return (status, message).into_response(),
+        };
+    match state
+        .render_manager
+        .get_render(render_id, effective_user_id)
+        .await
+    {
         Ok(Some(render)) => {
             let registry = state.render_manager.render_state_streams().clone();
             let mut watch_rx = registry

@@ -1,8 +1,8 @@
 import { useParams } from 'react-router-dom';
 import { Sidebar, SidebarItems, SidebarItemGroup, type SidebarTheme } from 'flowbite-react';
 import type { DeepPartial } from 'flowbite-react/types';
-import { useRender } from '@/hooks/useRender';
-import { useRenderStats } from '@/hooks/useRenderStats';
+import { useRenderQuery } from '@/hooks/useRender';
+import { useRenderStatsQuery } from '@/hooks/useRenderStats';
 import { RenderSidebar } from './RenderSidebar';
 import { RenderDisplay } from './RenderDisplay';
 
@@ -11,8 +11,8 @@ export function RenderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const renderID = Number(id);
 
-  useRender({ renderID, streaming: true });
-  useRenderStats({ renderID, streaming: true });
+  useRenderQuery({ renderID, streaming: true });
+  useRenderStatsQuery({ renderID, streaming: true });
 
   const sidebarTheme: DeepPartial<SidebarTheme> = {
     root: {
