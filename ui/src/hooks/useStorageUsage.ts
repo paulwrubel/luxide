@@ -7,7 +7,11 @@ export function useStorageUsage() {
   const token = mustGetToken();
 
   return useQuery({
-    queryKey: ['storageUsage', token],
+    queryKey: storageUsageKey(token),
     queryFn: () => getStorageUsage(token),
   });
+}
+
+export function storageUsageKey(token: string) {
+  return ['storageUsage', token] as const;
 }

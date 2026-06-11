@@ -12,8 +12,12 @@ export function useAllUsers(options: UseAllUsersOptions = {}) {
   const { token } = useAuth();
 
   return useQuery({
-    queryKey: ['allUsers', token],
+    queryKey: allUsersKey(token),
     queryFn: () => getAllUsers(token!),
     enabled: enabled && token !== undefined,
   });
+}
+
+export function allUsersKey(token: string | undefined) {
+  return ['allUsers', token] as const;
 }

@@ -6,6 +6,7 @@ import { stateKey } from '@/utils/api';
 import type { Render, RenderStateSnapshot } from '@/utils/api';
 import { useAuth } from '@/providers/auth';
 import { useAdminUserOverride } from '@/providers/AdminUserOverride';
+import { checkpointImageKey } from './useLatestCheckpointImage';
 
 export type UseRenderOptions = {
   renderID: number;
@@ -20,8 +21,10 @@ export function useRender(options: UseRenderOptions) {
   const { targetUserID } = useAdminUserOverride();
   const queryClient = useQueryClient();
 
+  const renderQueryKey = renderKey(renderID, token, targetUserID);
+
   const queryResult = useQuery({
-    queryKey: ['render', renderID, token, targetUserID],
+    queryKey: renderQueryKey,
     queryFn: () => getRender(token, renderID, targetUserID),
     staleTime: Infinity,
   });
@@ -30,7 +33,7 @@ export function useRender(options: UseRenderOptions) {
     (event: MessageEvent) => {
       // JSON.parse returns any; the SSE endpoint always sends RenderStateSnapshot-shaped data
       const snapshot = JSON.parse(event.data) as RenderStateSnapshot;
-      queryClient.setQueryData<Render>(['render', renderID, token, targetUserID], (old) => {
+      queryClient.setQueryData<Render>(renderQueryKey, (old) => {
         if (!old) {
           return old;
         }
@@ -44,11 +47,11 @@ export function useRender(options: UseRenderOptions) {
       const newKey = stateKey(snapshot.state);
       if (newKey === 'finished_checkpoint_iteration' || newKey === 'paused') {
         queryClient.invalidateQueries({
-          queryKey: ['checkpointImage', renderID, token, targetUserID],
+          queryKey: checkpointImageKey(renderID, token, targetUserID),
         });
       }
     },
-    [renderID, token, targetUserID, queryClient],
+    [queryClient, renderQueryKey, renderID, token, targetUserID],
   );
 
   const handleError = useCallback(() => {
@@ -66,4 +69,8 @@ export function useRender(options: UseRenderOptions) {
   });
 
   return queryResult;
+}
+
+export function renderKey(renderID: number, token: string, targetUserID: number | undefined) {
+  return ['render', renderID, token, targetUserID] as const;
 }
