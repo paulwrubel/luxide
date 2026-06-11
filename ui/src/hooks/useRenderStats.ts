@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getRenderStats } from '@/utils/api';
 import type { RenderStats } from '@/utils/api';
@@ -19,7 +19,10 @@ export function useRenderStatsQuery(options: UseRenderStatsOptions) {
   const { targetUserID } = useAdminUserOverride();
   const queryClient = useQueryClient();
 
-  const queryKey = renderStatsQueryKey(renderID, token, targetUserID);
+  const queryKey = useMemo(
+    () => renderStatsQueryKey(renderID, token, targetUserID),
+    [renderID, token, targetUserID],
+  );
 
   const queryResult = useQuery({
     queryKey,
