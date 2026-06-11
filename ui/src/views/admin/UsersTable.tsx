@@ -57,6 +57,7 @@ export function UsersTable() {
           <Table theme={{ root: { base: 'w-full text-left text-sm text-zinc-300' } }}>
             <TableHead>
               <TableRow>
+                <TableHeadCell>ID</TableHeadCell>
                 <TableHeadCell>User</TableHeadCell>
                 <TableHeadCell>Role</TableHeadCell>
                 <TableHeadCell>Created</TableHeadCell>
@@ -69,6 +70,7 @@ export function UsersTable() {
             <TableBody>
               {users.map((user) => (
                 <TableRow key={user.id}>
+                  <TableCell>{user.id}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar img={user.avatar_url} size="sm" rounded />
