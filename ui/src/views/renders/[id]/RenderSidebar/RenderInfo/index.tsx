@@ -1,9 +1,9 @@
-import { useRender } from '@/hooks/useRender';
+import { useRenderQuery } from '@/hooks/useRender';
 import { Button, Spinner } from 'flowbite-react';
 import { PropertyRow } from './PropertyRow';
 import { ViewRenderJSONButton } from '@/components/ViewRenderJSONButton';
 import { Separator } from '@/components/Separator';
-import { useRenderStats } from '@/hooks/useRenderStats';
+import { useRenderStatsQuery } from '@/hooks/useRenderStats';
 import { useNavigate } from 'react-router-dom';
 import { HiDocumentDuplicate } from 'react-icons/hi2';
 import { normalizeRenderConfig } from '@/utils/render/config';
@@ -55,9 +55,9 @@ export function RenderInfo(props: RenderInfoProps) {
     isLoading: isRenderLoading,
     isError: isRenderError,
     error: renderError,
-  } = useRender({ renderID });
+  } = useRenderQuery({ renderID });
 
-  const { data: renderStats } = useRenderStats({ renderID });
+  const { data: renderStats } = useRenderStatsQuery({ renderID });
 
   const navigate = useNavigate();
 

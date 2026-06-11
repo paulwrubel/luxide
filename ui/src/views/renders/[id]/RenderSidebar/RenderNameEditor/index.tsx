@@ -1,5 +1,5 @@
 import { Spinner } from 'flowbite-react';
-import { useRender } from '@/hooks/useRender';
+import { useRenderQuery } from '@/hooks/useRender';
 import { RenameForm } from './RenameForm';
 
 export type RenderNameEditorProps = {
@@ -14,7 +14,7 @@ export function RenderNameEditor(props: RenderNameEditorProps) {
     isLoading: isRenderLoading,
     isError: isRenderError,
     error: renderError,
-  } = useRender({ renderID });
+  } = useRenderQuery({ renderID });
 
   if (isRenderLoading) {
     return <Spinner size="md" className="fill-zinc-400" />;

@@ -4,7 +4,7 @@ import { useEventSource } from '@/hooks/useEventSource';
 import { getAllRenders } from '@/utils/api';
 import { stateKey } from '@/utils/api';
 import type { Render, RenderStateSnapshot } from '@/utils/api';
-import { checkpointImageKey } from './useLatestCheckpointImage';
+import { checkpointImageQueryKey } from './useLatestCheckpointImage';
 import { useAuth } from '@/providers/auth';
 import { useAdminUserOverride } from '@/providers/AdminUserOverride';
 
@@ -12,7 +12,7 @@ export type UseRendersOptions = {
   streaming?: boolean;
 };
 
-export function useRenders(options: UseRendersOptions = {}) {
+export function useRendersQuery(options: UseRendersOptions = {}) {
   const { streaming } = options;
 
   const { mustGetToken } = useAuth();
@@ -20,10 +20,10 @@ export function useRenders(options: UseRendersOptions = {}) {
   const { targetUserID } = useAdminUserOverride();
   const queryClient = useQueryClient();
 
-  const rendersQueryKey = rendersKey(token, targetUserID);
+  const queryKey = rendersQueryKey(token, targetUserID);
 
   const queryResult = useQuery({
-    queryKey: rendersQueryKey,
+    queryKey,
     queryFn: () => getAllRenders(token, targetUserID),
     staleTime: Infinity,
   });
@@ -36,7 +36,7 @@ export function useRenders(options: UseRendersOptions = {}) {
         state,
         updated_at: updatedAt,
       } = JSON.parse(event.data) as RenderStateSnapshot;
-      queryClient.setQueryData<Render[]>(rendersQueryKey, (old) => {
+      queryClient.setQueryData<Render[]>(queryKey, (old) => {
         if (!old) {
           return old;
         }
@@ -48,25 +48,25 @@ export function useRenders(options: UseRendersOptions = {}) {
       const newKey = stateKey(state);
       if (newKey === 'finished_checkpoint_iteration' || newKey === 'paused') {
         queryClient.invalidateQueries({
-          queryKey: checkpointImageKey(renderID, token, targetUserID),
+          queryKey: checkpointImageQueryKey(renderID, token, targetUserID),
         });
       }
     },
-    [queryClient, rendersQueryKey, targetUserID, token],
+    [queryClient, queryKey, targetUserID, token],
   );
 
   const handleRemoved = useCallback(
     (event: MessageEvent) => {
       // JSON.parse returns any; the SSE endpoint always sends RenderStateSnapshot-shaped data
       const { render_id } = JSON.parse(event.data) as RenderStateSnapshot;
-      queryClient.setQueryData<Render[]>(rendersQueryKey, (old) => {
+      queryClient.setQueryData<Render[]>(queryKey, (old) => {
         if (!old) {
           return old;
         }
         return old.filter((r) => r.id !== render_id);
       });
     },
-    [queryClient, rendersQueryKey],
+    [queryClient, queryKey],
   );
 
   const handleError = useCallback(() => {
@@ -87,6 +87,6 @@ export function useRenders(options: UseRendersOptions = {}) {
   return queryResult;
 }
 
-export function rendersKey(token: string, targetUserID: number | undefined) {
+export function rendersQueryKey(token: string, targetUserID: number | undefined) {
   return ['renders', token, targetUserID] as const;
 }

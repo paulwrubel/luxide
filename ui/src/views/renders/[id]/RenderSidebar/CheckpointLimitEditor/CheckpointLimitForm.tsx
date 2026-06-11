@@ -2,7 +2,7 @@ import { useSelector } from '@tanstack/react-store';
 import { Button, Spinner } from 'flowbite-react';
 import { HiCheck } from 'react-icons/hi2';
 import { useAppForm } from '@/hooks/useAppForm';
-import { useUpdateRenderTotalCheckpoints } from '@/hooks/useRenderMutations';
+import { useUpdateRenderTotalCheckpointsMutation } from '@/hooks/useRenderMutations';
 import { z } from 'zod';
 import { extractErrorMessage } from '@/utils/api';
 import toast from 'react-hot-toast';
@@ -16,7 +16,7 @@ export type CheckpointLimitFormProps = {
 export function CheckpointLimitForm(props: CheckpointLimitFormProps) {
   const { currentValue, currentCheckpointIteration, renderID } = props;
 
-  const { mutate: updateCheckpoints, isPending } = useUpdateRenderTotalCheckpoints();
+  const { mutate: updateCheckpoints, isPending } = useUpdateRenderTotalCheckpointsMutation();
 
   const form = useAppForm({
     defaultValues: { total_checkpoints: currentValue },

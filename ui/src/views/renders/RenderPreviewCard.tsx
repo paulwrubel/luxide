@@ -3,7 +3,7 @@ import { Card, Progress, Spinner, type CardTheme } from 'flowbite-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import type { DeepPartial } from 'flowbite-react/types';
 import { isRenderStateRunning, isRenderStatePausing, type Render } from '@/utils/api';
-import { useLatestCheckpointImage } from '@/hooks/useLatestCheckpointImage';
+import { useLatestCheckpointImageQuery } from '@/hooks/useLatestCheckpointImage';
 
 export type RenderPreviewCardProps = {
   render: Render;
@@ -16,7 +16,7 @@ export function RenderPreviewCard(props: RenderPreviewCardProps) {
     isPending: isCheckpointImagePending,
     isError: isCheckpointImageError,
     isSuccess: isCheckpointImageSuccess,
-  } = useLatestCheckpointImage({ renderID: render.id });
+  } = useLatestCheckpointImageQuery({ renderID: render.id });
   const renderSize = render.config.parameters.image_dimensions;
   const state = render.state;
   const running = isRenderStateRunning(state);

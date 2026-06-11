@@ -1,6 +1,6 @@
 import { useAuth } from '@/providers/auth';
 import { useAdminUserOverride } from '@/providers/AdminUserOverride';
-import { useAllUsers } from '@/hooks/useAllUsers';
+import { useAllUsersQuery } from '@/hooks/useAllUsers';
 import { Badge, Tooltip } from 'flowbite-react';
 import { HiXMark } from 'react-icons/hi2';
 
@@ -11,7 +11,7 @@ export function AdminBanner() {
   const isAdmin = currentUser?.role === 'admin';
 
   // only fetch users when impersonating AND the current user is an admin
-  const { data: allUsers } = useAllUsers({ enabled: isAdmin && targetUserID !== undefined });
+  const { data: allUsers } = useAllUsersQuery({ enabled: isAdmin && targetUserID !== undefined });
 
   // don't render if not impersonating or not an admin
   if (targetUserID === undefined || !isAdmin) {

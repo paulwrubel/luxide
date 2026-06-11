@@ -9,7 +9,7 @@ export type UseLatestCheckpointImageOptions = {
   enabled?: boolean;
 };
 
-export function useLatestCheckpointImage(options: UseLatestCheckpointImageOptions) {
+export function useLatestCheckpointImageQuery(options: UseLatestCheckpointImageOptions) {
   const { renderID, enabled } = options;
 
   const { mustGetToken } = useAuth();
@@ -18,7 +18,7 @@ export function useLatestCheckpointImage(options: UseLatestCheckpointImageOption
   const { targetUserID } = useAdminUserOverride();
 
   const { data: checkpointData, ...queryRest } = useQuery({
-    queryKey: checkpointImageKey(renderID, token, targetUserID),
+    queryKey: checkpointImageQueryKey(renderID, token, targetUserID),
     queryFn: async () => {
       const blob = await getLatestCheckpointImage(token, renderID, targetUserID);
       if (blob === null) {
@@ -42,7 +42,7 @@ export function useLatestCheckpointImage(options: UseLatestCheckpointImageOption
   return { data: checkpointData, ...queryRest };
 }
 
-export function checkpointImageKey(
+export function checkpointImageQueryKey(
   renderID: number,
   token: string,
   targetUserID: number | undefined,

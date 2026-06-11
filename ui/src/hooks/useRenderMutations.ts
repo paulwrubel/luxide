@@ -11,7 +11,7 @@ import {
 import { useAuth } from '../providers/auth';
 import type { NormalizedRenderConfig } from '../utils/render/config';
 
-export function useCreateRender() {
+export function useCreateRenderMutation() {
   const { mustGetToken } = useAuth();
   const token = mustGetToken();
   const { targetUserID } = useAdminUserOverride();
@@ -26,7 +26,7 @@ export function useCreateRender() {
   });
 }
 
-export function usePauseRender() {
+export function usePauseRenderMutation() {
   const { mustGetToken } = useAuth();
   const token = mustGetToken();
   const { targetUserID } = useAdminUserOverride();
@@ -42,7 +42,7 @@ export function usePauseRender() {
   });
 }
 
-export function useResumeRender() {
+export function useResumeRenderMutation() {
   const { mustGetToken } = useAuth();
   const token = mustGetToken();
   const { targetUserID } = useAdminUserOverride();
@@ -58,7 +58,7 @@ export function useResumeRender() {
   });
 }
 
-export function useDeleteRender() {
+export function useDeleteRenderMutation() {
   const { mustGetToken } = useAuth();
   const token = mustGetToken();
   const { targetUserID } = useAdminUserOverride();
@@ -73,7 +73,7 @@ export function useDeleteRender() {
   });
 }
 
-export function useUpdateRenderTotalCheckpoints() {
+export function useUpdateRenderTotalCheckpointsMutation() {
   const { mustGetToken } = useAuth();
   const token = mustGetToken();
   const { targetUserID } = useAdminUserOverride();
@@ -95,7 +95,7 @@ export function useUpdateRenderTotalCheckpoints() {
   });
 }
 
-export function useUpdateRenderName() {
+export function useUpdateRenderNameMutation() {
   const { mustGetToken } = useAuth();
   const token = mustGetToken();
   const { targetUserID } = useAdminUserOverride();

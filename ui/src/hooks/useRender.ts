@@ -6,14 +6,14 @@ import { stateKey } from '@/utils/api';
 import type { Render, RenderStateSnapshot } from '@/utils/api';
 import { useAuth } from '@/providers/auth';
 import { useAdminUserOverride } from '@/providers/AdminUserOverride';
-import { checkpointImageKey } from './useLatestCheckpointImage';
+import { checkpointImageQueryKey } from './useLatestCheckpointImage';
 
 export type UseRenderOptions = {
   renderID: number;
   streaming?: boolean;
 };
 
-export function useRender(options: UseRenderOptions) {
+export function useRenderQuery(options: UseRenderOptions) {
   const { renderID, streaming } = options;
 
   const { mustGetToken } = useAuth();
@@ -21,10 +21,10 @@ export function useRender(options: UseRenderOptions) {
   const { targetUserID } = useAdminUserOverride();
   const queryClient = useQueryClient();
 
-  const renderQueryKey = renderKey(renderID, token, targetUserID);
+  const queryKey = renderQueryKey(renderID, token, targetUserID);
 
   const queryResult = useQuery({
-    queryKey: renderQueryKey,
+    queryKey,
     queryFn: () => getRender(token, renderID, targetUserID),
     staleTime: Infinity,
   });
@@ -33,7 +33,7 @@ export function useRender(options: UseRenderOptions) {
     (event: MessageEvent) => {
       // JSON.parse returns any; the SSE endpoint always sends RenderStateSnapshot-shaped data
       const snapshot = JSON.parse(event.data) as RenderStateSnapshot;
-      queryClient.setQueryData<Render>(renderQueryKey, (old) => {
+      queryClient.setQueryData<Render>(queryKey, (old) => {
         if (!old) {
           return old;
         }
@@ -47,11 +47,11 @@ export function useRender(options: UseRenderOptions) {
       const newKey = stateKey(snapshot.state);
       if (newKey === 'finished_checkpoint_iteration' || newKey === 'paused') {
         queryClient.invalidateQueries({
-          queryKey: checkpointImageKey(renderID, token, targetUserID),
+          queryKey: checkpointImageQueryKey(renderID, token, targetUserID),
         });
       }
     },
-    [queryClient, renderQueryKey, renderID, token, targetUserID],
+    [queryClient, queryKey, renderID, token, targetUserID],
   );
 
   const handleError = useCallback(() => {
@@ -71,6 +71,6 @@ export function useRender(options: UseRenderOptions) {
   return queryResult;
 }
 
-export function renderKey(renderID: number, token: string, targetUserID: number | undefined) {
+export function renderQueryKey(renderID: number, token: string, targetUserID: number | undefined) {
   return ['render', renderID, token, targetUserID] as const;
 }

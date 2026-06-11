@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Alert } from 'flowbite-react';
 import { useAuth } from '@/providers/auth';
-import { useRenders } from '@/hooks/useRenders';
+import { useRendersQuery } from '@/hooks/useRenders';
 import { RenderPreviewCard } from './RenderPreviewCard';
 import { NewRenderCard } from './NewRenderCard';
 import { SkeletonRenderCard } from './SkeletonRenderCard';
@@ -10,7 +10,7 @@ import { HiExclamationTriangle } from 'react-icons/hi2';
 
 export function RendersPage() {
   const { user } = useAuth();
-  const allRendersQuery = useRenders({ streaming: true });
+  const allRendersQuery = useRendersQuery({ streaming: true });
 
   const canCreateNewRender =
     (user?.max_renders ?? null) === null ||

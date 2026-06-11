@@ -14,8 +14,8 @@ import {
   TableRow,
 } from 'flowbite-react';
 import type { Role, User } from '@/utils/api';
-import { useAllUsers } from '@/hooks/useAllUsers';
-import { useUpdateUserRole } from '@/hooks/useUserMutations';
+import { useAllUsersQuery } from '@/hooks/useAllUsers';
+import { useUpdateUserRoleMutation } from '@/hooks/useUserMutations';
 import { useAuth } from '@/providers/auth';
 import { RoleChangeModal } from './RoleChangeModal';
 import { QuotaEditModal } from './QuotaEditModal';
@@ -32,8 +32,9 @@ export function UsersTable() {
 
   const navigate = useNavigate();
 
-  const { data: users, isPending, isError, error } = useAllUsers();
-  const { mutate: updateUserRole, isPending: updateUserRoleIsPending } = useUpdateUserRole();
+  const { data: users, isPending, isError, error } = useAllUsersQuery();
+  const { mutate: updateUserRole, isPending: updateUserRoleIsPending } =
+    useUpdateUserRoleMutation();
 
   const [confirmTarget, setConfirmTarget] = useState<{ user: User; newRole: Role } | null>(null);
   const [quotaEditUser, setQuotaEditUser] = useState<User | null>(null);

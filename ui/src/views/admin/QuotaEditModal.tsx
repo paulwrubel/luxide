@@ -11,7 +11,7 @@ import { useSelector } from '@tanstack/react-store';
 import { useAppForm } from '@/hooks/useAppForm';
 import { z } from 'zod';
 import type { User } from '@/utils/api';
-import { useUpdateUserQuotas } from '@/hooks/useUserMutations';
+import { useUpdateUserQuotasMutation } from '@/hooks/useUserMutations';
 
 export type QuotaEditModalProps = {
   user: User;
@@ -21,7 +21,7 @@ export type QuotaEditModalProps = {
 export function QuotaEditModal(props: QuotaEditModalProps) {
   const { user, onClose } = props;
 
-  const { mutate: updateQuotas, isPending } = useUpdateUserQuotas();
+  const { mutate: updateQuotas, isPending } = useUpdateUserQuotasMutation();
 
   const form = useAppForm({
     defaultValues: {

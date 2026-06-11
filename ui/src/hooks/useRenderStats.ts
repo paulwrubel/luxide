@@ -11,7 +11,7 @@ export type UseRenderStatsOptions = {
   streaming?: boolean;
 };
 
-export function useRenderStats(options: UseRenderStatsOptions) {
+export function useRenderStatsQuery(options: UseRenderStatsOptions) {
   const { renderID, streaming } = options;
 
   const { mustGetToken } = useAuth();
@@ -19,10 +19,10 @@ export function useRenderStats(options: UseRenderStatsOptions) {
   const { targetUserID } = useAdminUserOverride();
   const queryClient = useQueryClient();
 
-  const renderStatsQueryKey = renderStatsKey(renderID, token, targetUserID);
+  const queryKey = renderStatsQueryKey(renderID, token, targetUserID);
 
   const queryResult = useQuery({
-    queryKey: renderStatsQueryKey,
+    queryKey,
     queryFn: () => getRenderStats(token, renderID, targetUserID),
     staleTime: Infinity,
   });
@@ -31,9 +31,9 @@ export function useRenderStats(options: UseRenderStatsOptions) {
     (event: MessageEvent) => {
       // JSON.parse returns any; the SSE endpoint always sends RenderStats-shaped data
       const stats = JSON.parse(event.data) as RenderStats;
-      queryClient.setQueryData<RenderStats>(renderStatsQueryKey, stats);
+      queryClient.setQueryData<RenderStats>(queryKey, stats);
     },
-    [queryClient, renderStatsQueryKey],
+    [queryClient, queryKey],
   );
 
   const handleError = useCallback(() => {
@@ -53,6 +53,10 @@ export function useRenderStats(options: UseRenderStatsOptions) {
   return queryResult;
 }
 
-export function renderStatsKey(renderID: number, token: string, targetUserID: number | undefined) {
+export function renderStatsQueryKey(
+  renderID: number,
+  token: string,
+  targetUserID: number | undefined,
+) {
   return ['renderStats', renderID, token, targetUserID] as const;
 }

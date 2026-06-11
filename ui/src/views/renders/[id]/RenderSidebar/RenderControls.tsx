@@ -1,7 +1,11 @@
 import { Button, Spinner } from 'flowbite-react';
 import { useNavigate } from 'react-router-dom';
-import { useRender } from '@/hooks/useRender';
-import { usePauseRender, useResumeRender, useDeleteRender } from '@/hooks/useRenderMutations';
+import { useRenderQuery } from '@/hooks/useRender';
+import {
+  usePauseRenderMutation,
+  useResumeRenderMutation,
+  useDeleteRenderMutation,
+} from '@/hooks/useRenderMutations';
 import { isRenderStatePausing, isRenderStatePaused, isRenderStateRunning } from '@/utils/api';
 import toast from 'react-hot-toast';
 import { extractErrorMessage } from '@/utils/api';
@@ -20,11 +24,11 @@ export function RenderControls(props: RenderControlsProps) {
     isLoading: isRenderLoading,
     isError: isRenderError,
     error: renderError,
-  } = useRender({ renderID });
+  } = useRenderQuery({ renderID });
 
-  const { mutate: pauseRender, isPending: isPausePending } = usePauseRender();
-  const { mutate: resumeRender, isPending: isResumePending } = useResumeRender();
-  const { mutate: deleteRender, isPending: isDeletePending } = useDeleteRender();
+  const { mutate: pauseRender, isPending: isPausePending } = usePauseRenderMutation();
+  const { mutate: resumeRender, isPending: isResumePending } = useResumeRenderMutation();
+  const { mutate: deleteRender, isPending: isDeletePending } = useDeleteRenderMutation();
 
   if (isRenderLoading || !render) {
     return <Spinner size="md" className="fill-zinc-400" />;
