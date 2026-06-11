@@ -112,6 +112,36 @@ impl Camera {
         Ray::new(origin, direction, time)
     }
 
+    pub fn get_ray_stratified(&self, x: u32, y: u32, sample_index: u32, total_samples: u32) -> Ray {
+        let pixel_center = self.pixel_00_location
+            + (self.pixel_delta_u * x as f64)
+            + (self.pixel_delta_v * y as f64);
+
+        let grid_size = (total_samples as f64).sqrt().floor() as u32;
+        let cell_width = 1.0 / grid_size as f64;
+        let cell_height = 1.0 / grid_size as f64;
+
+        let row = sample_index / grid_size;
+        let col = sample_index % grid_size;
+
+        let mut rng = rand::rng();
+
+        let u = (col as f64 + rng.random_range(0.0..1.0)) * cell_width - 0.5;
+        let v = (row as f64 + rng.random_range(0.0..1.0)) * cell_height - 0.5;
+
+        let pixel_sample = pixel_center + self.pixel_delta_u * u + self.pixel_delta_v * v;
+
+        let origin = if self.defocus_angle_degrees > 0.0 {
+            self.defocus_disk_sample()
+        } else {
+            self.center
+        };
+        let direction = origin.to(pixel_sample);
+        let time = rand::random();
+
+        Ray::new(origin, direction, time)
+    }
+
     fn defocus_disk_sample(&self) -> Point {
         let disk_unit_vector = &Vector::random_in_unit_disk();
 
