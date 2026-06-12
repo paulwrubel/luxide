@@ -28,6 +28,9 @@ pub struct RenderParameters {
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct ImportanceSamplingConfig {
+    /// Weight for the material's own BRDF-based PDF (diffuse/Lambertian).
+    #[serde(default)]
+    pub brdf_weight: f64,
     /// Weight for sampling toward emissive objects (lights).
     #[serde(default)]
     pub emissive_weight: f64,
@@ -37,9 +40,10 @@ pub struct ImportanceSamplingConfig {
     /// Weight for sampling toward specular objects (metal/mirror).
     #[serde(default)]
     pub specular_weight: f64,
-    /// Weight for the material's own BRDF-based PDF (diffuse/Lambertian).
+    /// Weight for sampling toward virtual geometrics (guide objects for
+    /// importance sampling only, no visual contribution).
     #[serde(default)]
-    pub brdf_weight: f64,
+    pub virtual_weight: f64,
     /// Whether to use Multiple Importance Sampling to blend
     /// BRDF and light sampling strategies (power heuristic).
     #[serde(default)]
@@ -49,28 +53,35 @@ pub struct ImportanceSamplingConfig {
 impl ImportanceSamplingConfig {
     /// Normalize the weights so they sum to 1.0, if they don't already.
     pub fn normalize(&mut self) {
-        let total = self.emissive_weight
+        let total = self.brdf_weight
+            + self.emissive_weight
             + self.transmissive_weight
             + self.specular_weight
-            + self.brdf_weight;
+            + self.virtual_weight;
 
         if total > 0.0 {
+            self.brdf_weight /= total;
             self.emissive_weight /= total;
             self.transmissive_weight /= total;
             self.specular_weight /= total;
-            self.brdf_weight /= total;
+            self.virtual_weight /= total;
         }
     }
 
     pub fn sum(&self) -> f64 {
-        self.emissive_weight + self.transmissive_weight + self.specular_weight + self.brdf_weight
+        self.brdf_weight
+            + self.emissive_weight
+            + self.transmissive_weight
+            + self.specular_weight
+            + self.virtual_weight
     }
 
     pub fn validate(&self, world: &SceneWorld) -> Result<(), String> {
-        if self.emissive_weight < 0.0
+        if self.brdf_weight < 0.0
+            || self.emissive_weight < 0.0
             || self.transmissive_weight < 0.0
             || self.specular_weight < 0.0
-            || self.brdf_weight < 0.0
+            || self.virtual_weight < 0.0
         {
             return Err("Importance sampling weights must be non-negative".to_string());
         }
@@ -89,6 +100,10 @@ impl ImportanceSamplingConfig {
     /// Validate that at least one non-zero weight category has matching
     /// geometric objects in the scene.
     fn validate_against_world(&self, world: &SceneWorld) -> Result<(), String> {
+        // the BRDF always matches — any Lambertian material uses it
+        if self.brdf_weight > 0.0 {
+            return Ok(());
+        }
         if self.emissive_weight > 0.0 && !world.emissive_list.is_empty() {
             return Ok(());
         }
@@ -98,8 +113,7 @@ impl ImportanceSamplingConfig {
         if self.specular_weight > 0.0 && !world.specular_list.is_empty() {
             return Ok(());
         }
-        // the BRDF always matches — any Lambertian material uses it
-        if self.brdf_weight > 0.0 {
+        if self.virtual_weight > 0.0 && !world.virtual_list.is_empty() {
             return Ok(());
         }
         Err("at least one importance sampling category must have a non-zero weight with matching objects in the scene".to_string())
@@ -109,10 +123,11 @@ impl ImportanceSamplingConfig {
 impl Default for ImportanceSamplingConfig {
     fn default() -> Self {
         Self {
+            brdf_weight: 1.0,
             emissive_weight: 0.0,
             transmissive_weight: 0.0,
             specular_weight: 0.0,
-            brdf_weight: 1.0,
+            virtual_weight: 0.0,
             use_multiple_importance_sampling: false,
         }
     }

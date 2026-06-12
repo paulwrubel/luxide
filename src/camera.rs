@@ -286,7 +286,7 @@ fn build_mixture_pdf(
     scene_world: &SceneWorld,
     hit_point: Point,
 ) -> Pdf {
-    let mut entries: Vec<(Pdf, f64)> = Vec::with_capacity(4);
+    let mut entries: Vec<(Pdf, f64)> = Vec::with_capacity(5);
 
     // material-provided BRDF category — always included as fallback;
     // zero weight means it won't be sampled unless all other
@@ -323,6 +323,18 @@ fn build_mixture_pdf(
                 origin: hit_point,
             },
             config.specular_weight,
+        ));
+    }
+
+    // virtual category — user-defined guide geometrics for importance
+    // sampling only (no visual contribution, never intersected)
+    if config.virtual_weight > 0.0 && !scene_world.virtual_list.is_empty() {
+        entries.push((
+            Pdf::Geometric {
+                geometric: Arc::clone(&scene_world.virtual_list),
+                origin: hit_point,
+            },
+            config.virtual_weight,
         ));
     }
 

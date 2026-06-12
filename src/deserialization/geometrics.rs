@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     geometry::{
         Geometric,
-        compounds::{AxisAlignedPBox, Bvh, List, ModelObj},
+        compounds::{AxisAlignedPBox, Bvh, List, ModelObj, Virtual},
         instances::{RotateXAxis, RotateYAxis, RotateZAxis, Translate},
         primitives::{Parallelogram, Sphere, Triangle},
         volumes,
@@ -126,6 +126,8 @@ pub enum GeometricData {
         density: f64,
         reflectance_texture: String,
     },
+    #[serde(rename = "virtual")]
+    Virtual { geometric: GeometricRefOrInline },
 }
 
 impl Build<Arc<dyn Geometric>> for &GeometricData {
@@ -294,6 +296,13 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
                     *density,
                     Arc::clone(reflectance_texture),
                 )))
+            }
+            Self::Virtual {
+                geometric: geometric_ref,
+            } => {
+                let geometric = geometric_ref.build(builts)?;
+
+                Ok(Arc::new(Virtual::new(geometric)))
             }
         }
     }

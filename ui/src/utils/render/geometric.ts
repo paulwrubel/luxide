@@ -45,6 +45,8 @@ export function normalizeGeometricData(
       return normalizeGeometricTriangle(config, geometricData);
     case 'constant_volume':
       return normalizeGeometricConstantVolume(config, geometricData);
+    case 'virtual':
+      return normalizeGeometricVirtual(config, geometricData);
   }
 }
 
@@ -57,7 +59,8 @@ export type NormalizedGeometricData =
   | NormalizedGeometricParallelogram
   | NormalizedGeometricSphere
   | NormalizedGeometricTriangle
-  | NormalizedGeometricConstantVolume;
+  | NormalizedGeometricConstantVolume
+  | NormalizedGeometricVirtual;
 
 export type RawGeometricData =
   | RawGeometricBox
@@ -68,7 +71,8 @@ export type RawGeometricData =
   | RawGeometricParallelogram
   | RawGeometricSphere
   | RawGeometricTriangle
-  | RawGeometricConstantVolume;
+  | RawGeometricConstantVolume
+  | RawGeometricVirtual;
 
 export function isGeometricData(data: unknown): data is GeometricData {
   return (
@@ -85,6 +89,7 @@ export function isGeometricData(data: unknown): data is GeometricData {
       'sphere',
       'triangle',
       'constant_volume',
+      'virtual',
     ].includes(data.type)
   );
 }
@@ -97,7 +102,8 @@ export function isComposite(
     data.type === 'rotate_x' ||
     data.type === 'rotate_y' ||
     data.type === 'rotate_z' ||
-    data.type === 'translate'
+    data.type === 'translate' ||
+    data.type === 'virtual'
   );
 }
 
@@ -127,6 +133,7 @@ export function getReferencedMaterialNames(
     case 'rotate_z':
     case 'translate':
     case 'constant_volume':
+    case 'virtual':
       materials.push(...getReferencedMaterialNames(config, data.geometric));
       break;
   }
@@ -227,7 +234,8 @@ export function getCenterPoint(
       const pivot = getAroundPoint(data.around, config, data.geometric);
       return rotatePoint(childCenter, data.type, angleRad, pivot);
     }
-    case 'constant_volume': {
+    case 'constant_volume':
+    case 'virtual': {
       const { data: subData } = getGeometricDataSafe(config, data.geometric);
       return getCenterPoint(config, subData);
     }
@@ -397,6 +405,11 @@ export function defaultGeometricForType(
         density: 1,
         geometric: '__unit_box',
         reflectance_texture: '__white',
+      };
+    case 'virtual':
+      return {
+        type: 'virtual',
+        geometric: '__unit_box',
       };
   }
 }
@@ -821,6 +834,42 @@ export type RawGeometricConstantVolume = {
   reflectance_texture: string | RawTextureData;
 };
 
+export type RawGeometricVirtual = {
+  type: 'virtual';
+  geometric: string | RawGeometricData;
+};
+
+export type NormalizedGeometricVirtual = Omit<RawGeometricVirtual, 'geometric'> & {
+  geometric: string;
+};
+
+export const GeometricVirtualSchema = z.object({
+  type: z.literal('virtual'),
+  geometric: z.string().nonempty(),
+});
+
+export function normalizeGeometricVirtual(
+  config: RenderConfig,
+  geometricData: RawGeometricVirtual,
+): NormalizedGeometricVirtual {
+  const geometric = geometricData;
+
+  if (typeof geometric.geometric !== 'string') {
+    if (!config.geometrics) {
+      config.geometrics = {};
+    }
+
+    const geometricName = getNextUniqueName(
+      config.geometrics,
+      capitalize(geometric.geometric.type),
+    );
+    config.geometrics[geometricName] = normalizeGeometricData(config, geometric.geometric);
+    geometric.geometric = geometricName;
+  }
+
+  return geometric as NormalizedGeometricVirtual;
+}
+
 const geometricSchemaByType: Record<string, z.ZodTypeAny> = {
   box: GeometricBoxSchema,
   list: GeometricListSchema,
@@ -833,6 +882,7 @@ const geometricSchemaByType: Record<string, z.ZodTypeAny> = {
   sphere: GeometricSphereSchema,
   triangle: GeometricTriangleSchema,
   constant_volume: GeometricConstantVolumeSchema,
+  virtual: GeometricVirtualSchema,
 };
 
 export const GeometricDataSchema = z.any().superRefine((data, ctx) => {

@@ -9,10 +9,11 @@ import { useSelector } from '@tanstack/react-store';
 import type { RenderForm } from '@/hooks/useRenderForm';
 
 const DEFAULT_IMPORTANCE_SAMPLING = {
+  brdf_weight: 1.0,
   emissive_weight: 1.0,
   transmissive_weight: 0.0,
   specular_weight: 0.0,
-  brdf_weight: 1.0,
+  virtual_weight: 0.0,
   use_multiple_importance_sampling: true,
 };
 
@@ -64,6 +65,15 @@ export function ImportanceSamplingControls(props: ImportanceSamplingControlsProp
         <div className="py-2">
           <TextInputControl
             form={form}
+            fieldName="parameters.importance_sampling.brdf_weight"
+            label="BRDF Weight"
+            labelSpacePercentage={70}
+            valueLabel="weight"
+            type="number"
+            labelSuffix={<WarningIconAdvancedProperty />}
+          />
+          <TextInputControl
+            form={form}
             fieldName="parameters.importance_sampling.emissive_weight"
             label="Emissive Weight"
             labelSpacePercentage={70}
@@ -91,8 +101,8 @@ export function ImportanceSamplingControls(props: ImportanceSamplingControlsProp
           />
           <TextInputControl
             form={form}
-            fieldName="parameters.importance_sampling.brdf_weight"
-            label="BRDF Weight"
+            fieldName="parameters.importance_sampling.virtual_weight"
+            label="Virtual Weight"
             labelSpacePercentage={70}
             valueLabel="weight"
             type="number"
