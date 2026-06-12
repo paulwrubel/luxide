@@ -25,6 +25,7 @@ export type AddEntityCreateConfig = {
   customName?: string;
   instances: InstanceType[];
   isConstantVolume: boolean;
+  isVirtual: boolean;
 };
 
 export type AddEntityModalProps<T extends EntityType> = {
@@ -44,18 +45,21 @@ export function AddEntityModal<T extends EntityType>(props: AddEntityModalProps<
   const [instances, setInstances] = useState<InstanceType[]>([]);
   const [pendingInstanceType, setPendingInstanceType] = useState<InstanceType>('translate');
   const [isConstantVolume, setIsConstantVolume] = useState(false);
+  const [isVirtual, setIsVirtual] = useState(false);
 
   function handleCreate() {
     onCreate({
       customName: customName.trim() || undefined,
       instances,
       isConstantVolume,
+      isVirtual,
     });
     // reset all state
     setCustomName('');
     setInstances([]);
     setPendingInstanceType('translate');
     setIsConstantVolume(false);
+    setIsVirtual(false);
     onClose();
   }
 
@@ -64,6 +68,7 @@ export function AddEntityModal<T extends EntityType>(props: AddEntityModalProps<
     setInstances([]);
     setPendingInstanceType('translate');
     setIsConstantVolume(false);
+    setIsVirtual(false);
     onClose();
   }
 
@@ -159,6 +164,15 @@ export function AddEntityModal<T extends EntityType>(props: AddEntityModalProps<
                 checked={isConstantVolume}
                 onChange={setIsConstantVolume}
                 label="Create as Constant Volume?"
+              />
+            </div>
+
+            {/* Virtual toggle */}
+            <div className="mb-3 flex items-center gap-3">
+              <ToggleSwitch
+                checked={isVirtual}
+                onChange={setIsVirtual}
+                label="Create as Virtual?"
               />
             </div>
           </>

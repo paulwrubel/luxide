@@ -56,7 +56,7 @@ export function AddEntityDropdown<T extends EntityType>(props: AddEntityDropdown
     const autoName = `New ${label}`;
     const record = (formValues[type] ?? {}) as EntityRecord<T>;
 
-    if (type === 'geometrics' && (config.instances.length > 0 || config.isConstantVolume)) {
+    if (type === 'geometrics' && (config.instances.length > 0 || config.isConstantVolume || config.isVirtual)) {
       // determine inner geometric name (use custom or auto-generated)
       let currentRecord = { ...record };
       const innerName = config.customName
@@ -92,6 +92,20 @@ export function AddEntityDropdown<T extends EntityType>(props: AddEntityDropdown
         };
         currentRecord = { ...currentRecord, [cvName]: cv } as EntityRecord<T>;
         currentRef = cvName;
+      }
+
+      // outermost wrapper: virtual
+      if (config.isVirtual) {
+        const virtName = getNextUniqueName(currentRecord, 'New Virtual');
+        const virtDefault = defaultGeometricForType(
+          'virtual' as Exclude<GeometricData['type'], 'obj_model'>,
+        );
+        const virt = {
+          ...virtDefault,
+          geometric: currentRef,
+        };
+        currentRecord = { ...currentRecord, [virtName]: virt } as EntityRecord<T>;
+        currentRef = virtName;
       }
 
       form.setFieldValue(type, currentRecord as never);
