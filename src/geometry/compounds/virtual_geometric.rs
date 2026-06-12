@@ -28,15 +28,18 @@ impl Geometric for VirtualGeometric {
     }
 
     fn is_emissive(&self) -> bool {
-        self.inner.is_emissive()
+        // material is dead code for virtual geometrics
+        false
     }
 
     fn is_transmissive(&self) -> bool {
-        self.inner.is_transmissive()
+        // material is dead code for virtual geometrics
+        false
     }
 
     fn is_specular(&self) -> bool {
-        self.inner.is_specular()
+        // material is dead code for virtual geometrics
+        false
     }
 
     fn is_empty(&self) -> bool {
