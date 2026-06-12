@@ -233,9 +233,6 @@ fn build_geometrics(
 ) -> Result<(), String> {
     let mut building = std::collections::HashSet::new();
 
-    // Function to get dependencies from a geometric
-    // let get_dependencies = |geometric: &GeometricData| {};
-
     // Function to build and insert a geometric
     let build_and_insert = |name: &str, geometric: &GeometricData, builts: &mut Builts| {
         if !builts.geometrics.contains_key(name) {

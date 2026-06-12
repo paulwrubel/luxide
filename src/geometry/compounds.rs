@@ -10,5 +10,5 @@ pub use list::List;
 mod model_obj;
 pub use model_obj::ModelObj;
 
-mod virtual_geometric;
-pub use virtual_geometric::VirtualGeometric;
+mod r#virtual;
+pub use r#virtual::Virtual;

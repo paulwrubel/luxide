@@ -10,17 +10,17 @@ use crate::{
 /// that redirect rays toward their surface to improve convergence, without
 /// contributing any visual output.
 #[derive(Debug)]
-pub struct VirtualGeometric {
+pub struct Virtual {
     inner: Arc<dyn Geometric>,
 }
 
-impl VirtualGeometric {
+impl Virtual {
     pub fn new(inner: Arc<dyn Geometric>) -> Self {
         Self { inner }
     }
 }
 
-impl Geometric for VirtualGeometric {
+impl Geometric for Virtual {
     fn intersect(&self, _ray: Ray, _ray_t: Interval) -> Option<RayHit> {
         // virtual geometrics never produce hits — they are invisible
         // to ray intersections and only influence importance sampling

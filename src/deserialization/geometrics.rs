@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     geometry::{
         Geometric,
-        compounds::{AxisAlignedPBox, Bvh, List, ModelObj, VirtualGeometric},
+        compounds::{AxisAlignedPBox, Bvh, List, ModelObj, Virtual},
         instances::{RotateXAxis, RotateYAxis, RotateZAxis, Translate},
         primitives::{Parallelogram, Sphere, Triangle},
         volumes,
@@ -302,7 +302,7 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
             } => {
                 let geometric = geometric_ref.build(builts)?;
 
-                Ok(Arc::new(VirtualGeometric::new(geometric)))
+                Ok(Arc::new(Virtual::new(geometric)))
             }
         }
     }
