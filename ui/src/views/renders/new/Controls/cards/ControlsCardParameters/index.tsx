@@ -129,6 +129,15 @@ export function ControlsCardParameters(props: ControlsCardParametersProps) {
           )}
         </form.AppField>
 
+        <form.AppField name="parameters.use_russian_roulette">
+          {(field) => (
+            <field.ToggleControl
+              label="Russian Roulette"
+              labelSuffix={<WarningIconAdvancedProperty />}
+            />
+          )}
+        </form.AppField>
+
         <ImportanceSamplingControls form={form} />
       </div>
     </ControlsCard>

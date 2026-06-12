@@ -25,6 +25,7 @@ pub struct Camera {
     image_height: u32,
     center: Point,
     importance_sampling: ImportanceSamplingConfig,
+    use_russian_roulette: bool,
     pixel_00_location: Point,
     pixel_delta_u: Vector,
     pixel_delta_v: Vector,
@@ -59,6 +60,7 @@ impl Camera {
         self.center = self.eye_location;
         self.background_color = scene.background_color;
         self.importance_sampling = parameters.importance_sampling;
+        self.use_russian_roulette = parameters.use_russian_roulette;
 
         let (width, height) = parameters.image_dimensions;
 
@@ -160,6 +162,8 @@ impl Camera {
     }
 
     pub fn ray_color(&self, mut ray: Ray, scene_world: &SceneWorld, max_bounces: u32) -> Color {
+        let mut rng = rand::rng();
+
         // accumulated color contributions of each geometric we intersect along the rays' paths.
         let mut accumulated_color = Color::BLACK;
         // accumulated attentuation (color) of surfaces we encounter.
@@ -260,6 +264,21 @@ impl Camera {
             }
 
             bounces += 1;
+
+            // Russian roulette: probabilistically terminate paths with low remaining
+            // throughput. The survival probability p is the largest RGB component of
+            // the current attenuation (max-component luminance heuristic), clamped
+            // to [0, 1]. Survivors are scaled by 1/p to maintain an unbiased estimator.
+            // This is always-active (no minimum bounce threshold): early bounces have
+            // attenuation near 1.0, so p ≈ 1.0 and termination is naturally rare.
+            if self.use_russian_roulette {
+                let p = attentuation_strength.max_component().min(1.0);
+                if rng.random::<f64>() > p {
+                    return accumulated_color;
+                }
+                // scale throughput to keep the estimator unbiased
+                attentuation_strength /= p;
+            }
         }
 
         // at this point, we must have failed to intersect.

@@ -73,6 +73,12 @@ impl Color {
             u8::MAX,
         ])
     }
+
+    /// Returns the largest RGB component value.
+    /// Used for Russian roulette survival probability heuristics.
+    pub fn max_component(self) -> f64 {
+        self.0.max_component()
+    }
 }
 
 impl From<[f64; 3]> for Color {

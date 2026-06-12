@@ -65,6 +65,7 @@ export function getEmptyRenderConfig(): NormalizedRenderConfig {
       saved_checkpoint_limit: 1,
       max_bounces: 50,
       use_scaling_truncation: true,
+      use_russian_roulette: true,
       importance_sampling: {
         brdf_weight: 1.0,
         emissive_weight: 1.0,
@@ -245,6 +246,7 @@ export function getCornellBoxBaseRenderConfig(): NormalizedRenderConfig {
       saved_checkpoint_limit: 1,
       max_bounces: 50,
       use_scaling_truncation: true,
+      use_russian_roulette: true,
       importance_sampling: {
         brdf_weight: 1.0,
         emissive_weight: 1.0,

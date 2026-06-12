@@ -102,6 +102,10 @@ export function RenderInfo(props: RenderInfoProps) {
           />
           <PropertyRow label="Max bounces" value={render.config.parameters.max_bounces} />
           <PropertyRow
+            label="Russian roulette"
+            value={render.config.parameters.use_russian_roulette ? 'Enabled' : 'Disabled'}
+          />
+          <PropertyRow
             label="Total checkpoints"
             value={render.config.parameters.total_checkpoints}
           />

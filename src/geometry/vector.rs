@@ -209,6 +209,10 @@ impl Vector {
             *self
         }
     }
+
+    pub fn max_component(&self) -> f64 {
+        self.x.max(self.y).max(self.z)
+    }
 }
 
 impl From<[f64; 3]> for Vector {

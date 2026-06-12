@@ -20,6 +20,12 @@ pub struct RenderParameters {
     pub saved_checkpoint_limit: Option<u32>,
     pub max_bounces: u32,
     pub use_scaling_truncation: bool,
+    /// Whether to use Russian roulette for probabilistic early
+    /// termination of low-contribution paths. When enabled, the
+    /// integrator uses the max-component luminance heuristic to
+    /// compute a survival probability at each bounce, terminating
+    /// paths whose remaining throughput is negligible.
+    pub use_russian_roulette: bool,
     /// Configurable weights for importance sampling categories.
     /// The integrator normalizes these internally — raw values are fine.
     #[serde(default)]
