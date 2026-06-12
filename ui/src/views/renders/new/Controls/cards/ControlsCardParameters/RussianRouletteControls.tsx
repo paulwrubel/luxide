@@ -19,7 +19,7 @@ export function RussianRouletteControls(props: RussianRouletteControlsProps) {
 
   const [rouletteAfterLocal, setRouletteAfterLocal] = useState(rouletteAfter);
 
-  const isRussianRouletteEnabled = parameters.bounces?.use_russian_roulette_after !== undefined;
+  const isRussianRouletteEnabled = parameters.bounces?.use_russian_roulette_after != null;
 
   function handleToggle(checked: boolean) {
     if (checked) {

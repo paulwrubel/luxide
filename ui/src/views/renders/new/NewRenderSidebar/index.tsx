@@ -64,6 +64,7 @@ export function NewRenderSidebar({ form }: NewRenderSidebarProps) {
   const handleClick = async () => {
     await form.validate('submit');
     if (!form.state.isValid) {
+      console.log(form.state.errors);
       return;
     }
     createRender(form.state.values, {
