@@ -106,7 +106,9 @@ impl RenderManager {
 
                 // move Created renders to Running
                 let created_renders = renders.iter().filter(|r| {
-                    r.state == RenderState::Created && r.config.parameters.total_checkpoints > 0
+                    r.state == RenderState::Created
+                        && r.config.parameters.total_checkpoints > 0
+                        && !self.running_renders.lock().unwrap().contains(&r.id)
                 });
                 for render in created_renders.cloned() {
                     self.spawn_tracer_thread_to_next_checkpoint(render, None)
@@ -117,6 +119,7 @@ impl RenderManager {
                 let checkpointed_renders = renders.iter().filter(|r| match r.state {
                     RenderState::FinishedCheckpointIteration(checkpoint) => {
                         checkpoint < r.config.parameters.total_checkpoints
+                            && !self.running_renders.lock().unwrap().contains(&r.id)
                     }
                     _ => false,
                 });
