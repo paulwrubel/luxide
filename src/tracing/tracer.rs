@@ -95,7 +95,7 @@ impl Tracer {
                                         cam.get_ray(x, y)
                                     };
 
-                                    acc + cam.ray_color(ray, &scene.world, parameters.max_bounces)
+                                    acc + cam.ray_color(ray, &scene.world)
                                 },
                             );
                             // done with pixel!

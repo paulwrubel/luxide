@@ -96,7 +96,9 @@ Config files define a complete scene graph in JSON. Resources are declared in na
     "gamma_correction": 2.0,
     "samples_per_checkpoint": 10,
     "total_checkpoints": 5,
-    "max_bounces": 50,
+    "bounces": {
+      "max": 50
+    },
     "use_scaling_truncation": true
   },
   "active_scene": {
@@ -187,16 +189,17 @@ Each checkpoint iteration writes a PNG file named `<iteration>.png` (e.g., `1.pn
 
 ### Render parameters reference
 
-| Parameter | Description |
-|---|---|
-| `image_dimensions` | Output image width and height in pixels |
-| `tile_dimensions` | Tile size in pixels for parallel rendering |
-| `gamma_correction` | Gamma value for encoding output (2.0 is typical) |
-| `samples_per_checkpoint` | Samples accumulated per pixel in each checkpoint iteration |
-| `total_checkpoints` | How many checkpoint iterations to run |
-| `max_bounces` | Maximum ray bounce depth before terminating |
-| `use_scaling_truncation` | Clamp HDR values to [0,1] before gamma correction (prevents fireflies) |
-| `saved_checkpoint_limit` | Maximum number of checkpoints to keep pixel data for (older ones are cleared) |
+| Parameter                            | Description                                                                                |
+| ------------------------------------ | ------------------------------------------------------------------------------------------ |
+| `image_dimensions`                   | Output image width and height in pixels                                                    |
+| `tile_dimensions`                    | Tile size in pixels for parallel rendering                                                 |
+| `gamma_correction`                   | Gamma value for encoding output (2.0 is typical)                                           |
+| `samples_per_checkpoint`             | Samples accumulated per pixel in each checkpoint iteration                                 |
+| `total_checkpoints`                  | How many checkpoint iterations to run                                                      |
+| `bounces.max`                        | Maximum ray bounce depth before terminating                                                |
+| `bounces.use_russian_roulette_after` | If set, enables Russian roulette path termination after this many bounces. Omit to disable |
+| `use_scaling_truncation`             | Clamp HDR values to [0,1] before gamma correction (prevents fireflies)                     |
+| `saved_checkpoint_limit`             | Maximum number of checkpoints to keep pixel data for (older ones are cleared)              |
 
 ---
 

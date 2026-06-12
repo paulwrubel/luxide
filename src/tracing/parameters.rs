@@ -18,12 +18,32 @@ pub struct RenderParameters {
     pub samples_per_checkpoint: u32,
     pub total_checkpoints: u32,
     pub saved_checkpoint_limit: Option<u32>,
-    pub max_bounces: u32,
+    pub bounces: BouncesConfig,
     pub use_scaling_truncation: bool,
     /// Configurable weights for importance sampling categories.
     /// The integrator normalizes these internally — raw values are fine.
     #[serde(default)]
     pub importance_sampling: ImportanceSamplingConfig,
+}
+
+/// Configuration for ray bounce behavior.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+pub struct BouncesConfig {
+    /// Maximum number of ray bounces before hard termination.
+    pub max: u32,
+    /// If set, enables Russian roulette path termination after this many
+    /// bounces. Uses the max-component luminance heuristic for the
+    /// survival probability. Omit or set to `None` to disable.
+    pub use_russian_roulette_after: Option<u32>,
+}
+
+impl Default for BouncesConfig {
+    fn default() -> Self {
+        Self {
+            max: 50,
+            use_russian_roulette_after: None,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
