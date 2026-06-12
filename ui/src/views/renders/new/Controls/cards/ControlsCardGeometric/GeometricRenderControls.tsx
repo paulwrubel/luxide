@@ -57,7 +57,11 @@ export function GeometricRenderControls(props: GeometricRenderControlsProps) {
             <div key={subName}>
               {i > 0 && <Separator />}
               <NestedGeometricHeader geometricName={subName} renderConfig={renderConfig} />
-              <GeometricRenderControls form={form} name={subName} showMaterialSelect={showMaterialSelect} />
+              <GeometricRenderControls
+                form={form}
+                name={subName}
+                showMaterialSelect={showMaterialSelect}
+              />
             </div>
           ))}
         </>
@@ -86,7 +90,11 @@ export function GeometricRenderControls(props: GeometricRenderControlsProps) {
             renderConfig={renderConfig}
           />
           <Separator />
-          <GeometricRenderControls form={form} name={embedddedGeometricName} showMaterialSelect={showMaterialSelect} />
+          <GeometricRenderControls
+            form={form}
+            name={embedddedGeometricName}
+            showMaterialSelect={showMaterialSelect}
+          />
         </>
       );
     }
@@ -107,7 +115,11 @@ export function GeometricRenderControls(props: GeometricRenderControlsProps) {
             renderConfig={renderConfig}
           />
           <Separator />
-          <GeometricRenderControls form={form} name={embedddedGeometricName} showMaterialSelect={showMaterialSelect} />
+          <GeometricRenderControls
+            form={form}
+            name={embedddedGeometricName}
+            showMaterialSelect={showMaterialSelect}
+          />
         </>
       );
     }
@@ -215,7 +227,11 @@ export function GeometricRenderControls(props: GeometricRenderControlsProps) {
             renderConfig={renderConfig}
           />
           <Separator />
-          <GeometricRenderControls form={form} name={embedddedGeometricName} showMaterialSelect={showMaterialSelect} />
+          <GeometricRenderControls
+            form={form}
+            name={embedddedGeometricName}
+            showMaterialSelect={showMaterialSelect}
+          />
         </>
       );
     }
@@ -229,7 +245,11 @@ export function GeometricRenderControls(props: GeometricRenderControlsProps) {
             renderConfig={renderConfig}
           />
           <Separator />
-          <GeometricRenderControls form={form} name={embedddedGeometricName} showMaterialSelect={false} />
+          <GeometricRenderControls
+            form={form}
+            name={embedddedGeometricName}
+            showMaterialSelect={false}
+          />
         </>
       );
     }
