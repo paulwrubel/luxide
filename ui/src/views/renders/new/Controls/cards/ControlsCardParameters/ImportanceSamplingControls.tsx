@@ -13,6 +13,7 @@ const DEFAULT_IMPORTANCE_SAMPLING = {
   emissive_weight: 1.0,
   transmissive_weight: 0.0,
   specular_weight: 0.0,
+  virtual_weight: 0.0,
   use_multiple_importance_sampling: true,
 };
 
@@ -93,6 +94,15 @@ export function ImportanceSamplingControls(props: ImportanceSamplingControlsProp
             form={form}
             fieldName="parameters.importance_sampling.specular_weight"
             label="Specular Weight"
+            labelSpacePercentage={70}
+            valueLabel="weight"
+            type="number"
+            labelSuffix={<WarningIconAdvancedProperty />}
+          />
+          <TextInputControl
+            form={form}
+            fieldName="parameters.importance_sampling.virtual_weight"
+            label="Virtual Weight"
             labelSpacePercentage={70}
             valueLabel="weight"
             type="number"

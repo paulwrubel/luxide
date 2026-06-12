@@ -49,7 +49,12 @@ export function useRenderForm(options: UseRenderFormOptions) {
 
         return (
           !cfg ||
-          cfg.brdf_weight + cfg.emissive_weight + cfg.transmissive_weight + cfg.specular_weight > 0
+          cfg.brdf_weight +
+            cfg.emissive_weight +
+            cfg.transmissive_weight +
+            cfg.specular_weight +
+            cfg.virtual_weight >
+            0
         );
       },
       {

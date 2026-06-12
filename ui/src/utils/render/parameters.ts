@@ -5,6 +5,7 @@ export const ImportanceSamplingConfigSchema = z.object({
   emissive_weight: z.number().min(0),
   transmissive_weight: z.number().min(0),
   specular_weight: z.number().min(0),
+  virtual_weight: z.number().min(0),
   use_multiple_importance_sampling: z.boolean(),
 });
 
