@@ -41,14 +41,19 @@ pub struct SceneData {
 impl Build<Scene> for SceneData {
     fn build(&self, builts: &Builts) -> Result<Scene, String> {
         let mut world = Vec::new();
+        let mut world_virtual = Vec::new();
 
         for geometric in &self.geometrics {
             let geometric = geometric.build(builts)?;
-            world.push(geometric);
+            if geometric.is_virtual() {
+                world_virtual.push(geometric);
+            } else {
+                world.push(geometric);
+            }
         }
         let camera = self.camera.build(builts)?;
         let scene = Scene {
-            world: SceneWorld::from_geometrics(&world, self.use_bvh),
+            world: SceneWorld::from_geometrics(&world, &world_virtual, self.use_bvh),
             camera,
             background_color: self.background_color.into(),
         };

@@ -41,4 +41,10 @@ pub trait Geometric: std::fmt::Debug + Sync + Send {
     /// is the absolute cosine between the direction and the surface normal at
     /// the hit, and `area` is the total surface area.
     fn direction_pdf(&self, origin: Point, dir: Vector) -> f64;
+
+    /// Whether this geometric is "virtual" — excluded from ray intersections
+    /// but included in importance sampling for faster convergence.
+    fn is_virtual(&self) -> bool {
+        false
+    }
 }

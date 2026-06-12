@@ -40,6 +40,10 @@ pub struct ImportanceSamplingConfig {
     /// Weight for the material's own BRDF-based PDF (diffuse/Lambertian).
     #[serde(default)]
     pub brdf_weight: f64,
+    /// Weight for sampling toward virtual geometrics (guide objects for
+    /// importance sampling only, no visual contribution).
+    #[serde(default)]
+    pub virtual_weight: f64,
     /// Whether to use Multiple Importance Sampling to blend
     /// BRDF and light sampling strategies (power heuristic).
     #[serde(default)]
@@ -52,18 +56,24 @@ impl ImportanceSamplingConfig {
         let total = self.emissive_weight
             + self.transmissive_weight
             + self.specular_weight
-            + self.brdf_weight;
+            + self.brdf_weight
+            + self.virtual_weight;
 
         if total > 0.0 {
             self.emissive_weight /= total;
             self.transmissive_weight /= total;
             self.specular_weight /= total;
             self.brdf_weight /= total;
+            self.virtual_weight /= total;
         }
     }
 
     pub fn sum(&self) -> f64 {
-        self.emissive_weight + self.transmissive_weight + self.specular_weight + self.brdf_weight
+        self.emissive_weight
+            + self.transmissive_weight
+            + self.specular_weight
+            + self.brdf_weight
+            + self.virtual_weight
     }
 
     pub fn validate(&self, world: &SceneWorld) -> Result<(), String> {
@@ -71,6 +81,7 @@ impl ImportanceSamplingConfig {
             || self.transmissive_weight < 0.0
             || self.specular_weight < 0.0
             || self.brdf_weight < 0.0
+            || self.virtual_weight < 0.0
         {
             return Err("Importance sampling weights must be non-negative".to_string());
         }
@@ -98,6 +109,9 @@ impl ImportanceSamplingConfig {
         if self.specular_weight > 0.0 && !world.specular_list.is_empty() {
             return Ok(());
         }
+        if self.virtual_weight > 0.0 && !world.virtual_list.is_empty() {
+            return Ok(());
+        }
         // the BRDF always matches — any Lambertian material uses it
         if self.brdf_weight > 0.0 {
             return Ok(());
@@ -113,6 +127,7 @@ impl Default for ImportanceSamplingConfig {
             transmissive_weight: 0.0,
             specular_weight: 0.0,
             brdf_weight: 1.0,
+            virtual_weight: 0.0,
             use_multiple_importance_sampling: false,
         }
     }

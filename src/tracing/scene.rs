@@ -24,6 +24,7 @@ pub struct SceneWorld {
     pub emissive_list: Arc<dyn Geometric>,
     pub transmissive_list: Arc<dyn Geometric>,
     pub specular_list: Arc<dyn Geometric>,
+    pub virtual_list: Arc<dyn Geometric>,
 }
 
 impl SceneWorld {
@@ -35,12 +36,17 @@ impl SceneWorld {
             emissive_list: Arc::new(List::from_vec(Vec::new())),
             transmissive_list: Arc::new(List::from_vec(Vec::new())),
             specular_list: Arc::new(List::from_vec(Vec::new())),
+            virtual_list: Arc::new(List::from_vec(Vec::new())),
         }
     }
 
-    pub fn from_geometrics(geometrics: &Vec<Arc<dyn Geometric>>, use_bvh: bool) -> Self {
-        let list = List::from_vec(geometrics.clone());
-        let world: Arc<dyn Geometric> = if use_bvh {
+    pub fn from_geometrics(
+        world: &Vec<Arc<dyn Geometric>>,
+        world_virtual: &[Arc<dyn Geometric>],
+        use_bvh: bool,
+    ) -> Self {
+        let list = List::from_vec(world.clone());
+        let compiled_world: Arc<dyn Geometric> = if use_bvh {
             Arc::new(Bvh::from_list(list))
         } else {
             Arc::new(list)
@@ -50,7 +56,7 @@ impl SceneWorld {
         let mut transmissives = Vec::new();
         let mut speculars = Vec::new();
 
-        for geometric in geometrics {
+        for geometric in world {
             if geometric.is_emissive() {
                 emissives.push(geometric.clone());
             }
@@ -63,10 +69,12 @@ impl SceneWorld {
         }
 
         SceneWorld {
-            world,
+            world: compiled_world,
+
             emissive_list: Arc::new(List::from_vec(emissives)),
             transmissive_list: Arc::new(List::from_vec(transmissives)),
             specular_list: Arc::new(List::from_vec(speculars)),
+            virtual_list: Arc::new(List::from_vec(world_virtual.to_owned())),
         }
     }
 }
