@@ -56,12 +56,14 @@ export function AddEntityDropdown<T extends EntityType>(props: AddEntityDropdown
     const autoName = `New ${label}`;
     const record = (formValues[type] ?? {}) as EntityRecord<T>;
 
-    if (type === 'geometrics' && (config.instances.length > 0 || config.isConstantVolume || config.isVirtual)) {
-      // determine inner geometric name (use custom or auto-generated)
+    if (
+      type === 'geometrics' &&
+      (config.instances.length > 0 || config.isConstantVolume || config.isVirtual)
+    ) {
+      // the inner geometric always gets an auto-generated name;
+      // the user's custom name is applied to the outermost wrapper below
       let currentRecord = { ...record };
-      const innerName = config.customName
-        ? getNextUniqueName(currentRecord, config.customName)
-        : getNextUniqueName(currentRecord, autoName);
+      const innerName = getNextUniqueName(currentRecord, autoName);
 
       currentRecord = { ...currentRecord, [innerName]: newEntity };
       let currentRef = innerName;
@@ -106,6 +108,15 @@ export function AddEntityDropdown<T extends EntityType>(props: AddEntityDropdown
         };
         currentRecord = { ...currentRecord, [virtName]: virt } as EntityRecord<T>;
         currentRef = virtName;
+      }
+
+      // if the user provided a custom name, apply it to the outermost
+      // wrapper (the one that goes into the scene), not the inner geometry
+      if (config.customName) {
+        const outerName = getNextUniqueName(currentRecord, config.customName);
+        const { [currentRef]: entry, ...rest } = currentRecord as Record<string, unknown>;
+        currentRecord = { ...rest, [outerName]: entry } as EntityRecord<T>;
+        currentRef = outerName;
       }
 
       form.setFieldValue(type, currentRecord as never);
