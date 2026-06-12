@@ -63,9 +63,11 @@ export function getEmptyRenderConfig(): NormalizedRenderConfig {
       samples_per_checkpoint: 16,
       total_checkpoints: 100,
       saved_checkpoint_limit: 1,
-      max_bounces: 50,
       use_scaling_truncation: true,
-      use_russian_roulette: true,
+      bounces: {
+        max: 50,
+        use_russian_roulette_after: 3,
+      },
       importance_sampling: {
         brdf_weight: 1.0,
         emissive_weight: 1.0,
@@ -244,9 +246,11 @@ export function getCornellBoxBaseRenderConfig(): NormalizedRenderConfig {
       samples_per_checkpoint: 16,
       total_checkpoints: 100,
       saved_checkpoint_limit: 1,
-      max_bounces: 50,
       use_scaling_truncation: true,
-      use_russian_roulette: true,
+      bounces: {
+        max: 50,
+        use_russian_roulette_after: 3,
+      },
       importance_sampling: {
         brdf_weight: 1.0,
         emissive_weight: 1.0,

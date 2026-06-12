@@ -7,6 +7,7 @@ import { useAuth } from '@/providers/auth';
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { useSelector } from '@tanstack/react-store';
 import { CheckpointLimitControls } from './CheckpointLimitControls';
+import { RussianRouletteControls } from './RussianRouletteControls';
 import { ImportanceSamplingControls } from './ImportanceSamplingControls';
 
 export type ControlsCardParametersProps = {
@@ -19,7 +20,6 @@ export function ControlsCardParameters(props: ControlsCardParametersProps) {
   const { user } = useAuth();
   const renderConfig = useSelector(form.store, (state) => state.values);
   const parameters = renderConfig.parameters;
-
   return (
     <ControlsCard leftLabel="parameters" leftLabelStyle="light" startExpanded>
       <div className="flex flex-col gap-2 p-4">
@@ -112,7 +112,7 @@ export function ControlsCardParameters(props: ControlsCardParametersProps) {
 
         <TextInputControl
           form={form}
-          fieldName="parameters.max_bounces"
+          fieldName="parameters.bounces.max"
           label="Max Light Bounces"
           labelSpacePercentage={70}
           valueLabel="bounces"
@@ -129,14 +129,7 @@ export function ControlsCardParameters(props: ControlsCardParametersProps) {
           )}
         </form.AppField>
 
-        <form.AppField name="parameters.use_russian_roulette">
-          {(field) => (
-            <field.ToggleControl
-              label="Russian Roulette"
-              labelSuffix={<WarningIconAdvancedProperty />}
-            />
-          )}
-        </form.AppField>
+        <RussianRouletteControls form={form} />
 
         <ImportanceSamplingControls form={form} />
       </div>

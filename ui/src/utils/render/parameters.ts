@@ -11,6 +11,13 @@ export const ImportanceSamplingConfigSchema = z.object({
 
 export type ImportanceSamplingConfig = z.infer<typeof ImportanceSamplingConfigSchema>;
 
+export const BouncesConfigSchema = z.object({
+  max: z.number().int().min(1).max(200),
+  use_russian_roulette_after: z.number().int().min(0).optional(),
+});
+
+export type BouncesConfig = z.infer<typeof BouncesConfigSchema>;
+
 export const RenderParametersSchema = z
   .object({
     image_dimensions: z.tuple([z.number().int().min(1), z.number().int().min(1)]),
@@ -19,9 +26,8 @@ export const RenderParametersSchema = z
     samples_per_checkpoint: z.number().int().min(1),
     total_checkpoints: z.number().int().min(1),
     saved_checkpoint_limit: z.number().int().min(0).optional(),
-    max_bounces: z.number().int().min(1).max(200),
+    bounces: BouncesConfigSchema,
     use_scaling_truncation: z.boolean(),
-    use_russian_roulette: z.boolean(),
     importance_sampling: ImportanceSamplingConfigSchema.optional(),
   })
   .refine((params) => params.tile_dimensions[0] <= params.image_dimensions[0], {

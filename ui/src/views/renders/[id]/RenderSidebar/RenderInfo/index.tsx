@@ -100,10 +100,10 @@ export function RenderInfo(props: RenderInfoProps) {
             label="Samples"
             value={`${render.config.parameters.samples_per_checkpoint}/ckpt`}
           />
-          <PropertyRow label="Max bounces" value={render.config.parameters.max_bounces} />
+          <PropertyRow label="Max bounces" value={render.config.parameters.bounces.max} />
           <PropertyRow
             label="Russian roulette"
-            value={render.config.parameters.use_russian_roulette ? 'Enabled' : 'Disabled'}
+            value={render.config.parameters.bounces.use_russian_roulette_after != null ? `After ${render.config.parameters.bounces.use_russian_roulette_after} bounces` : 'Disabled'}
           />
           <PropertyRow
             label="Total checkpoints"

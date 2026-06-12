@@ -5,7 +5,7 @@ use rand::RngExt;
 use crate::{
     geometry::{Point, Ray, Vector},
     shading::{Color, materials::ScatterRecord, pdf::Pdf},
-    tracing::{ImportanceSamplingConfig, RenderParameters, Scene, SceneWorld},
+    tracing::{BouncesConfig, ImportanceSamplingConfig, RenderParameters, Scene, SceneWorld},
     utils::{Angle, Interval},
 };
 
@@ -25,7 +25,7 @@ pub struct Camera {
     image_height: u32,
     center: Point,
     importance_sampling: ImportanceSamplingConfig,
-    use_russian_roulette: bool,
+    bounces: BouncesConfig,
     pixel_00_location: Point,
     pixel_delta_u: Vector,
     pixel_delta_v: Vector,
@@ -60,7 +60,7 @@ impl Camera {
         self.center = self.eye_location;
         self.background_color = scene.background_color;
         self.importance_sampling = parameters.importance_sampling;
-        self.use_russian_roulette = parameters.use_russian_roulette;
+        self.bounces = parameters.bounces;
 
         let (width, height) = parameters.image_dimensions;
 
@@ -161,7 +161,7 @@ impl Camera {
         x_offset + y_offset
     }
 
-    pub fn ray_color(&self, mut ray: Ray, scene_world: &SceneWorld, max_bounces: u32) -> Color {
+    pub fn ray_color(&self, mut ray: Ray, scene_world: &SceneWorld) -> Color {
         let mut rng = rand::rng();
 
         // accumulated color contributions of each geometric we intersect along the rays' paths.
@@ -184,7 +184,7 @@ impl Camera {
             // update our accumulated color
             accumulated_color += attentuation_strength * emittance;
 
-            if bounces >= max_bounces {
+            if bounces >= self.bounces.max {
                 return accumulated_color;
             }
 
@@ -266,17 +266,17 @@ impl Camera {
             bounces += 1;
 
             // Russian roulette: probabilistically terminate paths with low remaining
-            // throughput. The survival probability p is the largest RGB component of
-            // the current attenuation (max-component luminance heuristic), clamped
-            // to [0, 1]. Survivors are scaled by 1/p to maintain an unbiased estimator.
-            // This is always-active (no minimum bounce threshold): early bounces have
-            // attenuation near 1.0, so p ≈ 1.0 and termination is naturally rare.
-            if self.use_russian_roulette {
+            // throughput once we're past the configured threshold. The survival
+            // probability p is the largest RGB component of the current attenuation
+            // (max-component luminance heuristic), clamped to [0, 1].
+            // Survivors are scaled by 1/p to maintain an unbiased estimator.
+            if let Some(after) = self.bounces.use_russian_roulette_after
+                && bounces > after
+            {
                 let p = attentuation_strength.max_component().min(1.0);
                 if rng.random::<f64>() > p {
                     return accumulated_color;
                 }
-                // scale throughput to keep the estimator unbiased
                 attentuation_strength /= p;
             }
         }
