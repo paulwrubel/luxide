@@ -21,10 +21,10 @@ export function ToggleControlUnbound(props: ToggleControlUnboundProps) {
         {labelPrefix}
         <ToggleSwitch
           checked={checked}
-          onChange={(checked) => {
+          onChange={(newChecked) => {
             const syntheticEvent = {
-              target: { checked },
-              // ToggleSwitch onChange provides boolean, not a DOM event;
+              target: { checked: newChecked },
+              // onChange provides boolean, not a DOM event;
               // synthesize a ChangeEvent so callers receive a consistent interface
             } as ChangeEvent<HTMLInputElement>;
             onChange?.(syntheticEvent);

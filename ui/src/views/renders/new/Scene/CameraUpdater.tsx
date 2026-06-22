@@ -1,6 +1,6 @@
 import { PerspectiveCamera } from '@react-three/drei';
 import { useRef, useEffect } from 'react';
-import * as THREE from 'three';
+import type * as THREE from 'three';
 import type { RawCameraData } from '@/utils/render/camera';
 
 export type CameraUpdaterProps = {

@@ -10,7 +10,7 @@ import { normalizeRenderConfig } from '@/utils/render/config';
 import { withDefaultResources } from '@/utils/render/templates';
 
 /**
- * Formats a pixel sample count for display.
+ * formats a pixel sample count for display.
  * - Under 10M: comma-separated (e.g., "3,125,000")
  * - 10M-999M: abbreviated with one decimal (e.g., "12.5M")
  * - 1B+: abbreviated with one decimal (e.g., "1.3B")
@@ -104,7 +104,7 @@ export function RenderInfo(props: RenderInfoProps) {
           <PropertyRow
             label="Russian roulette"
             value={
-              render.config.parameters.bounces.use_russian_roulette_after != null
+              render.config.parameters.bounces.use_russian_roulette_after !== null
                 ? `After ${render.config.parameters.bounces.use_russian_roulette_after} bounces`
                 : 'Disabled'
             }

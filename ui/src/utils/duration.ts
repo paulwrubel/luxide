@@ -6,7 +6,7 @@ export function isApiDuration(duration: LuxonDuration | ApiDuration): duration i
 }
 
 /**
- * Formats a luxon Duration into a human-readable string.
+ * formats a luxon Duration into a human-readable string.
  * - < 60 seconds: "Xs" or "<1s"
  * - 1-59 minutes: "Xm Ys"
  * - >= 1 hour: "Xh Ym Zs"

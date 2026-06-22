@@ -2,7 +2,7 @@ import { degreesToRadians, radiansToDegrees } from '../math';
 import { z } from 'zod';
 import type { NormalizedRenderConfig } from './config';
 
-/* CONFIG HELPER FUNCTIONS */
+/* cONFIG HELPER FUNCTIONS */
 
 export function removeDefaults(array: string[]) {
   return array.filter((item) => !item.startsWith('__'));
@@ -50,7 +50,7 @@ export function getTopLevelTextureNames(config: NormalizedRenderConfig) {
   );
 }
 
-/* GENERAL */
+/* gENERAL */
 
 export function isNonNullObject(x: unknown): x is Record<string, unknown> {
   return typeof x === 'object' && x !== null;
@@ -72,7 +72,7 @@ export function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-/* ANGLE */
+/* aNGLE */
 
 export const AngleDegreesSchema = z.object({
   degrees: z.number(),
@@ -100,7 +100,7 @@ export function toDegrees(angle: Angle): number {
   return angle.degrees;
 }
 
-/* AROUND */
+/* aROUND */
 
 export type Around = AroundCenter | AroundOrigin | AroundPoint;
 

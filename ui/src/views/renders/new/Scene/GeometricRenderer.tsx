@@ -210,7 +210,7 @@ export function GeometricRenderer(props: GeometricRendererProps) {
 
     case 'obj_model':
     case 'constant_volume':
-      // TODO: not yet implemented
+      // todo: not yet implemented
       return null;
 
     default:

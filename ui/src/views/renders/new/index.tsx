@@ -17,7 +17,7 @@ export function NewRenderPage() {
   const [containerWidth, setContainerWidth] = useState(0);
   const [containerHeight, setContainerHeight] = useState(0);
 
-  // ResizeObserver for canvas container
+  // resize observer for canvas container
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;

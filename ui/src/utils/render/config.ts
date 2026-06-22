@@ -70,7 +70,7 @@ function filterRecord<T>(
 export function normalizeRenderConfig(config: RenderConfig): NormalizedRenderConfig {
   const renderConfig = config;
 
-  // PASS 1: extract inline active_scene into the scenes map
+  // pass 1: extract inline active_scene into the scenes map
   if (typeof renderConfig.active_scene !== 'string') {
     if (!renderConfig.scenes) {
       renderConfig.scenes = {};
@@ -81,7 +81,7 @@ export function normalizeRenderConfig(config: RenderConfig): NormalizedRenderCon
     renderConfig.active_scene = sceneName;
   }
 
-  // PASS 2: normalize all maps — convert inline data to named references
+  // pass 2: normalize all maps — convert inline data to named references
   for (const scene of Object.values(renderConfig.scenes ?? {})) {
     normalizeSceneData(renderConfig, scene);
   }
@@ -95,13 +95,13 @@ export function normalizeRenderConfig(config: RenderConfig): NormalizedRenderCon
     normalizeTextureData(renderConfig, tex);
   }
 
-  // PASS 3: remove default fallback resources
+  // pass 3: remove default fallback resources
   removeDefaultResources(renderConfig as NormalizedRenderConfig);
 
   return renderConfig as NormalizedRenderConfig;
 }
 
-// NormalizedRenderConfig is the same as a RenderConfig, but with all the
+// this is the same as a RenderConfig, but with all the
 // fields which can be a reference or an inline definition replaced with a
 // guaranteed reference
 export type NormalizedRenderConfig = Omit<

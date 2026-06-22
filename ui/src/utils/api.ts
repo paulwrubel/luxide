@@ -482,7 +482,7 @@ export async function getStorageUsage(token: string): Promise<UsageResponse> {
 }
 
 /**
- * Extract a human-readable error message from an API error.
+ * extract a human-readable error message from an API error.
  *
  * The backend returns structured JSON like `{"code": 403, "message": "..."}`
  * but the API client embeds it in a thrown Error: `"failed to ...: (403: {json})"`.

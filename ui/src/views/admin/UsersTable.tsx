@@ -121,7 +121,7 @@ export function UsersTable() {
           </Table>
         </div>
       )}
-      {!isPending && !isError && users && users.length === 0 && (
+      {!isPending && !isError && users?.length === 0 && (
         <p className="text-zinc-400">No users found.</p>
       )}
 

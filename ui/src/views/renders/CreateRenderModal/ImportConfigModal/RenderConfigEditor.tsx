@@ -32,7 +32,7 @@ function schemaLintSource(view: EditorView): Diagnostic[] {
           };
         }
 
-        // Fallback: find the line containing the last path segment's key
+        // fallback: find the line containing the last path segment's key
         const lastSegment = String(issue.path[issue.path.length - 1] ?? '');
         if (lastSegment) {
           const searchIdx = text.indexOf(`"${lastSegment}"`);
@@ -48,7 +48,7 @@ function schemaLintSource(view: EditorView): Diagnostic[] {
           }
         }
 
-        // Last resort: highlight entire document
+        // last resort: highlight entire document
         return {
           from: 0,
           to: text.length,

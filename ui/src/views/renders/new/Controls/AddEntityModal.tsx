@@ -93,7 +93,7 @@ export function AddEntityModal<T extends EntityType>(props: AddEntityModalProps<
     <Modal dismissible show={open} onClose={handleCancel}>
       <ModalHeader>{option.label}</ModalHeader>
       <ModalBody>
-        {/* Name input */}
+        {/* name input */}
         <div className="mb-3">
           <label className="mb-1 block text-sm font-medium text-gray-300">Name (optional)</label>
           <TextInput
@@ -103,13 +103,13 @@ export function AddEntityModal<T extends EntityType>(props: AddEntityModalProps<
           />
         </div>
 
-        {/* Description */}
+        {/* description */}
         {option.description && <p className="mb-4 text-sm text-gray-400">{option.description}</p>}
 
-        {/* Geometric-specific: instances and constant volume */}
+        {/* geometric-specific: instances and constant volume */}
         {isGeometrics && (
           <>
-            {/* Stacked instances builder */}
+            {/* stacked instances builder */}
             <div className="mb-4">
               <label className="mb-1 block text-sm font-medium text-gray-300">Instances</label>
               {instances.length > 0 ? (
@@ -158,7 +158,7 @@ export function AddEntityModal<T extends EntityType>(props: AddEntityModalProps<
               </div>
             </div>
 
-            {/* Constant volume toggle */}
+            {/* constant volume toggle */}
             <div className="mb-3 flex items-center gap-3">
               <ToggleSwitch
                 checked={isConstantVolume}
@@ -167,7 +167,7 @@ export function AddEntityModal<T extends EntityType>(props: AddEntityModalProps<
               />
             </div>
 
-            {/* Virtual toggle */}
+            {/* virtual toggle */}
             <div className="mb-3 flex items-center gap-3">
               <ToggleSwitch
                 checked={isVirtual}
