@@ -2,10 +2,10 @@ import { Separator } from '@/components/Separator';
 import { getGeometricData } from '@/utils/render/geometric';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
 
-interface NestedGeometricHeaderProps {
+export type NestedGeometricHeaderProps = {
   geometricName: string;
   renderConfig: NormalizedRenderConfig;
-}
+};
 
 export function NestedGeometricHeader(props: NestedGeometricHeaderProps) {
   const { geometricName, renderConfig } = props;

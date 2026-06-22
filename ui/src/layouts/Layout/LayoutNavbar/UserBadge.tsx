@@ -1,4 +1,4 @@
-import { useAuth } from '@/providers/auth';
+import { useAuth } from '@/providers/Auth';
 import { navigateToAPILogin } from '@/utils/api';
 import { FaGithub } from 'react-icons/fa6';
 import {

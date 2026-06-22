@@ -8,7 +8,7 @@ import { HiTrash } from 'react-icons/hi2';
 import { RenamableLabel } from './RenamableLabel';
 import { LabelText, type LabelTextProps } from './LabelText';
 
-interface ControlsCardProps {
+export type ControlsCardProps = {
   children: React.ReactNode;
   startExpanded?: boolean;
   leftLabel: string;
@@ -17,7 +17,7 @@ interface ControlsCardProps {
   rightLabelStyle?: LabelTextProps['type'];
   onRename?: (newName: string) => void;
   onDelete?: () => void;
-}
+};
 
 export function ControlsCard(props: ControlsCardProps) {
   const {

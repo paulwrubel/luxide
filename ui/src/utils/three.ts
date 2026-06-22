@@ -7,7 +7,7 @@ export type TriangleGeometry = {
 };
 
 /**
- * Returns raw vertex/index/normal data for a triangle.
+ * returns raw vertex/index/normal data for a triangle.
  * Computes the face normal if per-vertex normals are not provided.
  */
 export function createTriangleGeometry(geometricData: GeometricTriangle): TriangleGeometry {
@@ -65,7 +65,7 @@ export type ParallelogramGeometry = {
 };
 
 /**
- * Returns raw vertex/index/normal data for a parallelogram (quad).
+ * returns raw vertex/index/normal data for a parallelogram (quad).
  * Normal is cross(u, v) normalized, same for all four vertices.
  */
 export function createParallelogramGeometry(

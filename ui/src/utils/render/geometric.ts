@@ -123,8 +123,8 @@ export function getReferencedMaterialNames(
       break;
     case 'list':
       materials.push(
-        ...data.geometrics.flatMap((geometricName) =>
-          getReferencedMaterialNames(config, geometricName),
+        ...data.geometrics.flatMap((subGeometricName) =>
+          getReferencedMaterialNames(config, subGeometricName),
         ),
       );
       break;

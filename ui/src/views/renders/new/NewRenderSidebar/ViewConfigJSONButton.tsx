@@ -1,15 +1,17 @@
 import { Button } from 'flowbite-react';
 import { HiEye } from 'react-icons/hi2';
 
-export interface ViewConfigJSONButtonProps {
+export type ViewConfigJSONButtonProps = {
   onClick: () => void;
-}
+};
 
-export const ViewConfigJSONButton = ({ onClick }: ViewConfigJSONButtonProps) => {
+export function ViewConfigJSONButton(props: ViewConfigJSONButtonProps) {
+  const { onClick } = props;
+
   return (
     <Button color="gray" onClick={onClick}>
       <HiEye />
       View JSON
     </Button>
   );
-};
+}

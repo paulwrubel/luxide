@@ -5,7 +5,7 @@ import { getAllRenders } from '@/utils/api';
 import { stateKey } from '@/utils/api';
 import type { Render, RenderStateSnapshot } from '@/utils/api';
 import { checkpointImageQueryKey } from './useLatestCheckpointImage';
-import { useAuth } from '@/providers/auth';
+import { useAuth } from '@/providers/Auth';
 import { useAdminUserOverride } from '@/providers/AdminUserOverride';
 
 export type UseRendersOptions = {

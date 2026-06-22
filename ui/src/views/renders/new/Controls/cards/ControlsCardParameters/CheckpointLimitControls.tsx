@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Tooltip, ToggleSwitch } from 'flowbite-react';
-import { useAuth } from '@/providers/auth';
+import { useAuth } from '@/providers/Auth';
 // import { Separator } from '@/components/Separator';
 import { TextInputControl } from '@/components/form-controls/TextInputControl';
 import { AnimatedSeparator } from '@/components/AnimatedSeparator';

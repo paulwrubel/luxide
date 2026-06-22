@@ -4,7 +4,7 @@ import { useEventSource } from '@/hooks/useEventSource';
 import { getRender } from '@/utils/api';
 import { stateKey } from '@/utils/api';
 import type { Render, RenderStateSnapshot } from '@/utils/api';
-import { useAuth } from '@/providers/auth';
+import { useAuth } from '@/providers/Auth';
 import { useAdminUserOverride } from '@/providers/AdminUserOverride';
 import { checkpointImageQueryKey } from './useLatestCheckpointImage';
 

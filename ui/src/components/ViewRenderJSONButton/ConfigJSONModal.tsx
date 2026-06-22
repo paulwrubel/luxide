@@ -3,14 +3,14 @@ import { HiArrowDownTray, HiClipboard, HiCheck } from 'react-icons/hi2';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { nightOwl } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 
-export interface ConfigJSONModalProps {
+export type ConfigJSONModalProps = {
   show: boolean;
   onClose: () => void;
   jsonString: string;
   copied: boolean;
   onCopy: () => void;
   onDownload: () => void;
-}
+};
 
 export function ConfigJSONModal(props: ConfigJSONModalProps) {
   const { show, onClose, jsonString, copied, onCopy, onDownload } = props;

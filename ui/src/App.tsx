@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from 'flowbite-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider } from './providers/auth';
+import { AuthProvider } from './providers/Auth';
 import { AdminUserOverrideProvider } from './providers/AdminUserOverride';
 import { Layout } from './layouts/Layout';
 import { AuthenticatedRouteLayout } from './layouts/AuthenticatedRouteLayout';

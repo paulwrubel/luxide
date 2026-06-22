@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { updateUserRole, updateUserQuotas } from '../utils/api';
-import { useAuth } from '../providers/auth';
+import { useAuth } from '../providers/Auth';
 import type { Role } from '../utils/api';
 
 export function useUpdateUserRoleMutation() {

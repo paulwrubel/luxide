@@ -5,10 +5,10 @@ import type { NormalizedRenderConfig } from '@/utils/render/config';
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { useSelector } from '@tanstack/react-store';
 
-interface ControlsCardMaterialProps {
+export type ControlsCardMaterialProps = {
   form: RenderForm;
   materialName: string;
-}
+};
 
 export function ControlsCardMaterial(props: ControlsCardMaterialProps) {
   const { form, materialName } = props;

@@ -8,7 +8,7 @@ import {
   updateRenderTotalCheckpoints,
   updateRenderName,
 } from '../utils/api';
-import { useAuth } from '../providers/auth';
+import { useAuth } from '../providers/Auth';
 import type { NormalizedRenderConfig } from '../utils/render/config';
 
 export function useCreateRenderMutation() {

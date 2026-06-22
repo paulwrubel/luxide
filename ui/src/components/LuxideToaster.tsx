@@ -10,7 +10,7 @@ const toastTheme: DeepPartial<ToastTheme> = {
 };
 
 /**
- * Renders all toasts using flowbite-react's `Toast` component with framer-motion
+ * renders all toasts using flowbite-react's `Toast` component with framer-motion
  * animation. Place once at the root of the app — no context or provider needed.
  */
 export function LuxideToaster() {

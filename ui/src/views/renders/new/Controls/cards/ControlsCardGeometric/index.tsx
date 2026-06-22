@@ -6,10 +6,10 @@ import { useSelector } from '@tanstack/react-store';
 import { ControlsCard } from '../ControlsCard';
 import { GeometricRenderControls } from './GeometricRenderControls';
 
-interface ControlsCardGeometricProps {
+export type ControlsCardGeometricProps = {
   form: RenderForm;
   geometricName: string;
-}
+};
 
 export function ControlsCardGeometric(props: ControlsCardGeometricProps) {
   const { form, geometricName } = props;

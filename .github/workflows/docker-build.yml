@@ -53,6 +53,7 @@ jobs:
               - 'ui/.prettierrc'
               - 'ui/.prettierignore'
               - 'ui/.nvmrc'
+              - 'ui/.npmrc'
               - 'ui/index.html'
               - 'justfile'
               - '.github/workflows/**'

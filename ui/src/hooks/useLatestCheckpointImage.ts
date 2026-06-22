@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getLatestCheckpointImage } from '../utils/api';
-import { useAuth } from '../providers/auth';
+import { useAuth } from '../providers/Auth';
 import { useAdminUserOverride } from '@/providers/AdminUserOverride';
 
 export type UseLatestCheckpointImageOptions = {

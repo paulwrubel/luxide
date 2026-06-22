@@ -1,4 +1,4 @@
-import { useAuth } from '@/providers/auth';
+import { useAuth } from '@/providers/Auth';
 import { useAdminUserOverride } from '@/providers/AdminUserOverride';
 import { useAllUsersQuery } from '@/hooks/useAllUsers';
 import { Badge, Tooltip } from 'flowbite-react';

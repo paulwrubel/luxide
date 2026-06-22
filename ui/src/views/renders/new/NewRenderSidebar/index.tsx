@@ -13,7 +13,7 @@ import {
 import { Separator } from '@/components/Separator';
 import type { DeepPartial } from 'flowbite-react/types';
 import { Controls } from '../Controls';
-import { useAuth } from '@/providers/auth';
+import { useAuth } from '@/providers/Auth';
 import { useCreateRenderMutation } from '@/hooks/useRenderMutations';
 import { useRendersQuery } from '@/hooks/useRenders';
 import type { RenderForm } from '@/hooks/useRenderForm';
@@ -22,11 +22,13 @@ import { ConfigJSONModal } from '@/components/ViewRenderJSONButton/ConfigJSONMod
 import toast from 'react-hot-toast';
 import { extractErrorMessage } from '@/utils/api';
 
-export interface NewRenderSidebarProps {
+export type NewRenderSidebarProps = {
   form: RenderForm;
-}
+};
 
-export function NewRenderSidebar({ form }: NewRenderSidebarProps) {
+export function NewRenderSidebar(props: NewRenderSidebarProps) {
+  const { form } = props;
+
   const [showModal, setShowModal] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -64,7 +66,7 @@ export function NewRenderSidebar({ form }: NewRenderSidebarProps) {
   const handleClick = async () => {
     await form.validate('submit');
     if (!form.state.isValid) {
-      console.log(form.state.errors);
+      console.warn(form.state.errors);
       return;
     }
     createRender(form.state.values, {

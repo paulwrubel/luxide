@@ -4,10 +4,10 @@ import { HiEye } from 'react-icons/hi2';
 import { ConfigJSONModal } from './ConfigJSONModal';
 import type { RawRenderConfig } from '@/utils/render/config';
 
-interface ViewRenderJSONButtonProps {
+export type ViewRenderJSONButtonProps = {
   config: RawRenderConfig;
   size?: ButtonProps['size'];
-}
+};
 
 export function ViewRenderJSONButton(props: ViewRenderJSONButtonProps) {
   const { config, size = 'sm' } = props;

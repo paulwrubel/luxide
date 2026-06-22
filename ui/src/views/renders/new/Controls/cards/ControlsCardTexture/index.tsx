@@ -10,10 +10,10 @@ import type { RenderForm } from '@/hooks/useRenderForm';
 import { useSelector } from '@tanstack/react-store';
 import { Separator } from '@/components/Separator';
 
-interface ControlsCardTextureProps {
+export type ControlsCardTextureProps = {
   form: RenderForm;
   textureName: string;
-}
+};
 
 export function ControlsCardTexture(props: ControlsCardTextureProps) {
   const { form, textureName } = props;

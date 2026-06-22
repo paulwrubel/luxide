@@ -44,7 +44,7 @@ export function normalizeSceneData(
   return scene as NormalizedSceneData;
 }
 
-// NormalizedSceneData is the same as a SceneData, but with all the
+// this is the same as a SceneData, but with all the
 // fields which can be a reference or an inline definition replaced with a
 // guaranteed reference
 export type NormalizedSceneData = Omit<RawSceneData, 'geometrics' | 'camera'> & {

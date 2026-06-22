@@ -2,10 +2,10 @@ import { Separator } from '@/components/Separator';
 import { getTextureData } from '@/utils/render/texture';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
 
-interface NestedTextureHeaderProps {
+export type NestedTextureHeaderProps = {
   textureName: string;
   renderConfig: NormalizedRenderConfig;
-}
+};
 
 export function NestedTextureHeader(props: NestedTextureHeaderProps) {
   const { textureName, renderConfig } = props;

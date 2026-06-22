@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useAuth } from '@/providers/auth';
+import { useAuth } from '@/providers/Auth';
 import { useRenderForm } from '@/hooks/useRenderForm';
 import { NewRenderSidebar } from './NewRenderSidebar';
 import { Scene } from './Scene';
@@ -17,7 +17,7 @@ export function NewRenderPage() {
   const [containerWidth, setContainerWidth] = useState(0);
   const [containerHeight, setContainerHeight] = useState(0);
 
-  // ResizeObserver for canvas container
+  // resize observer for canvas container
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;

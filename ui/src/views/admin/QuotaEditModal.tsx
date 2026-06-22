@@ -114,7 +114,7 @@ export function QuotaEditModal(props: QuotaEditModalProps) {
       <ModalHeader>Edit Quotas for @{user.username}</ModalHeader>
       <ModalBody>
         <div className="flex flex-col gap-4 text-zinc-300">
-          {/* Max Renders */}
+          {/* max renders */}
           <fieldset className="flex flex-col gap-2 rounded-lg border border-zinc-700 p-3">
             <div className="flex items-center justify-between">
               <Label className="text-zinc-300">Max Renders</Label>
@@ -137,7 +137,7 @@ export function QuotaEditModal(props: QuotaEditModalProps) {
             )}
           </fieldset>
 
-          {/* Max Checkpoints Per Render */}
+          {/* max checkpoints per render */}
           <fieldset className="flex flex-col gap-2 rounded-lg border border-zinc-700 p-3">
             <div className="flex items-center justify-between">
               <Label className="text-zinc-300">Max Checkpoints Per Render</Label>
@@ -160,7 +160,7 @@ export function QuotaEditModal(props: QuotaEditModalProps) {
             )}
           </fieldset>
 
-          {/* Max Render Pixel Count */}
+          {/* max render pixel count */}
           <fieldset className="flex flex-col gap-2 rounded-lg border border-zinc-700 p-3">
             <div className="flex items-center justify-between">
               <Label className="text-zinc-300">Max Render Pixel Count</Label>
