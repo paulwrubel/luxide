@@ -2,7 +2,7 @@ import { useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getRenderStats } from '@/utils/api';
 import type { RenderStats } from '@/utils/api';
-import { useAuth } from '@/providers/auth';
+import { useAuth } from '@/providers/Auth';
 import { useAdminUserOverride } from '@/providers/AdminUserOverride';
 import { useEventSource } from '@/hooks/useEventSource';
 

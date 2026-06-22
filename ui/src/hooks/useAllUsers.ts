@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { getAllUsers } from '../utils/api';
-import { useAuth } from '../providers/auth';
+import { useAuth } from '../providers/Auth';
 
 export type UseAllUsersOptions = {
   enabled?: boolean;

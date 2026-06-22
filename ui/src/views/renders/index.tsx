@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Alert } from 'flowbite-react';
-import { useAuth } from '@/providers/auth';
+import { useAuth } from '@/providers/Auth';
 import { useRendersQuery } from '@/hooks/useRenders';
 import { RenderPreviewCard } from './RenderPreviewCard';
 import { NewRenderCard } from './NewRenderCard';

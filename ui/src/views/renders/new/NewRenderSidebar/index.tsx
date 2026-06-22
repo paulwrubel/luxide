@@ -13,7 +13,7 @@ import {
 import { Separator } from '@/components/Separator';
 import type { DeepPartial } from 'flowbite-react/types';
 import { Controls } from '../Controls';
-import { useAuth } from '@/providers/auth';
+import { useAuth } from '@/providers/Auth';
 import { useCreateRenderMutation } from '@/hooks/useRenderMutations';
 import { useRendersQuery } from '@/hooks/useRenders';
 import type { RenderForm } from '@/hooks/useRenderForm';

@@ -2,7 +2,7 @@ import { useRenderQuery } from '@/hooks/useRender';
 import { Spinner, Button } from 'flowbite-react';
 import { HiArrowDownTray } from 'react-icons/hi2';
 import { getLatestCheckpointImage } from '@/utils/api';
-import { useAuth } from '@/providers/auth';
+import { useAuth } from '@/providers/Auth';
 import { StateBadge } from './StateBadge';
 
 export type RenderTitleBarProps = {

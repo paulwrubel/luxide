@@ -1,5 +1,5 @@
 import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '@/providers/auth';
+import { useAuth } from '@/providers/Auth';
 
 export function AdminRouteLayout() {
   const { isAuthenticated, user } = useAuth();

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { fetchAuthTokenGitHub } from '@/utils/api';
-import { useAuth } from '@/providers/auth';
+import { useAuth } from '@/providers/Auth';
 import { Spinner } from 'flowbite-react';
 
 /**

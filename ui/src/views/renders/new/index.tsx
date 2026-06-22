@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useAuth } from '@/providers/auth';
+import { useAuth } from '@/providers/Auth';
 import { useRenderForm } from '@/hooks/useRenderForm';
 import { NewRenderSidebar } from './NewRenderSidebar';
 import { Scene } from './Scene';

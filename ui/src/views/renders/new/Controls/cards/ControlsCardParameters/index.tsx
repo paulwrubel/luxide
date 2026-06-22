@@ -3,7 +3,7 @@ import { WarningIconAdvancedProperty } from '../../icons/WarningIconAdvancedProp
 import { TextInputControl } from '@/components/form-controls/TextInputControl';
 import { TextArrayInputControl } from '@/components/form-controls/TextArrayInputControl';
 import { HelperText } from 'flowbite-react';
-import { useAuth } from '@/providers/auth';
+import { useAuth } from '@/providers/Auth';
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { useSelector } from '@tanstack/react-store';
 import { CheckpointLimitControls } from './CheckpointLimitControls';

@@ -10,7 +10,7 @@ import type { DeepPartial } from 'flowbite-react/types';
 import { AdminBanner } from '@/components/AdminBanner';
 import { UserBadge } from './UserBadge';
 import { Link } from 'react-router-dom';
-import { useAuth } from '@/providers/auth';
+import { useAuth } from '@/providers/Auth';
 
 export function LayoutNavbar() {
   const { isAuthenticated, user } = useAuth();

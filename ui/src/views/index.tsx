@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from 'flowbite-react';
 import { motion } from 'framer-motion';
-import { useAuth } from '@/providers/auth';
+import { useAuth } from '@/providers/Auth';
 import { navigateToAPILogin } from '@/utils/api';
 import type { User } from '@/utils/api';
 import { FaGithub } from 'react-icons/fa';

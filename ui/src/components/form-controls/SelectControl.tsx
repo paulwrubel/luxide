@@ -2,10 +2,10 @@ import { useFieldContext } from '@/hooks/formContext';
 import React from 'react';
 import { Label, Select } from 'flowbite-react';
 
-interface SelectItem {
+type SelectItem = {
   label: string;
   value: string;
-}
+};
 
 export type SelectControlProps = {
   label: string;

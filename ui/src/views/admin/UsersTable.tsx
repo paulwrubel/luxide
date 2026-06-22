@@ -16,7 +16,7 @@ import {
 import type { Role, User } from '@/utils/api';
 import { useAllUsersQuery } from '@/hooks/useAllUsers';
 import { useUpdateUserRoleMutation } from '@/hooks/useUserMutations';
-import { useAuth } from '@/providers/auth';
+import { useAuth } from '@/providers/Auth';
 import { RoleChangeModal } from './RoleChangeModal';
 import { QuotaEditModal } from './QuotaEditModal';
 
