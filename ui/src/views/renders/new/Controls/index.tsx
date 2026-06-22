@@ -20,9 +20,9 @@ import type { RenderForm } from '@/hooks/useRenderForm';
 import { useSelector } from '@tanstack/react-store';
 import type { DeepPartial } from 'flowbite-react/types';
 
-interface ControlsProps {
+export type ControlsProps = {
   form: RenderForm;
-}
+};
 
 export function Controls(props: ControlsProps) {
   const { form } = props;

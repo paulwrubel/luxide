@@ -22,11 +22,13 @@ import { ConfigJSONModal } from '@/components/ViewRenderJSONButton/ConfigJSONMod
 import toast from 'react-hot-toast';
 import { extractErrorMessage } from '@/utils/api';
 
-export interface NewRenderSidebarProps {
+export type NewRenderSidebarProps = {
   form: RenderForm;
-}
+};
 
-export function NewRenderSidebar({ form }: NewRenderSidebarProps) {
+export function NewRenderSidebar(props: NewRenderSidebarProps) {
+  const { form } = props;
+
   const [showModal, setShowModal] = useState(false);
   const [copied, setCopied] = useState(false);
 

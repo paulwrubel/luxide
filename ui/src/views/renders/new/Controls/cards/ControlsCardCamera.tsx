@@ -7,10 +7,10 @@ import type { DeepKeys } from '@tanstack/react-form';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
 import { useSelector } from '@tanstack/react-store';
 
-interface ControlsCardCameraProps {
+export type ControlsCardCameraProps = {
   form: RenderForm;
   cameraName: string;
-}
+};
 
 export function ControlsCardCamera(props: ControlsCardCameraProps) {
   const { form, cameraName } = props;

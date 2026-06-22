@@ -7,11 +7,11 @@ import {
   isRenderStateFinishedCheckpointIteration,
 } from '@/utils/api';
 
-export type RenderStateBadgeProps = {
+export type StateBadgeProps = {
   renderState: RenderState;
 };
 
-export function StateBadge(props: RenderStateBadgeProps) {
+export function StateBadge(props: StateBadgeProps) {
   const { renderState } = props;
 
   let label: string;

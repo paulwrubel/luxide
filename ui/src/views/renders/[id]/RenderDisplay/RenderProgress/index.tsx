@@ -11,7 +11,13 @@ import { Spinner } from 'flowbite-react';
 import { ProgressState } from './ProgressState';
 import { RenderTiming, type RenderTimingData } from './RenderTiming';
 
-export function RenderProgress({ renderID }: { renderID: number }) {
+export type RenderProgressProps = {
+  renderID: number;
+};
+
+export function RenderProgress(props: RenderProgressProps) {
+  const { renderID } = props;
+
   const {
     data: render,
     isPending: isRenderPending,

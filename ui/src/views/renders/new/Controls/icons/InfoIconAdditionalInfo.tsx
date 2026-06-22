@@ -1,9 +1,9 @@
 import { Tooltip } from 'flowbite-react';
 import { HiInformationCircle } from 'react-icons/hi2';
 
-interface InfoIconAdditionalInfoProps {
+export type InfoIconAdditionalInfoProps = {
   info: string | string[];
-}
+};
 
 export function InfoIconAdditionalInfo(props: InfoIconAdditionalInfoProps) {
   const { info } = props;
