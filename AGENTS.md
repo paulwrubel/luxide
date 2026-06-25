@@ -4,8 +4,6 @@ Luxide is a **ray tracing render manager** — a multi-tenant platform where use
 - A **Rust backend** (HTTP API server + CLI renderer) with a custom path tracing engine
 - A **React SPA frontend** for creating render configurations and monitoring progress
 
-The `ui/` directory is the React frontend.
-
 ---
 
 ## 2. Tech Stack
@@ -15,19 +13,12 @@ The `ui/` directory is the React frontend.
 - **Database**: SQLx with PostgreSQL (also supports FileStorage and InMemoryStorage backends)
 - **Auth**: GitHub OAuth2 → JWT (RS256, 24hr expiry)
 - **Rendering**: Custom path tracing engine in `src/tracing/` (rayon-parallel, tile-based)
-- **CLI**: clap for the `luxide-cli` binary
 
 ### Frontend (React + TypeScript)
-- **Build**: Vite + TypeScript
-- **Routing**: react-router-dom
 - **State/Data**: @tanstack/react-query (server state, 1s polling), @tanstack/react-form + @tanstack/zod-form-adapter (form state)
 - **3D Preview**: @react-three/fiber + @react-three/drei + three
-- **UI Kit**: flowbite-react
-- **UI Kit Reference**: https://flowbite-react.com/llms.txt
-- **Animation**: framer-motion
-- **Validation**: zod
+- **UI Kit**: flowbite-react — reference: https://flowbite-react.com/llms.txt
 - **CSS**: Tailwind CSS v4 (configured entirely in CSS, no config file; dark mode via `.dark` class)
-- **Icons**: react-icons
 
 ---
 
@@ -36,11 +27,6 @@ The `ui/` directory is the React frontend.
 - `src/` — Rust backend: HTTP API server, CLI renderer, path tracing engine, geometry/shading libraries
 - `ui/` — React SPA frontend (active): page views, shared components, hooks, providers, API client utils, layouts
 - `migrations/` — SQLx PostgreSQL migrations (9 up/down pairs)
-- `models/` — 3D model files (teapot.obj, teapot_normals.obj)
-- `configs/` — Example render configurations (JSON + YAML, Cornell box variants)
-- `benches/` — Criterion benchmarks
-- `bruno/` — Bruno API client collections for testing endpoints
-- `texture_images/` — Texture images for rendering
 
 ---
 
@@ -70,10 +56,6 @@ The `ui/` directory is the React frontend.
 | `just build-ui`                 | Setup Node env + build React UI                                  |
 | `just clean`                    | Cargo clean + remove ui/dist + stop Docker                       |
 | `just generate-jwt-keypair-pem` | Generate RSA keypair for JWT signing                             |
-| `cd ui && npm run dev`          | Start Vite dev server (port 5173, proxies /api → localhost:8080) |
-| `cd ui && npm run build`        | TypeScript check + Vite production build (outputs to ../ui/dist) |
-| `cd ui && npm run lint`         | Run ESLint                                                       |
-| `cargo build --release`         | Build both Rust binaries                                         |
 
 Note: The `just build-api` and `just run` commands embed the UI's `dist/` folder into the Rust binary at compile time via `include_dir!`. The API server serves the React SPA alongside the API routes.
 
@@ -103,15 +85,7 @@ Dark mode requires THREE things simultaneously:
 ### Backend
 - `luxide.json` and `luxide.secret.json` in the repo root are the API config and secrets files (not checked into git; templates should exist).
 - The Rust project is a single crate with two binaries (NOT a workspace with multiple crates).
-
----
-
-## Additional Notes
-
 - The Rust crate uses `#![forbid(unsafe_code)]` — no unsafe Rust anywhere.
-- Rust edition: 2024
-- Database: PostgreSQL with JSONB columns for render state and config, BYTEA for bincode-encoded pixel data.
-- The API server's Vite dev proxy forwards `/api` to `localhost:8080` for development; in production the API serves the UI directly.
 
 ## 7. React Component Conventions
 
