@@ -2,8 +2,10 @@ use std::sync::Arc;
 
 use crate::shading::pdf::Pdf;
 use crate::{
-    geometry::{Onb, Point, Ray, RayHit, Vector},
-    shading::{Color, Texture, textures::SolidColor},
+    geometry::{Onb, Point, Ray, RayHit, Vector3},
+    shading::{
+        ColorSpectrum, Texture, color_spectrum::SPECTRAL_SAMPLE_COUNT, textures::SolidColor,
+    },
 };
 
 use super::{Material, ScatterRecord};
@@ -40,16 +42,16 @@ impl Lambertian {
 }
 
 impl Material for Lambertian {
-    fn reflectance(&self, u: f64, v: f64, p: Point) -> Color {
+    fn reflectance(&self, u: f64, v: f64, p: Point) -> ColorSpectrum<SPECTRAL_SAMPLE_COUNT> {
         self.reflectance_texture.value(u, v, p)
     }
 
-    fn emittance(&self, u: f64, v: f64, p: Point) -> Color {
+    fn emittance(&self, u: f64, v: f64, p: Point) -> ColorSpectrum<SPECTRAL_SAMPLE_COUNT> {
         self.emittance_texture.value(u, v, p)
     }
 
     fn is_emissive(&self) -> bool {
-        self.emittance_texture.value(0.5, 0.5, Point::ORIGIN) != Color::BLACK
+        self.emittance_texture.value(0.5, 0.5, Point::ORIGIN) != ColorSpectrum::ZERO
     }
 
     fn is_transmissive(&self) -> bool {
@@ -68,13 +70,13 @@ impl Material for Lambertian {
 
     fn brdf(
         &self,
-        _outgoing_direction: Vector,
-        _incident_direction: Vector,
-        _normal: Vector,
+        _outgoing_direction: Vector3,
+        _incident_direction: Vector3,
+        _normal: Vector3,
         u: f64,
         v: f64,
         p: Point,
-    ) -> Color {
+    ) -> ColorSpectrum<SPECTRAL_SAMPLE_COUNT> {
         let albedo = self.reflectance_texture.value(u, v, p);
         albedo / std::f64::consts::PI
     }

@@ -1,14 +1,14 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector},
+    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector3},
     utils::{Angle, Around, Interval},
 };
 
 #[derive(Clone, Debug)]
 pub struct RotateXAxis {
     geometric: Arc<dyn Geometric>,
-    translation: Vector,
+    translation: Vector3,
     sin_theta: f64,
     cos_theta: f64,
     bounding_box: Aabb,
@@ -58,25 +58,25 @@ impl RotateXAxis {
     }
 
     fn world_to_local_point(&self, v: Point) -> Point {
-        Point::from_vector(self.world_to_local_vector(v.0 - self.translation)) + self.translation
+        Point::from_vector3(self.world_to_local_vector(v.0 - self.translation)) + self.translation
     }
 
-    fn world_to_local_vector(&self, v: Vector) -> Vector {
+    fn world_to_local_vector(&self, v: Vector3) -> Vector3 {
         let y = self.cos_theta * v.y + self.sin_theta * v.z;
         let z = -self.sin_theta * v.y + self.cos_theta * v.z;
 
-        Vector::new(v.x, y, z)
+        Vector3::new(v.x, y, z)
     }
 
     fn local_to_world_point(&self, v: Point) -> Point {
-        Point::from_vector(self.local_to_world_vector(v.0 - self.translation)) + self.translation
+        Point::from_vector3(self.local_to_world_vector(v.0 - self.translation)) + self.translation
     }
 
-    fn local_to_world_vector(&self, v: Vector) -> Vector {
+    fn local_to_world_vector(&self, v: Vector3) -> Vector3 {
         let y = self.cos_theta * v.y - self.sin_theta * v.z;
         let z = self.sin_theta * v.y + self.cos_theta * v.z;
 
-        Vector::new(v.x, y, z)
+        Vector3::new(v.x, y, z)
     }
 }
 
@@ -121,13 +121,13 @@ impl Geometric for RotateXAxis {
         self.bounding_box
     }
 
-    fn sample_direction_from(&self, origin: Point) -> Vector {
+    fn sample_direction_from(&self, origin: Point) -> Vector3 {
         let local_origin = self.world_to_local_point(origin);
         let local_dir = self.geometric.sample_direction_from(local_origin);
         self.local_to_world_vector(local_dir)
     }
 
-    fn direction_pdf(&self, origin: Point, dir: Vector) -> f64 {
+    fn direction_pdf(&self, origin: Point, dir: Vector3) -> f64 {
         let local_origin = self.world_to_local_point(origin);
         let local_dir = self.world_to_local_vector(dir);
         // PDF is invariant under rigid transforms

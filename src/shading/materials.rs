@@ -1,6 +1,7 @@
-use super::Color;
+use super::ColorSpectrum;
 use super::pdf::Pdf;
-use crate::geometry::{Point, Ray, RayHit, Vector};
+use crate::geometry::{Point, Ray, RayHit, Vector3};
+use crate::shading::color_spectrum::SPECTRAL_SAMPLE_COUNT;
 
 mod dielectric;
 pub use dielectric::Dielectric;
@@ -15,7 +16,7 @@ mod specular;
 pub use specular::Specular;
 
 pub trait Material: std::fmt::Debug + Sync + Send {
-    fn emittance(&self, u: f64, v: f64, p: Point) -> Color;
+    fn emittance(&self, u: f64, v: f64, p: Point) -> ColorSpectrum<SPECTRAL_SAMPLE_COUNT>;
 
     /// Whether this material emits any light at any point on its surface.
     /// Used to build the lights list for importance sampling.
@@ -34,9 +35,9 @@ pub trait Material: std::fmt::Debug + Sync + Send {
     ///
     /// For `Pdf`-variant materials (Lambertian), the actual contribution comes
     /// from `brdf()`, but `reflectance()` is still called for early-termination:
-    /// if the surface absorbs all light (returns `Color::BLACK`), the integrator
-    /// skips scattering entirely.
-    fn reflectance(&self, u: f64, v: f64, p: Point) -> Color;
+    /// if the surface absorbs all light (returns `ColorSpectrum::ZERO`), the
+    /// integrator skips scattering entirely.
+    fn reflectance(&self, u: f64, v: f64, p: Point) -> ColorSpectrum<SPECTRAL_SAMPLE_COUNT>;
 
     fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<ScatterRecord>;
 
@@ -54,13 +55,13 @@ pub trait Material: std::fmt::Debug + Sync + Send {
     /// never called — they bypass the BRDF path via `ScatterRecord::Delta`.
     fn brdf(
         &self,
-        outgoing_direction: Vector,
-        incident_direction: Vector,
-        normal: Vector,
+        outgoing_direction: Vector3,
+        incident_direction: Vector3,
+        normal: Vector3,
         u: f64,
         v: f64,
         p: Point,
-    ) -> Color;
+    ) -> ColorSpectrum<SPECTRAL_SAMPLE_COUNT>;
 }
 
 /// The result of a material scatter operation.

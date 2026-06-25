@@ -3,8 +3,11 @@ use std::{f64::consts::PI, sync::Arc};
 use rand::RngExt;
 
 use crate::{
-    geometry::{Point, Ray, Vector},
-    shading::{Color, materials::ScatterRecord, pdf::Pdf},
+    geometry::{Point, Ray, Vector, Vector3},
+    shading::{
+        ColorRgb, ColorSpectrum, HeroWavelengths, color_spectrum::SPECTRAL_SAMPLE_COUNT,
+        hero_wavelengths::HERO_WAVELENGTH_COUNT, materials::ScatterRecord, pdf::Pdf,
+    },
     tracing::{BouncesConfig, ImportanceSamplingConfig, RenderParameters, Scene, SceneWorld},
     utils::{Angle, Interval},
 };
@@ -14,26 +17,26 @@ pub struct Camera {
     // "public" fields
     eye_location: Point,
     target_location: Point,
-    view_up: Vector,
+    view_up: Vector3,
     vertical_field_of_view_degrees: f64,
 
     defocus_angle_degrees: f64,
     focus_distance: f64,
 
     // "private" fields
-    background_color: Color,
+    background_color: ColorSpectrum<SPECTRAL_SAMPLE_COUNT>,
     image_height: u32,
     center: Point,
     importance_sampling: ImportanceSamplingConfig,
     bounces: BouncesConfig,
     pixel_00_location: Point,
-    pixel_delta_u: Vector,
-    pixel_delta_v: Vector,
-    u: Vector,
-    v: Vector,
-    w: Vector,
-    defocus_disk_u: Vector,
-    defocus_disk_v: Vector,
+    pixel_delta_u: Vector3,
+    pixel_delta_v: Vector3,
+    u: Vector3,
+    v: Vector3,
+    w: Vector3,
+    defocus_disk_u: Vector3,
+    defocus_disk_v: Vector3,
 }
 
 impl Camera {
@@ -41,7 +44,7 @@ impl Camera {
         vertical_field_of_view_degrees: f64,
         eye_location: Point,
         target_location: Point,
-        view_up: Vector,
+        view_up: Vector3,
         defocus_angle_degrees: f64,
         focus_distance: f64,
     ) -> Self {
@@ -145,14 +148,14 @@ impl Camera {
     }
 
     fn defocus_disk_sample(&self) -> Point {
-        let disk_unit_vector = &Vector::random_in_unit_disk();
+        let disk_unit_vector = &Vector3::random_in_unit_disk();
 
         self.center
             + self.defocus_disk_u * disk_unit_vector.x
             + self.defocus_disk_v * disk_unit_vector.y
     }
 
-    fn pixel_sample_square(&self) -> Vector {
+    fn pixel_sample_square(&self) -> Vector3 {
         let mut rng = rand::rng();
 
         let x_offset = self.pixel_delta_u * rng.random_range(-0.5..0.5);
@@ -161,61 +164,55 @@ impl Camera {
         x_offset + y_offset
     }
 
-    pub fn ray_color(&self, mut ray: Ray, scene_world: &SceneWorld) -> Color {
+    pub fn ray_color(&self, mut ray: Ray, scene_world: &SceneWorld) -> ColorRgb {
         let mut rng = rand::rng();
 
-        // accumulated color contributions of each geometric we intersect along the rays' paths.
-        let mut accumulated_color = Color::BLACK;
-        // accumulated attentuation (color) of surfaces we encounter.
-        // unless we find a dual reflective/emissive surface, this is will always deteriorate in value,
-        // which represents that only a portion of the light received from that point will be reflected instead of absorbed.
-        let mut attentuation_strength = Color::WHITE;
+        // pick 4 stratified random hero wavelengths for this camera ray
+        let hero_wavelengths = HeroWavelengths::new_distributed();
 
-        // iterate over geometrics until we fail to intersect, reach max bounces, or find a non-reflective surface
+        // per-wavelength accumulated radiance (scalar)
+        let mut accumulated = Vector::<HERO_WAVELENGTH_COUNT>::ZERO;
+        // per-wavelength attenuation throughput (scalar)
+        let mut attenuation = Vector::<HERO_WAVELENGTH_COUNT>::ONE;
+
         let mut bounces = 0;
         while let Some(ray_hit) = scene_world
             .world
             .intersect(ray, Interval::new(0.001, f64::INFINITY))
         {
+            // emissive contribution at each hero wavelength
             let emittance = ray_hit
                 .material
                 .emittance(ray_hit.u, ray_hit.v, ray_hit.point);
-
-            // update our accumulated color
-            accumulated_color += attentuation_strength * emittance;
+            accumulated += attenuation * emittance.sample(&hero_wavelengths);
 
             if bounces >= self.bounces.max {
-                return accumulated_color;
+                // convert accumulated spectral samples to RGB and return
+                return hero_wavelengths.to_color_rgb(accumulated);
             }
 
-            // early termination: if the surface absorbs all light, skip scatter
-            if ray_hit
+            // early termination: if surface absorbs all light at all wavelengths
+            let reflectance = ray_hit
                 .material
-                .reflectance(ray_hit.u, ray_hit.v, ray_hit.point)
-                == Color::BLACK
-            {
-                return accumulated_color;
+                .reflectance(ray_hit.u, ray_hit.v, ray_hit.point);
+            if reflectance.is_black() {
+                return hero_wavelengths.to_color_rgb(accumulated);
             }
 
             let Some(srec) = ray_hit.material.scatter(ray, &ray_hit) else {
-                return accumulated_color;
+                return hero_wavelengths.to_color_rgb(accumulated);
             };
 
-            // unit vector from surface toward the camera (outgoing direction for BRDF)
             let outgoing_direction = (-ray.direction).unit_vector();
 
             match srec {
                 ScatterRecord::Delta { scattered } => {
-                    // specular or dielectric materials, which really only have a discrete scatter direction, and not a distribution over 3D space.
-                    //
-                    // essentially, this is a special case that sidesteps the BRDF + PDF evaluation
+                    // specular / dielectric — attenuation scales by reflectance at each wavelength
                     let reflectance =
                         ray_hit
                             .material
                             .reflectance(ray_hit.u, ray_hit.v, ray_hit.point);
-
-                    attentuation_strength *= reflectance;
-
+                    attenuation *= reflectance.sample(&hero_wavelengths);
                     ray = scattered
                 }
                 ScatterRecord::Pdf(scatter_pdf) => {
@@ -242,21 +239,20 @@ impl Camera {
                         let pdf_val = pdf.strategy_density(incident_direction, index_of_strategy);
                         let mis_weight = pdf.power_heuristic(incident_direction, index_of_strategy);
 
-                        // degenerate sample from grazing-angle/proximity rejection in geometric direction_pdf
                         if pdf_val <= 0.0 {
-                            return accumulated_color;
+                            return hero_wavelengths.to_color_rgb(accumulated);
                         }
 
-                        attentuation_strength *= brdf_val * cos_theta * mis_weight / pdf_val;
+                        attenuation *=
+                            brdf_val.sample(&hero_wavelengths) * (cos_theta * mis_weight / pdf_val);
                     } else {
                         let pdf_val = pdf.density(incident_direction);
 
-                        // degenerate sample from grazing-angle/proximity rejection in geometric direction_pdf
                         if pdf_val <= 0.0 {
-                            return accumulated_color;
+                            return hero_wavelengths.to_color_rgb(accumulated);
                         }
 
-                        attentuation_strength *= brdf_val * cos_theta / pdf_val;
+                        attenuation *= brdf_val.sample(&hero_wavelengths) * (cos_theta / pdf_val);
                     }
 
                     ray = Ray::new(ray_hit.point, incident_direction, ray.time)
@@ -265,35 +261,22 @@ impl Camera {
 
             bounces += 1;
 
-            // Russian roulette: probabilistically terminate paths with low remaining
-            // throughput once we're past the configured threshold. The survival
-            // probability p is the largest RGB component of the current attenuation
-            // (max-component luminance heuristic), clamped to [0, 1].
-            // Survivors are scaled by 1/p to maintain an unbiased estimator.
+            // Russian roulette: use max attenuation across all hero wavelengths
             if let Some(after) = self.bounces.use_russian_roulette_after
                 && bounces > after
             {
-                let p = attentuation_strength.max_component().min(1.0);
+                let p = attenuation.iter().fold(0.0_f64, |a, &b| a.max(b)).min(1.0);
                 if rng.random::<f64>() > p {
-                    return accumulated_color;
+                    return hero_wavelengths.to_color_rgb(accumulated);
                 }
-                attentuation_strength /= p;
+                attenuation /= p;
             }
         }
 
-        // at this point, we must have failed to intersect.
-        //
-        // normally, we could just return the background color.
-        // however, because of a design decision I made, it is completely possible
-        // to have a material be both reflective and emissive. this means we need to
-        // account for cases where the accumulated_color is non-zero due to emissive
-        // materials AND the ray is reflected.
+        // ray missed — add background contribution
+        accumulated += attenuation * self.background_color.sample(&hero_wavelengths);
 
-        // first, update our accumulated color to account for a non-black background
-        accumulated_color += attentuation_strength * self.background_color;
-
-        // then, we can finally return the accumulated color
-        accumulated_color
+        hero_wavelengths.to_color_rgb(accumulated)
     }
 }
 

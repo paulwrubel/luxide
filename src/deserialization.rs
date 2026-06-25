@@ -10,7 +10,7 @@ use textures::TextureRefOrInline;
 use crate::{
     camera::Camera,
     geometry::Geometric,
-    shading::{Color, Texture, materials::Material},
+    shading::{ColorRgb, Texture, materials::Material},
     tracing::{RenderParameters, Scene},
     utils::{Angle, Around},
 };
@@ -350,19 +350,19 @@ fn prefix_builtin_key(key: &str) -> String {
 fn get_builtin_textures() -> IndexMap<String, TextureData> {
     indexmap! {
         prefix_builtin_key("white") => TextureData::SolidColor {
-            color: Color::WHITE.into()
+            color: ColorRgb::WHITE.into()
          },
         prefix_builtin_key("black") => TextureData::SolidColor {
-            color: Color::BLACK.into()
+            color: ColorRgb::BLACK.into()
         },
         prefix_builtin_key("red") => TextureData::SolidColor {
-             color: Color::RED.into()
+             color: ColorRgb::RED.into()
             },
         prefix_builtin_key("green") => TextureData::SolidColor {
-            color: Color::GREEN.into()
+            color: ColorRgb::GREEN.into()
          },
         prefix_builtin_key("blue") => TextureData::SolidColor {
-            color: Color::BLUE.into()
+            color: ColorRgb::BLUE.into()
         },
         // cornell box colors
         prefix_builtin_key("cornell_box_white") => TextureData::SolidColor {

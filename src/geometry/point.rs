@@ -2,23 +2,23 @@ use std::ops::{Index, IndexMut, Neg};
 
 use auto_ops::impl_op_ex;
 
-use super::Vector;
+use super::Vector3;
 
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
-pub struct Point(pub Vector);
+pub struct Point(pub Vector3);
 
 impl Point {
-    pub const ZERO: Point = Self(Vector::ZERO);
-    pub const ONE: Point = Self(Vector::ONE);
+    pub const ZERO: Point = Self(Vector3::ZERO);
+    pub const ONE: Point = Self(Vector3::ONE);
     pub const ORIGIN: Point = Self::ZERO;
-    pub const INFINITY: Point = Self(Vector::INFINITY);
+    pub const INFINITY: Point = Self(Vector3::INFINITY);
 
     pub fn new(x: f64, y: f64, z: f64) -> Self {
-        Self(Vector::new(x, y, z))
+        Self(Vector3::new(x, y, z))
     }
 
-    pub fn from_vector(vector: Vector) -> Self {
-        Self(vector)
+    pub fn from_vector3(vector3: Vector3) -> Self {
+        Self(vector3)
     }
 
     pub fn min_components_point(&self, other: Self) -> Point {
@@ -55,22 +55,22 @@ impl Point {
             .fold(-Point::INFINITY, |a, b| a.max_components_point(*b))
     }
 
-    pub fn to(&self, other: Self) -> Vector {
+    pub fn to(&self, other: Self) -> Vector3 {
         other - self
     }
 
-    pub fn from(&self, other: Self) -> Vector {
+    pub fn from(&self, other: Self) -> Vector3 {
         self - other
     }
 
-    pub fn as_vector(&self) -> Vector {
+    pub fn as_vector3(&self) -> Vector3 {
         self.0
     }
 }
 
 impl From<[f64; 3]> for Point {
     fn from(v: [f64; 3]) -> Self {
-        Self(Vector::new(v[0], v[1], v[2]))
+        Self(Vector3::new(v[0], v[1], v[2]))
     }
 }
 
@@ -78,7 +78,7 @@ impl Neg for Point {
     type Output = Point;
 
     fn neg(self) -> Self::Output {
-        Point::from_vector(self.0 * -1.0)
+        Point::from_vector3(self.0 * -1.0)
     }
 }
 
@@ -96,18 +96,18 @@ impl IndexMut<usize> for Point {
     }
 }
 
-impl_op_ex!(+ |a: &Point, b: &Vector| -> Point {
+impl_op_ex!(+ |a: &Point, b: &Vector3| -> Point {
     Point(a.0 + b)
 });
 
-impl_op_ex!(+= |a: &mut Point, b: &Vector| {
+impl_op_ex!(+= |a: &mut Point, b: &Vector3| {
     a.0 += b;
 });
 
-impl_op_ex!(-|a: &Point, b: &Point| -> Vector { a.0 - b.0 });
+impl_op_ex!(-|a: &Point, b: &Point| -> Vector3 { a.0 - b.0 });
 
-impl_op_ex!(-|a: &Point, b: &Vector| -> Point { Point(a.0 - b) });
+impl_op_ex!(-|a: &Point, b: &Vector3| -> Point { Point(a.0 - b) });
 
-impl_op_ex!(-= |a: &mut Point, b: &Vector|  {
+impl_op_ex!(-= |a: &mut Point, b: &Vector3|  {
     a.0 -= b;
 });

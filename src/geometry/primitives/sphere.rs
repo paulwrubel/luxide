@@ -1,7 +1,7 @@
 use std::{f64::consts::PI, sync::Arc};
 
 use crate::{
-    geometry::{Aabb, Geometric, Onb, Point, Ray, RayHit, Vector},
+    geometry::{Aabb, Geometric, Onb, Point, Ray, RayHit, Vector3},
     shading::materials::{Lambertian, Material},
     utils::Interval,
 };
@@ -9,7 +9,7 @@ use crate::{
 #[derive(Clone, Debug)]
 pub struct Sphere {
     center_1: Point,
-    center_vector: Option<Vector>,
+    center_vector: Option<Vector3>,
     radius: f64,
     material: Arc<dyn Material>,
     bounding_box: Aabb,
@@ -17,7 +17,7 @@ pub struct Sphere {
 
 impl Sphere {
     pub fn new(center: Point, radius: f64, material: Arc<dyn Material>) -> Self {
-        let radius_vector = Vector::new(radius, radius, radius);
+        let radius_vector = Vector3::new(radius, radius, radius);
         Self {
             center_1: center,
             center_vector: None,
@@ -33,7 +33,7 @@ impl Sphere {
         radius: f64,
         material: Arc<dyn Material>,
     ) -> Self {
-        let radius_vector = Vector::new(radius, radius, radius);
+        let radius_vector = Vector3::new(radius, radius, radius);
         let bounding_box_1 =
             Aabb::from_points(&[center_1 - radius_vector, center_1 + radius_vector]);
         let bounding_box_2 =
@@ -65,14 +65,14 @@ impl Sphere {
     /// Generate a random direction within the cone that subtends the sphere
     /// from a point at `distance_squared` away. The result is in the local
     /// frame where +Z points toward the sphere center.
-    fn random_to_sphere(radius: f64, distance_squared: f64) -> Vector {
+    fn random_to_sphere(radius: f64, distance_squared: f64) -> Vector3 {
         let r1: f64 = rand::random();
         let r2: f64 = rand::random();
         let cos_theta_max = (1.0 - radius * radius / distance_squared).sqrt();
         let z = 1.0 + r2 * (cos_theta_max - 1.0);
         let phi = 2.0 * PI * r1;
         let sin_theta = (1.0 - z * z).sqrt();
-        Vector::new(phi.cos() * sin_theta, phi.sin() * sin_theta, z)
+        Vector3::new(phi.cos() * sin_theta, phi.sin() * sin_theta, z)
     }
 
     fn uv(unit_point: Point) -> (f64, f64) {
@@ -114,7 +114,7 @@ impl Geometric for Sphere {
         }
 
         let point = ray.at(root);
-        let (u, v) = Self::uv(Point::from_vector(center.to(point).unit_vector()));
+        let (u, v) = Self::uv(Point::from_vector3(center.to(point).unit_vector()));
 
         Some(RayHit {
             t: root,
@@ -150,7 +150,7 @@ impl Geometric for Sphere {
         self.bounding_box
     }
 
-    fn sample_direction_from(&self, origin: Point) -> Vector {
+    fn sample_direction_from(&self, origin: Point) -> Vector3 {
         // sample the sphere as a cone from origin:
         // build an ONB with w pointing toward the sphere center,
         // then sample a direction uniformly within the cone subtended
@@ -161,7 +161,7 @@ impl Geometric for Sphere {
 
         // degenerate: origin inside the sphere — sample the full sphere
         if distance_squared <= self.radius * self.radius {
-            return Vector::random_unit();
+            return Vector3::random_unit();
         }
 
         let onb = Onb::from_w(to_center.unit_vector());
@@ -169,7 +169,7 @@ impl Geometric for Sphere {
         onb.to_world(local_dir)
     }
 
-    fn direction_pdf(&self, origin: Point, dir: Vector) -> f64 {
+    fn direction_pdf(&self, origin: Point, dir: Vector3) -> f64 {
         // go from origin to the hit point
         let ray = Ray::new(origin, dir, 0.0);
 

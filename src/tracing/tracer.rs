@@ -4,9 +4,9 @@ use rand::seq::SliceRandom;
 use rayon::prelude::*;
 use tokio::sync::mpsc;
 
-use crate::{deserialization::RenderData, shading::Color};
+use crate::{deserialization::RenderData, shading::ColorRgb};
 
-pub type PixelData = HashMap<(u32, u32), Color>;
+pub type PixelData = HashMap<(u32, u32), ColorRgb>;
 
 #[derive(Debug, Copy, Clone)]
 pub struct ProgressPacket {
@@ -82,7 +82,7 @@ impl Tracer {
                             let stratified_count = grid_size * grid_size;
 
                             let color = (0..parameters.samples_per_checkpoint).fold(
-                                Color::BLACK,
+                                ColorRgb::BLACK,
                                 |acc, i| {
                                     let ray = if i < stratified_count {
                                         cam.get_ray_stratified(
@@ -111,7 +111,7 @@ impl Tracer {
                             let scaled_color = color / parameters.samples_per_checkpoint as f64;
 
                             // scale relative to the current round
-                            let img_color = pixel_data.get(&(x, y)).unwrap_or(&Color::BLACK);
+                            let img_color = pixel_data.get(&(x, y)).unwrap_or(&ColorRgb::BLACK);
                             let weighted_color = (img_color * (checkpoint - 1) as f64
                                 + scaled_color)
                                 / checkpoint as f64;

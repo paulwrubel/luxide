@@ -3,7 +3,7 @@ use std::ops::{Index, IndexMut};
 use auto_ops::{impl_op_ex, impl_op_ex_commutative};
 
 use crate::{
-    geometry::{Point, Ray, Vector},
+    geometry::{Point, Ray, Vector3},
     utils::Interval,
 };
 
@@ -139,7 +139,7 @@ impl IndexMut<usize> for Aabb {
     }
 }
 
-impl_op_ex_commutative!(+ |a: &Aabb, b: &Vector| -> Aabb {
+impl_op_ex_commutative!(+ |a: &Aabb, b: &Vector3| -> Aabb {
     Aabb {
         x_interval: a.x_interval + b.x,
         y_interval: a.y_interval + b.y,
@@ -147,13 +147,13 @@ impl_op_ex_commutative!(+ |a: &Aabb, b: &Vector| -> Aabb {
     }
 });
 
-impl_op_ex!(+= |a: &mut Aabb, b: &Vector| {
+impl_op_ex!(+= |a: &mut Aabb, b: &Vector3| {
     a.x_interval += b.x;
     a.y_interval += b.y;
     a.z_interval += b.z;
 });
 
-impl_op_ex!(-|a: &Aabb, b: &Vector| -> Aabb {
+impl_op_ex!(-|a: &Aabb, b: &Vector3| -> Aabb {
     Aabb {
         x_interval: a.x_interval - b.x,
         y_interval: a.y_interval - b.y,
@@ -161,7 +161,7 @@ impl_op_ex!(-|a: &Aabb, b: &Vector| -> Aabb {
     }
 });
 
-impl_op_ex!(-= |a: &mut Aabb, b: &Vector|  {
+impl_op_ex!(-= |a: &mut Aabb, b: &Vector3|  {
     a.x_interval -= b.x;
     a.y_interval -= b.y;
     a.z_interval -= b.z;

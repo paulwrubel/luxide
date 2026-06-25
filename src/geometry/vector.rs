@@ -1,342 +1,215 @@
-use std::{
-    f64::consts::PI,
-    ops::{Index, IndexMut, Neg},
-};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
-use auto_ops::{impl_op_ex, impl_op_ex_commutative};
-use bincode::{Decode, Encode};
-use rand::RngExt;
+/// A fixed-size numeric array with element-wise arithmetic.
+///
+/// Unlike the geometric `Vector3`, this type has no geometric interpretation —
+/// no cross product, no normalization, no spatial semantics. It is purely
+/// for arithmetic on fixed-size arrays of scalars.
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct Vector<const N: usize>(pub [f64; N]);
 
-use crate::utils::Angle;
-
-#[derive(Debug, Copy, Clone, PartialEq, Default, Encode, Decode)]
-pub struct Vector {
-    pub x: f64,
-    pub y: f64,
-    pub z: f64,
-}
-
-impl Vector {
-    pub const ZERO: Self = Self {
-        x: 0.0,
-        y: 0.0,
-        z: 0.0,
-    };
-
-    pub const ONE: Self = Self {
-        x: 1.0,
-        y: 1.0,
-        z: 1.0,
-    };
-
-    pub const INFINITY: Self = Self {
-        x: f64::INFINITY,
-        y: f64::INFINITY,
-        z: f64::INFINITY,
-    };
-
-    pub const RIGHT: Self = Self {
-        x: 1.0,
-        y: 0.0,
-        z: 0.0,
-    };
-    pub const UNIT_X: Self = Self::RIGHT;
-
-    pub const UP: Self = Self {
-        x: 0.0,
-        y: 1.0,
-        z: 0.0,
-    };
-    pub const UNIT_Y: Self = Self::UP;
-
-    pub const FORWARD: Self = Self {
-        x: 0.0,
-        y: 0.0,
-        z: -1.0,
-    };
-
-    pub const UNIT_Z: Self = Self {
-        x: 0.0,
-        y: 0.0,
-        z: 1.0,
-    };
-
-    pub fn new(x: f64, y: f64, z: f64) -> Self {
-        Self { x, y, z }
-    }
-
-    pub fn random() -> Self {
-        Self::random_range(0.0, 1.0)
-    }
-
-    pub fn random_range(min: f64, max: f64) -> Self {
-        let mut rng = rand::rng();
-        Self {
-            x: rng.random_range(min..max),
-            y: rng.random_range(min..max),
-            z: rng.random_range(min..max),
-        }
-    }
-
-    pub fn random_in_unit_sphere() -> Self {
-        loop {
-            let p = Self::random_in_unit_cube();
-            if p.squared_length() < 1.0 {
-                return p;
-            }
-        }
-    }
-
-    pub fn random_in_unit_cube() -> Self {
-        let mut rng = rand::rng();
-        Self {
-            x: rng.random_range(-1.0..1.0),
-            y: rng.random_range(-1.0..1.0),
-            z: rng.random_range(-1.0..1.0),
-        }
-    }
-
-    pub fn random_in_unit_disk() -> Self {
-        let mut rng = rand::rng();
-        loop {
-            let p = Self {
-                x: rng.random_range(-1.0..1.0),
-                y: rng.random_range(-1.0..1.0),
-                z: 0.0,
-            };
-            if p.squared_length() < 1.0 {
-                return p;
-            }
-        }
-    }
-
-    pub fn random_unit() -> Self {
-        Self::random_in_unit_sphere().unit_vector()
-    }
-
-    pub fn random_on_hemisphere(normal: Self) -> Self {
-        let on_unit_sphere = Self::random_unit();
-        if on_unit_sphere.dot(normal) > 0.0 {
-            on_unit_sphere
-        } else {
-            -on_unit_sphere
-        }
-    }
-
-    /// generates a random unit direction on the +Z hemisphere with a
-    /// cosine-weighted distribution.  the direction is relative to +Z
-    /// (`z > 0` by construction), not world-space.  use an `Onb` to orient
-    /// the result to an arbitrary surface normal.
-    ///
-    /// implemented via malley's method: uniformly sample the unit disk and
-    /// project onto the hemisphere.
-    pub fn random_cosine_weighted_direction() -> Self {
-        let r1 = rand::random::<f64>();
-        let r2 = rand::random::<f64>();
-        let phi = 2.0 * PI * r1;
-        let sqrt_r2 = r2.sqrt();
-        Self {
-            x: phi.cos() * sqrt_r2,
-            y: phi.sin() * sqrt_r2,
-            z: (1.0 - r2).sqrt(),
-        }
-    }
-
-    pub fn length(&self) -> f64 {
-        self.squared_length().sqrt()
-    }
-
-    pub fn squared_length(&self) -> f64 {
-        self.x * self.x + self.y * self.y + self.z * self.z
-    }
-
-    pub fn de_nan(&self) -> Self {
-        Self {
-            x: if self.x.is_nan() { 0.0 } else { self.x },
-            y: if self.y.is_nan() { 0.0 } else { self.y },
-            z: if self.z.is_nan() { 0.0 } else { self.z },
-        }
-    }
-
-    pub fn normalize(&mut self) {
-        *self /= self.length();
-    }
-
-    pub fn unit_vector(&self) -> Self {
-        self / self.length()
-    }
-
-    pub fn is_near_zero(&self) -> bool {
-        let s = 1e-8;
-        self.x.abs() < s && self.y.abs() < s && self.z.abs() < s
-    }
-
-    pub fn angle(&self, other: Self) -> Angle {
-        Angle::Radians((self.dot(other) / (self.length() * other.length())).acos())
-    }
-
-    pub fn dot(&self, other: Self) -> f64 {
-        self.x * other.x + self.y * other.y + self.z * other.z
-    }
-
-    pub fn cross(&self, other: Self) -> Self {
-        Self {
-            x: self.y * other.z - self.z * other.y,
-            y: self.z * other.x - self.x * other.z,
-            z: self.x * other.y - self.y * other.x,
-        }
-    }
-
-    pub fn reflect_around(&self, normal: Self) -> Self {
-        self - 2.0 * self.dot(normal) * normal
-    }
-
-    pub fn refract_around(&self, normal: Self, etai_over_etat: f64) -> Self {
-        let cos_theta = (-*self).dot(normal).min(1.0);
-        let perpendicular_component = etai_over_etat * (self + cos_theta * normal);
-        let parallel_component = -((1.0 - perpendicular_component.squared_length())
-            .abs()
-            .sqrt())
-            * normal;
-        perpendicular_component + parallel_component
-    }
-
-    pub fn scale_down(&self, scale: f64) -> Self {
-        let max = self.x.max(self.y).max(self.z);
-        if max > scale {
-            *self / (max / scale)
-        } else {
-            *self
-        }
-    }
-
-    pub fn max_component(&self) -> f64 {
-        self.x.max(self.y).max(self.z)
+impl<const N: usize> Default for Vector<N> {
+    fn default() -> Self {
+        Self::ZERO
     }
 }
 
-impl From<[f64; 3]> for Vector {
-    fn from(v: [f64; 3]) -> Self {
-        Self {
-            x: v[0],
-            y: v[1],
-            z: v[2],
+impl<const N: usize> Vector<N> {
+    /// All elements set to zero.
+    pub const ZERO: Self = Self([0.0; N]);
+
+    /// All elements set to zero.
+    pub const ONE: Self = Self([1.0; N]);
+
+    /// Create from an array.
+    pub fn new(data: [f64; N]) -> Self {
+        Self(data)
+    }
+
+    /// Iterate over the elements by reference.
+    pub fn iter(&self) -> std::slice::Iter<'_, f64> {
+        self.0.iter()
+    }
+
+    /// Iterate over the elements mutably.
+    pub fn iter_mut(&mut self) -> std::slice::IterMut<'_, f64> {
+        self.0.iter_mut()
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Element-wise operators (Vector<N> × Vector<N>)
+// ---------------------------------------------------------------------------
+
+impl<const N: usize> Add<&Vector<N>> for &Vector<N> {
+    type Output = Vector<N>;
+    fn add(self, rhs: &Vector<N>) -> Vector<N> {
+        let mut data = self.0;
+        for (x, &y) in data.iter_mut().zip(rhs.0.iter()) {
+            *x += y;
+        }
+        Vector(data)
+    }
+}
+
+impl<const N: usize> AddAssign<&Vector<N>> for Vector<N> {
+    fn add_assign(&mut self, rhs: &Vector<N>) {
+        for (x, &y) in self.0.iter_mut().zip(rhs.0.iter()) {
+            *x += y;
         }
     }
 }
 
-impl Neg for Vector {
-    type Output = Vector;
-
-    fn neg(self) -> Self::Output {
-        self * -1.0
+impl<const N: usize> AddAssign<Vector<N>> for Vector<N> {
+    fn add_assign(&mut self, rhs: Vector<N>) {
+        for (x, y) in self.0.iter_mut().zip(rhs.0.iter()) {
+            *x += *y;
+        }
     }
 }
 
-impl Index<usize> for Vector {
+impl<const N: usize> Sub<&Vector<N>> for &Vector<N> {
+    type Output = Vector<N>;
+    fn sub(self, rhs: &Vector<N>) -> Vector<N> {
+        let mut data = self.0;
+        for (x, &y) in data.iter_mut().zip(rhs.0.iter()) {
+            *x -= y;
+        }
+        Vector(data)
+    }
+}
+
+impl<const N: usize> SubAssign<&Vector<N>> for Vector<N> {
+    fn sub_assign(&mut self, rhs: &Vector<N>) {
+        for (x, &y) in self.0.iter_mut().zip(rhs.0.iter()) {
+            *x -= y;
+        }
+    }
+}
+
+impl<const N: usize> Mul<&Vector<N>> for &Vector<N> {
+    type Output = Vector<N>;
+    fn mul(self, rhs: &Vector<N>) -> Vector<N> {
+        let mut data = self.0;
+        for (x, &y) in data.iter_mut().zip(rhs.0.iter()) {
+            *x *= y;
+        }
+        Vector(data)
+    }
+}
+
+impl<const N: usize> Mul<Vector<N>> for Vector<N> {
+    type Output = Vector<N>;
+    fn mul(self, rhs: Vector<N>) -> Vector<N> {
+        &self * &rhs
+    }
+}
+
+impl<const N: usize> MulAssign<&Vector<N>> for Vector<N> {
+    fn mul_assign(&mut self, rhs: &Vector<N>) {
+        for (x, &y) in self.0.iter_mut().zip(rhs.0.iter()) {
+            *x *= y;
+        }
+    }
+}
+
+impl<const N: usize> MulAssign<Vector<N>> for Vector<N> {
+    fn mul_assign(&mut self, rhs: Vector<N>) {
+        for (x, y) in self.0.iter_mut().zip(rhs.0.iter()) {
+            *x *= *y;
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Scalar operators (Vector<N> × f64)
+// ---------------------------------------------------------------------------
+
+impl<const N: usize> Mul<f64> for &Vector<N> {
+    type Output = Vector<N>;
+    fn mul(self, rhs: f64) -> Vector<N> {
+        let mut data = self.0;
+        for x in &mut data {
+            *x *= rhs;
+        }
+        Vector(data)
+    }
+}
+
+impl<const N: usize> Mul<f64> for Vector<N> {
+    type Output = Vector<N>;
+    fn mul(self, rhs: f64) -> Vector<N> {
+        let mut data = self.0;
+        for x in &mut data {
+            *x *= rhs;
+        }
+        Vector(data)
+    }
+}
+
+impl<const N: usize> Mul<&Vector<N>> for f64 {
+    type Output = Vector<N>;
+    fn mul(self, rhs: &Vector<N>) -> Vector<N> {
+        rhs * self
+    }
+}
+
+impl<const N: usize> MulAssign<f64> for Vector<N> {
+    fn mul_assign(&mut self, rhs: f64) {
+        for x in &mut self.0 {
+            *x *= rhs;
+        }
+    }
+}
+
+impl<const N: usize> Div<f64> for &Vector<N> {
+    type Output = Vector<N>;
+    fn div(self, rhs: f64) -> Vector<N> {
+        let mut data = self.0;
+        for x in &mut data {
+            *x /= rhs;
+        }
+        Vector(data)
+    }
+}
+
+impl<const N: usize> DivAssign<f64> for Vector<N> {
+    fn div_assign(&mut self, rhs: f64) {
+        for x in &mut self.0 {
+            *x /= rhs;
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Indexing
+// ---------------------------------------------------------------------------
+
+impl<const N: usize> std::ops::Index<usize> for Vector<N> {
     type Output = f64;
-
-    fn index(&self, index: usize) -> &Self::Output {
-        match index {
-            0 => &self.x,
-            1 => &self.y,
-            2 => &self.z,
-            _ => panic!("Index out of bounds"),
-        }
+    fn index(&self, index: usize) -> &f64 {
+        &self.0[index]
     }
 }
 
-impl IndexMut<usize> for Vector {
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        match index {
-            0 => &mut self.x,
-            1 => &mut self.y,
-            2 => &mut self.z,
-            _ => panic!("Index out of bounds"),
-        }
+impl<const N: usize> std::ops::IndexMut<usize> for Vector<N> {
+    fn index_mut(&mut self, index: usize) -> &mut f64 {
+        &mut self.0[index]
     }
 }
 
-impl_op_ex!(+ |a: &Vector, b: &Vector| -> Vector {
-    Vector {
-        x: a.x + b.x,
-        y: a.y + b.y,
-        z: a.z + b.z,
+impl<'a, const N: usize> IntoIterator for &'a Vector<N> {
+    type Item = &'a f64;
+    type IntoIter = std::slice::Iter<'a, f64>;
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.iter()
     }
-});
+}
 
-impl_op_ex!(+= |a: &mut Vector, b: &Vector| {
-    a.x += b.x;
-    a.y += b.y;
-    a.z += b.z;
-});
-
-impl_op_ex!(-|a: &Vector, b: &Vector| -> Vector {
-    Vector {
-        x: a.x - b.x,
-        y: a.y - b.y,
-        z: a.z - b.z,
+impl<'a, const N: usize> IntoIterator for &'a mut Vector<N> {
+    type Item = &'a mut f64;
+    type IntoIter = std::slice::IterMut<'a, f64>;
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.iter_mut()
     }
-});
-
-impl_op_ex!(-= |a: &mut Vector, b: &Vector|  {
-    a.x -= b.x;
-    a.y -= b.y;
-    a.z -= b.z;
-});
-
-impl_op_ex!(*|a: &Vector, b: &Vector| -> Vector {
-    Vector {
-        x: a.x * b.x,
-        y: a.y * b.y,
-        z: a.z * b.z,
-    }
-});
-
-impl_op_ex_commutative!(*|a: &Vector, b: &f64| -> Vector {
-    Vector {
-        x: a.x * b,
-        y: a.y * b,
-        z: a.z * b,
-    }
-});
-
-impl_op_ex!(*= |a: &mut Vector, b: &Vector| {
-    a.x *= b.x;
-    a.y *= b.y;
-    a.z *= b.z;
-});
-
-impl_op_ex!(*= |a: &mut Vector, b: &f64| {
-    a.x *= b;
-    a.y *= b;
-    a.z *= b;
-});
-
-impl_op_ex!(/|a: &Vector, b: &Vector| -> Vector {
-    Vector {
-        x: a.x / b.x,
-        y: a.y / b.y,
-        z: a.z / b.z,
-    }
-});
-
-impl_op_ex_commutative!(/|a: &Vector, b: &f64| -> Vector {
-    Vector {
-        x: a.x / b,
-        y: a.y / b,
-        z: a.z / b,
-    }
-});
-
-impl_op_ex!(/= |a: &mut Vector, b: &Vector| {
-    a.x /= b.x;
-    a.y /= b.y;
-    a.z /= b.z;
-});
-
-impl_op_ex!(/= |a: &mut Vector, b: &f64| {
-    a.x /= b;
-    a.y /= b;
-    a.z /= b;
-});
+}

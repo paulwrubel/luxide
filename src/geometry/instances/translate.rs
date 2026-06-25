@@ -1,19 +1,19 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector},
+    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector3},
     utils::Interval,
 };
 
 #[derive(Clone, Debug)]
 pub struct Translate {
     geometric: Arc<dyn Geometric>,
-    translation: Vector,
+    translation: Vector3,
     bounding_box: Aabb,
 }
 
 impl Translate {
-    pub fn new(geometric: Arc<dyn Geometric>, translation: Vector) -> Self {
+    pub fn new(geometric: Arc<dyn Geometric>, translation: Vector3) -> Self {
         let bounding_box = geometric.bounding_box() + translation;
         Self {
             geometric: Arc::clone(&geometric),
@@ -22,11 +22,11 @@ impl Translate {
         }
     }
 
-    fn world_to_local(&self, v: Vector) -> Vector {
+    fn world_to_local(&self, v: Vector3) -> Vector3 {
         v - self.translation
     }
 
-    fn local_to_world(&self, v: Vector) -> Vector {
+    fn local_to_world(&self, v: Vector3) -> Vector3 {
         v + self.translation
     }
 }
@@ -67,14 +67,14 @@ impl Geometric for Translate {
         self.bounding_box
     }
 
-    fn sample_direction_from(&self, origin: Point) -> Vector {
-        let local_origin = Point::from_vector(self.world_to_local(origin.0));
+    fn sample_direction_from(&self, origin: Point) -> Vector3 {
+        let local_origin = Point::from_vector3(self.world_to_local(origin.0));
         // direction is invariant under translation
         self.geometric.sample_direction_from(local_origin)
     }
 
-    fn direction_pdf(&self, origin: Point, dir: Vector) -> f64 {
-        let local_origin = Point::from_vector(self.world_to_local(origin.0));
+    fn direction_pdf(&self, origin: Point, dir: Vector3) -> f64 {
+        let local_origin = Point::from_vector3(self.world_to_local(origin.0));
         // direction is invariant under translation; PDF is invariant
         self.geometric.direction_pdf(local_origin, dir)
     }

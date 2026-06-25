@@ -1,14 +1,14 @@
-use super::{Point, Vector};
+use super::{Point, Vector3};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Ray {
     pub origin: Point,
-    pub direction: Vector,
+    pub direction: Vector3,
     pub time: f64,
 }
 
 impl Ray {
-    pub fn new(origin: Point, direction: Vector, time: f64) -> Self {
+    pub fn new(origin: Point, direction: Vector3, time: f64) -> Self {
         Self {
             origin,
             direction,

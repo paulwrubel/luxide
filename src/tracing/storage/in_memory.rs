@@ -3,7 +3,7 @@ use std::{collections::HashMap, sync::Arc};
 use futures::StreamExt;
 use tokio::sync::RwLock;
 
-use crate::{shading::Color, utils::ProgressInfo};
+use crate::{shading::ColorRgb, utils::ProgressInfo};
 
 use super::{
     Render, RenderCheckpoint, RenderCheckpointMeta, RenderID, RenderState, RenderStorage,
@@ -311,7 +311,7 @@ impl RenderStorage for InMemoryStorage {
         let checkpoints = self.checkpoints.read().await;
 
         let key_size = std::mem::size_of::<(u32, u32)>();
-        let val_size = std::mem::size_of::<Color>();
+        let val_size = std::mem::size_of::<ColorRgb>();
 
         let entry_size_bytes = (key_size + val_size) as u64;
 

@@ -2,36 +2,36 @@ use auto_ops::{impl_op_ex, impl_op_ex_commutative};
 use bincode::{Decode, Encode};
 use image::Rgba;
 
-use crate::geometry::Vector;
+use crate::geometry::Vector3;
 
 #[derive(Debug, Copy, Clone, PartialEq, Default, Encode, Decode)]
-pub struct Color(Vector);
+pub struct ColorRgb(Vector3);
 
-impl Color {
-    pub const BLACK: Color = Self(Vector::ZERO);
-    pub const WHITE: Color = Self(Vector::ONE);
-    pub const RED: Color = Self(Vector::UNIT_X);
-    pub const GREEN: Color = Self(Vector::UNIT_Y);
-    pub const BLUE: Color = Self(Vector::UNIT_Z);
+impl ColorRgb {
+    pub const BLACK: ColorRgb = Self(Vector3::ZERO);
+    pub const WHITE: ColorRgb = Self(Vector3::ONE);
+    pub const RED: ColorRgb = Self(Vector3::UNIT_X);
+    pub const GREEN: ColorRgb = Self(Vector3::UNIT_Y);
+    pub const BLUE: ColorRgb = Self(Vector3::UNIT_Z);
 
     pub fn new(r: f64, g: f64, b: f64) -> Self {
-        Self(Vector::new(r, g, b))
+        Self(Vector3::new(r, g, b))
     }
 
     pub fn random() -> Self {
-        Self(Vector::random())
+        Self(Vector3::random())
     }
 
     pub fn random_range(min: f64, max: f64) -> Self {
-        Self(Vector::random_range(min, max))
+        Self(Vector3::random_range(min, max))
     }
 
-    pub fn from_vector(vector: Vector) -> Self {
+    pub fn from_vector(vector: Vector3) -> Self {
         Self(vector)
     }
 
     pub fn from_rgba_u8(rgba: &Rgba<u8>) -> Self {
-        Self(Vector::new(
+        Self(Vector3::new(
             rgba.0[0] as f64 / u8::MAX as f64,
             rgba.0[1] as f64 / u8::MAX as f64,
             rgba.0[2] as f64 / u8::MAX as f64,
@@ -39,7 +39,7 @@ impl Color {
     }
 
     pub fn from_gamma_corrected_rgba_u8(rgba: &Rgba<u8>, decoding_gamma: f64) -> Self {
-        Self(Vector::new(
+        Self(Vector3::new(
             (rgba.0[0] as f64 / u8::MAX as f64).powf(decoding_gamma),
             (rgba.0[1] as f64 / u8::MAX as f64).powf(decoding_gamma),
             (rgba.0[2] as f64 / u8::MAX as f64).powf(decoding_gamma),
@@ -81,46 +81,46 @@ impl Color {
     }
 }
 
-impl From<[f64; 3]> for Color {
+impl From<[f64; 3]> for ColorRgb {
     fn from(v: [f64; 3]) -> Self {
         Self::new(v[0], v[1], v[2])
     }
 }
 
-impl From<Color> for [f64; 3] {
-    fn from(value: Color) -> Self {
+impl From<ColorRgb> for [f64; 3] {
+    fn from(value: ColorRgb) -> Self {
         [value.0.x, value.0.y, value.0.z]
     }
 }
 
-impl_op_ex!(+|a: &Color, b: &Color| -> Color { Color(a.0 + b.0) });
+impl_op_ex!(+|a: &ColorRgb, b: &ColorRgb| -> ColorRgb { ColorRgb(a.0 + b.0) });
 
-impl_op_ex!(+= |a: &mut Color, b: &Color| {
+impl_op_ex!(+= |a: &mut ColorRgb, b: &ColorRgb| {
     a.0 += b.0;
 });
 
-impl_op_ex!(-|a: &Color, b: &Color| -> Color { Color(a.0 - b.0) });
+impl_op_ex!(-|a: &ColorRgb, b: &ColorRgb| -> ColorRgb { ColorRgb(a.0 - b.0) });
 
-impl_op_ex!(-= |a: &mut Color, b: &Color| {
+impl_op_ex!(-= |a: &mut ColorRgb, b: &ColorRgb| {
     a.0 -= b.0;
 });
 
-impl_op_ex!(*|a: &Color, b: &Color| -> Color { Color(a.0 * b.0) });
+impl_op_ex!(*|a: &ColorRgb, b: &ColorRgb| -> ColorRgb { ColorRgb(a.0 * b.0) });
 
-impl_op_ex_commutative!(*|a: &Color, b: &f64| -> Color { Color(a.0 * b) });
+impl_op_ex_commutative!(*|a: &ColorRgb, b: &f64| -> ColorRgb { ColorRgb(a.0 * b) });
 
-impl_op_ex!(*= |a: &mut Color, b: &Color| {
+impl_op_ex!(*= |a: &mut ColorRgb, b: &ColorRgb| {
     a.0 *= b.0;
 });
 
-impl_op_ex!(*= |a: &mut Color, b: &f64| {
+impl_op_ex!(*= |a: &mut ColorRgb, b: &f64| {
     a.0 *= b;
 });
 
-impl_op_ex_commutative!(/|a: &Color, b: &f64| -> Color {
-    Color(a.0 / b)
+impl_op_ex_commutative!(/|a: &ColorRgb, b: &f64| -> ColorRgb {
+    ColorRgb(a.0 / b)
 });
 
-impl_op_ex!(/= |a: &mut Color, b: &f64| {
+impl_op_ex!(/= |a: &mut ColorRgb, b: &f64| {
     a.0 /= b;
 });

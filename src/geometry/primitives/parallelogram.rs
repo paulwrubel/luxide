@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector},
+    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector3},
     shading::materials::{Lambertian, Material},
     utils::Interval,
 };
@@ -9,12 +9,12 @@ use crate::{
 #[derive(Clone, Debug)]
 pub struct Parallelogram {
     lower_left: Point,
-    u: Vector,
-    v: Vector,
-    normal: Vector,
+    u: Vector3,
+    v: Vector3,
+    normal: Vector3,
     is_culled: bool,
     plane_d: f64,
-    w: Vector,
+    w: Vector3,
     material: Arc<dyn Material>,
     bounding_box: Aabb,
     area: f64, // cache this because it's used quite often in sampling
@@ -23,8 +23,8 @@ pub struct Parallelogram {
 impl Parallelogram {
     pub fn new(
         lower_left: Point,
-        u: Vector,
-        v: Vector,
+        u: Vector3,
+        v: Vector3,
         is_culled: bool,
         material: Arc<dyn Material>,
     ) -> Self {
@@ -47,8 +47,8 @@ impl Parallelogram {
     pub fn unit() -> Self {
         Self::new(
             Point::new(-0.5, -0.5, 0.0),
-            Vector::new(1.0, 0.0, 0.0),
-            Vector::new(0.0, 1.0, 0.0),
+            Vector3::new(1.0, 0.0, 0.0),
+            Vector3::new(0.0, 1.0, 0.0),
             true,
             Arc::new(Lambertian::white()),
         )
@@ -131,7 +131,7 @@ impl Geometric for Parallelogram {
         self.bounding_box
     }
 
-    fn sample_direction_from(&self, origin: Point) -> Vector {
+    fn sample_direction_from(&self, origin: Point) -> Vector3 {
         let alpha: f64 = rand::random();
         let beta: f64 = rand::random();
         let p = self.lower_left + alpha * self.u + beta * self.v;
@@ -139,7 +139,7 @@ impl Geometric for Parallelogram {
         origin.to(p).unit_vector()
     }
 
-    fn direction_pdf(&self, origin: Point, direction: Vector) -> f64 {
+    fn direction_pdf(&self, origin: Point, direction: Vector3) -> f64 {
         // go from the origin to the hit point
         let ray = Ray::new(origin, direction, 0.0);
 
@@ -170,20 +170,20 @@ mod tests {
     fn hits_unculled_front_center() {
         let p = Parallelogram::new(
             Point::new(0.0, 0.0, 0.0),
-            Vector::new(1.0, 0.0, 0.0),
-            Vector::new(0.0, 1.0, 0.0),
+            Vector3::new(1.0, 0.0, 0.0),
+            Vector3::new(0.0, 1.0, 0.0),
             false,
             Arc::new(Lambertian::white()),
         );
 
-        let ray = Ray::new(Point::new(0.5, 0.5, 1.0), Vector::new(0.0, 0.0, -1.0), 0.0);
+        let ray = Ray::new(Point::new(0.5, 0.5, 1.0), Vector3::new(0.0, 0.0, -1.0), 0.0);
         let ray_t = Interval::new(0.0, f64::INFINITY);
 
         let opt_hit = p.intersect(ray, ray_t);
         assert!(opt_hit.is_some());
         let hit = opt_hit.unwrap();
 
-        assert_eq!(hit.normal, Vector::new(0.0, 0.0, 1.0));
+        assert_eq!(hit.normal, Vector3::new(0.0, 0.0, 1.0));
         assert_eq!(hit.u, 0.5);
         assert_eq!(hit.v, 0.5);
         assert_eq!(hit.point, Point::new(0.5, 0.5, 0.0));
@@ -194,20 +194,20 @@ mod tests {
     fn hits_unculled_back_center() {
         let p = Parallelogram::new(
             Point::new(0.0, 0.0, 0.0),
-            Vector::new(1.0, 0.0, 0.0),
-            Vector::new(0.0, 1.0, 0.0),
+            Vector3::new(1.0, 0.0, 0.0),
+            Vector3::new(0.0, 1.0, 0.0),
             false,
             Arc::new(Lambertian::white()),
         );
 
-        let ray = Ray::new(Point::new(0.5, 0.5, -1.0), Vector::new(0.0, 0.0, 1.0), 0.0);
+        let ray = Ray::new(Point::new(0.5, 0.5, -1.0), Vector3::new(0.0, 0.0, 1.0), 0.0);
         let ray_t = Interval::new(0.0, f64::INFINITY);
 
         let opt_hit = p.intersect(ray, ray_t);
         assert!(opt_hit.is_some());
         let hit = opt_hit.unwrap();
 
-        assert_eq!(hit.normal, Vector::new(0.0, 0.0, -1.0));
+        assert_eq!(hit.normal, Vector3::new(0.0, 0.0, -1.0));
         assert_eq!(hit.u, 0.5);
         assert_eq!(hit.v, 0.5);
         assert_eq!(hit.point, Point::new(0.5, 0.5, 0.0));
@@ -218,20 +218,20 @@ mod tests {
     fn hits_culled_front_center() {
         let p = Parallelogram::new(
             Point::new(0.0, 0.0, 0.0),
-            Vector::new(1.0, 0.0, 0.0),
-            Vector::new(0.0, 1.0, 0.0),
+            Vector3::new(1.0, 0.0, 0.0),
+            Vector3::new(0.0, 1.0, 0.0),
             true,
             Arc::new(Lambertian::white()),
         );
 
-        let ray = Ray::new(Point::new(0.5, 0.5, 1.0), Vector::new(0.0, 0.0, -1.0), 0.0);
+        let ray = Ray::new(Point::new(0.5, 0.5, 1.0), Vector3::new(0.0, 0.0, -1.0), 0.0);
         let ray_t = Interval::new(0.0, f64::INFINITY);
 
         let opt_hit = p.intersect(ray, ray_t);
         assert!(opt_hit.is_some());
         let hit = opt_hit.unwrap();
 
-        assert_eq!(hit.normal, Vector::new(0.0, 0.0, 1.0));
+        assert_eq!(hit.normal, Vector3::new(0.0, 0.0, 1.0));
         assert_eq!(hit.u, 0.5);
         assert_eq!(hit.v, 0.5);
         assert_eq!(hit.point, Point::new(0.5, 0.5, 0.0));
@@ -242,13 +242,13 @@ mod tests {
     fn misses_culled_back_center() {
         let p = Parallelogram::new(
             Point::new(0.0, 0.0, 0.0),
-            Vector::new(1.0, 0.0, 0.0),
-            Vector::new(0.0, 1.0, 0.0),
+            Vector3::new(1.0, 0.0, 0.0),
+            Vector3::new(0.0, 1.0, 0.0),
             true,
             Arc::new(Lambertian::white()),
         );
 
-        let ray = Ray::new(Point::new(0.5, 0.5, -1.0), Vector::new(0.0, 0.0, 1.0), 0.0);
+        let ray = Ray::new(Point::new(0.5, 0.5, -1.0), Vector3::new(0.0, 0.0, 1.0), 0.0);
         let ray_t = Interval::new(0.0, f64::INFINITY);
 
         let opt_hit = p.intersect(ray, ray_t);
@@ -259,13 +259,13 @@ mod tests {
     fn misses_to_right() {
         let p = Parallelogram::new(
             Point::new(0.0, 0.0, 0.0),
-            Vector::new(1.0, 0.0, 0.0),
-            Vector::new(0.0, 1.0, 0.0),
+            Vector3::new(1.0, 0.0, 0.0),
+            Vector3::new(0.0, 1.0, 0.0),
             false,
             Arc::new(Lambertian::white()),
         );
 
-        let ray = Ray::new(Point::new(1.5, 0.5, 1.0), Vector::new(0.0, 0.0, -1.0), 0.0);
+        let ray = Ray::new(Point::new(1.5, 0.5, 1.0), Vector3::new(0.0, 0.0, -1.0), 0.0);
         let ray_t = Interval::new(0.0, f64::INFINITY);
 
         let opt_hit = p.intersect(ray, ray_t);
@@ -276,13 +276,13 @@ mod tests {
     fn misses_above() {
         let p = Parallelogram::new(
             Point::new(0.0, 0.0, 0.0),
-            Vector::new(1.0, 0.0, 0.0),
-            Vector::new(0.0, 1.0, 0.0),
+            Vector3::new(1.0, 0.0, 0.0),
+            Vector3::new(0.0, 1.0, 0.0),
             false,
             Arc::new(Lambertian::white()),
         );
 
-        let ray = Ray::new(Point::new(0.5, 1.5, 1.0), Vector::new(0.0, 0.0, -1.0), 0.0);
+        let ray = Ray::new(Point::new(0.5, 1.5, 1.0), Vector3::new(0.0, 0.0, -1.0), 0.0);
         let ray_t = Interval::new(0.0, f64::INFINITY);
 
         let opt_hit = p.intersect(ray, ray_t);
@@ -293,13 +293,13 @@ mod tests {
     fn misses_off_plane_parallel() {
         let p = Parallelogram::new(
             Point::new(0.0, 0.0, 0.0),
-            Vector::new(1.0, 0.0, 0.0),
-            Vector::new(0.0, 1.0, 0.0),
+            Vector3::new(1.0, 0.0, 0.0),
+            Vector3::new(0.0, 1.0, 0.0),
             false,
             Arc::new(Lambertian::white()),
         );
 
-        let ray = Ray::new(Point::new(0.5, 0.5, 1.0), Vector::new(1.0, 0.0, 0.0), 0.0);
+        let ray = Ray::new(Point::new(0.5, 0.5, 1.0), Vector3::new(1.0, 0.0, 0.0), 0.0);
         let ray_t = Interval::new(0.0, f64::INFINITY);
 
         let opt_hit = p.intersect(ray, ray_t);
@@ -310,13 +310,13 @@ mod tests {
     fn misses_on_plane_parallel() {
         let p = Parallelogram::new(
             Point::new(0.0, 0.0, 0.0),
-            Vector::new(1.0, 0.0, 0.0),
-            Vector::new(0.0, 1.0, 0.0),
+            Vector3::new(1.0, 0.0, 0.0),
+            Vector3::new(0.0, 1.0, 0.0),
             false,
             Arc::new(Lambertian::white()),
         );
 
-        let ray = Ray::new(Point::new(0.5, 0.5, 0.0), Vector::new(1.0, 0.0, 0.0), 0.0);
+        let ray = Ray::new(Point::new(0.5, 0.5, 0.0), Vector3::new(1.0, 0.0, 0.0), 0.0);
         let ray_t = Interval::new(0.0, f64::INFINITY);
 
         let opt_hit = p.intersect(ray, ray_t);
@@ -327,20 +327,20 @@ mod tests {
     fn hits_edge() {
         let p = Parallelogram::new(
             Point::new(0.0, 0.0, 0.0),
-            Vector::new(1.0, 0.0, 0.0),
-            Vector::new(0.0, 1.0, 0.0),
+            Vector3::new(1.0, 0.0, 0.0),
+            Vector3::new(0.0, 1.0, 0.0),
             true,
             Arc::new(Lambertian::white()),
         );
 
-        let ray = Ray::new(Point::new(0.0, 0.5, 1.0), Vector::new(0.0, 0.0, -1.0), 0.0);
+        let ray = Ray::new(Point::new(0.0, 0.5, 1.0), Vector3::new(0.0, 0.0, -1.0), 0.0);
         let ray_t = Interval::new(0.0, f64::INFINITY);
 
         let opt_hit = p.intersect(ray, ray_t);
         assert!(opt_hit.is_some());
         let hit = opt_hit.unwrap();
 
-        assert_eq!(hit.normal, Vector::new(0.0, 0.0, 1.0));
+        assert_eq!(hit.normal, Vector3::new(0.0, 0.0, 1.0));
         assert_eq!(hit.u, 0.0);
         assert_eq!(hit.v, 0.5);
         assert_eq!(hit.point, Point::new(0.0, 0.5, 0.0));
@@ -351,20 +351,20 @@ mod tests {
     fn hits_corner() {
         let p = Parallelogram::new(
             Point::new(0.0, 0.0, 0.0),
-            Vector::new(1.0, 0.0, 0.0),
-            Vector::new(0.0, 1.0, 0.0),
+            Vector3::new(1.0, 0.0, 0.0),
+            Vector3::new(0.0, 1.0, 0.0),
             true,
             Arc::new(Lambertian::white()),
         );
 
-        let ray = Ray::new(Point::new(0.0, 0.0, 1.0), Vector::new(0.0, 0.0, -1.0), 0.0);
+        let ray = Ray::new(Point::new(0.0, 0.0, 1.0), Vector3::new(0.0, 0.0, -1.0), 0.0);
         let ray_t = Interval::new(0.0, f64::INFINITY);
 
         let opt_hit = p.intersect(ray, ray_t);
         assert!(opt_hit.is_some());
         let hit = opt_hit.unwrap();
 
-        assert_eq!(hit.normal, Vector::new(0.0, 0.0, 1.0));
+        assert_eq!(hit.normal, Vector3::new(0.0, 0.0, 1.0));
         assert_eq!(hit.u, 0.0);
         assert_eq!(hit.v, 0.0);
         assert_eq!(hit.point, Point::new(0.0, 0.0, 0.0));

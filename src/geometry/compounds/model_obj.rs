@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector, primitives::Triangle},
+    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector3, primitives::Triangle},
     shading::materials::Material,
     utils::Interval,
 };
@@ -78,7 +78,7 @@ impl ModelObj {
                 let a_normal = if recalculate_normals {
                     a.to(b).cross(a.to(c)).unit_vector()
                 } else {
-                    Vector::new(
+                    Vector3::new(
                         mesh.normals[a_index * 3] as f64,
                         mesh.normals[a_index * 3 + 1] as f64,
                         mesh.normals[a_index * 3 + 2] as f64,
@@ -88,7 +88,7 @@ impl ModelObj {
                 let b_normal = if recalculate_normals {
                     a.to(b).cross(a.to(c)).unit_vector()
                 } else {
-                    Vector::new(
+                    Vector3::new(
                         mesh.normals[b_index * 3] as f64,
                         mesh.normals[b_index * 3 + 1] as f64,
                         mesh.normals[b_index * 3 + 2] as f64,
@@ -98,7 +98,7 @@ impl ModelObj {
                 let c_normal = if recalculate_normals {
                     a.to(b).cross(a.to(c)).unit_vector()
                 } else {
-                    Vector::new(
+                    Vector3::new(
                         mesh.normals[c_index * 3] as f64,
                         mesh.normals[c_index * 3 + 1] as f64,
                         mesh.normals[c_index * 3 + 2] as f64,
@@ -106,9 +106,9 @@ impl ModelObj {
                     .unit_vector()
                 };
 
-                let transformed_a = Point::from_vector(a.0 * scale) + offset;
-                let transformed_b = Point::from_vector(b.0 * scale) + offset;
-                let transformed_c = Point::from_vector(c.0 * scale) + offset;
+                let transformed_a = Point::from_vector3(a.0 * scale) + offset;
+                let transformed_b = Point::from_vector3(b.0 * scale) + offset;
+                let transformed_c = Point::from_vector3(c.0 * scale) + offset;
 
                 triangles.push(Arc::new(Triangle::new_with_normals(
                     transformed_a,
@@ -162,11 +162,11 @@ impl Geometric for ModelObj {
         self.geometric.bounding_box()
     }
 
-    fn sample_direction_from(&self, origin: Point) -> Vector {
+    fn sample_direction_from(&self, origin: Point) -> Vector3 {
         self.geometric.sample_direction_from(origin)
     }
 
-    fn direction_pdf(&self, origin: Point, dir: Vector) -> f64 {
+    fn direction_pdf(&self, origin: Point, dir: Vector3) -> f64 {
         self.geometric.direction_pdf(origin, dir)
     }
 }
@@ -227,14 +227,14 @@ impl Geometric for ListOrBvh {
         }
     }
 
-    fn sample_direction_from(&self, origin: Point) -> Vector {
+    fn sample_direction_from(&self, origin: Point) -> Vector3 {
         match self {
             ListOrBvh::List(list) => list.sample_direction_from(origin),
             ListOrBvh::Bvh(bvh) => bvh.sample_direction_from(origin),
         }
     }
 
-    fn direction_pdf(&self, origin: Point, dir: Vector) -> f64 {
+    fn direction_pdf(&self, origin: Point, dir: Vector3) -> f64 {
         match self {
             ListOrBvh::List(list) => list.direction_pdf(origin, dir),
             ListOrBvh::Bvh(bvh) => bvh.direction_pdf(origin, dir),

@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 
+use crate::shading::ColorRgb;
 use crate::tracing::{Scene, SceneWorld};
 
 use super::{Build, Builts, cameras::CameraRefOrInline, geometrics::GeometricRefOrInline};
@@ -55,7 +56,7 @@ impl Build<Scene> for SceneData {
         let scene = Scene {
             world: SceneWorld::from_geometrics(&world, &world_virtual, self.use_bvh),
             camera,
-            background_color: self.background_color.into(),
+            background_color: ColorRgb::from(self.background_color).into(),
         };
 
         Ok(scene)

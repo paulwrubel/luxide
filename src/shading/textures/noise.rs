@@ -1,6 +1,9 @@
 use noise::NoiseFn;
 
-use crate::{geometry::Point, shading::Color};
+use crate::{
+    geometry::Point,
+    shading::{ColorSpectrum, color_spectrum::SPECTRAL_SAMPLE_COUNT},
+};
 
 use super::Texture;
 
@@ -63,7 +66,7 @@ where
     Input: Fn(Point) -> Point + Sync + Send,
     Output: Fn(f64, Point) -> f64 + Sync + Send,
 {
-    fn value(&self, _u: f64, _v: f64, p: Point) -> Color {
+    fn value(&self, _u: f64, _v: f64, p: Point) -> ColorSpectrum<SPECTRAL_SAMPLE_COUNT> {
         let input = match self.input_fn {
             Some(ref input_fn) => input_fn(p),
             None => p,
@@ -74,6 +77,6 @@ where
             None => val,
         };
 
-        Color::WHITE * output
+        ColorSpectrum::ONE * output
     }
 }

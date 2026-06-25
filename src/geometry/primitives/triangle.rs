@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector},
+    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector3},
     shading::materials::Material,
     utils::Interval,
 };
@@ -11,9 +11,9 @@ pub struct Triangle {
     a: Point,
     b: Point,
     c: Point,
-    a_normal: Vector,
-    b_normal: Vector,
-    c_normal: Vector,
+    a_normal: Vector3,
+    b_normal: Vector3,
+    c_normal: Vector3,
     is_culled: bool,
     material: Arc<dyn Material>,
     bounding_box: Aabb,
@@ -41,9 +41,9 @@ impl Triangle {
         a: Point,
         b: Point,
         c: Point,
-        a_normal: Option<Vector>,
-        b_normal: Option<Vector>,
-        c_normal: Option<Vector>,
+        a_normal: Option<Vector3>,
+        b_normal: Option<Vector3>,
+        c_normal: Option<Vector3>,
         is_culled: bool,
         material: Arc<dyn Material>,
     ) -> Self {
@@ -61,9 +61,9 @@ impl Triangle {
         a: Point,
         b: Point,
         c: Point,
-        a_normal: Vector,
-        b_normal: Vector,
-        c_normal: Vector,
+        a_normal: Vector3,
+        b_normal: Vector3,
+        c_normal: Vector3,
         is_culled: bool,
         material: Arc<dyn Material>,
     ) -> Self {
@@ -151,7 +151,7 @@ impl Triangle {
         barycentric_alpha: f64,
         barycentric_beta: f64,
         barycentric_gamma: f64,
-    ) -> Vector {
+    ) -> Vector3 {
         (barycentric_alpha * self.a_normal
             + barycentric_beta * self.b_normal
             + barycentric_gamma * self.c_normal)
@@ -188,7 +188,7 @@ impl Geometric for Triangle {
         self.bounding_box
     }
 
-    fn sample_direction_from(&self, origin: Point) -> Vector {
+    fn sample_direction_from(&self, origin: Point) -> Vector3 {
         // uniform sampling on a triangle using barycentric coordinates
         // with sqrt to correct for area concentration
         let r1: f64 = rand::random();
@@ -204,7 +204,7 @@ impl Geometric for Triangle {
         origin.to(p).unit_vector()
     }
 
-    fn direction_pdf(&self, origin: Point, dir: Vector) -> f64 {
+    fn direction_pdf(&self, origin: Point, dir: Vector3) -> f64 {
         // go from the origin to the hit point
         let ray = Ray::new(origin, dir, 0.0);
 

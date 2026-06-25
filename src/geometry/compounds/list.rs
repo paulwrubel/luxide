@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector},
+    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector3},
     utils::Interval,
 };
 
@@ -106,10 +106,10 @@ impl Geometric for List {
         self.bounding_box
     }
 
-    fn sample_direction_from(&self, origin: Point) -> Vector {
+    fn sample_direction_from(&self, origin: Point) -> Vector3 {
         let total_area = self.surface_area();
         if total_area <= 0.0 {
-            return Vector::random_unit();
+            return Vector3::random_unit();
         }
         let mut threshold: f64 = rand::random::<f64>() * total_area;
         for item in &self.items {
@@ -123,7 +123,7 @@ impl Geometric for List {
         self.items.last().unwrap().sample_direction_from(origin)
     }
 
-    fn direction_pdf(&self, origin: Point, dir: Vector) -> f64 {
+    fn direction_pdf(&self, origin: Point, dir: Vector3) -> f64 {
         let total_area = self.surface_area();
         if total_area <= 0.0 {
             return 0.0;

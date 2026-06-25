@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector, primitives::Parallelogram},
+    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector3, primitives::Parallelogram},
     shading::materials::Material,
     utils::Interval,
 };
@@ -16,9 +16,9 @@ impl AxisAlignedPBox {
         let min = a.min_components_point(b);
         let max = a.max_components_point(b);
 
-        let dx = Vector::new(max.0.x - min.0.x, 0.0, 0.0);
-        let dy = Vector::new(0.0, max.0.y - min.0.y, 0.0);
-        let dz = Vector::new(0.0, 0.0, max.0.z - min.0.z);
+        let dx = Vector3::new(max.0.x - min.0.x, 0.0, 0.0);
+        let dy = Vector3::new(0.0, max.0.y - min.0.y, 0.0);
+        let dz = Vector3::new(0.0, 0.0, max.0.z - min.0.z);
 
         let mut faces = List::new();
         // front
@@ -103,11 +103,11 @@ impl Geometric for AxisAlignedPBox {
         self.0.bounding_box()
     }
 
-    fn sample_direction_from(&self, origin: Point) -> Vector {
+    fn sample_direction_from(&self, origin: Point) -> Vector3 {
         self.0.sample_direction_from(origin)
     }
 
-    fn direction_pdf(&self, origin: Point, dir: Vector) -> f64 {
+    fn direction_pdf(&self, origin: Point, dir: Vector3) -> f64 {
         self.0.direction_pdf(origin, dir)
     }
 }
