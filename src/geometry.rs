@@ -21,5 +21,8 @@ pub use ray_hit::RayHit;
 mod ray;
 pub use ray::Ray;
 
-mod vector;
+mod vector3;
 pub use vector::Vector;
+pub use vector3::Vector3;
+
+mod vector;

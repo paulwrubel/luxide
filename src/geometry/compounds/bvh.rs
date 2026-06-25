@@ -1,7 +1,7 @@
 use std::{cmp::Ordering, sync::Arc};
 
 use crate::{
-    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector},
+    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector3},
     utils::Interval,
 };
 
@@ -157,14 +157,14 @@ impl Geometric for Bvh {
         self.bounding_box
     }
 
-    fn sample_direction_from(&self, origin: Point) -> Vector {
+    fn sample_direction_from(&self, origin: Point) -> Vector3 {
         match &self.tree {
             BvhNode::Branch { left, right } => {
                 let left_area = left.surface_area();
                 let right_area = right.surface_area();
                 let total = left_area + right_area;
                 if total <= 0.0 {
-                    return Vector::random_unit();
+                    return Vector3::random_unit();
                 }
                 if rand::random::<f64>() * total <= left_area {
                     left.sample_direction_from(origin)
@@ -173,11 +173,11 @@ impl Geometric for Bvh {
                 }
             }
             BvhNode::Leaf(item) => item.sample_direction_from(origin),
-            BvhNode::Empty => Vector::random_unit(),
+            BvhNode::Empty => Vector3::random_unit(),
         }
     }
 
-    fn direction_pdf(&self, origin: Point, dir: Vector) -> f64 {
+    fn direction_pdf(&self, origin: Point, dir: Vector3) -> f64 {
         match &self.tree {
             BvhNode::Branch { left, right } => {
                 let total = left.surface_area() + right.surface_area();

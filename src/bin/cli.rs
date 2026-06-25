@@ -5,14 +5,14 @@ use luxide::{
     camera::Camera,
     deserialization::RenderConfig,
     geometry::{
-        Geometric, Point, Vector,
+        Geometric, Point, Vector3,
         compounds::{AxisAlignedPBox, Bvh, List},
         instances::{RotateYAxis, Translate},
         primitives::{Parallelogram, Sphere},
         volumes,
     },
     shading::{
-        Color, Texture,
+        ColorRgb, ColorSpectrum, Texture,
         materials::{Dielectric, Lambertian, Material, Specular},
         textures::{Checker, Image8Bit, Noise, SolidColor},
     },
@@ -131,7 +131,7 @@ fn final_scene() -> Scene {
         Arc::new(Image8Bit::from_filename("./texture_images/8k_earth_daymap.jpg", 2.0).unwrap());
 
     //perlin noise
-    let input_fn = |p: Point| Point::from_vector(0.1 * p.0);
+    let input_fn = |p: Point| Point::from_vector3(0.1 * p.0);
     // let output_fn = |n: f64, p: Point| 0.5 * (1.0 + (p.0.z + 10.0 * n).sin());
     let output_fn = |n: f64, p: Point| 0.5 * (1.0 + (p.0.z + 2.0 * n).sin());
     // let output_fn = |n: f64, p: Point| n;
@@ -209,15 +209,15 @@ fn final_scene() -> Scene {
 
     let light_panel = Arc::new(Parallelogram::new(
         Point::new(123.0, 554.0, 147.0),
-        Vector::new(300.0, 0.0, 0.0),
-        Vector::new(0.0, 0.0, 265.0),
+        Vector3::new(300.0, 0.0, 0.0),
+        Vector3::new(0.0, 0.0, 265.0),
         false,
         Arc::clone(&lambertian_light),
     ));
     world.push(light_panel);
 
     let center1 = Point::new(400.0, 400.0, 200.0);
-    let center2 = center1 + Vector::new(30.0, 0.0, 0.0);
+    let center2 = center1 + Vector3::new(30.0, 0.0, 0.0);
     let motion_sphere = Arc::new(Sphere::new_in_motion(
         center1,
         center2,
@@ -278,7 +278,7 @@ fn final_scene() -> Scene {
     let mut sphere_box = List::new();
     for _ in 0..1000 {
         sphere_box.push(Arc::new(Sphere::new(
-            Point::from_vector(Vector::random_range(0.0, 165.0)),
+            Point::from_vector3(Vector3::random_range(0.0, 165.0)),
             10.0,
             Arc::clone(&lambertian_light_grey),
         )))
@@ -291,7 +291,7 @@ fn final_scene() -> Scene {
     ));
     let sphere_box = Arc::new(Translate::new(
         sphere_box,
-        Vector::new(-100.0, 270.0, 395.0),
+        Vector3::new(-100.0, 270.0, 395.0),
     ));
     world.push(sphere_box);
 
@@ -302,7 +302,7 @@ fn final_scene() -> Scene {
     let vertical_field_of_view_degrees = 40.0;
     let eye_location = Point::new(478.0, 278.0, -600.0);
     let target_location = Point::new(278.0, 278.0, 0.0);
-    let view_up = Vector::UP;
+    let view_up = Vector3::UP;
 
     let defocus_angle_degrees = 0.0;
     let focus_distance = 1.0;
@@ -320,14 +320,14 @@ fn final_scene() -> Scene {
         // name: "final_scene".to_string(),
         camera,
         world: SceneWorld::from_world_without_importance_sampling(world),
-        background_color: Color::BLACK,
+        background_color: ColorSpectrum::ZERO,
     }
 }
 
 #[allow(dead_code)]
 fn cornell_box() -> Scene {
     // Textures
-    let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::BLACK));
+    let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::new(ColorSpectrum::ZERO));
     let solid_white: Arc<dyn Texture> = Arc::new(SolidColor::from_rgb(0.73, 0.73, 0.73));
     let solid_red: Arc<dyn Texture> = Arc::new(SolidColor::from_rgb(0.65, 0.05, 0.05));
     let solid_green: Arc<dyn Texture> = Arc::new(SolidColor::from_rgb(0.12, 0.45, 0.15));
@@ -356,48 +356,48 @@ fn cornell_box() -> Scene {
     // left wall (green)
     world.push(Arc::new(Parallelogram::new(
         Point::new(0.0, 0.0, 0.0),
-        Vector::new(0.0, 0.0, -1.0),
-        Vector::new(0.0, 1.0, 0.0),
+        Vector3::new(0.0, 0.0, -1.0),
+        Vector3::new(0.0, 1.0, 0.0),
         true,
         Arc::clone(&lambertian_green),
     )));
     // right wall (red)
     world.push(Arc::new(Parallelogram::new(
         Point::new(1.0, 0.0, -1.0),
-        Vector::new(0.0, 0.0, 1.0),
-        Vector::new(0.0, 1.0, 0.0),
+        Vector3::new(0.0, 0.0, 1.0),
+        Vector3::new(0.0, 1.0, 0.0),
         true,
         Arc::clone(&lambertian_red),
     )));
     // floor (white)
     world.push(Arc::new(Parallelogram::new(
         Point::new(0.0, 0.0, 0.0),
-        Vector::new(1.0, 0.0, 0.0),
-        Vector::new(0.0, 0.0, -1.0),
+        Vector3::new(1.0, 0.0, 0.0),
+        Vector3::new(0.0, 0.0, -1.0),
         true,
         Arc::clone(&lambertian_white),
     )));
     // ceiling (white)
     world.push(Arc::new(Parallelogram::new(
         Point::new(0.0, 1.0, -1.0),
-        Vector::new(1.0, 0.0, 0.0),
-        Vector::new(0.0, 0.0, 1.0),
+        Vector3::new(1.0, 0.0, 0.0),
+        Vector3::new(0.0, 0.0, 1.0),
         true,
         Arc::clone(&lambertian_white),
     )));
     // back wall (white)
     world.push(Arc::new(Parallelogram::new(
         Point::new(0.0, 0.0, -1.0),
-        Vector::new(1.0, 0.0, 0.0),
-        Vector::new(0.0, 1.0, 0.0),
+        Vector3::new(1.0, 0.0, 0.0),
+        Vector3::new(0.0, 1.0, 0.0),
         true,
         Arc::clone(&lambertian_white),
     )));
     // ceiling light
     world.push(Arc::new(Parallelogram::new(
         Point::new(1.0 - (343.0 / 555.0), 554.0 / 555.0, -332.0 / 555.0),
-        Vector::new(130.0 / 555.0, 0.0, 0.0),
-        Vector::new(0.0, 0.0, 105.0 / 555.0),
+        Vector3::new(130.0 / 555.0, 0.0, 0.0),
+        Vector3::new(0.0, 0.0, 105.0 / 555.0),
         false,
         Arc::clone(&lambertian_white_light),
     )));
@@ -405,7 +405,7 @@ fn cornell_box() -> Scene {
     // far left box
     let far_left_box = Arc::new(AxisAlignedPBox::new(
         Point::ZERO,
-        Point::ZERO + Vector::new(-165.0, 330.0, -165.0) / 555.0,
+        Point::ZERO + Vector3::new(-165.0, 330.0, -165.0) / 555.0,
         false,
         Arc::clone(&lambertian_white),
     ));
@@ -416,7 +416,7 @@ fn cornell_box() -> Scene {
     ));
     let far_left_box = Arc::new(Translate::new(
         far_left_box,
-        Vector::new(1.0 - (265.0 / 555.0), 0.0, -295.0 / 555.0),
+        Vector3::new(1.0 - (265.0 / 555.0), 0.0, -295.0 / 555.0),
     ));
     let far_left_box = Arc::new(volumes::Constant::new(
         far_left_box,
@@ -428,7 +428,7 @@ fn cornell_box() -> Scene {
     // near right box
     let near_right_box = Arc::new(AxisAlignedPBox::new(
         Point::ZERO,
-        Point::ZERO + Vector::new(-165.0, 165.0, -165.0) / 555.0,
+        Point::ZERO + Vector3::new(-165.0, 165.0, -165.0) / 555.0,
         false,
         Arc::clone(&lambertian_white),
     ));
@@ -439,7 +439,7 @@ fn cornell_box() -> Scene {
     ));
     let near_right_box = Arc::new(Translate::new(
         near_right_box,
-        Vector::new(1.0 - (130.0 / 555.0), 0.0, -65.0 / 555.0),
+        Vector3::new(1.0 - (130.0 / 555.0), 0.0, -65.0 / 555.0),
     ));
     let near_right_box = Arc::new(volumes::Constant::new(
         near_right_box,
@@ -452,7 +452,7 @@ fn cornell_box() -> Scene {
     let vertical_field_of_view_degrees = 40.0;
     let eye_location = Point::new(0.5, 0.5, 1.44144);
     let target_location = Point::new(0.5, 0.5, 0.0);
-    let view_up = Vector::new(0.0, 1.0, 0.0);
+    let view_up = Vector3::new(0.0, 1.0, 0.0);
 
     let defocus_angle_degrees = 0.0;
     let focus_distance = 1.0;
@@ -470,17 +470,17 @@ fn cornell_box() -> Scene {
         // name: "cornell_box".to_string(),
         camera,
         world: SceneWorld::from_world_without_importance_sampling(Arc::new(world)),
-        background_color: Color::BLACK,
+        background_color: ColorSpectrum::ZERO,
     }
 }
 
 #[allow(dead_code)]
 fn simple_light() -> Scene {
     // Textures
-    let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::BLACK));
-    let solid_white_light: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::WHITE * 4.0));
+    let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::new(ColorSpectrum::ZERO));
+    let solid_white_light: Arc<dyn Texture> = Arc::new(SolidColor::new(ColorSpectrum::ONE * 4.0));
 
-    let input_fn = |p: Point| Point::from_vector(4.0 * p.0);
+    let input_fn = |p: Point| Point::from_vector3(4.0 * p.0);
     // let output_fn = |n: f64, p: Point| 0.5 * (1.0 + (p.0.z + 10.0 * n).sin());
     let output_fn = |n: f64, p: Point| 0.5 * (1.0 + (p.0.z + 3.0 * n).sin());
     // let output_fn = |n: f64, p: Point| n;
@@ -520,8 +520,8 @@ fn simple_light() -> Scene {
     )));
     world.push(Arc::new(Parallelogram::new(
         Point::new(3.0, 1.0, -2.0),
-        Vector::new(2.0, 0.0, 0.0),
-        Vector::new(0.0, 2.0, 0.0),
+        Vector3::new(2.0, 0.0, 0.0),
+        Vector3::new(0.0, 2.0, 0.0),
         true,
         Arc::clone(&lambertian_light),
     )));
@@ -535,7 +535,7 @@ fn simple_light() -> Scene {
     let vertical_field_of_view_degrees = 20.0;
     let eye_location = Point::new(26.0, 3.0, 6.0);
     let target_location = Point::new(0.0, 2.0, 0.0);
-    let view_up = Vector::new(0.0, 1.0, 0.0);
+    let view_up = Vector3::new(0.0, 1.0, 0.0);
 
     let defocus_angle_degrees = 0.0;
     let focus_distance = 1.0;
@@ -553,19 +553,19 @@ fn simple_light() -> Scene {
         // name: "simple_light".to_string(),
         camera,
         world: SceneWorld::from_world_without_importance_sampling(Arc::new(world)),
-        background_color: Color::BLACK,
+        background_color: ColorSpectrum::ZERO,
     }
 }
 
 #[allow(dead_code)]
 fn quads() -> Scene {
     // Textures
-    let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::BLACK));
-    let solid_red: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::new(1.0, 0.2, 0.2)));
-    let solid_green: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::new(0.2, 1.0, 0.2)));
-    let solid_blue: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::new(0.2, 0.2, 1.0)));
-    let solid_orange: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::new(1.0, 0.5, 0.0)));
-    let solid_teal: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::new(0.2, 0.8, 0.8)));
+    let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::new(ColorSpectrum::ZERO));
+    let solid_red: Arc<dyn Texture> = Arc::new(SolidColor::from(ColorRgb::new(1.0, 0.2, 0.2)));
+    let solid_green: Arc<dyn Texture> = Arc::new(SolidColor::from(ColorRgb::new(0.2, 1.0, 0.2)));
+    let solid_blue: Arc<dyn Texture> = Arc::new(SolidColor::from(ColorRgb::new(0.2, 0.2, 1.0)));
+    let solid_orange: Arc<dyn Texture> = Arc::new(SolidColor::from(ColorRgb::new(1.0, 0.5, 0.0)));
+    let solid_teal: Arc<dyn Texture> = Arc::new(SolidColor::from(ColorRgb::new(0.2, 0.8, 0.8)));
 
     // Materials
     let lambertian_red: Arc<dyn Material> = Arc::new(Lambertian::new(
@@ -594,36 +594,36 @@ fn quads() -> Scene {
     let mut world = List::new();
     world.push(Arc::new(Parallelogram::new(
         Point::new(-3.0, -2.0, 5.0),
-        Vector::new(0.0, 0.0, -4.0),
-        Vector::new(0.0, 4.0, 0.0),
+        Vector3::new(0.0, 0.0, -4.0),
+        Vector3::new(0.0, 4.0, 0.0),
         is_culled,
         Arc::clone(&lambertian_red),
     )));
     world.push(Arc::new(Parallelogram::new(
         Point::new(-2.0, -2.0, 0.0),
-        Vector::new(4.0, 0.0, 0.0),
-        Vector::new(0.0, 4.0, 0.0),
+        Vector3::new(4.0, 0.0, 0.0),
+        Vector3::new(0.0, 4.0, 0.0),
         is_culled,
         Arc::clone(&lambertian_green),
     )));
     world.push(Arc::new(Parallelogram::new(
         Point::new(3.0, -2.0, 1.0),
-        Vector::new(0.0, 0.0, 4.0),
-        Vector::new(0.0, 4.0, 0.0),
+        Vector3::new(0.0, 0.0, 4.0),
+        Vector3::new(0.0, 4.0, 0.0),
         is_culled,
         Arc::clone(&lambertian_blue),
     )));
     world.push(Arc::new(Parallelogram::new(
         Point::new(-2.0, 3.0, 1.0),
-        Vector::new(4.0, 0.0, 0.0),
-        Vector::new(0.0, 0.0, 4.0),
+        Vector3::new(4.0, 0.0, 0.0),
+        Vector3::new(0.0, 0.0, 4.0),
         is_culled,
         Arc::clone(&lambertian_orange),
     )));
     world.push(Arc::new(Parallelogram::new(
         Point::new(-2.0, -3.0, 5.0),
-        Vector::new(4.0, 0.0, 0.0),
-        Vector::new(0.0, 0.0, -4.0),
+        Vector3::new(4.0, 0.0, 0.0),
+        Vector3::new(0.0, 0.0, -4.0),
         is_culled,
         Arc::clone(&lambertian_teal),
     )));
@@ -632,7 +632,7 @@ fn quads() -> Scene {
     let vertical_field_of_view_degrees = 80.0;
     let eye_location = Point::new(0.0, 0.0, 9.0);
     let target_location = Point::new(0.0, 0.0, 0.0);
-    let view_up = Vector::new(0.0, 1.0, 0.0);
+    let view_up = Vector3::new(0.0, 1.0, 0.0);
 
     let defocus_angle_degrees = 0.0;
     let focus_distance = 1.0;
@@ -650,16 +650,16 @@ fn quads() -> Scene {
         // name: "quads".to_string(),
         camera,
         world: SceneWorld::from_world_without_importance_sampling(Arc::new(world)),
-        background_color: Color::new(0.7, 0.8, 1.0),
+        background_color: ColorRgb::new(0.7, 0.8, 1.0).into(),
     }
 }
 
 #[allow(dead_code)]
 fn two_perlin_spheres() -> Scene {
     // Textures
-    let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::BLACK));
+    let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::new(ColorSpectrum::ZERO));
 
-    let input_fn = |p: Point| Point::from_vector(4.0 * p.0);
+    let input_fn = |p: Point| Point::from_vector3(4.0 * p.0);
     // let output_fn = |n: f64, p: Point| 0.5 * (1.0 + (p.0.z + 10.0 * n).sin());
     let output_fn = |n: f64, p: Point| 0.5 * (1.0 + (p.0.z + 2.0 * n).sin());
     // let output_fn = |n: f64, p: Point| n;
@@ -698,7 +698,7 @@ fn two_perlin_spheres() -> Scene {
     let vertical_field_of_view_degrees = 20.0;
     let eye_location = Point::new(13.0, 2.0, 3.0);
     let target_location = Point::new(0.0, 0.0, 0.0);
-    let view_up = Vector::new(0.0, 1.0, 0.0);
+    let view_up = Vector3::new(0.0, 1.0, 0.0);
 
     let defocus_angle_degrees = 0.0;
     let focus_distance = 1.0;
@@ -716,14 +716,14 @@ fn two_perlin_spheres() -> Scene {
         // name: "two_perlin_spheres".to_string(),
         camera,
         world: SceneWorld::from_world_without_importance_sampling(Arc::new(world)),
-        background_color: Color::new(0.7, 0.8, 1.0),
+        background_color: ColorRgb::new(0.7, 0.8, 1.0).into(),
     }
 }
 
 #[allow(dead_code)]
 fn earth() -> Scene {
     // Textures
-    let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::BLACK));
+    let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::new(ColorSpectrum::ZERO));
     let image_earth_day: Arc<dyn Texture> =
         Arc::new(Image8Bit::from_filename("./texture_images/8k_earth_daymap.jpg", 2.0).unwrap());
     // let image_earth_night: Arc<dyn Texture> =
@@ -732,7 +732,7 @@ fn earth() -> Scene {
         Arc::new(Image8Bit::from_filename("./texture_images/8k_moon.jpg", 2.0).unwrap());
     // let image_stars_milky_way =
     //     Arc::new(Image8Bit::from_filename("./texture_images/8k_stars_milky_way.jpg", 2.0).unwrap());
-    let solid_white: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::WHITE));
+    let solid_white: Arc<dyn Texture> = Arc::new(SolidColor::new(ColorSpectrum::ONE));
 
     // Materials
     let lambertian_earth_day: Arc<dyn Material> = Arc::new(Lambertian::new(
@@ -776,7 +776,7 @@ fn earth() -> Scene {
     let vertical_field_of_view_degrees = 30.0;
     let eye_location = Point::new(0.0, 0.0, 12.0);
     let target_location = Point::new(0.0, 0.0, 0.0);
-    let view_up = Vector::new(0.0, 1.0, 0.0);
+    let view_up = Vector3::new(0.0, 1.0, 0.0);
 
     let defocus_angle_degrees = 0.0;
     let focus_distance = 1.0;
@@ -794,18 +794,18 @@ fn earth() -> Scene {
         // name: "earth".to_string(),
         camera,
         world: SceneWorld::from_world_without_importance_sampling(Arc::new(world)),
-        background_color: Color::new(0.7, 0.8, 1.0),
+        background_color: ColorRgb::new(0.7, 0.8, 1.0).into(),
     }
 }
 
 #[allow(dead_code)]
 fn two_spheres() -> Scene {
     // Materials
-    let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::BLACK));
+    let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::new(ColorSpectrum::ZERO));
     let checker: Arc<dyn Texture> = Arc::new(Checker::from_colors(
         0.5,
-        Color::new(0.2, 0.1, 0.1),
-        Color::new(0.9, 0.9, 0.9),
+        ColorRgb::new(0.2, 0.1, 0.1).into(),
+        ColorRgb::new(0.9, 0.9, 0.9).into(),
     ));
     let lambertian_checker: Arc<dyn Material> = Arc::new(Lambertian::new(
         Arc::clone(&checker),
@@ -829,7 +829,7 @@ fn two_spheres() -> Scene {
     let vertical_field_of_view_degrees = 40.0;
     let eye_location = Point::new(13.0, 2.0, 3.0);
     let target_location = Point::new(0.0, 0.0, 0.0);
-    let view_up = Vector::new(0.0, 1.0, 0.0);
+    let view_up = Vector3::new(0.0, 1.0, 0.0);
 
     let defocus_angle_degrees = 0.0;
     let focus_distance = 1.0;
@@ -847,23 +847,25 @@ fn two_spheres() -> Scene {
         // name: "two_spheres".to_string(),
         world: SceneWorld::from_world_without_importance_sampling(Arc::new(world)),
         camera,
-        background_color: Color::new(0.7, 0.8, 1.0),
+        background_color: ColorRgb::new(0.7, 0.8, 1.0).into(),
     }
 }
 
 #[allow(dead_code)]
 fn random_spheres() -> Scene {
     // Textures
-    let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::BLACK));
-    let solid_white: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::WHITE));
-    let solid_brown: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::new(0.4, 0.2, 0.1)));
-    let solid_amber: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::new(0.7, 0.6, 0.5)));
+    let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::new(ColorSpectrum::ZERO));
+    let solid_white: Arc<dyn Texture> = Arc::new(SolidColor::new(ColorSpectrum::ONE));
+    let solid_brown: Arc<dyn Texture> =
+        Arc::new(SolidColor::new(ColorRgb::new(0.4, 0.2, 0.1).into()));
+    let solid_amber: Arc<dyn Texture> =
+        Arc::new(SolidColor::new(ColorRgb::new(0.7, 0.6, 0.5).into()));
 
     // Materials
     let checker: Arc<dyn Texture> = Arc::new(Checker::from_colors(
         0.32,
-        Color::new(0.2, 0.3, 0.1),
-        Color::new(0.9, 0.9, 0.9),
+        ColorRgb::new(0.2, 0.3, 0.1).into(),
+        ColorRgb::new(0.9, 0.9, 0.9).into(),
     ));
     let lambertian_checker: Arc<dyn Material> = Arc::new(Lambertian::new(
         Arc::clone(&checker),
@@ -908,18 +910,24 @@ fn random_spheres() -> Scene {
                 let choose_mat = rand::random::<f64>();
                 if choose_mat < 0.8 {
                     // lambertian
-                    let reflectance = Color::random() * Color::random();
-                    let reflectance = Arc::new(SolidColor::new(reflectance));
+                    let reflectance = ColorRgb::random() * ColorRgb::random();
+                    let rgb: [f64; 3] = reflectance.into();
+                    let reflectance = Arc::new(SolidColor::new(
+                        ColorRgb::new(rgb[0], rgb[1], rgb[2]).into(),
+                    ));
                     let lambertian =
                         Arc::new(Lambertian::new(reflectance, Arc::clone(&solid_black)));
-                    let center_2 = center + Vector::new(0.0, 0.5 * rand::random::<f64>(), 0.0);
+                    let center_2 = center + Vector3::new(0.0, 0.5 * rand::random::<f64>(), 0.0);
                     world_list.push(Arc::new(Sphere::new_in_motion(
                         center, center_2, 0.2, lambertian,
                     )));
                 } else if choose_mat < 0.95 {
                     // specular
-                    let albedo = Color::random_range(0.5, 1.0);
-                    let albedo: Arc<dyn Texture> = Arc::new(SolidColor::new(albedo));
+                    let albedo = ColorRgb::random_range(0.5, 1.0);
+                    let rgb: [f64; 3] = albedo.into();
+                    let albedo: Arc<dyn Texture> = Arc::new(SolidColor::new(
+                        ColorRgb::new(rgb[0], rgb[1], rgb[2]).into(),
+                    ));
                     let roughness = 0.5 * rand::random::<f64>();
                     let specular = Arc::new(Specular::new(
                         Arc::clone(&albedo),
@@ -929,7 +937,7 @@ fn random_spheres() -> Scene {
                     world_list.push(Arc::new(Sphere::new(center, 0.2, specular)));
                 } else {
                     // dielectric
-                    let albedo: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::WHITE));
+                    let albedo: Arc<dyn Texture> = Arc::new(SolidColor::new(ColorSpectrum::ONE));
                     let dielectric = Arc::new(Dielectric::new(
                         Arc::clone(&albedo),
                         Arc::clone(&solid_black),
@@ -966,7 +974,7 @@ fn random_spheres() -> Scene {
     let vertical_field_of_view_degrees = 20.0;
     let eye_location = Point::new(13.0, 2.0, 3.0);
     let target_location = Point::new(0.0, 0.0, 0.0);
-    let view_up = Vector::new(0.0, 1.0, 0.0);
+    let view_up = Vector3::new(0.0, 1.0, 0.0);
 
     let defocus_angle_degrees = 0.06;
     let focus_distance = 10.0;
@@ -984,6 +992,6 @@ fn random_spheres() -> Scene {
         // name: "random_spheres".to_string(),
         world: SceneWorld::from_world_without_importance_sampling(world),
         camera,
-        background_color: Color::new(0.7, 0.8, 1.0),
+        background_color: ColorRgb::new(0.7, 0.8, 1.0).into(),
     }
 }

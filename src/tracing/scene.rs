@@ -6,7 +6,7 @@ use crate::{
         Geometric,
         compounds::{Bvh, List},
     },
-    shading::Color,
+    shading::{ColorSpectrum, color_spectrum::SPECTRAL_SAMPLE_COUNT},
 };
 
 #[derive(Clone)]
@@ -14,7 +14,7 @@ pub struct Scene {
     pub world: SceneWorld,
 
     pub camera: Camera,
-    pub background_color: Color,
+    pub background_color: ColorSpectrum<SPECTRAL_SAMPLE_COUNT>,
 }
 
 #[derive(Clone)]

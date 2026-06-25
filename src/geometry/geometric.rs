@@ -1,5 +1,5 @@
 use crate::{
-    geometry::{Point, Vector},
+    geometry::{Point, Vector3},
     utils::Interval,
 };
 
@@ -26,7 +26,7 @@ pub trait Geometric: std::fmt::Debug + Sync + Send {
 
     /// Sample a random direction from `origin` toward a point on this object's
     /// surface, chosen uniformly by area. The returned direction is a unit vector.
-    fn sample_direction_from(&self, origin: Point) -> Vector;
+    fn sample_direction_from(&self, origin: Point) -> Vector3;
     /// The solid-angle probability density that [`sample_direction_from`] would
     /// assign to `dir`. Returns 0.0 if `dir` does not intersect this object.
     ///
@@ -40,7 +40,7 @@ pub trait Geometric: std::fmt::Debug + Sync + Send {
     /// where `distance` is the ray parameter at the hit point, `cos(θ_light)`
     /// is the absolute cosine between the direction and the surface normal at
     /// the hit, and `area` is the total surface area.
-    fn direction_pdf(&self, origin: Point, dir: Vector) -> f64;
+    fn direction_pdf(&self, origin: Point, dir: Vector3) -> f64;
 
     /// Whether this geometric is "virtual" — excluded from ray intersections
     /// but included in importance sampling for faster convergence.

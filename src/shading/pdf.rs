@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::geometry::{Geometric, Onb, Point, Vector};
+use crate::geometry::{Geometric, Onb, Point, Vector3};
 
 /// A probability density function over solid angle.
 #[derive(Debug, Clone)]
@@ -31,19 +31,19 @@ pub enum Pdf {
 impl Pdf {
     /// Draw a random unit direction and the index of the strategy that produced it.
     /// For non-Mixture variants, the index is always 0.
-    pub fn sample(&self) -> (Vector, usize) {
+    pub fn sample(&self) -> (Vector3, usize) {
         match self {
             Pdf::CosineHemisphere(onb) => {
-                (onb.to_world(Vector::random_cosine_weighted_direction()), 0)
+                (onb.to_world(Vector3::random_cosine_weighted_direction()), 0)
             }
             Pdf::UniformHemisphere(onb) => {
-                let mut direction = Vector::random_unit();
+                let mut direction = Vector3::random_unit();
                 if direction.z < 0.0 {
                     direction = -direction;
                 }
                 (onb.to_world(direction), 0)
             }
-            Pdf::UniformSphere => (Vector::random_unit(), 0),
+            Pdf::UniformSphere => (Vector3::random_unit(), 0),
             Pdf::Geometric { geometric, origin } => (geometric.sample_direction_from(*origin), 0),
             Pdf::Mixture { entries } => {
                 let threshold: f64 = rand::random();
@@ -61,7 +61,7 @@ impl Pdf {
     }
 
     /// The solid-angle probability density at `direction`.
-    pub fn density(&self, direction: Vector) -> f64 {
+    pub fn density(&self, direction: Vector3) -> f64 {
         match self {
             Pdf::CosineHemisphere(onb) => {
                 let cos_theta = onb.w.dot(direction);
@@ -91,7 +91,7 @@ impl Pdf {
     ///
     /// For Mixture: `p_idx² / Σ p_i²`, where `p_i = weight_i × density_i(direction)`.
     /// For all other variants: 1.0 (single strategy, no MIS needed).
-    pub fn power_heuristic(&self, direction: Vector, strategy_idx: usize) -> f64 {
+    pub fn power_heuristic(&self, direction: Vector3, strategy_idx: usize) -> f64 {
         match self {
             Pdf::Mixture { entries } => {
                 // un-normalized densities: p_i = weight_i × density_i(dir)
@@ -115,7 +115,7 @@ impl Pdf {
     ///
     /// For Mixture, this is the joint density `w_s × p_s(dir)`.
     /// For all other variants, this is just `density(dir)`.
-    pub fn strategy_density(&self, direction: Vector, strategy_idx: usize) -> f64 {
+    pub fn strategy_density(&self, direction: Vector3, strategy_idx: usize) -> f64 {
         match self {
             Pdf::Mixture { entries } => {
                 let (pdf, weight) = &entries[strategy_idx];

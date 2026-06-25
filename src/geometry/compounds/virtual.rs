@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector},
+    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector3},
     utils::Interval,
 };
 
@@ -58,11 +58,11 @@ impl Geometric for Virtual {
         self.inner.bounding_box()
     }
 
-    fn sample_direction_from(&self, origin: Point) -> Vector {
+    fn sample_direction_from(&self, origin: Point) -> Vector3 {
         self.inner.sample_direction_from(origin)
     }
 
-    fn direction_pdf(&self, origin: Point, dir: Vector) -> f64 {
+    fn direction_pdf(&self, origin: Point, dir: Vector3) -> f64 {
         self.inner.direction_pdf(origin, dir)
     }
 }
