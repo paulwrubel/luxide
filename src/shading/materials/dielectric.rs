@@ -37,11 +37,41 @@ impl Dielectric {
         r0 + (1.0 - r0) * (1.0 - cosine).powi(5)
     }
 
-    /// Index of refraction at a specific wavelength.
-    /// Currently returns the constant IOR. Will be replaced with a
-    /// Sellmeier equation for physically-accurate dispersion.
-    pub fn index_of_refraction_at(&self, _wavelength_nm: f64) -> f64 {
-        self.index_of_refraction
+    /// Index of refraction at a specific wavelength using a one-term
+    /// Sellmeier equation fitted from the user-provided IOR.
+    ///
+    /// The user's IOR is assumed to be n_D — the refractive index at the
+    /// sodium D-line (589.3nm). A single Sellmeier term with C₁ = 0.01 µm²
+    /// provides physically plausible dispersion for optical glass:
+    /// shorter wavelengths → higher IOR, with ~0.01 variation across the
+    /// visible range at IOR ≈ 1.5.
+    pub fn index_of_refraction_at(&self, wavelength_nm: f64) -> f64 {
+        let lambda_um = wavelength_nm / 1000.0;
+        let lambda_sq = lambda_um * lambda_um;
+
+        // D-line reference wavelength in µm
+        let d_um = 0.5893;
+        let d_sq = d_um * d_um;
+
+        // Fixed dispersion constant (µm²) — typical for optical glass
+        let c1 = 0.01;
+
+        // Solve B₁ so that n(589.3nm) = user_ior
+        let n_sq = self.index_of_refraction * self.index_of_refraction;
+        let b1 = (n_sq - 1.0) * (d_sq - c1) / d_sq;
+
+        // n²(λ) = 1 + B₁·λ²/(λ² − C₁)
+        let n_sq_lambda = 1.0 + b1 * lambda_sq / (lambda_sq - c1);
+        let nominal_ior = n_sq_lambda.sqrt().max(1.0);
+
+        // debug: amplify dispersion for visual testing.
+        // remove this multiplier (return nominal_ior) for production.
+        //
+        // const DISPERSION_MULTIPLIER: f64 = 1000.0;
+        // let dispersion = nominal_ior - self.index_of_refraction;
+        // self.index_of_refraction + dispersion * DISPERSION_MULTIPLIER
+
+        nominal_ior
     }
 
     /// Compute the scattered direction for a specific wavelength using
