@@ -41,10 +41,9 @@ impl Dielectric {
     /// Sellmeier equation fitted from the user-provided IOR.
     ///
     /// The user's IOR is assumed to be n_D — the refractive index at the
-    /// sodium D-line (589.3nm). A single Sellmeier term with C₁ = 0.01 µm²
-    /// provides physically plausible dispersion for optical glass:
-    /// shorter wavelengths → higher IOR, with ~0.01 variation across the
-    /// visible range at IOR ≈ 1.5.
+    /// sodium D-line (589.3nm). A single Sellmeier term with an IOR-dependent
+    /// C₁ provides physically plausible dispersion across a wide range of
+    /// materials: shorter wavelengths → higher IOR.
     pub fn index_of_refraction_at(&self, wavelength_nm: f64) -> f64 {
         let lambda_um = wavelength_nm / 1000.0;
         let lambda_sq = lambda_um * lambda_um;
@@ -53,25 +52,23 @@ impl Dielectric {
         let d_um = 0.5893;
         let d_sq = d_um * d_um;
 
-        // Fixed dispersion constant (µm²) — typical for optical glass
-        let c1 = 0.01;
+        let n_sq = self.index_of_refraction * self.index_of_refraction;
+
+        // C₁ models the square of the UV resonance wavelength. Higher-index
+        // materials have their resonance closer to the visible range, producing
+        // stronger dispersion. The Sellmeier term λ²/(λ² − C₁) grows more
+        // rapidly across the visible band when C₁ is larger.
+        //
+        // n=1.5 → C₁≈0.011  (moderate dispersion)
+        // n=2.4 → C₁≈0.029  (strong dispersion, ~2.6× glass)
+        let c1 = 0.005 * n_sq;
 
         // Solve B₁ so that n(589.3nm) = user_ior
-        let n_sq = self.index_of_refraction * self.index_of_refraction;
         let b1 = (n_sq - 1.0) * (d_sq - c1) / d_sq;
 
         // n²(λ) = 1 + B₁·λ²/(λ² − C₁)
         let n_sq_lambda = 1.0 + b1 * lambda_sq / (lambda_sq - c1);
-        let nominal_ior = n_sq_lambda.sqrt().max(1.0);
-
-        // debug: amplify dispersion for visual testing.
-        // remove this multiplier (return nominal_ior) for production.
-        //
-        // const DISPERSION_MULTIPLIER: f64 = 1000.0;
-        // let dispersion = nominal_ior - self.index_of_refraction;
-        // self.index_of_refraction + dispersion * DISPERSION_MULTIPLIER
-
-        nominal_ior
+        n_sq_lambda.sqrt().max(1.0)
     }
 
     /// Compute the scattered direction for a specific wavelength using
