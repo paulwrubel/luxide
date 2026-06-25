@@ -1,11 +1,15 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{Point, Ray, RayHit, Vector3},
-    shading::{ColorSpectrum, Texture, color_spectrum::SPECTRAL_SAMPLE_COUNT},
+    geometry::{Point, Ray, RayHit, Vector, Vector3},
+    shading::{
+        ColorSpectrum, Texture,
+        color_spectrum::SPECTRAL_SAMPLE_COUNT,
+        hero_wavelengths::{HERO_WAVELENGTH_COUNT, HeroWavelengths},
+    },
 };
 
-use super::{Material, ScatterRecord};
+use super::{Material, ScatterRecord, SpectralScatter};
 
 #[derive(Debug, Clone)]
 pub struct Dielectric {
@@ -31,6 +35,50 @@ impl Dielectric {
         let r0 = (1.0 - ref_idx) / (1.0 + ref_idx);
         let r0 = r0 * r0;
         r0 + (1.0 - r0) * (1.0 - cosine).powi(5)
+    }
+
+    /// Index of refraction at a specific wavelength.
+    /// Currently returns the constant IOR. Will be replaced with a
+    /// Sellmeier equation for physically-accurate dispersion.
+    pub fn index_of_refraction_at(&self, _wavelength_nm: f64) -> f64 {
+        self.index_of_refraction
+    }
+
+    /// Compute the scattered direction for a specific wavelength using
+    /// Fresnel-weighted Monte Carlo: randomly reflects or refracts
+    /// proportional to Schlick reflectance, returning the appropriate
+    /// attenuation weight (1.0 for reflection, 1.0 - reflectance for
+    /// transmission; converges to correct Fresnel over many samples).
+    pub fn refract_at(
+        &self,
+        incident: Vector3,
+        normal: Vector3,
+        wavelength_nm: f64,
+    ) -> (Vector3, f64) {
+        let ior = self.index_of_refraction_at(wavelength_nm);
+        let (refractive_normal, refraction_ratio) = if incident.dot(normal) < 0.0 {
+            (normal, 1.0 / ior)
+        } else {
+            (-normal, ior)
+        };
+
+        let unit_direction = incident.unit_vector();
+        let cos_theta = (-unit_direction).dot(refractive_normal).min(1.0);
+        let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
+        let cannot_refract = refraction_ratio * sin_theta > 1.0;
+
+        let reflectance = Self::schlick_reflectance(cos_theta, refraction_ratio);
+
+        if cannot_refract || reflectance > rand::random() {
+            // reflect (TIR or Schlick flip chose reflection)
+            (unit_direction.reflect_around(refractive_normal), 1.0)
+        } else {
+            // refract
+            (
+                unit_direction.refract_around(refractive_normal, refraction_ratio),
+                1.0 - reflectance,
+            )
+        }
     }
 }
 
@@ -73,29 +121,24 @@ impl Material for Dielectric {
         ColorSpectrum::ZERO
     }
 
-    fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<ScatterRecord> {
-        let (refractive_normal, refraction_ratio) = if ray.direction.dot(ray_hit.normal) < 0.0 {
-            (ray_hit.normal, 1.0 / self.index_of_refraction)
-        } else {
-            (-ray_hit.normal, self.index_of_refraction)
-        };
+    fn scatter(
+        &self,
+        ray: Ray,
+        ray_hit: &RayHit,
+        hw: &HeroWavelengths<HERO_WAVELENGTH_COUNT>,
+    ) -> Option<ScatterRecord> {
+        let mut rays = [None; HERO_WAVELENGTH_COUNT];
+        let mut reflectance = Vector::<HERO_WAVELENGTH_COUNT>::ZERO;
 
-        let unit_direction = ray.direction.unit_vector();
-        let cos_theta = (-unit_direction).dot(refractive_normal).min(1.0);
-        let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
-        let cannot_refract = refraction_ratio * sin_theta > 1.0;
+        for (i, &lambda) in hw.iter().enumerate() {
+            let (dir, refl) = self.refract_at(ray.direction, ray_hit.normal, lambda);
+            reflectance[i] = refl;
+            rays[i] = Some(Ray::new(ray_hit.point, dir, ray.time));
+        }
 
-        let refracted = if cannot_refract
-            || Dielectric::schlick_reflectance(cos_theta, refraction_ratio) > rand::random()
-        {
-            // cannot refract so must reflect
-            unit_direction.reflect_around(refractive_normal)
-        } else {
-            // can refract
-            unit_direction.refract_around(refractive_normal, refraction_ratio)
-        };
-
-        let scattered = Ray::new(ray_hit.point, refracted, ray.time);
-        Some(ScatterRecord::Delta { scattered })
+        Some(ScatterRecord::Spectral(Box::new(SpectralScatter {
+            rays,
+            reflectance,
+        })))
     }
 }

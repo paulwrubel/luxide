@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use crate::shading::hero_wavelengths::{HERO_WAVELENGTH_COUNT, HeroWavelengths};
 use crate::{
     geometry::{Point, Ray, RayHit, Vector3},
     shading::{ColorSpectrum, Texture, color_spectrum::SPECTRAL_SAMPLE_COUNT},
@@ -43,7 +44,12 @@ impl Material for Isotropic {
         false
     }
 
-    fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<ScatterRecord> {
+    fn scatter(
+        &self,
+        ray: Ray,
+        ray_hit: &RayHit,
+        _hw: &HeroWavelengths<HERO_WAVELENGTH_COUNT>,
+    ) -> Option<ScatterRecord> {
         // always scatter, and always scatter in a random direction
         Some(ScatterRecord::Delta {
             scattered: Ray::new(ray_hit.point, Vector3::random_unit(), ray.time),

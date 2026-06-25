@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use crate::shading::hero_wavelengths::{HERO_WAVELENGTH_COUNT, HeroWavelengths};
 use crate::shading::pdf::Pdf;
 use crate::{
     geometry::{Onb, Point, Ray, RayHit, Vector3},
@@ -62,7 +63,12 @@ impl Material for Lambertian {
         false
     }
 
-    fn scatter(&self, _ray: Ray, ray_hit: &RayHit) -> Option<ScatterRecord> {
+    fn scatter(
+        &self,
+        _ray: Ray,
+        ray_hit: &RayHit,
+        _hw: &HeroWavelengths<HERO_WAVELENGTH_COUNT>,
+    ) -> Option<ScatterRecord> {
         Some(ScatterRecord::Pdf(Pdf::CosineHemisphere(Onb::from_w(
             ray_hit.normal,
         ))))

@@ -5,8 +5,11 @@ use rand::RngExt;
 use crate::{
     geometry::{Point, Ray, Vector, Vector3},
     shading::{
-        ColorRgb, ColorSpectrum, HeroWavelengths, color_spectrum::SPECTRAL_SAMPLE_COUNT,
-        hero_wavelengths::HERO_WAVELENGTH_COUNT, materials::ScatterRecord, pdf::Pdf,
+        ColorRgb, ColorSpectrum, HeroWavelengths,
+        color_spectrum::SPECTRAL_SAMPLE_COUNT,
+        hero_wavelengths::HERO_WAVELENGTH_COUNT,
+        materials::{ScatterRecord, SpectralScatter},
+        pdf::Pdf,
     },
     tracing::{BouncesConfig, ImportanceSamplingConfig, RenderParameters, Scene, SceneWorld},
     utils::{Angle, Interval},
@@ -164,18 +167,24 @@ impl Camera {
         x_offset + y_offset
     }
 
-    pub fn ray_color(&self, mut ray: Ray, scene_world: &SceneWorld) -> ColorRgb {
+    /// Trace a ray through the scene, accumulating spectral radiance at
+    /// each of the N hero wavelengths. For `N = 4`, this is the shared-
+    /// geometry path. For `N = 1`, this is a single-wavelength sub-path
+    /// used after a dispersive dielectric split.
+    fn trace_spectral<const N: usize>(
+        &self,
+        mut ray: Ray,
+        hw: &HeroWavelengths<N>,
+        scene_world: &SceneWorld,
+        mut bounces: u32,
+    ) -> Vector<N> {
         let mut rng = rand::rng();
 
-        // pick 4 stratified random hero wavelengths for this camera ray
-        let hero_wavelengths = HeroWavelengths::new_distributed();
+        // per-wavelength accumulated radiance
+        let mut accumulated = Vector::<N>::ZERO;
+        // per-wavelength attenuation throughput
+        let mut attenuation = Vector::<N>::ONE;
 
-        // per-wavelength accumulated radiance (scalar)
-        let mut accumulated = Vector::<HERO_WAVELENGTH_COUNT>::ZERO;
-        // per-wavelength attenuation throughput (scalar)
-        let mut attenuation = Vector::<HERO_WAVELENGTH_COUNT>::ONE;
-
-        let mut bounces = 0;
         while let Some(ray_hit) = scene_world
             .world
             .intersect(ray, Interval::new(0.001, f64::INFINITY))
@@ -184,11 +193,10 @@ impl Camera {
             let emittance = ray_hit
                 .material
                 .emittance(ray_hit.u, ray_hit.v, ray_hit.point);
-            accumulated += attenuation * emittance.sample(&hero_wavelengths);
+            accumulated += attenuation * emittance.sample(hw);
 
             if bounces >= self.bounces.max {
-                // convert accumulated spectral samples to RGB and return
-                return hero_wavelengths.to_color_rgb(accumulated);
+                return accumulated;
             }
 
             // early termination: if surface absorbs all light at all wavelengths
@@ -196,24 +204,51 @@ impl Camera {
                 .material
                 .reflectance(ray_hit.u, ray_hit.v, ray_hit.point);
             if reflectance.is_black() {
-                return hero_wavelengths.to_color_rgb(accumulated);
+                return accumulated;
             }
 
-            let Some(srec) = ray_hit.material.scatter(ray, &ray_hit) else {
-                return hero_wavelengths.to_color_rgb(accumulated);
+            // Build a 4-wavelength set from the generic N-wavelength `hw`.
+            // For N=4 this is an identity; for N=1 this fills all 4 slots
+            // with the same wavelength (non-dispersive case for sub-paths).
+            let scatter_hw = {
+                let mut data = [0.0; HERO_WAVELENGTH_COUNT];
+                for i in 0..HERO_WAVELENGTH_COUNT {
+                    data[i] = hw[i % N];
+                }
+                HeroWavelengths::new(data)
+            };
+            let Some(srec) = ray_hit.material.scatter(ray, &ray_hit, &scatter_hw) else {
+                return accumulated;
             };
 
             let outgoing_direction = (-ray.direction).unit_vector();
 
             match srec {
+                ScatterRecord::Spectral(ss) => {
+                    let SpectralScatter { rays, reflectance } = *ss;
+                    // dispersive dielectric — trace each hero wavelength independently
+                    for i in 0..N {
+                        if let Some(refracted) = rays[i] {
+                            let single_hw = HeroWavelengths::new([hw[i]; 1]);
+                            let contrib = self.trace_spectral::<1>(
+                                refracted,
+                                &single_hw,
+                                scene_world,
+                                bounces + 1,
+                            );
+                            accumulated[i] += attenuation[i] * reflectance[i] * contrib[0];
+                        }
+                    }
+                    return accumulated;
+                }
                 ScatterRecord::Delta { scattered } => {
-                    // specular / dielectric — attenuation scales by reflectance at each wavelength
+                    // specular — attenuation scales by reflectance at each wavelength
                     let reflectance =
                         ray_hit
                             .material
                             .reflectance(ray_hit.u, ray_hit.v, ray_hit.point);
-                    attenuation *= reflectance.sample(&hero_wavelengths);
-                    ray = scattered
+                    attenuation *= reflectance.sample(hw);
+                    ray = scattered;
                 }
                 ScatterRecord::Pdf(scatter_pdf) => {
                     let pdf = build_mixture_pdf(
@@ -240,22 +275,21 @@ impl Camera {
                         let mis_weight = pdf.power_heuristic(incident_direction, index_of_strategy);
 
                         if pdf_val <= 0.0 {
-                            return hero_wavelengths.to_color_rgb(accumulated);
+                            return accumulated;
                         }
 
-                        attenuation *=
-                            brdf_val.sample(&hero_wavelengths) * (cos_theta * mis_weight / pdf_val);
+                        attenuation *= brdf_val.sample(hw) * (cos_theta * mis_weight / pdf_val);
                     } else {
                         let pdf_val = pdf.density(incident_direction);
 
                         if pdf_val <= 0.0 {
-                            return hero_wavelengths.to_color_rgb(accumulated);
+                            return accumulated;
                         }
 
-                        attenuation *= brdf_val.sample(&hero_wavelengths) * (cos_theta / pdf_val);
+                        attenuation *= brdf_val.sample(hw) * (cos_theta / pdf_val);
                     }
 
-                    ray = Ray::new(ray_hit.point, incident_direction, ray.time)
+                    ray = Ray::new(ray_hit.point, incident_direction, ray.time);
                 }
             }
 
@@ -267,16 +301,22 @@ impl Camera {
             {
                 let p = attenuation.iter().fold(0.0_f64, |a, &b| a.max(b)).min(1.0);
                 if rng.random::<f64>() > p {
-                    return hero_wavelengths.to_color_rgb(accumulated);
+                    return accumulated;
                 }
                 attenuation /= p;
             }
         }
 
         // ray missed — add background contribution
-        accumulated += attenuation * self.background_color.sample(&hero_wavelengths);
+        accumulated += attenuation * self.background_color.sample(hw);
 
-        hero_wavelengths.to_color_rgb(accumulated)
+        accumulated
+    }
+
+    pub fn ray_color(&self, ray: Ray, scene_world: &SceneWorld) -> ColorRgb {
+        let hw = HeroWavelengths::<HERO_WAVELENGTH_COUNT>::new_distributed();
+        let accumulated = self.trace_spectral::<HERO_WAVELENGTH_COUNT>(ray, &hw, scene_world, 0);
+        hw.to_color_rgb(accumulated)
     }
 }
 

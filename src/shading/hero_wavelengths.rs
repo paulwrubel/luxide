@@ -1,3 +1,5 @@
+use std::ops::Index;
+
 use crate::{
     geometry::Vector,
     shading::{
@@ -23,6 +25,11 @@ pub const HERO_WAVELENGTH_COUNT: usize = 4;
 pub struct HeroWavelengths<const N: usize>(Vector<N>);
 
 impl<const N: usize> HeroWavelengths<N> {
+    /// Create from an explicit array of wavelengths.
+    pub fn new(wavelengths: [f64; N]) -> Self {
+        Self(Vector::new(wavelengths))
+    }
+
     /// Pick 4 stratified hero wavelengths by dividing 380-780nm into equal bins
     /// and picking a random wavelength within each bin.
     pub fn new_distributed() -> Self {
@@ -66,6 +73,13 @@ impl<const N: usize> HeroWavelengths<N> {
     /// Iterate over the elements by reference.
     pub fn iter(&self) -> std::slice::Iter<'_, f64> {
         self.0.iter()
+    }
+}
+
+impl<const N: usize> Index<usize> for HeroWavelengths<N> {
+    type Output = f64;
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.0[index]
     }
 }
 

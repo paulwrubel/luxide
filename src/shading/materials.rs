@@ -1,7 +1,8 @@
 use super::ColorSpectrum;
 use super::pdf::Pdf;
-use crate::geometry::{Point, Ray, RayHit, Vector3};
+use crate::geometry::{Point, Ray, RayHit, Vector, Vector3};
 use crate::shading::color_spectrum::SPECTRAL_SAMPLE_COUNT;
+use crate::shading::hero_wavelengths::{HERO_WAVELENGTH_COUNT, HeroWavelengths};
 
 mod dielectric;
 pub use dielectric::Dielectric;
@@ -39,7 +40,12 @@ pub trait Material: std::fmt::Debug + Sync + Send {
     /// integrator skips scattering entirely.
     fn reflectance(&self, u: f64, v: f64, p: Point) -> ColorSpectrum<SPECTRAL_SAMPLE_COUNT>;
 
-    fn scatter(&self, ray: Ray, ray_hit: &RayHit) -> Option<ScatterRecord>;
+    fn scatter(
+        &self,
+        ray: Ray,
+        ray_hit: &RayHit,
+        hw: &HeroWavelengths<HERO_WAVELENGTH_COUNT>,
+    ) -> Option<ScatterRecord>;
 
     /// Evaluate the BRDF (Bidirectional Reflectance Distribution Function).
     ///
@@ -64,6 +70,17 @@ pub trait Material: std::fmt::Debug + Sync + Send {
     ) -> ColorSpectrum<SPECTRAL_SAMPLE_COUNT>;
 }
 
+/// Payload for a dispersive dielectric scatter event.
+/// Boxed to keep `ScatterRecord` small on the stack.
+#[derive(Debug)]
+pub struct SpectralScatter {
+    /// One refracted ray per hero wavelength. `None` when total internal
+    /// reflection occurs at that wavelength.
+    pub rays: [Option<Ray>; HERO_WAVELENGTH_COUNT],
+    /// Per-wavelength reflectance/transmission weight.
+    pub reflectance: Vector<HERO_WAVELENGTH_COUNT>,
+}
+
 /// The result of a material scatter operation.
 ///
 /// `Pdf` carries a sampling probability density for diffuse materials
@@ -77,4 +94,6 @@ pub enum ScatterRecord {
         /// The scattered ray to continue tracing.
         scattered: Ray,
     },
+    /// Dispersive dielectric scatter — boxed to avoid bloating the enum.
+    Spectral(Box<SpectralScatter>),
 }
