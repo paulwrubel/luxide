@@ -1,32 +1,47 @@
 {
+  "name": "Cornell Box",
   "parameters": {
-    "image_dimensions": [ 500, 500 ],
-    "tile_dimensions": [ 1, 1 ],
-    "gamma_correction": 2,
-    "samples_per_checkpoint": 1,
-    "checkpoints": 10,
-    "max_bounces": 50,
-    "use_scaling_truncation": true
+    "image_dimensions": [500, 500],
+    "tile_dimensions": [1, 1],
+    "gamma_correction": 2.0,
+    "samples_per_checkpoint": 16,
+    "total_checkpoints": 100,
+    "saved_checkpoint_limit": 1,
+    "bounces": {
+      "max": 50,
+      "use_russian_roulette_after": 3
+    },
+    "use_scaling_truncation": true,
+    "importance_sampling": {
+      "brdf_weight": 1.0,
+      "emissive_weight": 1.0,
+      "transmissive_weight": 0.0,
+      "specular_weight": 0.0,
+      "virtual_weight": 0.0,
+      "use_multiple_importance_sampling": true
+    }
   },
-  "active_scene": {
-    "name": "cornell_box",
-    "geometrics": [
-      "left_wall",
-      "right_wall",
-      "floor",
-      "ceiling",
-      "back_wall",
-      "front_wall",
-      "far_left_box",
-      "near_right_box",
-      "near_right_box_internal"
-    ],
-    "use_bvh": true,
-    "camera": "basic",
-    "background_color": [ 0, 0, 0 ]
+  "active_scene": "Cornell Box",
+  "scenes": {
+    "Cornell Box": {
+      "geometrics": [
+        "left_wall",
+        "right_wall",
+        "floor",
+        "ceiling",
+        "back_wall",
+        "front_wall",
+        "far_left_box",
+        "near_right_box",
+        "near_right_box_internal"
+      ],
+      "use_bvh": true,
+      "camera": "Main Camera",
+      "background_color": [0, 0, 0]
+    }
   },
   "cameras": {
-    "basic": {
+    "Main Camera": {
       "vertical_field_of_view_degrees": 40,
       "eye_location": [ 0.5, 0.5, 1.44144 ],
       "target_location": [ 0.5, 0.5, 0 ],
