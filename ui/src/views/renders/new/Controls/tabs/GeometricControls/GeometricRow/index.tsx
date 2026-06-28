@@ -3,12 +3,12 @@ import { fixReferences, renameGeometric } from '@/utils/render/utils';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { useSelector } from '@tanstack/react-store';
-import { AccordionRow } from '../AccordionRow';
-import { GeometricAccordionControls } from './GeometricAccordionControls';
-import { WarningIconOrphanGeometric } from '../icons/WarningIconOrphanGeometric';
-import { InfoIconDefaultResource } from '../icons/InfoIconDefaultResource';
+import { AccordionRow } from '../../../shared/AccordionRow';
+import { GeometricFormControls } from './GeometricFormControls';
+import { WarningIconOrphanGeometric } from '../../../shared/icons/WarningIconOrphanGeometric';
+import { InfoIconDefaultResource } from '../../../shared/icons/InfoIconDefaultResource';
 
-export type GeometricAccordionRowProps = {
+export type GeometricRowProps = {
   form: RenderForm;
   geometricName: string;
   depth: number;
@@ -16,7 +16,7 @@ export type GeometricAccordionRowProps = {
   isDirectlyInActiveScene: boolean;
 };
 
-export function GeometricAccordionRow(props: GeometricAccordionRowProps) {
+export function GeometricRow(props: GeometricRowProps) {
   const { form, geometricName, depth, isUsedByActiveScene } = props;
 
   const isDefault = geometricName.startsWith('__');
@@ -84,7 +84,7 @@ export function GeometricAccordionRow(props: GeometricAccordionRowProps) {
           </div>
         )}
         <fieldset disabled={isDefault} className="border-0 p-0">
-          <GeometricAccordionControls form={form} name={geometricName} />
+          <GeometricFormControls form={form} name={geometricName} />
         </fieldset>
       </div>
     </AccordionRow>

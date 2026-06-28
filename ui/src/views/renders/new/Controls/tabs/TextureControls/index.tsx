@@ -2,20 +2,13 @@ import { useMemo } from 'react';
 import { useSelector } from '@tanstack/react-store';
 import { getSceneData } from '@/utils/render/scene';
 import { removeDefaults } from '@/utils/render/utils';
-import { buildGeometricTree } from './geometricTree';
+import { buildGeometricTree } from '../../shared/geometricTree';
 
 import type { RenderForm } from '@/hooks/useRenderForm';
-import { GeometricAccordionRow } from './GeometricAccordionRow';
-import { MaterialAccordionRow } from './MaterialAccordionRow';
-import { TextureAccordionRow } from './TextureAccordionRow';
+import { TextureRow } from './TextureRow';
 
-export type AccordionViewProps = {
-  form: RenderForm;
-  section: 'geometrics' | 'materials' | 'textures';
-};
-
-export function AccordionView(props: AccordionViewProps) {
-  const { form, section } = props;
+export function TextureControls(props: { form: RenderForm }) {
+  const { form } = props;
 
   const renderConfig = useSelector(form.store, (state) => state.values);
 
@@ -35,7 +28,6 @@ export function AccordionView(props: AccordionViewProps) {
       if (!geo) {
         continue;
       }
-      // leaf geometrics and constant_volume have a 'material' field
       if ('material' in geo && typeof geo.material === 'string') {
         used.add(geo.material);
       }
@@ -81,58 +73,21 @@ export function AccordionView(props: AccordionViewProps) {
     return used;
   }, [geometricTree, usedMaterialNames, renderConfig.materials, renderConfig.geometrics]);
 
-  const materialNames = useMemo(
-    () => (section === 'materials' ? Object.keys(renderConfig.materials ?? {}) : []),
-    [renderConfig, section],
-  );
-
   const textureNames = useMemo(
-    () => (section === 'textures' ? Object.keys(renderConfig.textures ?? {}) : []),
-    [renderConfig, section],
+    () => Object.keys(renderConfig.textures ?? {}),
+    [renderConfig.textures],
   );
 
   return (
-    <div className="flex flex-col gap-6">
-      {section === 'geometrics' && (
-        <div className="flex flex-col">
-          {geometricTree.map((node) => (
-            <GeometricAccordionRow
-              key={node.formName + '-' + node.depth}
-              form={form}
-              geometricName={node.formName}
-              depth={node.depth}
-              isUsedByActiveScene={node.isUsedByActiveScene}
-              isDirectlyInActiveScene={node.isDirectlyInActiveScene}
-            />
-          ))}
-        </div>
-      )}
-
-      {section === 'materials' && (
-        <div className="flex flex-col">
-          {materialNames.map((matName) => (
-            <MaterialAccordionRow
-              key={matName}
-              form={form}
-              materialName={matName}
-              isUsedByActiveScene={usedMaterialNames.has(matName)}
-            />
-          ))}
-        </div>
-      )}
-
-      {section === 'textures' && (
-        <div className="flex flex-col">
-          {textureNames.map((texName) => (
-            <TextureAccordionRow
-              key={texName}
-              form={form}
-              textureName={texName}
-              isUsedByActiveScene={usedTextureNames.has(texName)}
-            />
-          ))}
-        </div>
-      )}
+    <div className="flex flex-col">
+      {textureNames.map((texName) => (
+        <TextureRow
+          key={texName}
+          form={form}
+          textureName={texName}
+          isUsedByActiveScene={usedTextureNames.has(texName)}
+        />
+      ))}
     </div>
   );
 }

@@ -1,19 +1,19 @@
-import { AccordionRow } from '../AccordionRow';
+import { AccordionRow } from '../../shared/AccordionRow';
 import { getMaterialData } from '@/utils/render/material';
 import { fixReferences, renameMaterial } from '@/utils/render/utils';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { useSelector } from '@tanstack/react-store';
-import { WarningIconOrphanGeometric } from '../icons/WarningIconOrphanGeometric';
-import { InfoIconDefaultResource } from '../icons/InfoIconDefaultResource';
+import { WarningIconOrphanGeometric } from '../../shared/icons/WarningIconOrphanGeometric';
+import { InfoIconDefaultResource } from '../../shared/icons/InfoIconDefaultResource';
 
-export type MaterialAccordionRowProps = {
+export type MaterialRowProps = {
   form: RenderForm;
   materialName: string;
   isUsedByActiveScene: boolean;
 };
 
-export function MaterialAccordionRow(props: MaterialAccordionRowProps) {
+export function MaterialRow(props: MaterialRowProps) {
   const { form, materialName, isUsedByActiveScene } = props;
 
   const isDefault = materialName.startsWith('__');

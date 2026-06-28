@@ -1,23 +1,23 @@
-import { AccordionRow } from '../AccordionRow';
+import { AccordionRow } from '../../shared/AccordionRow';
 import { TextInputControl } from '@/components/form-controls/TextInputControl';
 import { TextArrayInputControl } from '@/components/form-controls/TextArrayInputControl';
-import { InfoIconAdditionalInfo } from '@/views/renders/new/Controls/icons/InfoIconAdditionalInfo';
+import { InfoIconAdditionalInfo } from '../../shared/icons/InfoIconAdditionalInfo';
 import { getTextureData } from '@/utils/render/texture';
 import { fixReferences, renameTexture } from '@/utils/render/utils';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { useSelector } from '@tanstack/react-store';
 import { Separator } from '@/components/Separator';
-import { WarningIconOrphanGeometric } from '../icons/WarningIconOrphanGeometric';
-import { InfoIconDefaultResource } from '../icons/InfoIconDefaultResource';
+import { WarningIconOrphanGeometric } from '../../shared/icons/WarningIconOrphanGeometric';
+import { InfoIconDefaultResource } from '../../shared/icons/InfoIconDefaultResource';
 
-export type TextureAccordionRowProps = {
+export type TextureRowProps = {
   form: RenderForm;
   textureName: string;
   isUsedByActiveScene: boolean;
 };
 
-export function TextureAccordionRow(props: TextureAccordionRowProps) {
+export function TextureRow(props: TextureRowProps) {
   const { form, textureName, isUsedByActiveScene } = props;
 
   const isDefault = textureName.startsWith('__');

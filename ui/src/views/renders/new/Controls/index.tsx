@@ -1,14 +1,13 @@
-import { useMemo } from 'react';
 import { Tabs, TabItem, type TabsTheme } from 'flowbite-react';
-import { CameraControls } from './controls/CameraControls';
-import { ParametersControls } from './controls/ParametersControls';
-import { SceneControls } from './controls/SceneControls';
-import { AddEntityDropdown } from './AddEntityDropdown';
-import { AccordionView } from './AccordionView';
+import { ParametersControls } from './tabs/ParametersControls';
+import { SceneControls } from './tabs/SceneControls';
+import { AddEntityDropdown } from './shared/AddEntityDropdown';
+import { GeometricControls } from './tabs/GeometricControls';
+import { MaterialControls } from './tabs/MaterialControls';
+import { TextureControls } from './tabs/TextureControls';
 import { defaultGeometricForType, type GeometricData } from '@/utils/render/geometric';
 import { defaultMaterialForType, type MaterialData } from '@/utils/render/material';
 import { defaultTextureForType, type TextureData } from '@/utils/render/texture';
-import { getSceneData } from '@/utils/render/scene';
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { useSelector } from '@tanstack/react-store';
 import type { DeepPartial } from 'flowbite-react/types';
@@ -21,11 +20,6 @@ export function Controls(props: ControlsProps) {
   const { form } = props;
 
   const renderConfig = useSelector(form.store, (state) => state.values);
-
-  const activeScene = useMemo(
-    () => getSceneData(renderConfig, renderConfig.active_scene),
-    [renderConfig],
-  );
 
   const tabsTheme: DeepPartial<TabsTheme> = {
     tablist: {
@@ -58,13 +52,12 @@ export function Controls(props: ControlsProps) {
       <TabItem title="Scene">
         <div className="flex flex-col items-stretch p-2">
           <SceneControls form={form} />
-          <CameraControls form={form} cameraName={activeScene.camera} />
         </div>
       </TabItem>
 
       <TabItem title="Geometrics">
         <div className="flex flex-col items-stretch gap-4 p-2">
-          <AccordionView form={form} section="geometrics" />
+          <GeometricControls form={form} />
           <div className="flex w-full justify-end">
             <AddEntityDropdown
               form={form}
@@ -121,7 +114,7 @@ export function Controls(props: ControlsProps) {
 
       <TabItem title="Materials">
         <div className="flex flex-col items-stretch gap-4 p-2">
-          <AccordionView form={form} section="materials" />
+          <MaterialControls form={form} />
           <div className="flex w-full justify-end">
             <AddEntityDropdown
               form={form}
@@ -152,7 +145,7 @@ export function Controls(props: ControlsProps) {
 
       <TabItem title="Textures">
         <div className="flex flex-col items-stretch gap-4 p-2">
-          <AccordionView form={form} section="textures" />
+          <TextureControls form={form} />
           <div className="flex w-full justify-end">
             <AddEntityDropdown
               form={form}

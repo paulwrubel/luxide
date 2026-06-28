@@ -1,5 +1,5 @@
-import { AccordionRow } from '../../AccordionRow';
-import { WarningIconAdvancedProperty } from '../../icons/WarningIconAdvancedProperty';
+import { AccordionRow } from '../../shared/AccordionRow';
+import { WarningIconAdvancedProperty } from '../../shared/icons/WarningIconAdvancedProperty';
 import { TextInputControl } from '@/components/form-controls/TextInputControl';
 import { TextArrayInputControl } from '@/components/form-controls/TextArrayInputControl';
 import { HelperText } from 'flowbite-react';

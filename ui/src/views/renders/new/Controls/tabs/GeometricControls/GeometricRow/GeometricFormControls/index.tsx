@@ -1,17 +1,17 @@
 import { TextArrayInputControl } from '@/components/form-controls/TextArrayInputControl';
 import { TextInputControl } from '@/components/form-controls/TextInputControl';
 import { getGeometricData } from '@/utils/render/geometric';
-import { AroundVariantControls } from '../controls/AroundVariantControls';
-import { GeometricMaterialSelect } from '../controls/GeometricMaterialSelect';
+import { AroundVariantControls } from './AroundVariantControls';
+import { GeometricMaterialSelect } from './GeometricMaterialSelect';
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { useSelector } from '@tanstack/react-store';
 
-export type GeometricAccordionControlsProps = {
+export type GeometricFormControlsProps = {
   form: RenderForm;
   name: string;
 };
 
-export function GeometricAccordionControls(props: GeometricAccordionControlsProps) {
+export function GeometricFormControls(props: GeometricFormControlsProps) {
   const { form, name } = props;
 
   const renderConfig = useSelector(form.store, (state) => state.values);

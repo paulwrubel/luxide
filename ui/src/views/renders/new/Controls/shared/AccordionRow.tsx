@@ -2,8 +2,8 @@ import { useState, type CSSProperties } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from 'flowbite-react';
 import { HiChevronDown, HiChevronUp, HiTrash } from 'react-icons/hi2';
-import { RenamableLabel } from '../controls/shared/RenamableLabel';
-import { LabelText } from '../controls/shared/LabelText';
+import { RenamableLabel } from './RenamableLabel';
+import { LabelText } from './LabelText';
 
 export type AccordionRowProps = {
   children: React.ReactNode;

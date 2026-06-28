@@ -1,16 +1,16 @@
-import { AccordionRow } from '../AccordionRow';
+import { AccordionRow } from '../../shared/AccordionRow';
 import { TextArrayInputControl } from '@/components/form-controls/TextArrayInputControl';
 import type { RenderForm, RenderFormPath } from '@/hooks/useRenderForm';
 import type { DeepKeys } from '@tanstack/react-form';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
-import { InfoIconAdditionalInfo } from '@/views/renders/new/Controls/icons/InfoIconAdditionalInfo';
+import { InfoIconAdditionalInfo } from '../../shared/icons/InfoIconAdditionalInfo';
 import { useSelector } from '@tanstack/react-store';
 
-export type SceneControlsProps = {
+export type ScenePanelProps = {
   form: RenderForm;
 };
 
-export function SceneControls(props: SceneControlsProps) {
+export function ScenePanel(props: ScenePanelProps) {
   const { form } = props;
 
   const renderConfig = useSelector(form.store, (state) => state.values);

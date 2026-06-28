@@ -1,5 +1,5 @@
-import { AccordionRow } from '../AccordionRow';
-import { WarningIconUnaffectedPreview } from '../icons/WarningIconUnaffectedPreview';
+import { AccordionRow } from '../../shared/AccordionRow';
+import { WarningIconUnaffectedPreview } from '../../shared/icons/WarningIconUnaffectedPreview';
 import { TextArrayInputControl } from '@/components/form-controls/TextArrayInputControl';
 import { renameCamera } from '@/utils/render/utils';
 import type { RenderForm, RenderFormPath } from '@/hooks/useRenderForm';
@@ -7,12 +7,12 @@ import type { DeepKeys } from '@tanstack/react-form';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
 import { useSelector } from '@tanstack/react-store';
 
-export type CameraControlsProps = {
+export type CameraPanelProps = {
   form: RenderForm;
   cameraName: string;
 };
 
-export function CameraControls(props: CameraControlsProps) {
+export function CameraPanel(props: CameraPanelProps) {
   const { form, cameraName } = props;
 
   const renderConfig = useSelector(form.store, (state) => state.values);
