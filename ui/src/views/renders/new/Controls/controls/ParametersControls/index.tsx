@@ -10,11 +10,11 @@ import { CheckpointLimitControls } from './CheckpointLimitControls';
 import { RussianRouletteControls } from './RussianRouletteControls';
 import { ImportanceSamplingControls } from './ImportanceSamplingControls';
 
-export type ControlsCardParametersProps = {
+export type ParametersControlsProps = {
   form: RenderForm;
 };
 
-export function ControlsCardParameters(props: ControlsCardParametersProps) {
+export function ParametersControls(props: ParametersControlsProps) {
   const { form } = props;
 
   const { user } = useAuth();

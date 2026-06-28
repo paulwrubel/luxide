@@ -6,11 +6,11 @@ import type { NormalizedRenderConfig } from '@/utils/render/config';
 import { InfoIconAdditionalInfo } from '@/views/renders/new/Controls/icons/InfoIconAdditionalInfo';
 import { useSelector } from '@tanstack/react-store';
 
-export type ControlsCardSceneProps = {
+export type SceneControlsProps = {
   form: RenderForm;
 };
 
-export function ControlsCardScene(props: ControlsCardSceneProps) {
+export function SceneControls(props: SceneControlsProps) {
   const { form } = props;
 
   const renderConfig = useSelector(form.store, (state) => state.values);

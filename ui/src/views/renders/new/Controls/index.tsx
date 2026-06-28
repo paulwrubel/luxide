@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { Tabs, TabItem, type TabsTheme } from 'flowbite-react';
-import { ControlsCardCamera } from './cards/ControlsCardCamera';
-import { ControlsCardParameters } from './cards/ControlsCardParameters';
-import { ControlsCardScene } from './cards/ControlsCardScene';
+import { CameraControls } from './controls/CameraControls';
+import { ParametersControls } from './controls/ParametersControls';
+import { SceneControls } from './controls/SceneControls';
 import { AddEntityDropdown } from './AddEntityDropdown';
 import { AccordionView } from './AccordionView';
 import { defaultGeometricForType, type GeometricData } from '@/utils/render/geometric';
@@ -51,14 +51,14 @@ export function Controls(props: ControlsProps) {
     <Tabs variant="pills" theme={tabsTheme}>
       <TabItem title="Parameters">
         <div className="flex flex-col items-stretch p-2">
-          <ControlsCardParameters form={form} />
+          <ParametersControls form={form} />
         </div>
       </TabItem>
 
       <TabItem title="Scene">
         <div className="flex flex-col items-stretch p-2">
-          <ControlsCardScene form={form} />
-          <ControlsCardCamera form={form} cameraName={activeScene.camera} />
+          <SceneControls form={form} />
+          <CameraControls form={form} cameraName={activeScene.camera} />
         </div>
       </TabItem>
 

@@ -7,12 +7,12 @@ import type { DeepKeys } from '@tanstack/react-form';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
 import { useSelector } from '@tanstack/react-store';
 
-export type ControlsCardCameraProps = {
+export type CameraControlsProps = {
   form: RenderForm;
   cameraName: string;
 };
 
-export function ControlsCardCamera(props: ControlsCardCameraProps) {
+export function CameraControls(props: CameraControlsProps) {
   const { form, cameraName } = props;
 
   const renderConfig = useSelector(form.store, (state) => state.values);

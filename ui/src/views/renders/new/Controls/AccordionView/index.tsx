@@ -55,7 +55,11 @@ export function AccordionView(props: AccordionViewProps) {
       if (!geo) {
         continue;
       }
-      if (geo.type === 'constant_volume' && 'reflectance_texture' in geo && typeof geo.reflectance_texture === 'string') {
+      if (
+        geo.type === 'constant_volume' &&
+        'reflectance_texture' in geo &&
+        typeof geo.reflectance_texture === 'string'
+      ) {
         used.add(geo.reflectance_texture);
       }
     }

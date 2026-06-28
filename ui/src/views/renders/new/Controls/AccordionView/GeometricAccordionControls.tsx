@@ -1,8 +1,8 @@
 import { TextArrayInputControl } from '@/components/form-controls/TextArrayInputControl';
 import { TextInputControl } from '@/components/form-controls/TextInputControl';
 import { getGeometricData } from '@/utils/render/geometric';
-import { AroundVariantControls } from '../cards/ControlsCardGeometric/AroundVariantControls';
-import { GeometricMaterialSelect } from '../cards/ControlsCardGeometric/GeometricMaterialSelect';
+import { AroundVariantControls } from '../controls/AroundVariantControls';
+import { GeometricMaterialSelect } from '../controls/GeometricMaterialSelect';
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { useSelector } from '@tanstack/react-store';
 
