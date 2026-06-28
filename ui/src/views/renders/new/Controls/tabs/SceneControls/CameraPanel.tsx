@@ -1,5 +1,5 @@
-import { ControlsCard } from './ControlsCard';
-import { WarningIconUnaffectedPreview } from '../icons/WarningIconUnaffectedPreview';
+import { AccordionRow } from '../../shared/AccordionRow';
+import { WarningIconUnaffectedPreview } from '../../shared/icons/WarningIconUnaffectedPreview';
 import { TextArrayInputControl } from '@/components/form-controls/TextArrayInputControl';
 import { renameCamera } from '@/utils/render/utils';
 import type { RenderForm, RenderFormPath } from '@/hooks/useRenderForm';
@@ -7,12 +7,12 @@ import type { DeepKeys } from '@tanstack/react-form';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
 import { useSelector } from '@tanstack/react-store';
 
-export type ControlsCardCameraProps = {
+export type CameraPanelProps = {
   form: RenderForm;
   cameraName: string;
 };
 
-export function ControlsCardCamera(props: ControlsCardCameraProps) {
+export function CameraPanel(props: CameraPanelProps) {
   const { form, cameraName } = props;
 
   const renderConfig = useSelector(form.store, (state) => state.values);
@@ -32,8 +32,8 @@ export function ControlsCardCamera(props: ControlsCardCameraProps) {
   const formPath: RenderFormPath = `cameras.${cameraName}`;
 
   return (
-    <ControlsCard leftLabel={cameraName} onRename={handleRename} startExpanded>
-      <div className="flex flex-col gap-2 p-4">
+    <AccordionRow leftLabel={cameraName} onRename={handleRename} startExpanded>
+      <div className="flex flex-col gap-2">
         <form.AppField name={`${formPath}.vertical_field_of_view_degrees`}>
           {(field) => (
             <field.RangeControl label="Vertical FOV (degrees)" min={10.0} max={170.0} step={1.0} />
@@ -72,6 +72,6 @@ export function ControlsCardCamera(props: ControlsCardCameraProps) {
           )}
         </form.AppField>
       </div>
-    </ControlsCard>
+    </AccordionRow>
   );
 }

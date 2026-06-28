@@ -15,7 +15,7 @@ Luxide is a **ray tracing render manager** — a multi-tenant platform where use
 - **Rendering**: Custom path tracing engine in `src/tracing/` (rayon-parallel, tile-based)
 
 ### Frontend (React + TypeScript)
-- **State/Data**: @tanstack/react-query (server state, 1s polling), @tanstack/react-form + @tanstack/zod-form-adapter (form state)
+- **State/Data**: @tanstack/react-query (server state, SSE-driven updates), @tanstack/react-form + @tanstack/zod-form-adapter (form state)
 - **3D Preview**: @react-three/fiber + @react-three/drei + three
 - **UI Kit**: flowbite-react — reference: https://flowbite-react.com/llms.txt
 - **CSS**: Tailwind CSS v4 (configured entirely in CSS, no config file; dark mode via `.dark` class)
@@ -34,10 +34,10 @@ Luxide is a **ray tracing render manager** — a multi-tenant platform where use
 
 - **TanStack Form over alternatives**: Chosen for headless, type-safe form management with Zod schema integration. All render configuration forms use TanStack Form with the Zod adapter.
 - **R3F (React Three Fiber) is the React renderer for Three.js**: The 3D scene preview is built with R3F + drei helpers.
-- **3D scene preview embedded in `views/render-new/`**: The 3D preview canvas is tightly coupled to the "new render" creation page rather than being a standalone reusable component. This is because the preview is only needed during scene creation — once a render is submitted, the backend handles the actual path tracing and the UI displays checkpoint images.
+- **3D scene preview embedded in `views/renders/new/`**: The 3D preview canvas is tightly coupled to the "new render" creation page rather than being a standalone reusable component. This is because the preview is only needed during scene creation — once a render is submitted, the backend handles the actual path tracing and the UI displays checkpoint images.
 - **Trait-based storage backends**: The `RenderStorage` and `UserStorage` traits allow swapping between PostgreSQL, filesystem, and in-memory storage via config. Both the API server and CLI use the same storage abstraction.
 - **GitHub OAuth → JWT auth flow**: Users authenticate via GitHub OAuth2. On callback, the server creates/finds the user, issues a RS256-signed JWT (24hr). Subsequent requests use `Authorization: Bearer <token>`. Admin users (defined in secrets) get unlimited resource quotas.
-- **Poll-based render manager**: The `RenderManager` polls every 1 second for state transitions (Created→Running→FinishedCheckpointIteration). The frontend mirrors this with 1s polling via React Query.
+- **Poll-based render manager**: The `RenderManager` polls every 1 second for state transitions (Created → Running → Pausing → Paused → FinishedCheckpointIteration). The frontend receives state updates via SSE (Server-Sent Events) pushed from the API.
 - **Resource limits per user**: Regular users have defaults (1 render, 1 checkpoint/render, 250K max pixel count). Admins have no limits.
 
 ---

@@ -7,10 +7,11 @@ export type RenamableLabelProps = {
   label: string;
   labelStyle: LabelTextProps['type'];
   onRename: (newName: string) => void;
+  afterLabel?: React.ReactNode;
 };
 
 export function RenamableLabel(props: RenamableLabelProps) {
-  const { label, labelStyle, onRename } = props;
+  const { label, labelStyle, onRename, afterLabel } = props;
 
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(label);
@@ -47,6 +48,7 @@ export function RenamableLabel(props: RenamableLabelProps) {
           }}
           className="w-40"
         />
+        {afterLabel}
         <Button {...buttonProps} onClick={handleConfirm}>
           <HiCheck className="h-4 w-4" />
         </Button>
@@ -57,6 +59,7 @@ export function RenamableLabel(props: RenamableLabelProps) {
   return (
     <span className="inline-flex items-center gap-2">
       <LabelText text={label} type={labelStyle} />
+      {afterLabel}
       <Button {...buttonProps} onClick={handleStartEditing}>
         <HiPencil className="h-4 w-4" />
       </Button>

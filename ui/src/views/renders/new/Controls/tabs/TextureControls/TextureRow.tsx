@@ -1,22 +1,33 @@
-import { ControlsCard } from '../ControlsCard';
+import { AccordionRow } from '../../shared/AccordionRow';
 import { TextInputControl } from '@/components/form-controls/TextInputControl';
 import { TextArrayInputControl } from '@/components/form-controls/TextArrayInputControl';
-import { InfoIconAdditionalInfo } from '@/views/renders/new/Controls/icons/InfoIconAdditionalInfo';
-import { NestedTextureHeader } from './NestedTextureHeader';
+import { InfoIconAdditionalInfo } from '../../shared/icons/InfoIconAdditionalInfo';
 import { getTextureData } from '@/utils/render/texture';
 import { fixReferences, renameTexture } from '@/utils/render/utils';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { useSelector } from '@tanstack/react-store';
 import { Separator } from '@/components/Separator';
+import { WarningIconOrphanGeometric } from '../../shared/icons/WarningIconOrphanGeometric';
+import { InfoIconDefaultResource } from '../../shared/icons/InfoIconDefaultResource';
 
-export type ControlsCardTextureProps = {
+export type TextureRowProps = {
   form: RenderForm;
   textureName: string;
+  isUsedByActiveScene: boolean;
 };
 
-export function ControlsCardTexture(props: ControlsCardTextureProps) {
-  const { form, textureName } = props;
+export function TextureRow(props: TextureRowProps) {
+  const { form, textureName, isUsedByActiveScene } = props;
+
+  const isDefault = textureName.startsWith('__');
+
+  const afterLabel = (
+    <>
+      {!isUsedByActiveScene && <WarningIconOrphanGeometric />}
+      {isDefault && <InfoIconDefaultResource />}
+    </>
+  );
 
   const renderConfig = useSelector(form.store, (state) => state.values);
 
@@ -52,20 +63,14 @@ export function ControlsCardTexture(props: ControlsCardTextureProps) {
     form.setFieldValue('scenes', fixed.scenes);
   }
 
-  function SubTexture({ name }: { name: string }) {
-    return (
-      <>
-        <NestedTextureHeader textureName={name} renderConfig={renderConfig} />
-        {renderControls(name)}
-      </>
-    );
-  }
-
   function renderControls(name: string) {
     const { data } = getTextureData(renderConfig, name);
 
     switch (data.type) {
       case 'checker': {
+        const evenData = getTextureData(renderConfig, data.even_texture);
+        const oddData = getTextureData(renderConfig, data.odd_texture);
+
         return (
           <>
             <TextInputControl
@@ -76,9 +81,20 @@ export function ControlsCardTexture(props: ControlsCardTextureProps) {
               type="number"
             />
             <Separator />
-            <SubTexture name={data.even_texture} />
+            <div className="flex items-baseline justify-between py-1">
+              <span className="text-sm text-zinc-400">Even Texture:</span>
+              <span className="text-sm">
+                {data.even_texture}{' '}
+                <span className="text-zinc-500 italic">{evenData.data.type}</span>
+              </span>
+            </div>
             <Separator />
-            <SubTexture name={data.odd_texture} />
+            <div className="flex items-baseline justify-between py-1">
+              <span className="text-sm text-zinc-400">Odd Texture:</span>
+              <span className="text-sm">
+                {data.odd_texture} <span className="text-zinc-500 italic">{oddData.data.type}</span>
+              </span>
+            </div>
           </>
         );
       }
@@ -112,14 +128,18 @@ export function ControlsCardTexture(props: ControlsCardTextureProps) {
   }
 
   return (
-    <ControlsCard
+    <AccordionRow
       leftLabel={textureName}
-      onRename={handleRename}
+      leftLabelStyle={isDefault ? 'light' : 'bold'}
+      onRename={isDefault ? undefined : handleRename}
       rightLabel={textureData.type}
       rightLabelStyle="light"
-      onDelete={() => handleDeleteTexture(textureName)}
+      afterLabel={afterLabel}
+      onDelete={isDefault ? undefined : () => handleDeleteTexture(textureName)}
     >
-      <div className="flex w-full flex-col gap-2 p-4">{renderControls(textureName)}</div>
-    </ControlsCard>
+      <fieldset disabled={isDefault} className="border-0 p-0">
+        <div className="flex w-full flex-col gap-2">{renderControls(textureName)}</div>
+      </fieldset>
+    </AccordionRow>
   );
 }

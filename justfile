@@ -106,6 +106,10 @@ sqlx-prepare:
     cargo sqlx prepare
 
 [group('misc')]
+prettier-fix-ui:
+    cd ui && npm run prettier-fix
+
+[group('misc')]
 clean:
     cargo clean
     -rm -r ./ui/dist

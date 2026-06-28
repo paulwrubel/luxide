@@ -3,7 +3,7 @@ import { ToggleSwitch } from 'flowbite-react';
 import { TextInputControl } from '@/components/form-controls/TextInputControl';
 import { AnimatedSeparator } from '@/components/AnimatedSeparator';
 import { ExpandableSection } from '@/components/ExpandableSection';
-import { WarningIconAdvancedProperty } from '../../icons/WarningIconAdvancedProperty';
+import { WarningIconAdvancedProperty } from '../../shared/icons/WarningIconAdvancedProperty';
 import { useSelector } from '@tanstack/react-store';
 import type { RenderForm } from '@/hooks/useRenderForm';
 
@@ -19,7 +19,7 @@ export function RussianRouletteControls(props: RussianRouletteControlsProps) {
 
   const [rouletteAfterLocal, setRouletteAfterLocal] = useState(rouletteAfter);
 
-  const isRussianRouletteEnabled = parameters.bounces?.use_russian_roulette_after !== null;
+  const isRussianRouletteEnabled = parameters.bounces?.use_russian_roulette_after !== undefined;
 
   function handleToggle(checked: boolean) {
     if (checked) {

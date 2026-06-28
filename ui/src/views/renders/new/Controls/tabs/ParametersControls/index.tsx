@@ -1,5 +1,5 @@
-import { ControlsCard } from '../ControlsCard';
-import { WarningIconAdvancedProperty } from '../../icons/WarningIconAdvancedProperty';
+import { AccordionRow } from '../../shared/AccordionRow';
+import { WarningIconAdvancedProperty } from '../../shared/icons/WarningIconAdvancedProperty';
 import { TextInputControl } from '@/components/form-controls/TextInputControl';
 import { TextArrayInputControl } from '@/components/form-controls/TextArrayInputControl';
 import { HelperText } from 'flowbite-react';
@@ -10,19 +10,19 @@ import { CheckpointLimitControls } from './CheckpointLimitControls';
 import { RussianRouletteControls } from './RussianRouletteControls';
 import { ImportanceSamplingControls } from './ImportanceSamplingControls';
 
-export type ControlsCardParametersProps = {
+export type ParametersControlsProps = {
   form: RenderForm;
 };
 
-export function ControlsCardParameters(props: ControlsCardParametersProps) {
+export function ParametersControls(props: ParametersControlsProps) {
   const { form } = props;
 
   const { user } = useAuth();
   const renderConfig = useSelector(form.store, (state) => state.values);
   const parameters = renderConfig.parameters;
   return (
-    <ControlsCard leftLabel="parameters" leftLabelStyle="light" startExpanded>
-      <div className="flex flex-col gap-2 p-4">
+    <AccordionRow leftLabel="Parameters" leftLabelStyle="light" startExpanded>
+      <div className="flex flex-col gap-2">
         <TextInputControl form={form} fieldName="name" label="Name" valueLabel="name" />
 
         <form.AppField name="parameters.image_dimensions">
@@ -133,6 +133,6 @@ export function ControlsCardParameters(props: ControlsCardParametersProps) {
 
         <ImportanceSamplingControls form={form} />
       </div>
-    </ControlsCard>
+    </AccordionRow>
   );
 }

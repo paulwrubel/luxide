@@ -1,16 +1,16 @@
-import { ControlsCard } from './ControlsCard';
+import { AccordionRow } from '../../shared/AccordionRow';
 import { TextArrayInputControl } from '@/components/form-controls/TextArrayInputControl';
 import type { RenderForm, RenderFormPath } from '@/hooks/useRenderForm';
 import type { DeepKeys } from '@tanstack/react-form';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
-import { InfoIconAdditionalInfo } from '@/views/renders/new/Controls/icons/InfoIconAdditionalInfo';
+import { InfoIconAdditionalInfo } from '../../shared/icons/InfoIconAdditionalInfo';
 import { useSelector } from '@tanstack/react-store';
 
-export type ControlsCardSceneProps = {
+export type ScenePanelProps = {
   form: RenderForm;
 };
 
-export function ControlsCardScene(props: ControlsCardSceneProps) {
+export function ScenePanel(props: ScenePanelProps) {
   const { form } = props;
 
   const renderConfig = useSelector(form.store, (state) => state.values);
@@ -19,8 +19,8 @@ export function ControlsCardScene(props: ControlsCardSceneProps) {
   const formPath: RenderFormPath = `scenes.${activeSceneName}`;
 
   return (
-    <ControlsCard leftLabel="scene" leftLabelStyle="light" startExpanded>
-      <div className="flex flex-col gap-2 p-4">
+    <AccordionRow leftLabel="Scene" leftLabelStyle="light" startExpanded>
+      <div className="flex flex-col gap-2">
         <form.AppField name={`${formPath}.use_bvh`}>
           {(field) => <field.ToggleControl label="Use BVH" />}
         </form.AppField>
@@ -42,6 +42,6 @@ export function ControlsCardScene(props: ControlsCardSceneProps) {
           }
         />
       </div>
-    </ControlsCard>
+    </AccordionRow>
   );
 }

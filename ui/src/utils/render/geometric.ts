@@ -4,7 +4,6 @@ import { normalizeTextureData, type RawTextureData } from './texture';
 import {
   AngleSchema,
   AroundSchema,
-  capitalize,
   getNextUniqueName,
   isAroundCenter,
   isAroundOrigin,
@@ -20,33 +19,34 @@ export type GeometricData = NormalizedGeometricData;
 
 export function normalizeGeometricData(
   config: RenderConfig,
+  name: string,
   geometricData: RawGeometricData,
 ): NormalizedGeometricData {
   switch (geometricData.type) {
     case 'box':
-      return normalizeGeometricBox(config, geometricData);
+      return normalizeGeometricBox(config, name, geometricData);
     case 'list':
-      return normalizeGeometricList(config, geometricData);
+      return normalizeGeometricList(config, name, geometricData);
     case 'obj_model':
-      return normalizeGeometricObjModel(config, geometricData);
+      return normalizeGeometricObjModel(config, name, geometricData);
     case 'rotate_x':
-      return normalizeGeometricInstanceRotate(config, geometricData);
+      return normalizeGeometricInstanceRotate(config, name, geometricData);
     case 'rotate_y':
-      return normalizeGeometricInstanceRotate(config, geometricData);
+      return normalizeGeometricInstanceRotate(config, name, geometricData);
     case 'rotate_z':
-      return normalizeGeometricInstanceRotate(config, geometricData);
+      return normalizeGeometricInstanceRotate(config, name, geometricData);
     case 'translate':
-      return normalizeGeometricInstanceTranslate(config, geometricData);
+      return normalizeGeometricInstanceTranslate(config, name, geometricData);
     case 'parallelogram':
-      return normalizeGeometricParallelogram(config, geometricData);
+      return normalizeGeometricParallelogram(config, name, geometricData);
     case 'sphere':
-      return normalizeGeometricSphere(config, geometricData);
+      return normalizeGeometricSphere(config, name, geometricData);
     case 'triangle':
-      return normalizeGeometricTriangle(config, geometricData);
+      return normalizeGeometricTriangle(config, name, geometricData);
     case 'constant_volume':
-      return normalizeGeometricConstantVolume(config, geometricData);
+      return normalizeGeometricConstantVolume(config, name, geometricData);
     case 'virtual':
-      return normalizeGeometricVirtual(config, geometricData);
+      return normalizeGeometricVirtual(config, name, geometricData);
   }
 }
 
@@ -426,6 +426,7 @@ export type GeometricBox = NormalizedGeometricBox;
 
 export function normalizeGeometricBox(
   config: RenderConfig,
+  name: string,
   geometricData: RawGeometricBox,
 ): NormalizedGeometricBox {
   const geometric = geometricData;
@@ -435,8 +436,12 @@ export function normalizeGeometricBox(
       config.materials = {};
     }
 
-    const materialName = getNextUniqueName(config.materials, capitalize(geometric.material.type));
-    config.materials[materialName] = normalizeMaterialData(config, geometric.material);
+    const materialName = getNextUniqueName(config.materials, `${name}_${geometric.material.type}`);
+    config.materials[materialName] = normalizeMaterialData(
+      config,
+      materialName,
+      geometric.material,
+    );
     geometric.material = materialName;
   }
 
@@ -465,6 +470,7 @@ export type GeometricList = NormalizedGeometricList;
 
 export function normalizeGeometricList(
   config: RenderConfig,
+  name: string,
   geometricData: RawGeometricList,
 ): NormalizedGeometricList {
   const geometric = geometricData;
@@ -475,8 +481,12 @@ export function normalizeGeometricList(
         config.geometrics = {};
       }
 
-      const geometricName = getNextUniqueName(config.geometrics, capitalize(subGeometric.type));
-      config.geometrics[geometricName] = normalizeGeometricData(config, subGeometric);
+      const geometricName = getNextUniqueName(config.geometrics, `${name}_${subGeometric.type}`);
+      config.geometrics[geometricName] = normalizeGeometricData(
+        config,
+        geometricName,
+        subGeometric,
+      );
       geometric.geometrics[index] = geometricName;
     }
   }
@@ -508,6 +518,7 @@ export type GeometricObjModel = NormalizedGeometricObjModel;
 
 export function normalizeGeometricObjModel(
   config: RenderConfig,
+  name: string,
   geometricData: RawGeometricObjModel,
 ): NormalizedGeometricObjModel {
   const geometric = geometricData;
@@ -517,8 +528,12 @@ export function normalizeGeometricObjModel(
       config.materials = {};
     }
 
-    const materialName = getNextUniqueName(config.materials, capitalize(geometric.material.type));
-    config.materials[materialName] = normalizeMaterialData(config, geometric.material);
+    const materialName = getNextUniqueName(config.materials, `${name}_${geometric.material.type}`);
+    config.materials[materialName] = normalizeMaterialData(
+      config,
+      materialName,
+      geometric.material,
+    );
     geometric.material = materialName;
   }
 
@@ -567,6 +582,7 @@ export type GeometricInstanceRotate = NormalizedGeometricInstanceRotate;
 
 export function normalizeGeometricInstanceRotate(
   config: RenderConfig,
+  name: string,
   geometricData: RawGeometricInstanceRotate,
 ): NormalizedGeometricInstanceRotate {
   const geometric = geometricData;
@@ -578,9 +594,13 @@ export function normalizeGeometricInstanceRotate(
 
     const geometricName = getNextUniqueName(
       config.geometrics,
-      capitalize(geometric.geometric.type),
+      `${name}_${geometric.geometric.type}`,
     );
-    config.geometrics[geometricName] = normalizeGeometricData(config, geometric.geometric);
+    config.geometrics[geometricName] = normalizeGeometricData(
+      config,
+      geometricName,
+      geometric.geometric,
+    );
     geometric.geometric = geometricName;
   }
 
@@ -611,6 +631,7 @@ export type GeometricInstanceTranslate = NormalizedGeometricInstanceTranslate;
 
 export function normalizeGeometricInstanceTranslate(
   config: RenderConfig,
+  name: string,
   geometricData: RawGeometricInstanceTranslate,
 ): NormalizedGeometricInstanceTranslate {
   const geometric = geometricData;
@@ -622,9 +643,13 @@ export function normalizeGeometricInstanceTranslate(
 
     const geometricName = getNextUniqueName(
       config.geometrics,
-      capitalize(geometric.geometric.type),
+      `${name}_${geometric.geometric.type}`,
     );
-    config.geometrics[geometricName] = normalizeGeometricData(config, geometric.geometric);
+    config.geometrics[geometricName] = normalizeGeometricData(
+      config,
+      geometricName,
+      geometric.geometric,
+    );
     geometric.geometric = geometricName;
   }
 
@@ -657,6 +682,7 @@ export type GeometricParallelogram = NormalizedGeometricParallelogram;
 
 export function normalizeGeometricParallelogram(
   config: RenderConfig,
+  name: string,
   geometricData: RawGeometricParallelogram,
 ): NormalizedGeometricParallelogram {
   const geometric = geometricData;
@@ -666,8 +692,12 @@ export function normalizeGeometricParallelogram(
       config.materials = {};
     }
 
-    const materialName = getNextUniqueName(config.materials, capitalize(geometric.material.type));
-    config.materials[materialName] = normalizeMaterialData(config, geometric.material);
+    const materialName = getNextUniqueName(config.materials, `${name}_${geometric.material.type}`);
+    config.materials[materialName] = normalizeMaterialData(
+      config,
+      materialName,
+      geometric.material,
+    );
     geometric.material = materialName;
   }
 
@@ -698,6 +728,7 @@ export type GeometricSphere = NormalizedGeometricSphere;
 
 export function normalizeGeometricSphere(
   config: RenderConfig,
+  name: string,
   geometricData: RawGeometricSphere,
 ): NormalizedGeometricSphere {
   const geometric = geometricData;
@@ -707,8 +738,12 @@ export function normalizeGeometricSphere(
       config.materials = {};
     }
 
-    const materialName = getNextUniqueName(config.materials, capitalize(geometric.material.type));
-    config.materials[materialName] = normalizeMaterialData(config, geometric.material);
+    const materialName = getNextUniqueName(config.materials, `${name}_${geometric.material.type}`);
+    config.materials[materialName] = normalizeMaterialData(
+      config,
+      materialName,
+      geometric.material,
+    );
     geometric.material = materialName;
   }
 
@@ -742,6 +777,7 @@ export type GeometricTriangle = NormalizedGeometricTriangle;
 
 export function normalizeGeometricTriangle(
   config: RenderConfig,
+  name: string,
   geometricData: RawGeometricTriangle,
 ): NormalizedGeometricTriangle {
   const geometric = geometricData;
@@ -751,8 +787,12 @@ export function normalizeGeometricTriangle(
       config.materials = {};
     }
 
-    const materialName = getNextUniqueName(config.materials, capitalize(geometric.material.type));
-    config.materials[materialName] = normalizeMaterialData(config, geometric.material);
+    const materialName = getNextUniqueName(config.materials, `${name}_${geometric.material.type}`);
+    config.materials[materialName] = normalizeMaterialData(
+      config,
+      materialName,
+      geometric.material,
+    );
     geometric.material = materialName;
   }
 
@@ -786,6 +826,7 @@ export type GeometricConstantVolume = NormalizedGeometricConstantVolume;
 
 export function normalizeGeometricConstantVolume(
   config: RenderConfig,
+  name: string,
   geometricData: RawGeometricConstantVolume,
 ): NormalizedGeometricConstantVolume {
   const geometric = geometricData;
@@ -797,9 +838,13 @@ export function normalizeGeometricConstantVolume(
 
     const geometricName = getNextUniqueName(
       config.geometrics,
-      capitalize(geometric.geometric.type),
+      `${name}_${geometric.geometric.type}`,
     );
-    config.geometrics[geometricName] = normalizeGeometricData(config, geometric.geometric);
+    config.geometrics[geometricName] = normalizeGeometricData(
+      config,
+      geometricName,
+      geometric.geometric,
+    );
     geometric.geometric = geometricName;
   }
 
@@ -810,9 +855,13 @@ export function normalizeGeometricConstantVolume(
 
     const textureName = getNextUniqueName(
       config.textures,
-      capitalize(geometric.reflectance_texture.type),
+      `${name}_${geometric.reflectance_texture.type}`,
     );
-    config.textures[textureName] = normalizeTextureData(config, geometric.reflectance_texture);
+    config.textures[textureName] = normalizeTextureData(
+      config,
+      textureName,
+      geometric.reflectance_texture,
+    );
     geometric.reflectance_texture = textureName;
   }
 
@@ -850,6 +899,7 @@ export const GeometricVirtualSchema = z.object({
 
 export function normalizeGeometricVirtual(
   config: RenderConfig,
+  name: string,
   geometricData: RawGeometricVirtual,
 ): NormalizedGeometricVirtual {
   const geometric = geometricData;
@@ -861,9 +911,13 @@ export function normalizeGeometricVirtual(
 
     const geometricName = getNextUniqueName(
       config.geometrics,
-      capitalize(geometric.geometric.type),
+      `${name}_${geometric.geometric.type}`,
     );
-    config.geometrics[geometricName] = normalizeGeometricData(config, geometric.geometric);
+    config.geometrics[geometricName] = normalizeGeometricData(
+      config,
+      geometricName,
+      geometric.geometric,
+    );
     geometric.geometric = geometricName;
   }
 

@@ -1,17 +1,29 @@
-import { ControlsCard } from './ControlsCard';
+import { AccordionRow } from '../../shared/AccordionRow';
 import { getMaterialData } from '@/utils/render/material';
 import { fixReferences, renameMaterial } from '@/utils/render/utils';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { useSelector } from '@tanstack/react-store';
+import { WarningIconOrphanGeometric } from '../../shared/icons/WarningIconOrphanGeometric';
+import { InfoIconDefaultResource } from '../../shared/icons/InfoIconDefaultResource';
 
-export type ControlsCardMaterialProps = {
+export type MaterialRowProps = {
   form: RenderForm;
   materialName: string;
+  isUsedByActiveScene: boolean;
 };
 
-export function ControlsCardMaterial(props: ControlsCardMaterialProps) {
-  const { form, materialName } = props;
+export function MaterialRow(props: MaterialRowProps) {
+  const { form, materialName, isUsedByActiveScene } = props;
+
+  const isDefault = materialName.startsWith('__');
+
+  const afterLabel = (
+    <>
+      {!isUsedByActiveScene && <WarningIconOrphanGeometric />}
+      {isDefault && <InfoIconDefaultResource />}
+    </>
+  );
 
   const renderConfig = useSelector(form.store, (state) => state.values);
 
@@ -41,13 +53,13 @@ export function ControlsCardMaterial(props: ControlsCardMaterialProps) {
     };
 
     const fixed = fixReferences(newConfig);
+
     form.setFieldValue('geometrics', fixed.geometrics);
     form.setFieldValue('materials', fixed.materials);
     form.setFieldValue('scenes', fixed.scenes);
     form.setFieldValue('textures', fixed.textures);
   }
 
-  // texture select items
   const textureItems = Object.keys(renderConfig.textures ?? {}).map((key) => ({
     label: key,
     value: key,
@@ -96,14 +108,18 @@ export function ControlsCardMaterial(props: ControlsCardMaterialProps) {
   }
 
   return (
-    <ControlsCard
+    <AccordionRow
       leftLabel={materialName}
-      onRename={handleRename}
+      leftLabelStyle={isDefault ? 'light' : 'bold'}
+      onRename={isDefault ? undefined : handleRename}
       rightLabel={materialData.type}
       rightLabelStyle="light"
-      onDelete={() => handleDeleteMaterial(materialName)}
+      afterLabel={afterLabel}
+      onDelete={isDefault ? undefined : () => handleDeleteMaterial(materialName)}
     >
-      <div className="flex w-full flex-col gap-2 p-4">{renderControls(materialName)}</div>
-    </ControlsCard>
+      <fieldset disabled={isDefault} className="border-0 p-0">
+        <div className="flex w-full flex-col gap-2">{renderControls(materialName)}</div>
+      </fieldset>
+    </AccordionRow>
   );
 }

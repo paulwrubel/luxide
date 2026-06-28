@@ -1,25 +1,24 @@
-import { useState } from 'react';
-import { Card, Button, type CardTheme } from 'flowbite-react';
-import { HiChevronDown, HiChevronUp } from 'react-icons/hi2';
-import type { DeepPartial } from 'flowbite-react/types';
+import { useState, type CSSProperties } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Separator } from '@/components/Separator';
-import { HiTrash } from 'react-icons/hi2';
+import { Button } from 'flowbite-react';
+import { HiChevronDown, HiChevronUp, HiTrash } from 'react-icons/hi2';
 import { RenamableLabel } from './RenamableLabel';
-import { LabelText, type LabelTextProps } from './LabelText';
+import { LabelText } from './LabelText';
 
-export type ControlsCardProps = {
+export type AccordionRowProps = {
   children: React.ReactNode;
   startExpanded?: boolean;
   leftLabel: string;
-  leftLabelStyle?: LabelTextProps['type'];
+  leftLabelStyle?: 'bold' | 'light';
   rightLabel?: string;
-  rightLabelStyle?: LabelTextProps['type'];
+  rightLabelStyle?: 'bold' | 'light';
   onRename?: (newName: string) => void;
   onDelete?: () => void;
+  depth?: number;
+  afterLabel?: React.ReactNode;
 };
 
-export function ControlsCard(props: ControlsCardProps) {
+export function AccordionRow(props: AccordionRowProps) {
   const {
     children,
     startExpanded = false,
@@ -29,23 +28,22 @@ export function ControlsCard(props: ControlsCardProps) {
     rightLabelStyle = 'light',
     onRename,
     onDelete,
+    depth = 0,
+    afterLabel,
   } = props;
 
   const [isExpanded, setIsExpanded] = useState(startExpanded);
 
-  const cardTheme: DeepPartial<CardTheme> = {
-    root: {
-      base: 'bg-zinc-800 dark:bg-zinc-800',
-      children: 'gap-0 p-0',
-    },
-  };
-
   return (
-    <Card theme={cardTheme} className="flex max-w-full flex-col text-zinc-200">
+    <div
+      className="ml-[calc(var(--row-depth)*1.5rem)] bg-zinc-800"
+      // the type for inline styles does not include custom properties like --row-depth
+      style={{ '--row-depth': depth } as CSSProperties}
+    >
       <div
         role="button"
         tabIndex={0}
-        className="flex cursor-pointer items-center justify-between p-4 pr-2"
+        className="flex cursor-pointer items-center justify-between border-t border-b border-zinc-700 bg-zinc-800 py-2 pr-3 pl-3 hover:bg-zinc-700/50 dark:bg-zinc-800"
         onClick={() => setIsExpanded(!isExpanded)}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -55,10 +53,19 @@ export function ControlsCard(props: ControlsCardProps) {
         }}
       >
         {onRename ? (
-          <RenamableLabel label={leftLabel} labelStyle={leftLabelStyle} onRename={onRename} />
+          <RenamableLabel
+            label={leftLabel}
+            labelStyle={leftLabelStyle}
+            onRename={onRename}
+            afterLabel={afterLabel}
+          />
         ) : (
-          <LabelText text={leftLabel} type={leftLabelStyle} />
+          <span className="inline-flex items-center gap-2">
+            <LabelText text={leftLabel} type={leftLabelStyle} />
+            {afterLabel}
+          </span>
         )}
+
         <div className="flex flex-row items-center gap-2">
           {rightLabel && <LabelText text={rightLabel} type={rightLabelStyle} />}
           {isExpanded ? (
@@ -77,10 +84,9 @@ export function ControlsCard(props: ControlsCardProps) {
             transition={{ duration: 0.3, ease: 'easeInOut' }}
             className="overflow-hidden"
           >
-            <Separator />
-            {children}
+            <div className="pr-3 pb-2 pl-4">{children}</div>
             {onDelete && (
-              <div className="flex w-full justify-end px-4 pb-4">
+              <div className="flex w-full justify-end px-2 pb-2">
                 <Button color="red" onClick={onDelete} size="sm">
                   <HiTrash className="h-5 w-5" />
                 </Button>
@@ -89,6 +95,6 @@ export function ControlsCard(props: ControlsCardProps) {
           </motion.div>
         )}
       </AnimatePresence>
-    </Card>
+    </div>
   );
 }
