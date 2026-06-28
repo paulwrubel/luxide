@@ -203,6 +203,7 @@ fn build_materials(
 fn get_geometric_dependencies(geometric: &GeometricData) -> Vec<String> {
     let mut deps = Vec::new();
     match geometric {
+        // these contain a vector of geometric references that must be built first
         GeometricData::CompoundList { geometrics, .. } => {
             for g in geometrics {
                 match g {
@@ -213,16 +214,24 @@ fn get_geometric_dependencies(geometric: &GeometricData) -> Vec<String> {
                 }
             }
         }
+        // these contain a single geometric reference that must be built first
         GeometricData::InstanceRotateXAxis { geometric, .. }
         | GeometricData::InstanceRotateYAxis { geometric, .. }
         | GeometricData::InstanceRotateZAxis { geometric, .. }
-        | GeometricData::InstanceTranslate { geometric, .. } => match geometric {
+        | GeometricData::InstanceTranslate { geometric, .. }
+        | GeometricData::VolumeConstant { geometric, .. }
+        | GeometricData::Virtual { geometric, .. } => match geometric {
             GeometricRefOrInline::Ref(ref_name) => deps.push(ref_name.clone()),
             GeometricRefOrInline::Inline(data) => {
                 deps.append(&mut get_geometric_dependencies(data))
             }
         },
-        _ => {}
+        // these contain no `geometric` field, only a `material` — no geometric dependencies to track
+        GeometricData::CompoundAxisAlignedPBox { .. }
+        | GeometricData::CompoundModelObj { .. }
+        | GeometricData::PrimitiveParallelogram { .. }
+        | GeometricData::PrimitiveSphere { .. }
+        | GeometricData::PrimitiveTriangle { .. } => {}
     }
     deps
 }
