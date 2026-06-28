@@ -15,6 +15,7 @@ export type SceneData = NormalizedSceneData;
 
 export function normalizeSceneData(
   config: RenderConfig,
+  name: string,
   sceneData: RawSceneData,
 ): NormalizedSceneData {
   const scene = sceneData;
@@ -24,7 +25,7 @@ export function normalizeSceneData(
       config.cameras = {};
     }
 
-    const cameraName = getNextUniqueName(config.cameras, 'Camera');
+    const cameraName = getNextUniqueName(config.cameras, `${name}_camera`);
     config.cameras[cameraName] = scene.camera;
     scene.camera = cameraName;
   }
@@ -35,8 +36,8 @@ export function normalizeSceneData(
         config.geometrics = {};
       }
 
-      const geometricName = getNextUniqueName(config.geometrics, capitalize(geometric.type));
-      config.geometrics[geometricName] = normalizeGeometricData(config, geometric);
+      const geometricName = getNextUniqueName(config.geometrics, `${name}_${geometric.type}`);
+      config.geometrics[geometricName] = normalizeGeometricData(config, geometricName, geometric);
       scene.geometrics[index] = geometricName;
     }
   }

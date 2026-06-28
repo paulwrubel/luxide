@@ -82,17 +82,17 @@ export function normalizeRenderConfig(config: RenderConfig): NormalizedRenderCon
   }
 
   // pass 2: normalize all maps — convert inline data to named references
-  for (const scene of Object.values(renderConfig.scenes ?? {})) {
-    normalizeSceneData(renderConfig, scene);
+  for (const [sceneName, scene] of Object.entries(renderConfig.scenes ?? {})) {
+    normalizeSceneData(renderConfig, sceneName, scene);
   }
-  for (const geo of Object.values(renderConfig.geometrics ?? {})) {
-    normalizeGeometricData(renderConfig, geo);
+  for (const [geometricName, geometric] of Object.entries(renderConfig.geometrics ?? {})) {
+    normalizeGeometricData(renderConfig, geometricName, geometric);
   }
-  for (const mat of Object.values(renderConfig.materials ?? {})) {
-    normalizeMaterialData(renderConfig, mat);
+  for (const [materialName, material] of Object.entries(renderConfig.materials ?? {})) {
+    normalizeMaterialData(renderConfig, materialName, material);
   }
-  for (const tex of Object.values(renderConfig.textures ?? {})) {
-    normalizeTextureData(renderConfig, tex);
+  for (const [textureName, texture] of Object.entries(renderConfig.textures ?? {})) {
+    normalizeTextureData(renderConfig, textureName, texture);
   }
 
   // pass 3: remove default fallback resources

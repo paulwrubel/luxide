@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { Tabs, TabItem, type TabsTheme } from 'flowbite-react';
+import { useMemo, useState } from 'react';
+import { Tabs, TabItem, ToggleSwitch, type TabsTheme } from 'flowbite-react';
 import { ControlsCardCamera } from './cards/ControlsCardCamera';
 import { ControlsCardParameters } from './cards/ControlsCardParameters';
 import { ControlsCardGeometric } from './cards/ControlsCardGeometric';
@@ -7,6 +7,7 @@ import { ControlsCardMaterial } from './cards/ControlsCardMaterial';
 import { ControlsCardTexture } from './cards/ControlsCardTexture';
 import { ControlsCardScene } from './cards/ControlsCardScene';
 import { AddEntityDropdown } from './AddEntityDropdown';
+import { AccordionView } from './AccordionView';
 import { defaultGeometricForType, type GeometricData } from '@/utils/render/geometric';
 import { defaultMaterialForType, type MaterialData } from '@/utils/render/material';
 import { defaultTextureForType, type TextureData } from '@/utils/render/texture';
@@ -49,6 +50,8 @@ export function Controls(props: ControlsProps) {
     [renderConfig],
   );
 
+  const [isTreeView, setIsTreeView] = useState(false);
+
   const tabsTheme: DeepPartial<TabsTheme> = {
     tablist: {
       variant: {
@@ -70,150 +73,167 @@ export function Controls(props: ControlsProps) {
   };
 
   return (
-    <Tabs variant="pills" theme={tabsTheme}>
-      <TabItem title="Parameters">
-        <div className="flex flex-col items-stretch gap-4 p-2">
-          <ControlsCardParameters form={form} />
-        </div>
-      </TabItem>
+    <>
+      <div className="flex items-center justify-between border-b border-zinc-700 px-2 py-2">
+        <ToggleSwitch checked={isTreeView} onChange={setIsTreeView} label="Tree View" />
+      </div>
+      <Tabs variant="pills" theme={tabsTheme}>
+        <TabItem title="Parameters">
+          <div className="flex flex-col items-stretch gap-4 p-2">
+            <ControlsCardParameters form={form} />
+          </div>
+        </TabItem>
 
-      <TabItem title="Scene">
-        <div className="flex flex-col items-stretch gap-4 p-2">
-          <ControlsCardScene form={form} />
-          <ControlsCardCamera form={form} cameraName={activeScene.camera} />
-        </div>
-      </TabItem>
+        <TabItem title="Scene">
+          <div className="flex flex-col items-stretch gap-4 p-2">
+            <ControlsCardScene form={form} />
+            <ControlsCardCamera form={form} cameraName={activeScene.camera} />
+          </div>
+        </TabItem>
 
-      <TabItem title="Geometrics">
-        <div className="flex flex-col items-stretch gap-4 p-2">
-          {activeGeometricNames.map((geoName) => (
-            <ControlsCardGeometric key={geoName} form={form} geometricName={geoName} />
-          ))}
-          <div className="flex w-full justify-end">
-            <AddEntityDropdown
-              form={form}
-              options={[
-                {
-                  subtype: 'box',
-                  label: 'Box',
-                  description: 'Axis-aligned box defined by two opposite corners.',
-                },
-                {
-                  subtype: 'sphere',
-                  label: 'Sphere',
-                  description: 'Sphere defined by center and radius.',
-                },
-                {
-                  subtype: 'triangle',
-                  label: 'Triangle',
-                  description: 'Triangle defined by three vertices.',
-                },
-                {
-                  subtype: 'parallelogram',
-                  label: 'Parallelogram',
-                  description: 'Parallelogram defined by origin and two edge vectors.',
-                },
-                {
-                  subtype: 'obj_model',
-                  label: 'OBJ Model',
-                  description: 'Import a 3D model from an OBJ file.',
-                  disabled: true,
-                  disabledReason:
-                    'OBJ model creation requires file upload support, which is not yet implemented in the UI.',
-                },
-              ]}
-              type="geometrics"
-              getDefault={(type) =>
-                defaultGeometricForType(type as Exclude<GeometricData['type'], 'obj_model'>)
-              }
-              onCreated={(name) => {
-                const activeSceneData = renderConfig.scenes?.[renderConfig.active_scene];
-                if (!activeSceneData) return;
-                const scenesPatch = {
-                  ...renderConfig.scenes,
-                  [renderConfig.active_scene]: {
-                    ...activeSceneData,
-                    geometrics: [...activeSceneData.geometrics, name],
+        <TabItem title="Geometrics">
+          <div className="flex flex-col items-stretch gap-4 p-2">
+            {isTreeView ? (
+              <AccordionView form={form} section="geometrics" />
+            ) : (
+              activeGeometricNames.map((geoName) => (
+                <ControlsCardGeometric key={geoName} form={form} geometricName={geoName} />
+              ))
+            )}
+            <div className="flex w-full justify-end">
+              <AddEntityDropdown
+                form={form}
+                options={[
+                  {
+                    subtype: 'box',
+                    label: 'Box',
+                    description: 'Axis-aligned box defined by two opposite corners.',
                   },
-                };
-                form.setFieldValue('scenes', scenesPatch);
-              }}
-            />
+                  {
+                    subtype: 'sphere',
+                    label: 'Sphere',
+                    description: 'Sphere defined by center and radius.',
+                  },
+                  {
+                    subtype: 'triangle',
+                    label: 'Triangle',
+                    description: 'Triangle defined by three vertices.',
+                  },
+                  {
+                    subtype: 'parallelogram',
+                    label: 'Parallelogram',
+                    description: 'Parallelogram defined by origin and two edge vectors.',
+                  },
+                  {
+                    subtype: 'obj_model',
+                    label: 'OBJ Model',
+                    description: 'Import a 3D model from an OBJ file.',
+                    disabled: true,
+                    disabledReason:
+                      'OBJ model creation requires file upload support, which is not yet implemented in the UI.',
+                  },
+                ]}
+                type="geometrics"
+                getDefault={(type) =>
+                  defaultGeometricForType(type as Exclude<GeometricData['type'], 'obj_model'>)
+                }
+                onCreated={(name) => {
+                  const activeSceneData = renderConfig.scenes?.[renderConfig.active_scene];
+                  if (!activeSceneData) return;
+                  const scenesPatch = {
+                    ...renderConfig.scenes,
+                    [renderConfig.active_scene]: {
+                      ...activeSceneData,
+                      geometrics: [...activeSceneData.geometrics, name],
+                    },
+                  };
+                  form.setFieldValue('scenes', scenesPatch);
+                }}
+              />
+            </div>
           </div>
-        </div>
-      </TabItem>
+        </TabItem>
 
-      <TabItem title="Materials">
-        <div className="flex flex-col items-stretch gap-4 p-2">
-          {topLevelMaterialNames.map((matName) => (
-            <ControlsCardMaterial key={matName} form={form} materialName={matName} />
-          ))}
-          <div className="flex w-full justify-end">
-            <AddEntityDropdown
-              form={form}
-              options={[
-                {
-                  subtype: 'lambertian',
-                  label: 'Lambertian Material',
-                  description:
-                    'Diffuse material that scatters light equally in all directions (ideal matte).',
-                },
-                {
-                  subtype: 'specular',
-                  label: 'Specular Material',
-                  description: 'Glossy material with adjustable roughness for reflections.',
-                },
-                {
-                  subtype: 'dielectric',
-                  label: 'Dielectric Material',
-                  description: 'Transparent material with refraction (glass, water).',
-                },
-              ]}
-              type="materials"
-              getDefault={(type) => defaultMaterialForType(type as MaterialData['type'])}
-            />
+        <TabItem title="Materials">
+          <div className="flex flex-col items-stretch gap-4 p-2">
+            {isTreeView ? (
+              <AccordionView form={form} section="materials" />
+            ) : (
+              topLevelMaterialNames.map((matName) => (
+                <ControlsCardMaterial key={matName} form={form} materialName={matName} />
+              ))
+            )}
+            <div className="flex w-full justify-end">
+              <AddEntityDropdown
+                form={form}
+                options={[
+                  {
+                    subtype: 'lambertian',
+                    label: 'Lambertian Material',
+                    description:
+                      'Diffuse material that scatters light equally in all directions (ideal matte).',
+                  },
+                  {
+                    subtype: 'specular',
+                    label: 'Specular Material',
+                    description: 'Glossy material with adjustable roughness for reflections.',
+                  },
+                  {
+                    subtype: 'dielectric',
+                    label: 'Dielectric Material',
+                    description: 'Transparent material with refraction (glass, water).',
+                  },
+                ]}
+                type="materials"
+                getDefault={(type) => defaultMaterialForType(type as MaterialData['type'])}
+              />
+            </div>
           </div>
-        </div>
-      </TabItem>
+        </TabItem>
 
-      <TabItem title="Textures">
-        <div className="flex flex-col items-stretch gap-4 p-2">
-          {topLevelTextureNames.map((texName) => (
-            <ControlsCardTexture key={texName} form={form} textureName={texName} />
-          ))}
-          <div className="flex w-full justify-end">
-            <AddEntityDropdown
-              form={form}
-              options={[
-                {
-                  subtype: 'color',
-                  label: 'Color Texture',
-                  description: 'Solid color defined by RGB values.',
-                },
-                {
-                  subtype: 'checker',
-                  label: 'Checker Texture',
-                  description: 'Procedural checker pattern with two sub-textures.',
-                  disabled: true,
-                  disabledReason: 'Checker textures are not yet supported in the 3D preview.',
-                },
-                {
-                  subtype: 'image',
-                  label: 'Image Texture',
-                  description: 'Load a texture from an image file.',
-                  disabled: true,
-                  disabledReason:
-                    'Image texture creation requires file upload support, which is not yet implemented in the UI.',
-                },
-              ]}
-              type="textures"
-              getDefault={(type) =>
-                defaultTextureForType(type as Exclude<TextureData['type'], 'image'>)
-              }
-            />
+        <TabItem title="Textures">
+          <div className="flex flex-col items-stretch gap-4 p-2">
+            {isTreeView ? (
+              <AccordionView form={form} section="textures" />
+            ) : (
+              topLevelTextureNames.map((texName) => (
+                <ControlsCardTexture key={texName} form={form} textureName={texName} />
+              ))
+            )}
+            <div className="flex w-full justify-end">
+              <AddEntityDropdown
+                form={form}
+                options={[
+                  {
+                    subtype: 'color',
+                    label: 'Color Texture',
+                    description: 'Solid color defined by RGB values.',
+                  },
+                  {
+                    subtype: 'checker',
+                    label: 'Checker Texture',
+                    description: 'Procedural checker pattern with two sub-textures.',
+                    disabled: true,
+                    disabledReason: 'Checker textures are not yet supported in the 3D preview.',
+                  },
+                  {
+                    subtype: 'image',
+                    label: 'Image Texture',
+                    description: 'Load a texture from an image file.',
+                    disabled: true,
+                    disabledReason:
+                      'Image texture creation requires file upload support, which is not yet implemented in the UI.',
+                  },
+                ]}
+                type="textures"
+                getDefault={(type) =>
+                  defaultTextureForType(type as Exclude<TextureData['type'], 'image'>)
+                }
+              />
+            </div>
           </div>
-        </div>
-      </TabItem>
-    </Tabs>
+        </TabItem>
+      </Tabs>
+    </>
   );
 }

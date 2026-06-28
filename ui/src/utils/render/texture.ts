@@ -6,11 +6,12 @@ export type TextureData = NormalizedTextureData;
 
 export function normalizeTextureData(
   config: RenderConfig,
+  name: string,
   textureData: RawTextureData,
 ): NormalizedTextureData {
   switch (textureData.type) {
     case 'checker':
-      return normalizeTextureChecker(config, textureData);
+      return normalizeTextureChecker(config, name, textureData);
     case 'image':
       return textureData;
     case 'color':
@@ -117,6 +118,7 @@ export type TextureChecker = NormalizedTextureChecker;
 
 export function normalizeTextureChecker(
   config: RenderConfig,
+  name: string,
   textureData: RawTextureChecker,
 ): NormalizedTextureChecker {
   const texture = textureData;
@@ -126,8 +128,8 @@ export function normalizeTextureChecker(
       config.textures = {};
     }
 
-    const textureName = getNextUniqueName(config.textures, capitalize(texture.even_texture.type));
-    config.textures[textureName] = normalizeTextureData(config, texture.even_texture);
+    const textureName = getNextUniqueName(config.textures, `${name}_${texture.even_texture.type}`);
+    config.textures[textureName] = normalizeTextureData(config, textureName, texture.even_texture);
     texture.even_texture = textureName;
   }
 
@@ -136,8 +138,8 @@ export function normalizeTextureChecker(
       config.textures = {};
     }
 
-    const textureName = getNextUniqueName(config.textures, capitalize(texture.odd_texture.type));
-    config.textures[textureName] = normalizeTextureData(config, texture.odd_texture);
+    const textureName = getNextUniqueName(config.textures, `${name}_${texture.odd_texture.type}`);
+    config.textures[textureName] = normalizeTextureData(config, textureName, texture.odd_texture);
     texture.odd_texture = textureName;
   }
 

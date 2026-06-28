@@ -58,8 +58,8 @@ export function isTypedObject(x: unknown): x is Record<string, unknown> & { type
 
 export function getNextUniqueName<_T>(collection: Record<string, _T>, baseName: string): string {
   let name = baseName;
-  for (let i = 1; name in collection; i++) {
-    name = `${baseName} ${i}`;
+  for (let i = 2; name in collection; i++) {
+    name = `${baseName}${i}`;
   }
   return name;
 }
