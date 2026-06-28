@@ -20,7 +20,7 @@ export function ControlsCardScene(props: ControlsCardSceneProps) {
 
   return (
     <AccordionRow leftLabel="Scene" leftLabelStyle="light" startExpanded>
-      <div className="flex flex-col gap-2 p-4">
+      <div className="flex flex-col gap-2">
         <form.AppField name={`${formPath}.use_bvh`}>
           {(field) => <field.ToggleControl label="Use BVH" />}
         </form.AppField>

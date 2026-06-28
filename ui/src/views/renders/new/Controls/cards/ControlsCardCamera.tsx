@@ -33,7 +33,7 @@ export function ControlsCardCamera(props: ControlsCardCameraProps) {
 
   return (
     <AccordionRow leftLabel={cameraName} onRename={handleRename} startExpanded>
-      <div className="flex flex-col gap-2 p-4">
+      <div className="flex flex-col gap-2">
         <form.AppField name={`${formPath}.vertical_field_of_view_degrees`}>
           {(field) => (
             <field.RangeControl label="Vertical FOV (degrees)" min={10.0} max={170.0} step={1.0} />

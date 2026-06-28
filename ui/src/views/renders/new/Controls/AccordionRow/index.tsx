@@ -4,8 +4,6 @@ import { Button } from 'flowbite-react';
 import { HiChevronDown, HiChevronUp, HiTrash } from 'react-icons/hi2';
 import { RenamableLabel } from '../cards/ControlsCard/RenamableLabel';
 import { LabelText } from '../cards/ControlsCard/LabelText';
-import { WarningIconOrphanGeometric } from '../icons/WarningIconOrphanGeometric';
-import { InfoIconDefaultResource } from '../icons/InfoIconDefaultResource';
 
 export type AccordionRowProps = {
   children: React.ReactNode;
@@ -17,8 +15,7 @@ export type AccordionRowProps = {
   onRename?: (newName: string) => void;
   onDelete?: () => void;
   depth?: number;
-  isUsedByActiveScene?: boolean; // was isOrphan
-  isDefaultEntity?: boolean;
+  afterLabel?: React.ReactNode;
 };
 
 export function AccordionRow(props: AccordionRowProps) {
@@ -32,18 +29,10 @@ export function AccordionRow(props: AccordionRowProps) {
     onRename,
     onDelete,
     depth = 0,
-    isUsedByActiveScene = false, // was isOrphan = false
-    isDefaultEntity = false,
+    afterLabel,
   } = props;
 
   const [isExpanded, setIsExpanded] = useState(startExpanded);
-
-  const afterLabelContent = (
-    <>
-      {!isUsedByActiveScene && <WarningIconOrphanGeometric />}
-      {isDefaultEntity && <InfoIconDefaultResource />}
-    </>
-  );
 
   return (
     <div
@@ -54,7 +43,7 @@ export function AccordionRow(props: AccordionRowProps) {
       <div
         role="button"
         tabIndex={0}
-        className="flex cursor-pointer items-center justify-between border-b border-zinc-700 bg-zinc-800 py-2 pr-3 pl-3 hover:bg-zinc-700/50 dark:bg-zinc-800"
+        className="flex cursor-pointer items-center justify-between border-t border-b border-zinc-700 bg-zinc-800 py-2 pr-3 pl-3 hover:bg-zinc-700/50 dark:bg-zinc-800"
         onClick={() => setIsExpanded(!isExpanded)}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -68,13 +57,12 @@ export function AccordionRow(props: AccordionRowProps) {
             label={leftLabel}
             labelStyle={leftLabelStyle}
             onRename={onRename}
-            afterLabel={afterLabelContent}
+            afterLabel={afterLabel}
           />
         ) : (
           <span className="inline-flex items-center gap-2">
             <LabelText text={leftLabel} type={leftLabelStyle} />
-            {!isUsedByActiveScene && <WarningIconOrphanGeometric />}
-            {isDefaultEntity && <InfoIconDefaultResource />}
+            {afterLabel}
           </span>
         )}
 

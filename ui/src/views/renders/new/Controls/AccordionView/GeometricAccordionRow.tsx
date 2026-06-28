@@ -6,6 +6,7 @@ import { useSelector } from '@tanstack/react-store';
 import { AccordionRow } from '../AccordionRow';
 import { GeometricAccordionControls } from './GeometricAccordionControls';
 import { WarningIconOrphanGeometric } from '../icons/WarningIconOrphanGeometric';
+import { InfoIconDefaultResource } from '../icons/InfoIconDefaultResource';
 
 export type GeometricAccordionRowProps = {
   form: RenderForm;
@@ -19,6 +20,13 @@ export function GeometricAccordionRow(props: GeometricAccordionRowProps) {
   const { form, geometricName, depth, isUsedByActiveScene } = props;
 
   const isDefault = geometricName.startsWith('__');
+
+  const afterLabel = (
+    <>
+      {!isUsedByActiveScene && <WarningIconOrphanGeometric />}
+      {isDefault && <InfoIconDefaultResource />}
+    </>
+  );
 
   const renderConfig = useSelector(form.store, (state) => state.values);
 
@@ -64,8 +72,7 @@ export function GeometricAccordionRow(props: GeometricAccordionRowProps) {
       onDelete={isDefault ? undefined : handleDeleteGeometric}
       depth={depth}
       startExpanded={false}
-      isUsedByActiveScene={isUsedByActiveScene}
-      isDefaultEntity={isDefault}
+      afterLabel={afterLabel}
     >
       <div className="flex w-full flex-col gap-2">
         {!isUsedByActiveScene && (

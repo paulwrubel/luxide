@@ -8,16 +8,26 @@ import type { NormalizedRenderConfig } from '@/utils/render/config';
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { useSelector } from '@tanstack/react-store';
 import { Separator } from '@/components/Separator';
+import { WarningIconOrphanGeometric } from '../icons/WarningIconOrphanGeometric';
+import { InfoIconDefaultResource } from '../icons/InfoIconDefaultResource';
 
 export type TextureAccordionRowProps = {
   form: RenderForm;
   textureName: string;
+  isUsedByActiveScene: boolean;
 };
 
 export function TextureAccordionRow(props: TextureAccordionRowProps) {
-  const { form, textureName } = props;
+  const { form, textureName, isUsedByActiveScene } = props;
 
   const isDefault = textureName.startsWith('__');
+
+  const afterLabel = (
+    <>
+      {!isUsedByActiveScene && <WarningIconOrphanGeometric />}
+      {isDefault && <InfoIconDefaultResource />}
+    </>
+  );
 
   const renderConfig = useSelector(form.store, (state) => state.values);
 
@@ -124,8 +134,8 @@ export function TextureAccordionRow(props: TextureAccordionRowProps) {
       onRename={isDefault ? undefined : handleRename}
       rightLabel={textureData.type}
       rightLabelStyle="light"
+      afterLabel={afterLabel}
       onDelete={isDefault ? undefined : () => handleDeleteTexture(textureName)}
-      isDefaultEntity={isDefault}
     >
       <fieldset disabled={isDefault} className="border-0 p-0">
         <div className="flex w-full flex-col gap-2">{renderControls(textureName)}</div>

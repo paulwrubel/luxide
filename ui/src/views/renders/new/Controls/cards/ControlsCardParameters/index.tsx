@@ -22,7 +22,7 @@ export function ControlsCardParameters(props: ControlsCardParametersProps) {
   const parameters = renderConfig.parameters;
   return (
     <AccordionRow leftLabel="Parameters" leftLabelStyle="light" startExpanded>
-      <div className="flex flex-col gap-2 p-4">
+      <div className="flex flex-col gap-2">
         <TextInputControl form={form} fieldName="name" label="Name" valueLabel="name" />
 
         <form.AppField name="parameters.image_dimensions">

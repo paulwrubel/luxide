@@ -4,16 +4,26 @@ import { fixReferences, renameMaterial } from '@/utils/render/utils';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { useSelector } from '@tanstack/react-store';
+import { WarningIconOrphanGeometric } from '../icons/WarningIconOrphanGeometric';
+import { InfoIconDefaultResource } from '../icons/InfoIconDefaultResource';
 
 export type MaterialAccordionRowProps = {
   form: RenderForm;
   materialName: string;
+  isUsedByActiveScene: boolean;
 };
 
 export function MaterialAccordionRow(props: MaterialAccordionRowProps) {
-  const { form, materialName } = props;
+  const { form, materialName, isUsedByActiveScene } = props;
 
   const isDefault = materialName.startsWith('__');
+
+  const afterLabel = (
+    <>
+      {!isUsedByActiveScene && <WarningIconOrphanGeometric />}
+      {isDefault && <InfoIconDefaultResource />}
+    </>
+  );
 
   const renderConfig = useSelector(form.store, (state) => state.values);
 
@@ -104,7 +114,7 @@ export function MaterialAccordionRow(props: MaterialAccordionRowProps) {
       onRename={isDefault ? undefined : handleRename}
       rightLabel={materialData.type}
       rightLabelStyle="light"
-      isDefaultEntity={isDefault}
+      afterLabel={afterLabel}
       onDelete={isDefault ? undefined : () => handleDeleteMaterial(materialName)}
     >
       <fieldset disabled={isDefault} className="border-0 p-0">
