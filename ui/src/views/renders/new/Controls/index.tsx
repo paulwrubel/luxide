@@ -27,8 +27,6 @@ export function Controls(props: ControlsProps) {
     [renderConfig],
   );
 
-
-
   const tabsTheme: DeepPartial<TabsTheme> = {
     tablist: {
       variant: {
@@ -52,13 +50,13 @@ export function Controls(props: ControlsProps) {
   return (
     <Tabs variant="pills" theme={tabsTheme}>
       <TabItem title="Parameters">
-        <div className="flex flex-col items-stretch gap-4 p-2">
+        <div className="flex flex-col items-stretch p-2">
           <ControlsCardParameters form={form} />
         </div>
       </TabItem>
 
       <TabItem title="Scene">
-        <div className="flex flex-col items-stretch gap-4 p-2">
+        <div className="flex flex-col items-stretch p-2">
           <ControlsCardScene form={form} />
           <ControlsCardCamera form={form} cameraName={activeScene.camera} />
         </div>

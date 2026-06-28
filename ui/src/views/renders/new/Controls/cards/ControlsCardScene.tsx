@@ -1,4 +1,4 @@
-import { ControlsCard } from './ControlsCard';
+import { AccordionRow } from '../AccordionRow';
 import { TextArrayInputControl } from '@/components/form-controls/TextArrayInputControl';
 import type { RenderForm, RenderFormPath } from '@/hooks/useRenderForm';
 import type { DeepKeys } from '@tanstack/react-form';
@@ -19,7 +19,7 @@ export function ControlsCardScene(props: ControlsCardSceneProps) {
   const formPath: RenderFormPath = `scenes.${activeSceneName}`;
 
   return (
-    <ControlsCard leftLabel="scene" leftLabelStyle="light" startExpanded>
+    <AccordionRow leftLabel="Scene" leftLabelStyle="light" startExpanded>
       <div className="flex flex-col gap-2 p-4">
         <form.AppField name={`${formPath}.use_bvh`}>
           {(field) => <field.ToggleControl label="Use BVH" />}
@@ -42,6 +42,6 @@ export function ControlsCardScene(props: ControlsCardSceneProps) {
           }
         />
       </div>
-    </ControlsCard>
+    </AccordionRow>
   );
 }

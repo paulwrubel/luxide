@@ -1,4 +1,4 @@
-import { ControlsCard } from '../ControlsCard';
+import { AccordionRow } from '../../AccordionRow';
 import { WarningIconAdvancedProperty } from '../../icons/WarningIconAdvancedProperty';
 import { TextInputControl } from '@/components/form-controls/TextInputControl';
 import { TextArrayInputControl } from '@/components/form-controls/TextArrayInputControl';
@@ -21,7 +21,7 @@ export function ControlsCardParameters(props: ControlsCardParametersProps) {
   const renderConfig = useSelector(form.store, (state) => state.values);
   const parameters = renderConfig.parameters;
   return (
-    <ControlsCard leftLabel="parameters" leftLabelStyle="light" startExpanded>
+    <AccordionRow leftLabel="Parameters" leftLabelStyle="light" startExpanded>
       <div className="flex flex-col gap-2 p-4">
         <TextInputControl form={form} fieldName="name" label="Name" valueLabel="name" />
 
@@ -133,6 +133,6 @@ export function ControlsCardParameters(props: ControlsCardParametersProps) {
 
         <ImportanceSamplingControls form={form} />
       </div>
-    </ControlsCard>
+    </AccordionRow>
   );
 }

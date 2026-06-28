@@ -69,7 +69,7 @@ export function GeometricAccordionRow(props: GeometricAccordionRowProps) {
     >
       <div className="flex w-full flex-col gap-2">
         {!isUsedByActiveScene && (
-          <div className="flex items-center gap-1 mb-2">
+          <div className="mb-2 flex items-center gap-1">
             <WarningIconOrphanGeometric />
             <p className="text-xs text-yellow-500">
               This geometric is not used by the active scene and will not appear in renders.

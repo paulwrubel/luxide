@@ -1,6 +1,6 @@
 import type { NormalizedRenderConfig, RenderConfig } from './config';
 import { normalizeTextureData, type RawTextureData } from './texture';
-import { capitalize, getNextUniqueName, isTypedObject } from './utils';
+import { getNextUniqueName, isTypedObject } from './utils';
 import { z } from 'zod';
 
 export type MaterialData = NormalizedMaterialData;
@@ -142,7 +142,11 @@ function normalizeMaterialDielectric(
       config.textures,
       `${name}_${material.reflectance_texture.type}`,
     );
-    config.textures[textureName] = normalizeTextureData(config, textureName, material.reflectance_texture);
+    config.textures[textureName] = normalizeTextureData(
+      config,
+      textureName,
+      material.reflectance_texture,
+    );
     material.reflectance_texture = textureName;
   }
 
@@ -155,7 +159,11 @@ function normalizeMaterialDielectric(
       config.textures,
       `${name}_${material.emittance_texture.type}`,
     );
-    config.textures[textureName] = normalizeTextureData(config, textureName, material.emittance_texture);
+    config.textures[textureName] = normalizeTextureData(
+      config,
+      textureName,
+      material.emittance_texture,
+    );
     material.emittance_texture = textureName;
   }
 
@@ -201,7 +209,11 @@ export function normalizeMaterialLambertian(
       config.textures,
       `${name}_${material.reflectance_texture.type}`,
     );
-    config.textures[textureName] = normalizeTextureData(config, textureName, material.reflectance_texture);
+    config.textures[textureName] = normalizeTextureData(
+      config,
+      textureName,
+      material.reflectance_texture,
+    );
     material.reflectance_texture = textureName;
   }
 
@@ -214,7 +226,11 @@ export function normalizeMaterialLambertian(
       config.textures,
       `${name}_${material.emittance_texture.type}`,
     );
-    config.textures[textureName] = normalizeTextureData(config, textureName, material.emittance_texture);
+    config.textures[textureName] = normalizeTextureData(
+      config,
+      textureName,
+      material.emittance_texture,
+    );
     material.emittance_texture = textureName;
   }
 
@@ -260,7 +276,11 @@ export function normalizeMaterialSpecular(
       config.textures,
       `${name}_${material.reflectance_texture.type}`,
     );
-    config.textures[textureName] = normalizeTextureData(config, textureName, material.reflectance_texture);
+    config.textures[textureName] = normalizeTextureData(
+      config,
+      textureName,
+      material.reflectance_texture,
+    );
     material.reflectance_texture = textureName;
   }
 
@@ -273,7 +293,11 @@ export function normalizeMaterialSpecular(
       config.textures,
       `${name}_${material.emittance_texture.type}`,
     );
-    config.textures[textureName] = normalizeTextureData(config, textureName, material.emittance_texture);
+    config.textures[textureName] = normalizeTextureData(
+      config,
+      textureName,
+      material.emittance_texture,
+    );
     material.emittance_texture = textureName;
   }
 

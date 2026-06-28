@@ -29,12 +29,12 @@ export function AccordionView(props: AccordionViewProps) {
   }, [renderConfig, section]);
 
   const materialNames = useMemo(
-    () => section === 'materials' ? Object.keys(renderConfig.materials ?? {}) : [],
+    () => (section === 'materials' ? Object.keys(renderConfig.materials ?? {}) : []),
     [renderConfig, section],
   );
 
   const textureNames = useMemo(
-    () => section === 'textures' ? Object.keys(renderConfig.textures ?? {}) : [],
+    () => (section === 'textures' ? Object.keys(renderConfig.textures ?? {}) : []),
     [renderConfig, section],
   );
 

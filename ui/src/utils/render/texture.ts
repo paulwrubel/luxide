@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { RenderConfig, NormalizedRenderConfig } from './config';
-import { capitalize, getNextUniqueName, isTypedObject } from './utils';
+import { getNextUniqueName, isTypedObject } from './utils';
 
 export type TextureData = NormalizedTextureData;
 

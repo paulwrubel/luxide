@@ -7,7 +7,9 @@ export function WarningIconOrphanGeometric() {
       content={
         <div>
           <h6 className="font-bold">Not in Active Scene</h6>
-          <p>This geometric is not referenced by the active scene and will not appear in renders.</p>
+          <p>
+            This geometric is not referenced by the active scene and will not appear in renders.
+          </p>
         </div>
       }
     >

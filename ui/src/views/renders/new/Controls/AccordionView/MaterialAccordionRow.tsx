@@ -108,9 +108,7 @@ export function MaterialAccordionRow(props: MaterialAccordionRowProps) {
       onDelete={isDefault ? undefined : () => handleDeleteMaterial(materialName)}
     >
       <fieldset disabled={isDefault} className="border-0 p-0">
-        <div className="flex w-full flex-col gap-2">
-          {renderControls(materialName)}
-        </div>
+        <div className="flex w-full flex-col gap-2">{renderControls(materialName)}</div>
       </fieldset>
     </AccordionRow>
   );

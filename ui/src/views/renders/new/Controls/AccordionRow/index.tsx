@@ -41,7 +41,7 @@ export function AccordionRow(props: AccordionRowProps) {
   const afterLabelContent = (
     <>
       {!isUsedByActiveScene && <WarningIconOrphanGeometric />}
-            {isDefaultEntity && <InfoIconDefaultResource />}
+      {isDefaultEntity && <InfoIconDefaultResource />}
     </>
   );
 
@@ -74,7 +74,7 @@ export function AccordionRow(props: AccordionRowProps) {
           <span className="inline-flex items-center gap-2">
             <LabelText text={leftLabel} type={leftLabelStyle} />
             {!isUsedByActiveScene && <WarningIconOrphanGeometric />}
-      {isDefaultEntity && <InfoIconDefaultResource />}
+            {isDefaultEntity && <InfoIconDefaultResource />}
           </span>
         )}
 

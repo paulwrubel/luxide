@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { type RawCameraData } from './camera';
 import type { RenderConfig, NormalizedRenderConfig } from './config';
 import { normalizeGeometricData, type RawGeometricData } from './geometric';
-import { capitalize, getNextUniqueName, isNonNullObject } from './utils';
+import { getNextUniqueName, isNonNullObject } from './utils';
 
 export const SceneDataSchema = z.object({
   geometrics: z.array(z.string().nonempty()),

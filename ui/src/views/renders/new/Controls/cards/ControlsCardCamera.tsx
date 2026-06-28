@@ -1,4 +1,4 @@
-import { ControlsCard } from './ControlsCard';
+import { AccordionRow } from '../AccordionRow';
 import { WarningIconUnaffectedPreview } from '../icons/WarningIconUnaffectedPreview';
 import { TextArrayInputControl } from '@/components/form-controls/TextArrayInputControl';
 import { renameCamera } from '@/utils/render/utils';
@@ -32,7 +32,7 @@ export function ControlsCardCamera(props: ControlsCardCameraProps) {
   const formPath: RenderFormPath = `cameras.${cameraName}`;
 
   return (
-    <ControlsCard leftLabel={cameraName} onRename={handleRename} startExpanded>
+    <AccordionRow leftLabel={cameraName} onRename={handleRename} startExpanded>
       <div className="flex flex-col gap-2 p-4">
         <form.AppField name={`${formPath}.vertical_field_of_view_degrees`}>
           {(field) => (
@@ -72,6 +72,6 @@ export function ControlsCardCamera(props: ControlsCardCameraProps) {
           )}
         </form.AppField>
       </div>
-    </ControlsCard>
+    </AccordionRow>
   );
 }
