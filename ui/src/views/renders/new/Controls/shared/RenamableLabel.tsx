@@ -57,7 +57,7 @@ export function RenamableLabel(props: RenamableLabelProps) {
   }
 
   return (
-    <span className="inline-flex items-center gap-2 min-w-0">
+    <span className="inline-flex min-w-0 items-center gap-2">
       <LabelText text={label} type={labelStyle} className="truncate" title={label} />
       {afterLabel}
       <Button {...buttonProps} onClick={handleStartEditing} className="shrink-0">
