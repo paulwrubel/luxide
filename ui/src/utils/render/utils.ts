@@ -19,6 +19,7 @@ export function getTopLevelGeometricNames(config: NormalizedRenderConfig) {
             case 'rotate_z':
             case 'translate':
             case 'constant_volume':
+            case 'virtual':
               return data.geometric;
             default:
               return [];
@@ -184,6 +185,7 @@ export function fixReferences(config: NormalizedRenderConfig): NormalizedRenderC
       case 'rotate_z':
       case 'translate':
       case 'constant_volume':
+      case 'virtual':
         if (!Object.keys(geometrics).includes(geometric.geometric)) {
           geometric.geometric = '__unit_box';
         }
@@ -349,7 +351,8 @@ export function renameGeometric(
       case 'rotate_y':
       case 'rotate_z':
       case 'translate':
-      case 'constant_volume': {
+      case 'constant_volume':
+      case 'virtual': {
         if (geometric.geometric === oldName) {
           geometric.geometric = newName;
         }
