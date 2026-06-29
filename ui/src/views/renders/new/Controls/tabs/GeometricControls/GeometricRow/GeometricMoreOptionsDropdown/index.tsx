@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Dropdown, DropdownItem, DropdownDivider } from 'flowbite-react';
 import { useSelector } from '@tanstack/react-store';
 import { HiEllipsisHorizontal, HiChevronRight, HiChevronDown } from 'react-icons/hi2';
-import { wrapGeometric, duplicateGeometric } from '@/utils/render/utils';
+import { wrapGeometric, duplicateGeometric } from '@/utils/render/geometric';
 import type { RenderForm } from '@/hooks/useRenderForm';
 
 export type GeometricMoreOptionsDropdownProps = {

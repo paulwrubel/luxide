@@ -1,7 +1,6 @@
 import { degreesToRadians, radiansToDegrees } from '../math';
 import { z } from 'zod';
 import type { NormalizedRenderConfig } from './config';
-import { defaultGeometricForType } from './geometric';
 
 export function removeDefaults(array: string[]) {
   return array.filter((item) => !item.startsWith('__'));
@@ -379,100 +378,6 @@ export function renameGeometric(
         name === oldName ? newName : name,
       );
     }
-  }
-
-  return newConfig;
-}
-
-/**
- * wrap an existing geometric in a composite wrapper (translate, rotate_x/y/z,
- * constant_volume, virtual). the original geometric is renamed to
- * `{wrapperName}_{OriginalTypeLabel}` and the wrapper takes its place.
- */
-export function wrapGeometric(
-  config: NormalizedRenderConfig,
-  geometricName: string,
-  wrapperType: 'translate' | 'rotate_x' | 'rotate_y' | 'rotate_z' | 'constant_volume' | 'virtual',
-): NormalizedRenderConfig {
-  const geometrics = config.geometrics;
-  if (!geometrics || !(geometricName in geometrics)) {
-    return config;
-  }
-
-  const originalType = geometrics[geometricName].type;
-  const typeLabels: Record<string, string> = {
-    box: 'Box',
-    sphere: 'Sphere',
-    triangle: 'Triangle',
-    parallelogram: 'Parallelogram',
-    obj_model: 'OBJ Model',
-    list: 'List',
-    rotate_x: 'Rotate X',
-    rotate_y: 'Rotate Y',
-    rotate_z: 'Rotate Z',
-    translate: 'Translate',
-    constant_volume: 'Constant Volume',
-    virtual: 'Virtual',
-  };
-  const typeLabel = typeLabels[originalType] ?? originalType;
-  const innerName = getNextUniqueName(geometrics, `${geometricName}_${typeLabel}`);
-
-  const newConfig = { ...config };
-  newConfig.geometrics = moveKey(newConfig.geometrics, geometricName, innerName);
-
-  // update all composite/list geometric references
-  Object.values(newConfig.geometrics ?? {}).forEach((geometric) => {
-    switch (geometric.type) {
-      case 'rotate_x':
-      case 'rotate_y':
-      case 'rotate_z':
-      case 'translate':
-      case 'constant_volume':
-      case 'virtual': {
-        if (geometric.geometric === geometricName) {
-          geometric.geometric = innerName;
-        }
-
-        break;
-      }
-      case 'list': {
-        geometric.geometrics = geometric.geometrics.map((name: string) =>
-          name === geometricName ? innerName : name,
-        );
-
-        break;
-      }
-    }
-  });
-
-  const wrapper = { ...defaultGeometricForType(wrapperType), geometric: innerName };
-  newConfig.geometrics[geometricName] = wrapper;
-
-  return newConfig;
-}
-
-/**
- * shallow-copy a geometric entry with a new unique name and add it
- * to the active scene.
- */
-export function duplicateGeometric(
-  config: NormalizedRenderConfig,
-  geometricName: string,
-): NormalizedRenderConfig {
-  const geometrics = config.geometrics;
-  if (!geometrics || !(geometricName in geometrics)) {
-    return config;
-  }
-
-  const newConfig = { ...config };
-  const copy = { ...geometrics[geometricName] };
-  const newName = getNextUniqueName(geometrics, `${geometricName} (copy)`);
-  newConfig.geometrics = { ...newConfig.geometrics, [newName]: copy };
-
-  // add to active scene
-  const activeScene = newConfig.scenes?.[newConfig.active_scene];
-  if (activeScene) {
-    activeScene.geometrics = [...activeScene.geometrics, newName];
   }
 
   return newConfig;
