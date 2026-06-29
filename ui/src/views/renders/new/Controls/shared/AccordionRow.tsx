@@ -16,6 +16,7 @@ export type AccordionRowProps = {
   onDelete?: () => void;
   depth?: number;
   afterLabel?: React.ReactNode;
+  rightActions?: React.ReactNode;
 };
 
 export function AccordionRow(props: AccordionRowProps) {
@@ -30,6 +31,7 @@ export function AccordionRow(props: AccordionRowProps) {
     onDelete,
     depth = 0,
     afterLabel,
+    rightActions,
   } = props;
 
   const [isExpanded, setIsExpanded] = useState(startExpanded);
@@ -68,6 +70,7 @@ export function AccordionRow(props: AccordionRowProps) {
 
         <div className="flex flex-row items-center gap-2">
           {rightLabel && <LabelText text={rightLabel} type={rightLabelStyle} />}
+          {rightActions}
           {isExpanded ? (
             <HiChevronUp className="h-4 w-auto" />
           ) : (

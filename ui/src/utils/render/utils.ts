@@ -1,7 +1,7 @@
 import { degreesToRadians, radiansToDegrees } from '../math';
 import { z } from 'zod';
 import type { NormalizedRenderConfig } from './config';
-import { defaultGeometricForType, type GeometricData } from './geometric';
+import { defaultGeometricForType } from './geometric';
 
 export function removeDefaults(array: string[]) {
   return array.filter((item) => !item.startsWith('__'));
