@@ -3,6 +3,7 @@ import { TextInputControl } from '@/components/form-controls/TextInputControl';
 import { getGeometricData } from '@/utils/render/geometric';
 import { AroundVariantControls } from './AroundVariantControls';
 import { GeometricMaterialSelect } from './GeometricMaterialSelect';
+import { GeometricTextureSelect } from './GeometricTextureSelect';
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { useSelector } from '@tanstack/react-store';
 
@@ -20,6 +21,11 @@ export function GeometricFormControls(props: GeometricFormControlsProps) {
 
   // build material select items
   const materialItems = Object.keys(renderConfig.materials ?? {}).map((key) => ({
+    label: key,
+    value: key,
+  }));
+
+  const textureItems = Object.keys(renderConfig.textures ?? {}).map((key) => ({
     label: key,
     value: key,
   }));
@@ -165,7 +171,7 @@ export function GeometricFormControls(props: GeometricFormControlsProps) {
           <form.AppField name={`geometrics.${name}.density`}>
             {(field) => <field.RangeControl label="Density" min={0} max={1} step={0.01} />}
           </form.AppField>
-          <GeometricMaterialSelect form={form} name={name} items={materialItems} />
+          <GeometricTextureSelect form={form} name={name} items={textureItems} />
         </>
       );
     case 'virtual':
