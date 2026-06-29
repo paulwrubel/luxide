@@ -62,10 +62,18 @@ export function AddEntityDropdown<T extends EntityType>(props: AddEntityDropdown
     ) {
       // the inner geometric always gets an auto-generated name;
       // the user's custom name is applied to the outermost wrapper below
+      const instanceTypeLabels: Record<string, string> = {
+        translate: 'Translate',
+        rotate_x: 'Rotate X',
+        rotate_y: 'Rotate Y',
+        rotate_z: 'Rotate Z',
+      };
+      const nameChain: { oldName: string; typeLabel: string }[] = [];
       let currentRecord = { ...record };
       const innerName = getNextUniqueName(currentRecord, autoName);
 
       currentRecord = { ...currentRecord, [innerName]: newEntity };
+      nameChain.push({ oldName: innerName, typeLabel: label });
       let currentRef = innerName;
 
       // stack instances from inner to outer
@@ -79,6 +87,7 @@ export function AddEntityDropdown<T extends EntityType>(props: AddEntityDropdown
           geometric: currentRef,
         };
         currentRecord = { ...currentRecord, [instanceName]: wrapper } as EntityRecord<T>;
+        nameChain.push({ oldName: instanceName, typeLabel: instanceTypeLabels[instanceType] });
         currentRef = instanceName;
       }
 
@@ -93,6 +102,7 @@ export function AddEntityDropdown<T extends EntityType>(props: AddEntityDropdown
           geometric: currentRef,
         };
         currentRecord = { ...currentRecord, [cvName]: cv } as EntityRecord<T>;
+        nameChain.push({ oldName: cvName, typeLabel: 'Constant Volume' });
         currentRef = cvName;
       }
 
@@ -107,6 +117,7 @@ export function AddEntityDropdown<T extends EntityType>(props: AddEntityDropdown
           geometric: currentRef,
         };
         currentRecord = { ...currentRecord, [virtName]: virt } as EntityRecord<T>;
+        nameChain.push({ oldName: virtName, typeLabel: 'Virtual' });
         currentRef = virtName;
       }
 
@@ -117,6 +128,30 @@ export function AddEntityDropdown<T extends EntityType>(props: AddEntityDropdown
         const { [currentRef]: entry, ...rest } = currentRecord as Record<string, unknown>;
         currentRecord = { ...rest, [outerName]: entry } as EntityRecord<T>;
         currentRef = outerName;
+        nameChain[nameChain.length - 1].oldName = currentRef;
+      }
+
+      // rename sub-geometrics to inherit their immediate parent's name
+      let parentNewName = nameChain[nameChain.length - 1].oldName;
+
+      for (let i = nameChain.length - 2; i >= 0; i--) {
+        const { oldName, typeLabel } = nameChain[i];
+        const newName = getNextUniqueName(currentRecord, `${parentNewName}_${typeLabel}`);
+
+        // move the entry to the new name
+        currentRecord = { ...currentRecord };
+        currentRecord[newName] = currentRecord[oldName];
+        delete currentRecord[oldName];
+
+        // type narrowing on generic T doesn't propagate inside the if-block
+        const parentEntry = currentRecord[parentNewName] as Record<string, unknown>;
+        currentRecord = {
+          ...currentRecord,
+          [parentNewName]: { ...parentEntry, geometric: newName },
+        } as EntityRecord<T>;
+
+        // this child's new name becomes the prefix for the next inner sibling
+        parentNewName = newName;
       }
 
       form.setFieldValue(type, currentRecord as never);

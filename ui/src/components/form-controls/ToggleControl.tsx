@@ -7,10 +7,11 @@ export type ToggleControlProps = {
   labelPrefix?: React.ReactNode;
   labelSuffix?: React.ReactNode;
   disabled?: boolean;
+  invert?: boolean;
 };
 
 export function ToggleControl(props: ToggleControlProps) {
-  const { label, labelPrefix, labelSuffix, disabled } = props;
+  const { label, labelPrefix, labelSuffix, disabled, invert } = props;
 
   const field = useFieldContext<boolean>();
 
@@ -25,8 +26,8 @@ export function ToggleControl(props: ToggleControlProps) {
           </span>
         </h6>
         <ToggleSwitch
-          checked={!!field.state.value}
-          onChange={(checked) => field.handleChange(checked)}
+          checked={invert ? !field.state.value : !!field.state.value}
+          onChange={(checked) => field.handleChange(invert ? !checked : checked)}
           disabled={disabled}
         />
       </div>
