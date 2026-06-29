@@ -48,6 +48,9 @@ export function GeometricFormControls(props: GeometricFormControlsProps) {
             valueLabels={['x', 'y', 'z']}
             type="number"
           />
+          <form.AppField name={`geometrics.${name}.is_culled`}>
+            {(field) => <field.ToggleControl label="Double Sided" invert />}
+          </form.AppField>
           <GeometricMaterialSelect form={form} name={name} items={materialItems} />
         </>
       );
@@ -95,6 +98,9 @@ export function GeometricFormControls(props: GeometricFormControlsProps) {
             valueLabels={['x', 'y', 'z']}
             type="number"
           />
+          <form.AppField name={`geometrics.${name}.is_culled`}>
+            {(field) => <field.ToggleControl label="Double Sided" invert />}
+          </form.AppField>
           <GeometricMaterialSelect form={form} name={name} items={materialItems} />
         </>
       );
@@ -130,6 +136,9 @@ export function GeometricFormControls(props: GeometricFormControlsProps) {
               </>
             }
           />
+          <form.AppField name={`geometrics.${name}.is_culled`}>
+            {(field) => <field.ToggleControl label="Double Sided" invert />}
+          </form.AppField>
           <GeometricMaterialSelect form={form} name={name} items={materialItems} />
         </>
       );
