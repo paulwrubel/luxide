@@ -327,14 +327,14 @@ export function defaultGeometricForType(
     case 'box':
       return {
         type: 'box',
-        a: [-0.5, 0, 0.5],
-        b: [0.5, 1.0, -0.5],
+        a: [-0.5, -0.5, 0.5],
+        b: [0.5, 0.5, -0.5],
         material: '__lambertian_white',
       };
     case 'list':
       return {
         type: 'list',
-        geometrics: ['__unit_box'],
+        geometrics: [],
       };
     case 'obj_model':
       if (!options || options.filename.length === 0) {
@@ -1061,6 +1061,155 @@ export function duplicateGeometric(
   if (activeScene) {
     activeScene.geometrics = [...activeScene.geometrics, newName];
   }
+
+  return newConfig;
+}
+
+/**
+ * add a geometric to a list. if the geometric was directly in the active
+ * scene, it is removed from the scene (the list should be in the scene instead).
+ */
+export function addGeometricToList(
+  config: NormalizedRenderConfig,
+  geometricName: string,
+  listName: string,
+): NormalizedRenderConfig {
+  const geometrics = config.geometrics;
+  if (!geometrics || !(geometricName in geometrics) || !(listName in geometrics)) {
+    return config;
+  }
+
+  const list = geometrics[listName];
+  if (list.type !== 'list') {
+    return config;
+  }
+
+  // prevent self-reference
+  if (geometricName === listName) {
+    return config;
+  }
+
+  // prevent duplicates
+  if (list.geometrics.includes(geometricName)) {
+    return config;
+  }
+
+  const newConfig = { ...config };
+
+  // add to list
+  newConfig.geometrics = {
+    ...newConfig.geometrics,
+    [listName]: {
+      ...list,
+      geometrics: [...list.geometrics, geometricName],
+    },
+  };
+
+  // remove from active scene (only if directly in scene)
+  const activeScene = newConfig.scenes?.[newConfig.active_scene];
+  if (activeScene?.geometrics.includes(geometricName)) {
+    activeScene.geometrics = activeScene.geometrics.filter(
+      (name: string) => name !== geometricName,
+    );
+  }
+
+  return newConfig;
+}
+
+/**
+ * remove a geometric from a list and re-add it to the active scene.
+ */
+export function removeGeometricFromList(
+  config: NormalizedRenderConfig,
+  geometricName: string,
+  listName: string,
+): NormalizedRenderConfig {
+  const geometrics = config.geometrics;
+  if (!geometrics || !(listName in geometrics)) {
+    return config;
+  }
+
+  const list = geometrics[listName];
+  if (list.type !== 'list') {
+    return config;
+  }
+
+  if (!list.geometrics.includes(geometricName)) {
+    return config;
+  }
+
+  const newConfig = { ...config };
+
+  // remove from list
+  newConfig.geometrics = {
+    ...newConfig.geometrics,
+    [listName]: {
+      ...list,
+      geometrics: list.geometrics.filter((name: string) => name !== geometricName),
+    },
+  };
+
+  // re-add to active scene
+  const activeScene = newConfig.scenes?.[newConfig.active_scene];
+  if (activeScene) {
+    activeScene.geometrics = [...activeScene.geometrics, geometricName];
+  }
+
+  return newConfig;
+}
+
+/**
+ * add a geometric to the active scene.
+ */
+export function addToScene(
+  config: NormalizedRenderConfig,
+  geometricName: string,
+): NormalizedRenderConfig {
+  const activeScene = config.scenes?.[config.active_scene];
+  if (!activeScene || !config.geometrics?.[geometricName]) {
+    return config;
+  }
+
+  if (activeScene.geometrics.includes(geometricName)) {
+    return config;
+  }
+
+  const newConfig = { ...config };
+  newConfig.scenes = {
+    ...newConfig.scenes,
+    [newConfig.active_scene]: {
+      ...activeScene,
+      geometrics: [...activeScene.geometrics, geometricName],
+    },
+  };
+
+  return newConfig;
+}
+
+/**
+ * remove a geometric from the active scene.
+ */
+export function removeFromScene(
+  config: NormalizedRenderConfig,
+  geometricName: string,
+): NormalizedRenderConfig {
+  const activeScene = config.scenes?.[config.active_scene];
+  if (!activeScene) {
+    return config;
+  }
+
+  if (!activeScene.geometrics.includes(geometricName)) {
+    return config;
+  }
+
+  const newConfig = { ...config };
+  newConfig.scenes = {
+    ...newConfig.scenes,
+    [newConfig.active_scene]: {
+      ...activeScene,
+      geometrics: activeScene.geometrics.filter((name: string) => name !== geometricName),
+    },
+  };
 
   return newConfig;
 }

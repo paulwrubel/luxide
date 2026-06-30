@@ -83,6 +83,11 @@ export function Controls(props: ControlsProps) {
                   description: 'Parallelogram defined by origin and two edge vectors.',
                 },
                 {
+                  subtype: 'list',
+                  label: 'List',
+                  description: 'A group of geometrics rendered together.',
+                },
+                {
                   subtype: 'obj_model',
                   label: 'OBJ Model',
                   description: 'Import a 3D model from an OBJ file.',

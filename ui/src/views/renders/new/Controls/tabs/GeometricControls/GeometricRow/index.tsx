@@ -18,7 +18,7 @@ export type GeometricRowProps = {
 };
 
 export function GeometricRow(props: GeometricRowProps) {
-  const { form, geometricName, depth, isUsedByActiveScene } = props;
+  const { form, geometricName, depth, isUsedByActiveScene, isDirectlyInActiveScene } = props;
 
   const isDefault = geometricName.startsWith('__');
 
@@ -76,7 +76,12 @@ export function GeometricRow(props: GeometricRowProps) {
       afterLabel={afterLabel}
       rightActions={
         !isDefault ? (
-          <GeometricMoreOptionsDropdown form={form} geometricName={geometricName} />
+          <GeometricMoreOptionsDropdown
+            form={form}
+            geometricName={geometricName}
+            isDirectlyInActiveScene={isDirectlyInActiveScene}
+            isUsedByActiveScene={isUsedByActiveScene}
+          />
         ) : undefined
       }
     >

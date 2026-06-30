@@ -134,11 +134,7 @@ export function WrapGeometricModal(props: WrapGeometricModalProps) {
 
         {/* virtual toggle */}
         <div className="mb-3 flex items-center gap-3">
-          <ToggleSwitch
-            checked={isVirtual}
-            onChange={setIsVirtual}
-            label="Wrap as Virtual?"
-          />
+          <ToggleSwitch checked={isVirtual} onChange={setIsVirtual} label="Wrap as Virtual?" />
         </div>
       </ModalBody>
       <ModalFooter>
