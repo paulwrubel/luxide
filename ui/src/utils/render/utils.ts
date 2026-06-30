@@ -422,3 +422,20 @@ export function duplicateTexture(
 
   return newConfig;
 }
+
+/**
+ * rebuild a record with keys in the specified order.
+ * used to persist drag-and-drop reordering for IndexMap-backed collections.
+ */
+export function reorderRecordKeys<T>(
+  record: Record<string, T>,
+  orderedKeys: string[],
+): Record<string, T> {
+  const result: Record<string, T> = {};
+  for (const key of orderedKeys) {
+    if (key in record) {
+      result[key] = record[key];
+    }
+  }
+  return result;
+}
