@@ -382,3 +382,43 @@ export function renameGeometric(
 
   return newConfig;
 }
+
+/**
+ * shallow-copy a material entry with a new unique name.
+ */
+export function duplicateMaterial(
+  config: NormalizedRenderConfig,
+  materialName: string,
+): NormalizedRenderConfig {
+  const materials = config.materials;
+  if (!materials || !(materialName in materials)) {
+    return config;
+  }
+
+  const newConfig = { ...config };
+  const copy = { ...materials[materialName] };
+  const newName = getNextUniqueName(materials, `${materialName} (copy)`);
+  newConfig.materials = { ...newConfig.materials, [newName]: copy };
+
+  return newConfig;
+}
+
+/**
+ * shallow-copy a texture entry with a new unique name.
+ */
+export function duplicateTexture(
+  config: NormalizedRenderConfig,
+  textureName: string,
+): NormalizedRenderConfig {
+  const textures = config.textures;
+  if (!textures || !(textureName in textures)) {
+    return config;
+  }
+
+  const newConfig = { ...config };
+  const copy = { ...textures[textureName] };
+  const newName = getNextUniqueName(textures, `${textureName} (copy)`);
+  newConfig.textures = { ...newConfig.textures, [newName]: copy };
+
+  return newConfig;
+}

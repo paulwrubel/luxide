@@ -10,6 +10,8 @@ import { useSelector } from '@tanstack/react-store';
 import { Separator } from '@/components/Separator';
 import { WarningIconOrphanGeometric } from '../../shared/icons/WarningIconOrphanGeometric';
 import { InfoIconDefaultResource } from '../../shared/icons/InfoIconDefaultResource';
+import { DuplicateDropdown } from '../../shared/DuplicateDropdown';
+import { duplicateTexture } from '@/utils/render/utils';
 
 export type TextureRowProps = {
   form: RenderForm;
@@ -127,6 +129,11 @@ export function TextureRow(props: TextureRowProps) {
     }
   }
 
+  function handleDuplicate() {
+    const result = duplicateTexture(renderConfig, textureName);
+    form.setFieldValue('textures', result.textures);
+  }
+
   return (
     <AccordionRow
       leftLabel={textureName}
@@ -136,6 +143,7 @@ export function TextureRow(props: TextureRowProps) {
       rightLabelStyle="light"
       afterLabel={afterLabel}
       onDelete={isDefault ? undefined : () => handleDeleteTexture(textureName)}
+      rightActions={!isDefault ? <DuplicateDropdown onDuplicate={handleDuplicate} /> : undefined}
     >
       <fieldset disabled={isDefault} className="border-0 p-0">
         <div className="flex w-full flex-col gap-2">{renderControls(textureName)}</div>

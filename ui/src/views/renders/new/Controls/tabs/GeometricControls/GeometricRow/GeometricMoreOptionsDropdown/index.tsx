@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Dropdown, DropdownItem, DropdownDivider } from 'flowbite-react';
 import { useSelector } from '@tanstack/react-store';
-import { HiEllipsisHorizontal, HiChevronRight, HiChevronDown } from 'react-icons/hi2';
+import { HiEllipsisHorizontal } from 'react-icons/hi2';
 import { wrapGeometric, duplicateGeometric } from '@/utils/render/geometric';
 import type { RenderForm } from '@/hooks/useRenderForm';
+import { WrapGeometricModal, type WrapGeometricConfig } from './WrapGeometricModal';
 
 export type GeometricMoreOptionsDropdownProps = {
   form: RenderForm;
@@ -13,21 +14,33 @@ export type GeometricMoreOptionsDropdownProps = {
 export function GeometricMoreOptionsDropdown(props: GeometricMoreOptionsDropdownProps) {
   const { form, geometricName } = props;
 
-  const [showInstanceSubmenu, setShowInstanceSubmenu] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const renderConfig = useSelector(form.store, (state) => state.values);
 
-  function handleWrap(
-    instanceType:
-      | 'translate'
-      | 'rotate_x'
-      | 'rotate_y'
-      | 'rotate_z'
-      | 'constant_volume'
-      | 'virtual',
-  ) {
-    const result = wrapGeometric(renderConfig, geometricName, instanceType);
-    form.setFieldValue('geometrics', result.geometrics);
-    form.setFieldValue('scenes', result.scenes);
+  function handleWrap(wrapConfig: WrapGeometricConfig) {
+    let currentConfig = renderConfig;
+    let currentName = geometricName;
+
+    // apply instances from inner to outer
+    for (const instanceType of wrapConfig.instances) {
+      const result = wrapGeometric(currentConfig, currentName, instanceType);
+      currentConfig = result.config;
+      currentName = result.wrapperName;
+    }
+
+    if (wrapConfig.isConstantVolume) {
+      const result = wrapGeometric(currentConfig, currentName, 'constant_volume');
+      currentConfig = result.config;
+      currentName = result.wrapperName;
+    }
+
+    if (wrapConfig.isVirtual) {
+      const result = wrapGeometric(currentConfig, currentName, 'virtual');
+      currentConfig = result.config;
+    }
+
+    form.setFieldValue('geometrics', currentConfig.geometrics);
+    form.setFieldValue('scenes', currentConfig.scenes);
   }
 
   function handleDuplicate() {
@@ -36,81 +49,33 @@ export function GeometricMoreOptionsDropdown(props: GeometricMoreOptionsDropdown
     form.setFieldValue('scenes', result.scenes);
   }
 
-  function handleToggleInstanceSubmenu(e: React.MouseEvent) {
-    e.stopPropagation();
-    setShowInstanceSubmenu((prev) => !prev);
-  }
-
   return (
-    <Dropdown
-      label={<HiEllipsisHorizontal className="h-5 w-5" />}
-      arrowIcon={false}
-      color="light"
-      size="sm"
-      inline
-    >
-      <li>
-        <button
-          type="button"
-          onClick={handleToggleInstanceSubmenu}
-          className="flex w-full items-center justify-between px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600"
+    <>
+      <Dropdown
+        label={<HiEllipsisHorizontal className="h-5 w-5" />}
+        arrowIcon={false}
+        color="light"
+        size="sm"
+        inline
+      >
+        <DropdownItem
+          onClick={() => {
+            setModalOpen(true);
+          }}
         >
-          Wrap in Instance
-          {showInstanceSubmenu ? (
-            <HiChevronDown className="h-4 w-4" />
-          ) : (
-            <HiChevronRight className="h-4 w-4" />
-          )}
-        </button>
-      </li>
-      {showInstanceSubmenu && (
-        <>
-          <DropdownItem
-            onClick={() => {
-              handleWrap('translate');
-            }}
-          >
-            Translate
-          </DropdownItem>
-          <DropdownItem
-            onClick={() => {
-              handleWrap('rotate_x');
-            }}
-          >
-            Rotate X
-          </DropdownItem>
-          <DropdownItem
-            onClick={() => {
-              handleWrap('rotate_y');
-            }}
-          >
-            Rotate Y
-          </DropdownItem>
-          <DropdownItem
-            onClick={() => {
-              handleWrap('rotate_z');
-            }}
-          >
-            Rotate Z
-          </DropdownItem>
-        </>
-      )}
-      <DropdownItem
-        onClick={() => {
-          handleWrap('constant_volume');
+          Wrap
+        </DropdownItem>
+        <DropdownDivider />
+        <DropdownItem onClick={handleDuplicate}>Duplicate</DropdownItem>
+      </Dropdown>
+      <WrapGeometricModal
+        geometricName={geometricName}
+        open={modalOpen}
+        onClose={() => {
+          setModalOpen(false);
         }}
-      >
-        Wrap in Constant Volume
-      </DropdownItem>
-      <DropdownItem
-        onClick={() => {
-          handleWrap('virtual');
-        }}
-      >
-        Wrap in Virtual
-      </DropdownItem>
-      <DropdownDivider />
-      <DropdownItem onClick={handleDuplicate}>Duplicate</DropdownItem>
-    </Dropdown>
+        onWrap={handleWrap}
+      />
+    </>
   );
 }

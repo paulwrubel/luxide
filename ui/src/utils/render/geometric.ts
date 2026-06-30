@@ -965,22 +965,16 @@ export const GeometricDataSchema = z.any().superRefine((data, ctx) => {
   }
 }) as z.ZodType<NormalizedGeometricData>;
 
-/**
- * wrap an existing geometric in a composite wrapper (translate, rotate_x/y/z,
- * constant_volume, virtual). the original geometric is renamed to
- * `{wrapperName}_{OriginalTypeLabel}` and the wrapper takes its place.
- */
 export function wrapGeometric(
   config: NormalizedRenderConfig,
   geometricName: string,
   wrapperType: 'translate' | 'rotate_x' | 'rotate_y' | 'rotate_z' | 'constant_volume' | 'virtual',
-): NormalizedRenderConfig {
+): { config: NormalizedRenderConfig; wrapperName: string } {
   const geometrics = config.geometrics;
   if (!geometrics || !(geometricName in geometrics)) {
-    return config;
+    return { config, wrapperName: geometricName };
   }
 
-  const originalType = geometrics[geometricName].type;
   const typeLabels: Record<string, string> = {
     box: 'Box',
     sphere: 'Sphere',
@@ -995,17 +989,17 @@ export function wrapGeometric(
     constant_volume: 'Constant Volume',
     virtual: 'Virtual',
   };
-  const typeLabel = typeLabels[originalType] ?? originalType;
-  const innerName = getNextUniqueName(geometrics, `${geometricName}_${typeLabel}`);
+  const wrapperTypeLabel = typeLabels[wrapperType] ?? wrapperType;
+  const wrapperName = getNextUniqueName(geometrics, `${geometricName}_${wrapperTypeLabel}`);
 
   const newConfig = { ...config };
-  // inline moveKey — move original from geometricName to innerName
-  const newGeometrics = { ...newConfig.geometrics };
-  newGeometrics[innerName] = newGeometrics[geometricName];
-  delete newGeometrics[geometricName];
-  newConfig.geometrics = newGeometrics;
 
-  // update all composite/list geometric references
+  // create the wrapper (but don't add it yet — reference update must run first
+  // so the wrapper itself doesn't get its own reference rewritten)
+  const wrapper = { ...defaultGeometricForType(wrapperType), geometric: geometricName };
+
+  // update all composite/list references: if they point to geometricName,
+  // point them to wrapperName instead (so they use the wrapped version)
   Object.values(newConfig.geometrics ?? {}).forEach((geometric) => {
     switch (geometric.type) {
       case 'rotate_x':
@@ -1015,14 +1009,14 @@ export function wrapGeometric(
       case 'constant_volume':
       case 'virtual': {
         if (geometric.geometric === geometricName) {
-          geometric.geometric = innerName;
+          geometric.geometric = wrapperName;
         }
 
         break;
       }
       case 'list': {
         geometric.geometrics = geometric.geometrics.map((name: string) =>
-          name === geometricName ? innerName : name,
+          name === geometricName ? wrapperName : name,
         );
 
         break;
@@ -1030,10 +1024,18 @@ export function wrapGeometric(
     }
   });
 
-  const wrapper = { ...defaultGeometricForType(wrapperType), geometric: innerName };
-  newConfig.geometrics[geometricName] = wrapper;
+  // now add the wrapper to geometrics
+  newConfig.geometrics = { ...newConfig.geometrics, [wrapperName]: wrapper };
 
-  return newConfig;
+  // update the active scene: replace geometricName with wrapperName
+  const activeScene = newConfig.scenes?.[newConfig.active_scene];
+  if (activeScene) {
+    activeScene.geometrics = activeScene.geometrics.map((name: string) =>
+      name === geometricName ? wrapperName : name,
+    );
+  }
+
+  return { config: newConfig, wrapperName };
 }
 
 /**
