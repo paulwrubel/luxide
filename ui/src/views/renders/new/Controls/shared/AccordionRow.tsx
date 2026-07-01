@@ -87,7 +87,7 @@ export function AccordionRow(props: AccordionRowProps) {
             transition={{ duration: 0.3, ease: 'easeInOut' }}
             className="overflow-hidden"
           >
-            <div className="pr-3 pb-2 pl-4">{children}</div>
+            <div className="px-4 py-2">{children}</div>
             {onDelete && (
               <div className="flex w-full justify-end px-2 pb-2">
                 <Button color="red" onClick={onDelete} size="sm">
