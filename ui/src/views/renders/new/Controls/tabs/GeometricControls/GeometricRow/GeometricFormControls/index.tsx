@@ -4,6 +4,7 @@ import { getGeometricData } from '@/utils/render/geometric';
 import { AroundVariantControls } from './AroundVariantControls';
 import { GeometricMaterialSelect } from './GeometricMaterialSelect';
 import { GeometricTextureSelect } from './GeometricTextureSelect';
+import { ListControls } from './ListControls';
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { useSelector } from '@tanstack/react-store';
 
@@ -186,11 +187,7 @@ export function GeometricFormControls(props: GeometricFormControlsProps) {
     case 'virtual':
       return <p className="text-sm text-zinc-500">Virtual wrapper — transparent in rendering.</p>;
     case 'list':
-      return (
-        <p className="text-sm text-zinc-500">
-          List — {data.geometrics.length} geometric{data.geometrics.length !== 1 ? 's' : ''}
-        </p>
-      );
+      return <ListControls form={form} name={name} />;
     default:
       return <h6 className="text-sm">Unknown or unimplemented geometric: {data.type} (sorry!)</h6>;
   }

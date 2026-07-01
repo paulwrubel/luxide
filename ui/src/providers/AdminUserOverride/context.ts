@@ -2,7 +2,7 @@ import { createContext } from 'react';
 
 export type AdminUserOverrideContextType = {
   targetUserID?: number;
-  setTargetUserID: (userId: number) => void;
+  setTargetUserID: (userID: number) => void;
   clearTargetUserID: () => void;
 };
 

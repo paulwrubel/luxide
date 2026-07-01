@@ -6,6 +6,8 @@ import type { RenderForm } from '@/hooks/useRenderForm';
 import { useSelector } from '@tanstack/react-store';
 import { WarningIconOrphanGeometric } from '../../shared/icons/WarningIconOrphanGeometric';
 import { InfoIconDefaultResource } from '../../shared/icons/InfoIconDefaultResource';
+import { DuplicateDropdown } from '../../shared/DuplicateDropdown';
+import { duplicateMaterial } from '@/utils/render/utils';
 
 export type MaterialRowProps = {
   form: RenderForm;
@@ -107,6 +109,11 @@ export function MaterialRow(props: MaterialRowProps) {
     }
   }
 
+  function handleDuplicate() {
+    const result = duplicateMaterial(renderConfig, materialName);
+    form.setFieldValue('materials', result.materials);
+  }
+
   return (
     <AccordionRow
       leftLabel={materialName}
@@ -116,6 +123,7 @@ export function MaterialRow(props: MaterialRowProps) {
       rightLabelStyle="light"
       afterLabel={afterLabel}
       onDelete={isDefault ? undefined : () => handleDeleteMaterial(materialName)}
+      rightActions={!isDefault ? <DuplicateDropdown onDuplicate={handleDuplicate} /> : undefined}
     >
       <fieldset disabled={isDefault} className="border-0 p-0">
         <div className="flex w-full flex-col gap-2">{renderControls(materialName)}</div>

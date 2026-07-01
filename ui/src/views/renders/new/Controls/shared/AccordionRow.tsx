@@ -16,6 +16,7 @@ export type AccordionRowProps = {
   onDelete?: () => void;
   depth?: number;
   afterLabel?: React.ReactNode;
+  rightActions?: React.ReactNode;
 };
 
 export function AccordionRow(props: AccordionRowProps) {
@@ -30,13 +31,14 @@ export function AccordionRow(props: AccordionRowProps) {
     onDelete,
     depth = 0,
     afterLabel,
+    rightActions,
   } = props;
 
   const [isExpanded, setIsExpanded] = useState(startExpanded);
 
   return (
     <div
-      className="ml-[calc(var(--row-depth)*1.5rem)] bg-zinc-800"
+      className="ml-[calc(var(--row-depth)*0.75rem)] bg-zinc-800"
       // the type for inline styles does not include custom properties like --row-depth
       style={{ '--row-depth': depth } as CSSProperties}
     >
@@ -68,6 +70,7 @@ export function AccordionRow(props: AccordionRowProps) {
 
         <div className="flex flex-row items-center gap-2">
           {rightLabel && <LabelText text={rightLabel} type={rightLabelStyle} />}
+          <div onClick={(e) => e.stopPropagation()}>{rightActions}</div>
           {isExpanded ? (
             <HiChevronUp className="h-4 w-auto" />
           ) : (
@@ -84,7 +87,7 @@ export function AccordionRow(props: AccordionRowProps) {
             transition={{ duration: 0.3, ease: 'easeInOut' }}
             className="overflow-hidden"
           >
-            <div className="pr-3 pb-2 pl-4">{children}</div>
+            <div className="px-4 py-2">{children}</div>
             {onDelete && (
               <div className="flex w-full justify-end px-2 pb-2">
                 <Button color="red" onClick={onDelete} size="sm">

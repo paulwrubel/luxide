@@ -112,7 +112,7 @@ export function defaultMaterialForType(type: MaterialData['type']): MaterialData
         type: 'specular',
         reflectance_texture: '__white',
         emittance_texture: '__black',
-        roughness: 1,
+        roughness: 0.0,
       };
   }
 }

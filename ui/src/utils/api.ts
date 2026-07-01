@@ -9,7 +9,7 @@ export function getAPIURL(): string {
   return `${window.location.origin}/api/v1`;
 }
 
-function appendUserId(url: string, targetUserID?: number): string {
+function appendUserID(url: string, targetUserID?: number): string {
   if (targetUserID === undefined) {
     return url;
   }
@@ -108,7 +108,7 @@ export async function postRender(
   renderConfig: NormalizedRenderConfig,
   targetUserID?: number,
 ): Promise<PostRenderResponse> {
-  const response = await fetch(appendUserId(`${getAPIURL()}/renders`, targetUserID), {
+  const response = await fetch(appendUserID(`${getAPIURL()}/renders`, targetUserID), {
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -210,7 +210,7 @@ export type Duration = {
 
 export async function getAllRenders(token: string, targetUserID?: number): Promise<Render[]> {
   const response = await fetch(
-    appendUserId(`${getAPIURL()}/renders?format=precise`, targetUserID),
+    appendUserID(`${getAPIURL()}/renders?format=precise`, targetUserID),
     {
       headers: { Authorization: `Bearer ${token}` },
     },
@@ -230,7 +230,7 @@ export async function getRender(
   targetUserID?: number,
 ): Promise<Render> {
   const response = await fetch(
-    appendUserId(`${getAPIURL()}/renders/${renderID}?format=precise`, targetUserID),
+    appendUserID(`${getAPIURL()}/renders/${renderID}?format=precise`, targetUserID),
     {
       headers: { Authorization: `Bearer ${token}` },
     },
@@ -250,7 +250,7 @@ export async function pauseRender(
   targetUserID?: number,
 ): Promise<void> {
   const response = await fetch(
-    appendUserId(`${getAPIURL()}/renders/${renderID}/pause`, targetUserID),
+    appendUserID(`${getAPIURL()}/renders/${renderID}/pause`, targetUserID),
     {
       headers: { Authorization: `Bearer ${token}` },
       method: 'POST',
@@ -269,7 +269,7 @@ export async function resumeRender(
   targetUserID?: number,
 ): Promise<void> {
   const response = await fetch(
-    appendUserId(`${getAPIURL()}/renders/${renderID}/resume`, targetUserID),
+    appendUserID(`${getAPIURL()}/renders/${renderID}/resume`, targetUserID),
     {
       headers: { Authorization: `Bearer ${token}` },
       method: 'POST',
@@ -287,7 +287,7 @@ export async function deleteRender(
   renderID: number,
   targetUserID?: number,
 ): Promise<void> {
-  const response = await fetch(appendUserId(`${getAPIURL()}/renders/${renderID}`, targetUserID), {
+  const response = await fetch(appendUserID(`${getAPIURL()}/renders/${renderID}`, targetUserID), {
     headers: { Authorization: `Bearer ${token}` },
     method: 'DELETE',
   });
@@ -305,7 +305,7 @@ export async function updateRenderTotalCheckpoints(
   targetUserID?: number,
 ): Promise<void> {
   const response = await fetch(
-    appendUserId(`${getAPIURL()}/renders/${renderID}/parameters/total_checkpoints`, targetUserID),
+    appendUserID(`${getAPIURL()}/renders/${renderID}/parameters/total_checkpoints`, targetUserID),
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -329,7 +329,7 @@ export async function updateRenderName(
   targetUserID?: number,
 ): Promise<void> {
   const response = await fetch(
-    appendUserId(`${getAPIURL()}/renders/${renderID}/name`, targetUserID),
+    appendUserID(`${getAPIURL()}/renders/${renderID}/name`, targetUserID),
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -371,7 +371,7 @@ export async function getRenderStats(
   targetUserID?: number,
 ): Promise<RenderStats> {
   const response = await fetch(
-    appendUserId(`${getAPIURL()}/renders/${renderID}/stats?format=precise`, targetUserID),
+    appendUserID(`${getAPIURL()}/renders/${renderID}/stats?format=precise`, targetUserID),
     {
       headers: { Authorization: `Bearer ${token}` },
     },
@@ -391,7 +391,7 @@ export async function getLatestCheckpointImage(
   targetUserID?: number,
 ): Promise<Blob | null> {
   const response = await fetch(
-    appendUserId(`${getAPIURL()}/renders/${renderID}/checkpoint/latest`, targetUserID),
+    appendUserID(`${getAPIURL()}/renders/${renderID}/checkpoint/latest`, targetUserID),
     {
       headers: { Authorization: `Bearer ${token}` },
     },

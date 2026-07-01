@@ -41,9 +41,9 @@ export function ExistingRenderPicker(props: ExistingRenderPickerProps) {
   const { onSelect, onBack } = props;
 
   const { data: renders, isLoading, isError } = useRendersQuery();
-  const [selectedRenderId, setSelectedRenderId] = useState<number | null>(null);
-  const selectedRender = selectedRenderId
-    ? (renders?.find((r) => r.id === selectedRenderId) ?? null)
+  const [selectedRenderID, setSelectedRenderID] = useState<number | null>(null);
+  const selectedRender = selectedRenderID
+    ? (renders?.find((r) => r.id === selectedRenderID) ?? null)
     : null;
 
   const handleUseConfig = () => {
@@ -86,7 +86,7 @@ export function ExistingRenderPicker(props: ExistingRenderPickerProps) {
         {!isLoading && !isError && renders && renders.length > 0 && (
           <ul className="space-y-1">
             {renders.map((render) => {
-              const isSelected = selectedRenderId === render.id;
+              const isSelected = selectedRenderID === render.id;
 
               return (
                 <li key={render.id}>
@@ -95,7 +95,7 @@ export function ExistingRenderPicker(props: ExistingRenderPickerProps) {
                     className={`w-full rounded px-3 py-2 text-left ${
                       isSelected ? 'bg-zinc-700' : 'hover:bg-zinc-800'
                     }`}
-                    onClick={() => setSelectedRenderId(render.id)}
+                    onClick={() => setSelectedRenderID(render.id)}
                   >
                     <div className="flex min-w-0 items-center justify-between gap-2">
                       <div className="flex min-w-0 items-center gap-2">

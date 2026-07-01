@@ -24,10 +24,10 @@ export function AdminUserOverrideProvider(props: AdminUserOverrideProviderProps)
   }, [searchParams]);
 
   const setTargetUserID = useCallback(
-    (userId: number) => {
+    (userID: number) => {
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
-        next.set('user_id', String(userId));
+        next.set('user_id', String(userID));
         return next;
       });
     },

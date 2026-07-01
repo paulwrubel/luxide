@@ -327,14 +327,14 @@ export function defaultGeometricForType(
     case 'box':
       return {
         type: 'box',
-        a: [-0.5, 0, 0.5],
-        b: [0.5, 1.0, -0.5],
+        a: [-0.5, -0.5, 0.5],
+        b: [0.5, 0.5, -0.5],
         material: '__lambertian_white',
       };
     case 'list':
       return {
         type: 'list',
-        geometrics: ['__unit_box'],
+        geometrics: [],
       };
     case 'obj_model':
       if (!options || options.filename.length === 0) {
@@ -964,3 +964,252 @@ export const GeometricDataSchema = z.any().superRefine((data, ctx) => {
     }
   }
 }) as z.ZodType<NormalizedGeometricData>;
+
+export function wrapGeometric(
+  config: NormalizedRenderConfig,
+  geometricName: string,
+  wrapperType: 'translate' | 'rotate_x' | 'rotate_y' | 'rotate_z' | 'constant_volume' | 'virtual',
+): { config: NormalizedRenderConfig; wrapperName: string } {
+  const geometrics = config.geometrics;
+  if (!geometrics || !(geometricName in geometrics)) {
+    return { config, wrapperName: geometricName };
+  }
+
+  const typeLabels: Record<string, string> = {
+    box: 'Box',
+    sphere: 'Sphere',
+    triangle: 'Triangle',
+    parallelogram: 'Parallelogram',
+    obj_model: 'OBJ Model',
+    list: 'List',
+    rotate_x: 'Rotate X',
+    rotate_y: 'Rotate Y',
+    rotate_z: 'Rotate Z',
+    translate: 'Translate',
+    constant_volume: 'Constant Volume',
+    virtual: 'Virtual',
+  };
+  const wrapperTypeLabel = typeLabels[wrapperType] ?? wrapperType;
+  const wrapperName = getNextUniqueName(geometrics, `${geometricName}_${wrapperTypeLabel}`);
+
+  const newConfig = { ...config };
+
+  // create the wrapper (but don't add it yet — reference update must run first
+  // so the wrapper itself doesn't get its own reference rewritten)
+  const wrapper = { ...defaultGeometricForType(wrapperType), geometric: geometricName };
+
+  // update all composite/list references: if they point to geometricName,
+  // point them to wrapperName instead (so they use the wrapped version)
+  Object.values(newConfig.geometrics ?? {}).forEach((geometric) => {
+    switch (geometric.type) {
+      case 'rotate_x':
+      case 'rotate_y':
+      case 'rotate_z':
+      case 'translate':
+      case 'constant_volume':
+      case 'virtual': {
+        if (geometric.geometric === geometricName) {
+          geometric.geometric = wrapperName;
+        }
+
+        break;
+      }
+      case 'list': {
+        geometric.geometrics = geometric.geometrics.map((name: string) =>
+          name === geometricName ? wrapperName : name,
+        );
+
+        break;
+      }
+    }
+  });
+
+  // now add the wrapper to geometrics
+  newConfig.geometrics = { ...newConfig.geometrics, [wrapperName]: wrapper };
+
+  // update the active scene: replace geometricName with wrapperName
+  const activeScene = newConfig.scenes?.[newConfig.active_scene];
+  if (activeScene) {
+    activeScene.geometrics = activeScene.geometrics.map((name: string) =>
+      name === geometricName ? wrapperName : name,
+    );
+  }
+
+  return { config: newConfig, wrapperName };
+}
+
+/**
+ * shallow-copy a geometric entry with a new unique name and add it
+ * to the active scene.
+ */
+export function duplicateGeometric(
+  config: NormalizedRenderConfig,
+  geometricName: string,
+): NormalizedRenderConfig {
+  const geometrics = config.geometrics;
+  if (!geometrics || !(geometricName in geometrics)) {
+    return config;
+  }
+
+  const newConfig = { ...config };
+  const copy = { ...geometrics[geometricName] };
+  const newName = getNextUniqueName(geometrics, `${geometricName} (copy)`);
+  newConfig.geometrics = { ...newConfig.geometrics, [newName]: copy };
+
+  // add to active scene
+  const activeScene = newConfig.scenes?.[newConfig.active_scene];
+  if (activeScene) {
+    activeScene.geometrics = [...activeScene.geometrics, newName];
+  }
+
+  return newConfig;
+}
+
+/**
+ * add a geometric to a list. if the geometric was directly in the active
+ * scene, it is removed from the scene (the list should be in the scene instead).
+ */
+export function addGeometricToList(
+  config: NormalizedRenderConfig,
+  geometricName: string,
+  listName: string,
+): NormalizedRenderConfig {
+  const geometrics = config.geometrics;
+  if (!geometrics || !(geometricName in geometrics) || !(listName in geometrics)) {
+    return config;
+  }
+
+  const list = geometrics[listName];
+  if (list.type !== 'list') {
+    return config;
+  }
+
+  // prevent self-reference
+  if (geometricName === listName) {
+    return config;
+  }
+
+  // prevent duplicates
+  if (list.geometrics.includes(geometricName)) {
+    return config;
+  }
+
+  const newConfig = { ...config };
+
+  // add to list
+  newConfig.geometrics = {
+    ...newConfig.geometrics,
+    [listName]: {
+      ...list,
+      geometrics: [...list.geometrics, geometricName],
+    },
+  };
+
+  // remove from active scene (only if directly in scene)
+  const activeScene = newConfig.scenes?.[newConfig.active_scene];
+  if (activeScene?.geometrics.includes(geometricName)) {
+    activeScene.geometrics = activeScene.geometrics.filter(
+      (name: string) => name !== geometricName,
+    );
+  }
+
+  return newConfig;
+}
+
+/**
+ * remove a geometric from a list and re-add it to the active scene.
+ */
+export function removeGeometricFromList(
+  config: NormalizedRenderConfig,
+  geometricName: string,
+  listName: string,
+): NormalizedRenderConfig {
+  const geometrics = config.geometrics;
+  if (!geometrics || !(listName in geometrics)) {
+    return config;
+  }
+
+  const list = geometrics[listName];
+  if (list.type !== 'list') {
+    return config;
+  }
+
+  if (!list.geometrics.includes(geometricName)) {
+    return config;
+  }
+
+  const newConfig = { ...config };
+
+  // remove from list
+  newConfig.geometrics = {
+    ...newConfig.geometrics,
+    [listName]: {
+      ...list,
+      geometrics: list.geometrics.filter((name: string) => name !== geometricName),
+    },
+  };
+
+  // re-add to active scene
+  const activeScene = newConfig.scenes?.[newConfig.active_scene];
+  if (activeScene) {
+    activeScene.geometrics = [...activeScene.geometrics, geometricName];
+  }
+
+  return newConfig;
+}
+
+/**
+ * add a geometric to the active scene.
+ */
+export function addToScene(
+  config: NormalizedRenderConfig,
+  geometricName: string,
+): NormalizedRenderConfig {
+  const activeScene = config.scenes?.[config.active_scene];
+  if (!activeScene || !config.geometrics?.[geometricName]) {
+    return config;
+  }
+
+  if (activeScene.geometrics.includes(geometricName)) {
+    return config;
+  }
+
+  const newConfig = { ...config };
+  newConfig.scenes = {
+    ...newConfig.scenes,
+    [newConfig.active_scene]: {
+      ...activeScene,
+      geometrics: [...activeScene.geometrics, geometricName],
+    },
+  };
+
+  return newConfig;
+}
+
+/**
+ * remove a geometric from the active scene.
+ */
+export function removeFromScene(
+  config: NormalizedRenderConfig,
+  geometricName: string,
+): NormalizedRenderConfig {
+  const activeScene = config.scenes?.[config.active_scene];
+  if (!activeScene) {
+    return config;
+  }
+
+  if (!activeScene.geometrics.includes(geometricName)) {
+    return config;
+  }
+
+  const newConfig = { ...config };
+  newConfig.scenes = {
+    ...newConfig.scenes,
+    [newConfig.active_scene]: {
+      ...activeScene,
+      geometrics: activeScene.geometrics.filter((name: string) => name !== geometricName),
+    },
+  };
+
+  return newConfig;
+}

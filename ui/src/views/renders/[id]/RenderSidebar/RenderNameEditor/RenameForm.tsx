@@ -31,7 +31,7 @@ export function RenameForm(props: RenameFormProps) {
   function handleSubmit() {
     const { name } = form.state.values;
     updateName(
-      { renderId: renderID, newName: name },
+      { renderID, newName: name },
       {
         onError: (error) => {
           toast.error(extractErrorMessage(error));

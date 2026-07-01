@@ -19,6 +19,7 @@ export function getTopLevelGeometricNames(config: NormalizedRenderConfig) {
             case 'rotate_z':
             case 'translate':
             case 'constant_volume':
+            case 'virtual':
               return data.geometric;
             default:
               return [];
@@ -184,6 +185,7 @@ export function fixReferences(config: NormalizedRenderConfig): NormalizedRenderC
       case 'rotate_z':
       case 'translate':
       case 'constant_volume':
+      case 'virtual':
         if (!Object.keys(geometrics).includes(geometric.geometric)) {
           geometric.geometric = '__unit_box';
         }
@@ -349,7 +351,8 @@ export function renameGeometric(
       case 'rotate_y':
       case 'rotate_z':
       case 'translate':
-      case 'constant_volume': {
+      case 'constant_volume':
+      case 'virtual': {
         if (geometric.geometric === oldName) {
           geometric.geometric = newName;
         }
@@ -378,4 +381,61 @@ export function renameGeometric(
   }
 
   return newConfig;
+}
+
+/**
+ * shallow-copy a material entry with a new unique name.
+ */
+export function duplicateMaterial(
+  config: NormalizedRenderConfig,
+  materialName: string,
+): NormalizedRenderConfig {
+  const materials = config.materials;
+  if (!materials || !(materialName in materials)) {
+    return config;
+  }
+
+  const newConfig = { ...config };
+  const copy = { ...materials[materialName] };
+  const newName = getNextUniqueName(materials, `${materialName} (copy)`);
+  newConfig.materials = { ...newConfig.materials, [newName]: copy };
+
+  return newConfig;
+}
+
+/**
+ * shallow-copy a texture entry with a new unique name.
+ */
+export function duplicateTexture(
+  config: NormalizedRenderConfig,
+  textureName: string,
+): NormalizedRenderConfig {
+  const textures = config.textures;
+  if (!textures || !(textureName in textures)) {
+    return config;
+  }
+
+  const newConfig = { ...config };
+  const copy = { ...textures[textureName] };
+  const newName = getNextUniqueName(textures, `${textureName} (copy)`);
+  newConfig.textures = { ...newConfig.textures, [newName]: copy };
+
+  return newConfig;
+}
+
+/**
+ * rebuild a record with keys in the specified order.
+ * used to persist drag-and-drop reordering for IndexMap-backed collections.
+ */
+export function reorderRecordKeys<T>(
+  record: Record<string, T>,
+  orderedKeys: string[],
+): Record<string, T> {
+  const result: Record<string, T> = {};
+  for (const key of orderedKeys) {
+    if (key in record) {
+      result[key] = record[key];
+    }
+  }
+  return result;
 }

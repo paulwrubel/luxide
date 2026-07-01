@@ -1,11 +1,24 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useSelector } from '@tanstack/react-store';
 import { getSceneData } from '@/utils/render/scene';
 import { removeDefaults } from '@/utils/render/utils';
 import { buildGeometricTree } from '../../shared/geometricTree';
 
+import {
+  DndContext,
+  DragOverlay,
+  closestCenter,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import { reorderRecordKeys } from '@/utils/render/utils';
+
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { TextureRow } from './TextureRow';
+import { DraggableGroup } from '../../shared/DraggableGroup';
 
 export function TextureControls(props: { form: RenderForm }) {
   const { form } = props;
@@ -78,16 +91,63 @@ export function TextureControls(props: { form: RenderForm }) {
     [renderConfig.textures],
   );
 
+  const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
+
+  const [activeID, setActiveID] = useState<string | null>(null);
+
+  function handleDragEnd(event: {
+    active: { id: string | number };
+    over: { id: string | number } | null;
+  }) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const oldIndex = textureNames.indexOf(String(active.id));
+    const newIndex = textureNames.indexOf(String(over.id));
+    if (oldIndex === -1 || newIndex === -1) {
+      return;
+    }
+
+    const reordered = arrayMove([...textureNames], oldIndex, newIndex);
+    const currentTextures = renderConfig.textures ?? {};
+    const reorderedTextures = reorderRecordKeys(currentTextures, reordered);
+    form.setFieldValue('textures', reorderedTextures);
+    setActiveID(null);
+  }
+
   return (
-    <div className="flex flex-col">
-      {textureNames.map((texName) => (
-        <TextureRow
-          key={texName}
-          form={form}
-          textureName={texName}
-          isUsedByActiveScene={usedTextureNames.has(texName)}
-        />
-      ))}
-    </div>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={(event) => {
+        setActiveID(String(event.active.id));
+      }}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext items={textureNames} strategy={verticalListSortingStrategy}>
+        <div className="flex flex-col">
+          {textureNames.map((texName) => (
+            <DraggableGroup key={texName} id={texName}>
+              <TextureRow
+                form={form}
+                textureName={texName}
+                isUsedByActiveScene={usedTextureNames.has(texName)}
+              />
+            </DraggableGroup>
+          ))}
+        </div>
+      </SortableContext>
+      <DragOverlay>
+        {activeID ? (
+          <TextureRow
+            form={form}
+            textureName={activeID}
+            isUsedByActiveScene={usedTextureNames.has(activeID)}
+          />
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 }

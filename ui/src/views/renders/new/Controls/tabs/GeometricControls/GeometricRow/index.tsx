@@ -7,6 +7,7 @@ import { AccordionRow } from '../../../shared/AccordionRow';
 import { GeometricFormControls } from './GeometricFormControls';
 import { WarningIconOrphanGeometric } from '../../../shared/icons/WarningIconOrphanGeometric';
 import { InfoIconDefaultResource } from '../../../shared/icons/InfoIconDefaultResource';
+import { GeometricMoreOptionsDropdown } from './GeometricMoreOptionsDropdown';
 
 export type GeometricRowProps = {
   form: RenderForm;
@@ -17,7 +18,7 @@ export type GeometricRowProps = {
 };
 
 export function GeometricRow(props: GeometricRowProps) {
-  const { form, geometricName, depth, isUsedByActiveScene } = props;
+  const { form, geometricName, depth, isUsedByActiveScene, isDirectlyInActiveScene } = props;
 
   const isDefault = geometricName.startsWith('__');
 
@@ -73,6 +74,16 @@ export function GeometricRow(props: GeometricRowProps) {
       depth={depth}
       startExpanded={false}
       afterLabel={afterLabel}
+      rightActions={
+        !isDefault ? (
+          <GeometricMoreOptionsDropdown
+            form={form}
+            geometricName={geometricName}
+            isDirectlyInActiveScene={isDirectlyInActiveScene}
+            isUsedByActiveScene={isUsedByActiveScene}
+          />
+        ) : undefined
+      }
     >
       <div className="flex w-full flex-col gap-2">
         {!isUsedByActiveScene && (
