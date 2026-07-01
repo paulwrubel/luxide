@@ -21,19 +21,17 @@ export function DraggableGroup(props: DraggableGroupProps) {
   };
 
   return (
-    <div ref={setNodeRef} style={style}>
-      <div className="flex items-start">
-        <button
-          type="button"
-          className="cursor-grab touch-none px-1 py-2 text-zinc-500 hover:text-zinc-300 active:cursor-grabbing"
-          {...attributes}
-          {...listeners}
-          aria-label="Drag to reorder"
-        >
-          <HiBars3 className="h-4 w-4" />
-        </button>
-        <div className="flex flex-1 flex-col">{children}</div>
-      </div>
+    <div ref={setNodeRef} style={style} className="relative">
+      <button
+        type="button"
+        className="absolute top-4 left-0 z-10 cursor-grab touch-none px-1 text-zinc-500 hover:text-zinc-300 active:cursor-grabbing"
+        {...attributes}
+        {...listeners}
+        aria-label="Drag to reorder"
+      >
+        <HiBars3 className="h-4 w-4" />
+      </button>
+      <div className="flex flex-col pl-6">{children}</div>
     </div>
   );
 }
