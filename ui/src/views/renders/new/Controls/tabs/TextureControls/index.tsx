@@ -17,7 +17,7 @@ import { reorderRecordKeys } from '@/utils/render/utils';
 
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { TextureRow } from './TextureRow';
-import { SortableTextureRow } from './SortableTextureRow';
+import { DraggableGroup } from '../../shared/DraggableGroup';
 
 export function TextureControls(props: { form: RenderForm }) {
   const { form } = props;
@@ -118,13 +118,13 @@ export function TextureControls(props: { form: RenderForm }) {
       <SortableContext items={textureNames} strategy={verticalListSortingStrategy}>
         <div className="flex flex-col">
           {textureNames.map((texName) => (
-            <SortableTextureRow
-              key={texName}
-              id={texName}
-              form={form}
-              textureName={texName}
-              isUsedByActiveScene={usedTextureNames.has(texName)}
-            />
+            <DraggableGroup key={texName} id={texName}>
+              <TextureRow
+                form={form}
+                textureName={texName}
+                isUsedByActiveScene={usedTextureNames.has(texName)}
+              />
+            </DraggableGroup>
           ))}
         </div>
       </SortableContext>

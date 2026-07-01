@@ -5,6 +5,7 @@ export type GeometricDisplayNode = {
   displayName: string;
   type: string;
   depth: number;
+  parentId: string | null;
   isDirectlyInActiveScene: boolean;
   isUsedByActiveScene: boolean;
 };
@@ -43,13 +44,12 @@ export function buildGeometricTree(
     }
   }
 
-  // true roots: geometrics that are NOT children of anything, sorted alphabetically
+  // true roots: geometrics that are NOT children of anything, in IndexMap insertion order
   const rootNames = Object.keys(geometrics)
-    .filter((name) => !childNames.has(name))
-    .sort();
+    .filter((name) => !childNames.has(name));
 
   // pass 2+3: DFS from true roots, propagating scene usage down the tree
-  function dfs(name: string, depth: number, ancestors: Set<string>, isAncestorUsed: boolean): void {
+  function dfs(name: string, depth: number, parentId: string | null, ancestors: Set<string>, isAncestorUsed: boolean): void {
     // cycle detected - skip this branch entirely
     if (ancestors.has(name)) {
       return;
@@ -70,6 +70,7 @@ export function buildGeometricTree(
       displayName: name,
       type: geo.type,
       depth,
+      parentId,
       isDirectlyInActiveScene: isDirect,
       isUsedByActiveScene: isUsed,
     });
@@ -78,18 +79,17 @@ export function buildGeometricTree(
     nextAncestors.add(name);
 
     for (const childName of getChildGeometricNames(geo)) {
-      dfs(childName, depth + 1, nextAncestors, isUsed);
+      dfs(childName, depth + 1, name, nextAncestors, isUsed);
     }
   }
 
   for (const rootName of rootNames) {
-    dfs(rootName, 0, new Set(), false);
+    dfs(rootName, 0, null, new Set(), false);
   }
 
   // pass 4: safety-net orphans (shouldn't happen with structural roots, but defensive)
   const orphanKeys = Object.keys(geometrics)
-    .filter((key) => !visitedInTree.has(key))
-    .sort();
+    .filter((key) => !visitedInTree.has(key));
 
   for (const orphanName of orphanKeys) {
     const geo = geometrics[orphanName];
@@ -99,6 +99,7 @@ export function buildGeometricTree(
       displayName: orphanName,
       type: geo.type,
       depth: 0,
+      parentId: null,
       isDirectlyInActiveScene: isDirect,
       isUsedByActiveScene: isDirect,
     });

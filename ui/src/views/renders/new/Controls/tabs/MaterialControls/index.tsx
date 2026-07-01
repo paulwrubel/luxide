@@ -14,7 +14,8 @@ import { removeDefaults, reorderRecordKeys } from '@/utils/render/utils';
 import { buildGeometricTree } from '../../shared/geometricTree';
 
 import type { RenderForm } from '@/hooks/useRenderForm';
-import { SortableMaterialRow } from './SortableMaterialRow';
+import { DraggableGroup } from '../../shared/DraggableGroup';
+import { MaterialRow } from './MaterialRow';
 
 export function MaterialControls(props: { form: RenderForm }) {
   const { form } = props;
@@ -77,13 +78,13 @@ export function MaterialControls(props: { form: RenderForm }) {
       <SortableContext items={materialNames} strategy={verticalListSortingStrategy}>
         <div className="flex flex-col">
           {materialNames.map((matName) => (
-            <SortableMaterialRow
-              key={matName}
-              id={matName}
-              form={form}
-              materialName={matName}
-              isUsedByActiveScene={usedMaterialNames.has(matName)}
-            />
+            <DraggableGroup key={matName} id={matName}>
+              <MaterialRow
+                form={form}
+                materialName={matName}
+                isUsedByActiveScene={usedMaterialNames.has(matName)}
+              />
+            </DraggableGroup>
           ))}
         </div>
       </SortableContext>
