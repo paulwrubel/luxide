@@ -34,10 +34,10 @@ export function usePauseRenderMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (renderId: number) => pauseRender(token, renderId, targetUserID),
-    onSuccess: (_data, renderId) => {
+    mutationFn: (renderID: number) => pauseRender(token, renderID, targetUserID),
+    onSuccess: (_data, renderID) => {
       queryClient.invalidateQueries({ queryKey: ['renders'] });
-      queryClient.invalidateQueries({ queryKey: ['render', renderId] });
+      queryClient.invalidateQueries({ queryKey: ['render', renderID] });
     },
   });
 }
@@ -50,10 +50,10 @@ export function useResumeRenderMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (renderId: number) => resumeRender(token, renderId, targetUserID),
-    onSuccess: (_data, renderId) => {
+    mutationFn: (renderID: number) => resumeRender(token, renderID, targetUserID),
+    onSuccess: (_data, renderID) => {
       queryClient.invalidateQueries({ queryKey: ['renders'] });
-      queryClient.invalidateQueries({ queryKey: ['render', renderId] });
+      queryClient.invalidateQueries({ queryKey: ['render', renderID] });
     },
   });
 }
@@ -66,7 +66,7 @@ export function useDeleteRenderMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (renderId: number) => deleteRender(token, renderId, targetUserID),
+    mutationFn: (renderID: number) => deleteRender(token, renderID, targetUserID),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['renders'] });
     },
@@ -82,15 +82,15 @@ export function useUpdateRenderTotalCheckpointsMutation() {
 
   return useMutation({
     mutationFn: ({
-      renderId,
+      renderID,
       newTotalCheckpoints,
     }: {
-      renderId: number;
+      renderID: number;
       newTotalCheckpoints: number;
-    }) => updateRenderTotalCheckpoints(token, renderId, newTotalCheckpoints, targetUserID),
-    onSuccess: (_data, { renderId }) => {
+    }) => updateRenderTotalCheckpoints(token, renderID, newTotalCheckpoints, targetUserID),
+    onSuccess: (_data, { renderID }) => {
       queryClient.invalidateQueries({ queryKey: ['renders'] });
-      queryClient.invalidateQueries({ queryKey: ['render', renderId] });
+      queryClient.invalidateQueries({ queryKey: ['render', renderID] });
     },
   });
 }
@@ -102,11 +102,11 @@ export function useUpdateRenderNameMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ renderId, newName }: { renderId: number; newName: string }) =>
-      updateRenderName(token, renderId, newName, targetUserID),
-    onSuccess: (_data, { renderId }) => {
+    mutationFn: ({ renderID, newName }: { renderID: number; newName: string }) =>
+      updateRenderName(token, renderID, newName, targetUserID),
+    onSuccess: (_data, { renderID }) => {
       queryClient.invalidateQueries({ queryKey: ['renders'] });
-      queryClient.invalidateQueries({ queryKey: ['render', renderId] });
+      queryClient.invalidateQueries({ queryKey: ['render', renderID] });
     },
   });
 }

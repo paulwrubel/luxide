@@ -93,7 +93,7 @@ export function TextureControls(props: { form: RenderForm }) {
 
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
 
-  const [activeID, setActiveId] = useState<string | null>(null);
+  const [activeID, setActiveID] = useState<string | null>(null);
 
   function handleDragEnd(event: {
     active: { id: string | number };
@@ -114,7 +114,7 @@ export function TextureControls(props: { form: RenderForm }) {
     const currentTextures = renderConfig.textures ?? {};
     const reorderedTextures = reorderRecordKeys(currentTextures, reordered);
     form.setFieldValue('textures', reorderedTextures);
-    setActiveId(null);
+    setActiveID(null);
   }
 
   return (
@@ -122,7 +122,7 @@ export function TextureControls(props: { form: RenderForm }) {
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragStart={(event) => {
-        setActiveId(String(event.active.id));
+        setActiveID(String(event.active.id));
       }}
       onDragEnd={handleDragEnd}
     >

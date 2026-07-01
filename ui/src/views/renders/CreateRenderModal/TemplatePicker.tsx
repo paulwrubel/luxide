@@ -22,8 +22,8 @@ const cardTheme: DeepPartial<CardTheme> = {
 export function TemplatePicker(props: TemplatePickerProps) {
   const { onSelect, onBack } = props;
 
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const selectedTemplate = selectedId ? (TEMPLATES.find((t) => t.id === selectedId) ?? null) : null;
+  const [selectedID, setSelectedID] = useState<string | null>(null);
+  const selectedTemplate = selectedID ? (TEMPLATES.find((t) => t.id === selectedID) ?? null) : null;
 
   return (
     <>
@@ -41,11 +41,11 @@ export function TemplatePicker(props: TemplatePickerProps) {
               imgSrc={template.thumbnail}
               role="button"
               tabIndex={0}
-              onClick={() => setSelectedId(template.id)}
+              onClick={() => setSelectedID(template.id)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
-                  setSelectedId(template.id);
+                  setSelectedID(template.id);
                 }
               }}
             >

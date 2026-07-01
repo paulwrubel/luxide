@@ -36,7 +36,7 @@ export function GeometricControls(props: GeometricControlsProps) {
 
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
 
-  const [activeID, setActiveId] = useState<string | null>(null);
+  const [activeID, setActiveID] = useState<string | null>(null);
 
   // build a lookup: parentID --> children
   const childrenByParent = useMemo(() => {
@@ -64,14 +64,14 @@ export function GeometricControls(props: GeometricControlsProps) {
   }) {
     const { active, over } = event;
     if (!over || active.id === over.id) {
-      setActiveId(null);
+      setActiveID(null);
       return;
     }
 
     const oldIndex = rootNames.indexOf(String(active.id));
     const newIndex = rootNames.indexOf(String(over.id));
     if (oldIndex === -1 || newIndex === -1) {
-      setActiveId(null);
+      setActiveID(null);
       return;
     }
 
@@ -86,7 +86,7 @@ export function GeometricControls(props: GeometricControlsProps) {
 
     const reorderedGeometrics = reorderRecordKeys(renderConfig.geometrics ?? {}, newKeyOrder);
     form.setFieldValue('geometrics', reorderedGeometrics);
-    setActiveId(null);
+    setActiveID(null);
   }
 
   // recursive render: renders a node and all its descendants
@@ -132,7 +132,7 @@ export function GeometricControls(props: GeometricControlsProps) {
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragStart={(event) => {
-        setActiveId(String(event.active.id));
+        setActiveID(String(event.active.id));
       }}
       onDragEnd={handleDragEnd}
     >

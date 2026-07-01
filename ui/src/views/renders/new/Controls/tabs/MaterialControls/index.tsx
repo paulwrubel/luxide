@@ -53,7 +53,7 @@ export function MaterialControls(props: { form: RenderForm }) {
 
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
 
-  const [activeID, setActiveId] = useState<string | null>(null);
+  const [activeID, setActiveID] = useState<string | null>(null);
 
   function handleDragEnd(event: {
     active: { id: string | number };
@@ -74,7 +74,7 @@ export function MaterialControls(props: { form: RenderForm }) {
     const currentMaterials = renderConfig.materials ?? {};
     const reorderedMaterials = reorderRecordKeys(currentMaterials, reordered);
     form.setFieldValue('materials', reorderedMaterials);
-    setActiveId(null);
+    setActiveID(null);
   }
 
   return (
@@ -82,7 +82,7 @@ export function MaterialControls(props: { form: RenderForm }) {
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragStart={(event) => {
-        setActiveId(String(event.active.id));
+        setActiveID(String(event.active.id));
       }}
       onDragEnd={handleDragEnd}
     >

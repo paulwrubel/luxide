@@ -38,7 +38,7 @@ export function CheckpointLimitForm(props: CheckpointLimitFormProps) {
   function handleSubmit() {
     const value = form.state.values.total_checkpoints;
     updateCheckpoints(
-      { renderId: renderID, newTotalCheckpoints: value },
+      { renderID, newTotalCheckpoints: value },
       {
         onError: (error) => {
           toast.error(extractErrorMessage(error));
