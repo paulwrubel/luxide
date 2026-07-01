@@ -241,7 +241,11 @@ export function GeometricControls(props: GeometricControlsProps) {
       // list child — gets its own DraggableGroup for reordering.
       // rendered as a flat sibling by the parent list root.
       return (
-        <DraggableGroup key={node.formName} id={makeListChildID(node.parentID!, node.formName)} depth={1}>
+        <DraggableGroup
+          key={node.formName}
+          id={makeListChildID(node.parentID!, node.formName)}
+          depth={1}
+        >
           <GeometricRow
             form={form}
             geometricName={node.formName}
