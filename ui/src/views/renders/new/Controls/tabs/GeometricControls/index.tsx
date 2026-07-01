@@ -35,11 +35,11 @@ export function GeometricControls(props: GeometricControlsProps) {
 
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
 
-  // build a lookup: parentId --> children
+  // build a lookup: parentID --> children
   const childrenByParent = useMemo(() => {
     const map = new Map<string | null, GeometricDisplayNode[]>();
     for (const node of geometricTree) {
-      const key = node.parentId;
+      const key = node.parentID;
       const list = map.get(key);
       if (list) {
         list.push(node);
@@ -50,9 +50,9 @@ export function GeometricControls(props: GeometricControlsProps) {
     return map;
   }, [geometricTree]);
 
-  // all root names (parentId === null), in insertion order
+  // all root names (parentID === null), in insertion order
   const rootNames = useMemo(() => {
-    return geometricTree.filter((n) => n.parentId === null).map((n) => n.formName);
+    return geometricTree.filter((n) => n.parentID === null).map((n) => n.formName);
   }, [geometricTree]);
 
   function handleDragEnd(event: {
@@ -86,7 +86,7 @@ export function GeometricControls(props: GeometricControlsProps) {
   // recursive render: renders a node and all its descendants
   function renderNode(node: GeometricDisplayNode): React.ReactNode {
     const children = childrenByParent.get(node.formName) ?? [];
-    const isRoot = node.parentId === null;
+    const isRoot = node.parentID === null;
 
     const descendants = children.map((child) => renderNode(child));
 

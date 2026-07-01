@@ -5,7 +5,7 @@ export type GeometricDisplayNode = {
   displayName: string;
   type: string;
   depth: number;
-  parentId: string | null;
+  parentID: string | null;
   isDirectlyInActiveScene: boolean;
   isUsedByActiveScene: boolean;
 };
@@ -49,7 +49,7 @@ export function buildGeometricTree(
     .filter((name) => !childNames.has(name));
 
   // pass 2+3: DFS from true roots, propagating scene usage down the tree
-  function dfs(name: string, depth: number, parentId: string | null, ancestors: Set<string>, isAncestorUsed: boolean): void {
+  function dfs(name: string, depth: number, parentID: string | null, ancestors: Set<string>, isAncestorUsed: boolean): void {
     // cycle detected - skip this branch entirely
     if (ancestors.has(name)) {
       return;
@@ -70,7 +70,7 @@ export function buildGeometricTree(
       displayName: name,
       type: geo.type,
       depth,
-      parentId,
+      parentID,
       isDirectlyInActiveScene: isDirect,
       isUsedByActiveScene: isUsed,
     });
@@ -99,7 +99,7 @@ export function buildGeometricTree(
       displayName: orphanName,
       type: geo.type,
       depth: 0,
-      parentId: null,
+      parentID: null,
       isDirectlyInActiveScene: isDirect,
       isUsedByActiveScene: isDirect,
     });
