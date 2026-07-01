@@ -6,10 +6,11 @@ import { HiBars3 } from 'react-icons/hi2';
 export type DraggableGroupProps = {
   id: string;
   children: React.ReactNode;
+  depth?: number;
 };
 
 export function DraggableGroup(props: DraggableGroupProps) {
-  const { id, children } = props;
+  const { id, children, depth = 0 } = props;
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
@@ -19,14 +20,16 @@ export function DraggableGroup(props: DraggableGroupProps) {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-  };
+    // cast needed — CSSProperties doesn't include custom properties
+    '--row-depth': depth,
+  } as React.CSSProperties;
 
   const childArray = Children.toArray(children);
   const [first, ...rest] = childArray;
   const hasRest = rest.length > 0;
 
   return (
-    <div ref={setNodeRef} style={style}>
+    <div ref={setNodeRef} style={style} className="ml-[calc(var(--row-depth)*0.75rem)]">
       <div className="flex items-center">
         <button
           type="button"

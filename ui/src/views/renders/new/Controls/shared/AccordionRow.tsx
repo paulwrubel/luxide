@@ -38,7 +38,7 @@ export function AccordionRow(props: AccordionRowProps) {
 
   return (
     <div
-      className="ml-[calc(var(--row-depth)*1.5rem)] bg-zinc-800"
+      className="ml-[calc(var(--row-depth)*0.75rem)] bg-zinc-800"
       // the type for inline styles does not include custom properties like --row-depth
       style={{ '--row-depth': depth } as CSSProperties}
     >
