@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useSelector } from '@tanstack/react-store';
 import { getSceneData } from '@/utils/render/scene';
 import { removeDefaults } from '@/utils/render/utils';
@@ -6,6 +6,7 @@ import { buildGeometricTree } from '../../shared/geometricTree';
 
 import {
   DndContext,
+  DragOverlay,
   closestCenter,
   PointerSensor,
   KeyboardSensor,
@@ -92,6 +93,8 @@ export function TextureControls(props: { form: RenderForm }) {
 
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
 
+  const [activeID, setActiveId] = useState<string | null>(null);
+
   function handleDragEnd(event: {
     active: { id: string | number };
     over: { id: string | number } | null;
@@ -111,10 +114,11 @@ export function TextureControls(props: { form: RenderForm }) {
     const currentTextures = renderConfig.textures ?? {};
     const reorderedTextures = reorderRecordKeys(currentTextures, reordered);
     form.setFieldValue('textures', reorderedTextures);
+    setActiveId(null);
   }
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={(event) => { setActiveId(String(event.active.id)); }} onDragEnd={handleDragEnd}>
       <SortableContext items={textureNames} strategy={verticalListSortingStrategy}>
         <div className="flex flex-col">
           {textureNames.map((texName) => (
@@ -128,6 +132,15 @@ export function TextureControls(props: { form: RenderForm }) {
           ))}
         </div>
       </SortableContext>
+      <DragOverlay>
+        {activeID ? (
+          <TextureRow
+            form={form}
+            textureName={activeID}
+            isUsedByActiveScene={usedTextureNames.has(activeID)}
+          />
+        ) : null}
+      </DragOverlay>
     </DndContext>
   );
 }

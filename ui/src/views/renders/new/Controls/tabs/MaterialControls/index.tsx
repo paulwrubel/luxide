@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useSelector } from '@tanstack/react-store';
 import {
   DndContext,
+  DragOverlay,
   closestCenter,
   PointerSensor,
   KeyboardSensor,
@@ -52,6 +53,8 @@ export function MaterialControls(props: { form: RenderForm }) {
 
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
 
+  const [activeID, setActiveId] = useState<string | null>(null);
+
   function handleDragEnd(event: {
     active: { id: string | number };
     over: { id: string | number } | null;
@@ -71,10 +74,16 @@ export function MaterialControls(props: { form: RenderForm }) {
     const currentMaterials = renderConfig.materials ?? {};
     const reorderedMaterials = reorderRecordKeys(currentMaterials, reordered);
     form.setFieldValue('materials', reorderedMaterials);
+    setActiveId(null);
   }
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+    <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={(event) => { setActiveId(String(event.active.id)); }}
+        onDragEnd={handleDragEnd}
+      >
       <SortableContext items={materialNames} strategy={verticalListSortingStrategy}>
         <div className="flex flex-col">
           {materialNames.map((matName) => (
@@ -88,6 +97,15 @@ export function MaterialControls(props: { form: RenderForm }) {
           ))}
         </div>
       </SortableContext>
+      <DragOverlay>
+        {activeID ? (
+          <MaterialRow
+            form={form}
+            materialName={activeID}
+            isUsedByActiveScene={usedMaterialNames.has(activeID)}
+          />
+        ) : null}
+      </DragOverlay>
     </DndContext>
   );
 }
