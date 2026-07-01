@@ -140,27 +140,27 @@ export function GeometricControls(props: GeometricControlsProps) {
         <div className="flex flex-col">{roots.map((node) => renderNode(node))}</div>
       </SortableContext>
       <DragOverlay>
-        {activeID ? (
-          (() => {
-            const node = geometricTree.find((n) => n.formName === activeID);
-            if (!node) {
-              return null;
-            }
-            const children = childrenByParent.get(node.formName) ?? [];
-            return (
-              <div>
-                <GeometricRow
-                  form={form}
-                  geometricName={node.formName}
-                  depth={node.depth}
-                  isUsedByActiveScene={node.isUsedByActiveScene}
-                  isDirectlyInActiveScene={node.isDirectlyInActiveScene}
-                />
-                {children.map((child) => renderNode(child))}
-              </div>
-            );
-          })()
-        ) : null}
+        {activeID
+          ? (() => {
+              const node = geometricTree.find((n) => n.formName === activeID);
+              if (!node) {
+                return null;
+              }
+              const children = childrenByParent.get(node.formName) ?? [];
+              return (
+                <div>
+                  <GeometricRow
+                    form={form}
+                    geometricName={node.formName}
+                    depth={node.depth}
+                    isUsedByActiveScene={node.isUsedByActiveScene}
+                    isDirectlyInActiveScene={node.isDirectlyInActiveScene}
+                  />
+                  {children.map((child) => renderNode(child))}
+                </div>
+              );
+            })()
+          : null}
       </DragOverlay>
     </DndContext>
   );

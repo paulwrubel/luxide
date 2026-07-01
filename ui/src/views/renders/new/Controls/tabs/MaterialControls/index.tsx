@@ -79,11 +79,13 @@ export function MaterialControls(props: { form: RenderForm }) {
 
   return (
     <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragStart={(event) => { setActiveId(String(event.active.id)); }}
-        onDragEnd={handleDragEnd}
-      >
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={(event) => {
+        setActiveId(String(event.active.id));
+      }}
+      onDragEnd={handleDragEnd}
+    >
       <SortableContext items={materialNames} strategy={verticalListSortingStrategy}>
         <div className="flex flex-col">
           {materialNames.map((matName) => (

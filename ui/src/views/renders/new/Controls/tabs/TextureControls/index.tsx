@@ -118,7 +118,14 @@ export function TextureControls(props: { form: RenderForm }) {
   }
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={(event) => { setActiveId(String(event.active.id)); }} onDragEnd={handleDragEnd}>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={(event) => {
+        setActiveId(String(event.active.id));
+      }}
+      onDragEnd={handleDragEnd}
+    >
       <SortableContext items={textureNames} strategy={verticalListSortingStrategy}>
         <div className="flex flex-col">
           {textureNames.map((texName) => (
