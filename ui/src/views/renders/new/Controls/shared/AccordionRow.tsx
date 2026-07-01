@@ -70,7 +70,7 @@ export function AccordionRow(props: AccordionRowProps) {
 
         <div className="flex flex-row items-center gap-2">
           {rightLabel && <LabelText text={rightLabel} type={rightLabelStyle} />}
-          {rightActions}
+          <div onClick={(e) => e.stopPropagation()}>{rightActions}</div>
           {isExpanded ? (
             <HiChevronUp className="h-4 w-auto" />
           ) : (
