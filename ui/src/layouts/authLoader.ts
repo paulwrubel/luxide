@@ -21,7 +21,7 @@ export type AuthSession = {
 
 let bootstrapPromise: Promise<AuthSession | null> | null = null;
 
-function bootstrapAuth(): Promise<AuthSession | null> {
+export function bootstrapAuth(): Promise<AuthSession | null> {
   if (!bootstrapPromise) {
     bootstrapPromise = fetch(`${getAPIURL()}/auth/refresh`, {
       method: 'POST',

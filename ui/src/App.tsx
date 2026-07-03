@@ -47,9 +47,7 @@ const router = createBrowserRouter([
       // admin routes — nested inside admin layout to redirect non-admins
       {
         element: <AdminRouteLayout />,
-        children: [
-          { path: '/admin', element: <AdminPage /> },
-        ],
+        children: [{ path: '/admin', element: <AdminPage /> }],
       },
     ],
   },

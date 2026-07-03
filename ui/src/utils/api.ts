@@ -79,9 +79,7 @@ export async function fetchAuthTokenGitHub(code: string, state: string): Promise
   return tokenResponse.access_token;
 }
 
-export async function fetchUserInfo(
-  fetcher: typeof fetch,
-): Promise<User> {
+export async function fetchUserInfo(fetcher: typeof fetch): Promise<User> {
   const response = await fetcher(`${getAPIURL()}/auth/current_user_info`);
 
   if (!response.ok) {
@@ -200,7 +198,10 @@ export type Duration = {
   nanos: number;
 };
 
-export async function getAllRenders(fetcher: typeof fetch, targetUserID?: number): Promise<Render[]> {
+export async function getAllRenders(
+  fetcher: typeof fetch,
+  targetUserID?: number,
+): Promise<Render[]> {
   const response = await fetcher(
     appendUserID(`${getAPIURL()}/renders?format=precise`, targetUserID),
   );
@@ -391,7 +392,11 @@ export async function getAllUsers(fetcher: typeof fetch): Promise<User[]> {
   return (await response.json()) as User[];
 }
 
-export async function updateUserRole(fetcher: typeof fetch, userID: number, role: Role): Promise<User> {
+export async function updateUserRole(
+  fetcher: typeof fetch,
+  userID: number,
+  role: Role,
+): Promise<User> {
   const response = await fetcher(`${getAPIURL()}/users/${userID}/role`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },

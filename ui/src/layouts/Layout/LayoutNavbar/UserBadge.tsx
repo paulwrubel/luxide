@@ -12,14 +12,14 @@ import {
 } from 'flowbite-react';
 
 export function UserBadge() {
-  const { isAuthenticated, user, clearAccessToken } = useAuth();
+  const { isAuthenticated, user, clearAccessToken, isAuthLoading } = useAuth();
 
   function handleLogout() {
     clearAccessToken();
     window.location.reload();
   }
 
-  if (isAuthenticated && user === undefined) {
+  if (isAuthLoading || (isAuthenticated && user === undefined)) {
     return (
       <div className="flex items-center gap-2">
         <Spinner color="info" size="sm" />
