@@ -1,17 +1,23 @@
-import { Outlet, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Outlet, Navigate, useLoaderData } from 'react-router-dom';
 import { useAuth } from '../providers/Auth';
 
-/**
- * layout component guarding authenticated routes.
- * checks auth state and conditionally returns <Navigate to="/login" replace />
- * if unauthenticated, or <Outlet /> if authenticated (i.e., renders child routes).
- *
- * @returns `<Navigate to="/login" replace />` if the user is unauthenticated, or `<Outlet />` if authenticated
- */
 export function AuthenticatedRouteLayout() {
-  const { isAuthenticated } = useAuth();
+  // the authLoader always returns { access_token } on success
+  const { access_token } = useLoaderData() as { access_token: string };
+  const { accessToken, setAccessToken } = useAuth();
 
-  if (!isAuthenticated) {
+  // bootstrap: pass the loader's access token into AuthProvider
+  // runs once intentionally — accessToken is undefined on entry
+  useEffect(() => {
+    if (!accessToken) {
+      setAccessToken(access_token);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ongoing guard: redirect if token is cleared (logout, failed refresh)
+  if (!accessToken) {
     return <Navigate to="/login" replace />;
   }
 

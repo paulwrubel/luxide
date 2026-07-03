@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './providers/Auth';
 import { AdminUserOverrideProvider } from './providers/AdminUserOverride';
 import { Layout } from './layouts/Layout';
+import { authLoader } from './layouts/authLoader';
 import { AuthenticatedRouteLayout } from './layouts/AuthenticatedRouteLayout';
 import { HomePage } from './views';
 import { LoginPage } from './views/login';
@@ -35,6 +36,7 @@ const router = createBrowserRouter([
       // authenticated routes — nested inside authenticated layout to redirect to /login if not logged in
       {
         element: <AuthenticatedRouteLayout />,
+        loader: authLoader,
         children: [
           { path: '/renders', element: <RendersPage /> },
           { path: '/renders/:id', element: <RenderDetailPage /> },
