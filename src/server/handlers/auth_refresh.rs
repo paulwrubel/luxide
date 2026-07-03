@@ -42,7 +42,6 @@ pub async fn auth_refresh(
         Ok((access_token, new_refresh_token)) => {
             let refresh_cookie = Cookie::build(("refresh_token", new_refresh_token))
                 .path("/api/v1/auth")
-                .secure(true)
                 .http_only(true)
                 .same_site(axum_extra::extract::cookie::SameSite::Lax)
                 .max_age(Duration::days(30));

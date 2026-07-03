@@ -31,7 +31,6 @@ pub async fn auth_login(
     let session_id = uuid::Uuid::new_v4();
     let session_id_cookie = Cookie::build(("session_id", session_id.to_string()))
         .path("/")
-        .secure(true)
         .http_only(true);
 
     let (url, auth_state) = match state
