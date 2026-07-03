@@ -128,14 +128,17 @@ export function fixReferences(config: NormalizedRenderConfig): NormalizedRenderC
   const materials = newConfig.materials ?? {};
   const geometrics = newConfig.geometrics ?? {};
   const scenes = newConfig.scenes ?? {};
+  const textureNames = new Set(Object.keys(textures));
+  const materialNames = new Set(Object.keys(materials));
+  const geometricNames = new Set(Object.keys(geometrics));
 
   // fix texture references: checker sub-textures
   for (const texture of Object.values(textures)) {
     if (texture.type === 'checker') {
-      if (!Object.keys(textures).includes(texture.even_texture)) {
+      if (!textureNames.has(texture.even_texture)) {
         texture.even_texture = '__white';
       }
-      if (!Object.keys(textures).includes(texture.odd_texture)) {
+      if (!textureNames.has(texture.odd_texture)) {
         texture.odd_texture = '__black';
       }
     }
@@ -147,10 +150,10 @@ export function fixReferences(config: NormalizedRenderConfig): NormalizedRenderC
       case 'dielectric':
       case 'lambertian':
       case 'specular':
-        if (!Object.keys(textures).includes(material.reflectance_texture)) {
+        if (!textureNames.has(material.reflectance_texture)) {
           material.reflectance_texture = '__white';
         }
-        if (!Object.keys(textures).includes(material.emittance_texture)) {
+        if (!textureNames.has(material.emittance_texture)) {
           material.emittance_texture = '__black';
         }
         break;
@@ -165,12 +168,12 @@ export function fixReferences(config: NormalizedRenderConfig): NormalizedRenderC
       case 'parallelogram':
       case 'sphere':
       case 'triangle':
-        if (!Object.keys(materials).includes(geometric.material)) {
+        if (!materialNames.has(geometric.material)) {
           geometric.material = '__lambertian_white';
         }
         break;
       case 'constant_volume':
-        if (!Object.keys(textures).includes(geometric.reflectance_texture)) {
+        if (!textureNames.has(geometric.reflectance_texture)) {
           geometric.reflectance_texture = '__white';
         }
         break;
@@ -186,13 +189,13 @@ export function fixReferences(config: NormalizedRenderConfig): NormalizedRenderC
       case 'translate':
       case 'constant_volume':
       case 'virtual':
-        if (!Object.keys(geometrics).includes(geometric.geometric)) {
+        if (!geometricNames.has(geometric.geometric)) {
           geometric.geometric = '__unit_box';
         }
         break;
       case 'list':
         geometric.geometrics = geometric.geometrics.filter((name: string) =>
-          Object.keys(geometrics).includes(name),
+          geometricNames.has(name),
         );
         break;
     }
@@ -202,7 +205,7 @@ export function fixReferences(config: NormalizedRenderConfig): NormalizedRenderC
   const activeScene = scenes[newConfig.active_scene];
   if (activeScene) {
     activeScene.geometrics = activeScene.geometrics.filter((name: string) =>
-      Object.keys(geometrics).includes(name),
+      geometricNames.has(name),
     );
   }
 
