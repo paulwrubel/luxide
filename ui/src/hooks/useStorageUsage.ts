@@ -3,12 +3,12 @@ import { getStorageUsage } from '../utils/api';
 import { useAuth } from '../providers/Auth';
 
 export function useStorageUsageQuery() {
-  const { mustGetToken } = useAuth();
-  const token = mustGetToken();
+  const { mustGetAccessToken, authenticatedFetch } = useAuth();
+  const accessToken = mustGetAccessToken();
 
   return useQuery({
-    queryKey: storageUsageQueryKey(token),
-    queryFn: () => getStorageUsage(token),
+    queryKey: storageUsageQueryKey(accessToken),
+    queryFn: () => getStorageUsage(authenticatedFetch),
   });
 }
 

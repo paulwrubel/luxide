@@ -12,15 +12,15 @@ export type UseLatestCheckpointImageOptions = {
 export function useLatestCheckpointImageQuery(options: UseLatestCheckpointImageOptions) {
   const { renderID, enabled } = options;
 
-  const { mustGetToken } = useAuth();
-  const token = mustGetToken();
+  const { mustGetAccessToken, authenticatedFetch } = useAuth();
+  const accessToken = mustGetAccessToken();
 
   const { targetUserID } = useAdminUserOverride();
 
   const { data: checkpointData, ...queryRest } = useQuery({
-    queryKey: checkpointImageQueryKey(renderID, token, targetUserID),
+    queryKey: checkpointImageQueryKey(renderID, accessToken, targetUserID),
     queryFn: async () => {
-      const blob = await getLatestCheckpointImage(token, renderID, targetUserID);
+      const blob = await getLatestCheckpointImage(authenticatedFetch, renderID, targetUserID);
       if (blob === null) {
         return null;
       }

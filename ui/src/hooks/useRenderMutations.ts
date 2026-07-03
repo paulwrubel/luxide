@@ -12,14 +12,14 @@ import { useAuth } from '../providers/Auth';
 import type { NormalizedRenderConfig } from '../utils/render/config';
 
 export function useCreateRenderMutation() {
-  const { mustGetToken } = useAuth();
-  const token = mustGetToken();
+  const { authenticatedFetch } = useAuth();
   const { targetUserID } = useAdminUserOverride();
 
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (config: NormalizedRenderConfig) => postRender(token, config, targetUserID),
+    mutationFn: (config: NormalizedRenderConfig) =>
+      postRender(authenticatedFetch, config, targetUserID),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['renders'] });
     },
@@ -27,14 +27,13 @@ export function useCreateRenderMutation() {
 }
 
 export function usePauseRenderMutation() {
-  const { mustGetToken } = useAuth();
-  const token = mustGetToken();
+  const { authenticatedFetch } = useAuth();
   const { targetUserID } = useAdminUserOverride();
 
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (renderID: number) => pauseRender(token, renderID, targetUserID),
+    mutationFn: (renderID: number) => pauseRender(authenticatedFetch, renderID, targetUserID),
     onSuccess: (_data, renderID) => {
       queryClient.invalidateQueries({ queryKey: ['renders'] });
       queryClient.invalidateQueries({ queryKey: ['render', renderID] });
@@ -43,14 +42,13 @@ export function usePauseRenderMutation() {
 }
 
 export function useResumeRenderMutation() {
-  const { mustGetToken } = useAuth();
-  const token = mustGetToken();
+  const { authenticatedFetch } = useAuth();
   const { targetUserID } = useAdminUserOverride();
 
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (renderID: number) => resumeRender(token, renderID, targetUserID),
+    mutationFn: (renderID: number) => resumeRender(authenticatedFetch, renderID, targetUserID),
     onSuccess: (_data, renderID) => {
       queryClient.invalidateQueries({ queryKey: ['renders'] });
       queryClient.invalidateQueries({ queryKey: ['render', renderID] });
@@ -59,14 +57,13 @@ export function useResumeRenderMutation() {
 }
 
 export function useDeleteRenderMutation() {
-  const { mustGetToken } = useAuth();
-  const token = mustGetToken();
+  const { authenticatedFetch } = useAuth();
   const { targetUserID } = useAdminUserOverride();
 
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (renderID: number) => deleteRender(token, renderID, targetUserID),
+    mutationFn: (renderID: number) => deleteRender(authenticatedFetch, renderID, targetUserID),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['renders'] });
     },
@@ -74,8 +71,7 @@ export function useDeleteRenderMutation() {
 }
 
 export function useUpdateRenderTotalCheckpointsMutation() {
-  const { mustGetToken } = useAuth();
-  const token = mustGetToken();
+  const { authenticatedFetch } = useAuth();
   const { targetUserID } = useAdminUserOverride();
 
   const queryClient = useQueryClient();
@@ -87,7 +83,8 @@ export function useUpdateRenderTotalCheckpointsMutation() {
     }: {
       renderID: number;
       newTotalCheckpoints: number;
-    }) => updateRenderTotalCheckpoints(token, renderID, newTotalCheckpoints, targetUserID),
+    }) =>
+      updateRenderTotalCheckpoints(authenticatedFetch, renderID, newTotalCheckpoints, targetUserID),
     onSuccess: (_data, { renderID }) => {
       queryClient.invalidateQueries({ queryKey: ['renders'] });
       queryClient.invalidateQueries({ queryKey: ['render', renderID] });
@@ -96,14 +93,13 @@ export function useUpdateRenderTotalCheckpointsMutation() {
 }
 
 export function useUpdateRenderNameMutation() {
-  const { mustGetToken } = useAuth();
-  const token = mustGetToken();
+  const { authenticatedFetch } = useAuth();
   const { targetUserID } = useAdminUserOverride();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ renderID, newName }: { renderID: number; newName: string }) =>
-      updateRenderName(token, renderID, newName, targetUserID),
+      updateRenderName(authenticatedFetch, renderID, newName, targetUserID),
     onSuccess: (_data, { renderID }) => {
       queryClient.invalidateQueries({ queryKey: ['renders'] });
       queryClient.invalidateQueries({ queryKey: ['render', renderID] });

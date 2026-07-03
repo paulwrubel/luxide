@@ -16,19 +16,19 @@ export type UseRenderOptions = {
 export function useRenderQuery(options: UseRenderOptions) {
   const { renderID, streaming } = options;
 
-  const { mustGetToken } = useAuth();
-  const token = mustGetToken();
+  const { mustGetAccessToken, authenticatedFetch } = useAuth();
+  const accessToken = mustGetAccessToken();
   const { targetUserID } = useAdminUserOverride();
   const queryClient = useQueryClient();
 
   const queryKey = useMemo(
-    () => renderQueryKey(renderID, token, targetUserID),
-    [renderID, token, targetUserID],
+    () => renderQueryKey(renderID, accessToken, targetUserID),
+    [renderID, accessToken, targetUserID],
   );
 
   const queryResult = useQuery({
     queryKey,
-    queryFn: () => getRender(token, renderID, targetUserID),
+    queryFn: () => getRender(authenticatedFetch, renderID, targetUserID),
     staleTime: Infinity,
   });
 
@@ -50,11 +50,11 @@ export function useRenderQuery(options: UseRenderOptions) {
       const newKey = stateKey(snapshot.state);
       if (newKey === 'finished_checkpoint_iteration' || newKey === 'paused') {
         queryClient.invalidateQueries({
-          queryKey: checkpointImageQueryKey(renderID, token, targetUserID),
+          queryKey: checkpointImageQueryKey(renderID, accessToken, targetUserID),
         });
       }
     },
-    [queryClient, queryKey, renderID, token, targetUserID],
+    [queryClient, queryKey, renderID, accessToken, targetUserID],
   );
 
   const handleError = useCallback(() => {
@@ -64,7 +64,7 @@ export function useRenderQuery(options: UseRenderOptions) {
   useEventSource({
     enabled: streaming ?? false,
     path: `/renders/${renderID}/state/stream`,
-    token,
+    accessToken,
     targetUserID,
     intervalMillis: 50,
     onUpdateEvent: handleUpdate,

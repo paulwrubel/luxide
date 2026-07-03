@@ -6,6 +6,7 @@ export type AuthContextType = {
   user: User | undefined;
   isAuthenticated: boolean;
   isAuthLoading: boolean;
+  mustGetAccessToken: () => string;
   authenticatedFetch: typeof fetch;
   setAccessToken: (token: string) => void;
   clearAccessToken: () => void;

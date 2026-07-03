@@ -22,6 +22,13 @@ export function AuthProvider(props: AuthProviderProps) {
     setUser(undefined);
   }, []);
 
+  const mustGetAccessToken = useCallback(() => {
+    if (!accessToken) {
+      throw new Error('Access token is required but not available');
+    }
+    return accessToken;
+  }, [accessToken]);
+
   const setAccessToken = useCallback((newToken: string) => {
     setAccessTokenState(newToken);
     setUser(undefined);
@@ -110,6 +117,7 @@ export function AuthProvider(props: AuthProviderProps) {
     isAuthenticated: !!accessToken,
     isAuthLoading,
     authenticatedFetch,
+    mustGetAccessToken,
     setAccessToken,
     clearAccessToken,
   };
