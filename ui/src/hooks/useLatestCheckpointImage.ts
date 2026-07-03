@@ -41,9 +41,6 @@ export function useLatestCheckpointImageQuery(options: UseLatestCheckpointImageO
   return { data: checkpointData, ...queryRest };
 }
 
-export function checkpointImageQueryKey(
-  renderID: number,
-  targetUserID: number | undefined,
-) {
+export function checkpointImageQueryKey(renderID: number, targetUserID: number | undefined) {
   return ['checkpointImage', renderID, targetUserID] as const;
 }
