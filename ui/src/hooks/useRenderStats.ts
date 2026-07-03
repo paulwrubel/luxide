@@ -56,9 +56,6 @@ export function useRenderStatsQuery(options: UseRenderStatsOptions) {
   return queryResult;
 }
 
-export function renderStatsQueryKey(
-  renderID: number,
-  targetUserID: number | undefined,
-) {
+export function renderStatsQueryKey(renderID: number, targetUserID: number | undefined) {
   return ['renderStats', renderID, targetUserID] as const;
 }

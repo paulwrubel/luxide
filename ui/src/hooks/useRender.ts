@@ -21,10 +21,7 @@ export function useRenderQuery(options: UseRenderOptions) {
   const { targetUserID } = useAdminUserOverride();
   const queryClient = useQueryClient();
 
-  const queryKey = useMemo(
-    () => renderQueryKey(renderID, targetUserID),
-    [renderID, targetUserID],
-  );
+  const queryKey = useMemo(() => renderQueryKey(renderID, targetUserID), [renderID, targetUserID]);
 
   const queryResult = useQuery({
     queryKey,
