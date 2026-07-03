@@ -64,7 +64,7 @@ pub async fn resolve_effective_user_id(
 ) -> Result<UserID, (StatusCode, String)> {
     let requested_user_id = match requested_user_id {
         Some(user_id) => user_id,
-        None => return Ok(claims.sub), // if no query parameter was set, just return from the token
+        None => return Ok(claims.sub), // if no query parameter was set, just return from the JWT
     };
 
     // if a user_id parameter was added, we need to make sure that either...
@@ -72,7 +72,7 @@ pub async fn resolve_effective_user_id(
     // - the user_id matches the claims.sub field, or
     // - the user making the request (claims.sub) is an admin
     //
-    // first we check if we even NEED to pull user info, by seeing if the QP matches the token's subject
+    // first we check if we even NEED to pull user info, by seeing if the QP matches the JWT's subject
     if claims.sub == requested_user_id {
         return Ok(claims.sub);
     }

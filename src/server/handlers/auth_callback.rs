@@ -23,7 +23,7 @@ pub struct AuthGithubCallbackQueryParameters {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub struct AuthLoginResponse {
-    pub token: String,
+    pub access_token: String,
     pub refresh_token: String,
 }
 
@@ -102,8 +102,8 @@ pub async fn auth_github_callback(
         }
     };
 
-    let token = match state.auth_manager.generate_new_jwt(user.id).await {
-        Ok(token) => token,
+    let access_token = match state.auth_manager.generate_new_jwt(user.id).await {
+        Ok(access_token) => access_token,
         Err(e) => {
             eprintln!("Failed to generate new JWT: {}", e);
             return (StatusCode::BAD_REQUEST, "Failed to generate new JWT").into_response();
@@ -122,7 +122,7 @@ pub async fn auth_github_callback(
         }
     };
 
-    println!("Generated JWT: {}", token);
+    println!("Generated JWT: {}", access_token);
 
     println!("User: {:#?}", user);
 
@@ -130,7 +130,7 @@ pub async fn auth_github_callback(
         StatusCode::OK,
         TypedHeader(ContentType::json()),
         Json(AuthLoginResponse {
-            token,
+            access_token,
             refresh_token,
         }),
     )

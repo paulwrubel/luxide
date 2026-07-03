@@ -16,7 +16,7 @@ pub struct RefreshRequest {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub struct RefreshResponse {
-    pub token: String,
+    pub access_token: String,
     pub refresh_token: String,
 }
 
@@ -25,10 +25,10 @@ pub async fn auth_refresh(
     Json(request): Json<RefreshRequest>,
 ) -> Response {
     match state.auth_manager.rotate_refresh_token(&request.refresh_token).await {
-        Ok((token, refresh_token)) => {
+        Ok((access_token, refresh_token)) => {
             (
                 StatusCode::OK,
-                Json(RefreshResponse { token, refresh_token }),
+                Json(RefreshResponse { access_token, refresh_token }),
             )
                 .into_response()
         }

@@ -352,15 +352,15 @@ pub struct GitHubUserInfo {
 pub trait JwtValidator {
     type Error;
 
-    fn validate_jwt(&self, token: &str) -> Result<Claims, Self::Error>;
+    fn validate_jwt(&self, jwt: &str) -> Result<Claims, Self::Error>;
 }
 
 impl JwtValidator for AuthManager {
     type Error = AuthManagerError;
 
-    fn validate_jwt(&self, token: &str) -> Result<Claims, Self::Error> {
+    fn validate_jwt(&self, jwt: &str) -> Result<Claims, Self::Error> {
         let decoded_token = jsonwebtoken::decode::<Claims>(
-            token,
+            jwt,
             &self.jwt_decoding_secret,
             &jsonwebtoken::Validation::new(jsonwebtoken::Algorithm::RS256),
         )
