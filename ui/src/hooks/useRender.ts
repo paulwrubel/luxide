@@ -22,8 +22,8 @@ export function useRenderQuery(options: UseRenderOptions) {
   const queryClient = useQueryClient();
 
   const queryKey = useMemo(
-    () => renderQueryKey(renderID, accessToken, targetUserID),
-    [renderID, accessToken, targetUserID],
+    () => renderQueryKey(renderID, targetUserID),
+    [renderID, targetUserID],
   );
 
   const queryResult = useQuery({
@@ -50,11 +50,11 @@ export function useRenderQuery(options: UseRenderOptions) {
       const newKey = stateKey(snapshot.state);
       if (newKey === 'finished_checkpoint_iteration' || newKey === 'paused') {
         queryClient.invalidateQueries({
-          queryKey: checkpointImageQueryKey(renderID, accessToken, targetUserID),
+          queryKey: checkpointImageQueryKey(renderID, targetUserID),
         });
       }
     },
-    [queryClient, queryKey, renderID, accessToken, targetUserID],
+    [queryClient, queryKey, renderID, targetUserID],
   );
 
   const handleError = useCallback(() => {
@@ -74,6 +74,6 @@ export function useRenderQuery(options: UseRenderOptions) {
   return queryResult;
 }
 
-export function renderQueryKey(renderID: number, token: string, targetUserID: number | undefined) {
-  return ['render', renderID, token, targetUserID] as const;
+export function renderQueryKey(renderID: number, targetUserID: number | undefined) {
+  return ['render', renderID, targetUserID] as const;
 }

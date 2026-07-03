@@ -12,12 +12,12 @@ export function useAllUsersQuery(options: UseAllUsersOptions = {}) {
   const { accessToken, authenticatedFetch } = useAuth();
 
   return useQuery({
-    queryKey: allUsersQueryKey(accessToken),
+    queryKey: allUsersQueryKey(),
     queryFn: () => getAllUsers(authenticatedFetch),
     enabled: enabled && accessToken !== undefined,
   });
 }
 
-export function allUsersQueryKey(token: string | undefined) {
-  return ['allUsers', token] as const;
+export function allUsersQueryKey() {
+  return ['allUsers'] as const;
 }

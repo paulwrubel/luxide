@@ -20,8 +20,8 @@ export function useRenderStatsQuery(options: UseRenderStatsOptions) {
   const queryClient = useQueryClient();
 
   const queryKey = useMemo(
-    () => renderStatsQueryKey(renderID, accessToken, targetUserID),
-    [renderID, accessToken, targetUserID],
+    () => renderStatsQueryKey(renderID, targetUserID),
+    [renderID, targetUserID],
   );
 
   const queryResult = useQuery({
@@ -58,8 +58,7 @@ export function useRenderStatsQuery(options: UseRenderStatsOptions) {
 
 export function renderStatsQueryKey(
   renderID: number,
-  token: string,
   targetUserID: number | undefined,
 ) {
-  return ['renderStats', renderID, token, targetUserID] as const;
+  return ['renderStats', renderID, targetUserID] as const;
 }
