@@ -24,6 +24,7 @@ pub struct AuthGithubCallbackQueryParameters {
 #[serde(rename_all = "snake_case")]
 pub struct AuthLoginResponse {
     pub token: String,
+    pub refresh_token: String,
 }
 
 pub async fn auth_github_callback(
@@ -109,6 +110,14 @@ pub async fn auth_github_callback(
         }
     };
 
+    let refresh_token = match state.auth_manager.generate_refresh_token(user.id).await {
+        Ok(rt) => rt,
+        Err(e) => {
+            eprintln!("Failed to generate refresh token: {}", e);
+            return (StatusCode::BAD_REQUEST, "Failed to generate refresh token").into_response();
+        }
+    };
+
     println!("Generated JWT: {}", token);
 
     println!("User: {:#?}", user);
@@ -116,7 +125,10 @@ pub async fn auth_github_callback(
     (
         StatusCode::OK,
         TypedHeader(ContentType::json()),
-        Json(AuthLoginResponse { token }),
+        Json(AuthLoginResponse {
+            token,
+            refresh_token,
+        }),
     )
         .into_response()
 }
@@ -147,22 +159,14 @@ async fn get_user_by_github_id(
         Ok(false) => {
             let user = if state.auth_manager.github_id_is_admin(github_id) {
                 User::new_admin(
-                    state
-                        .auth_manager
-                        .get_next_user_id()
-                        .await
-                        ?,
+                    state.auth_manager.get_next_user_id().await?,
                     github_id,
                     user_info.login.clone(),
                     user_info.avatar_url.clone(),
                 )
             } else {
                 User::new(
-                    state
-                        .auth_manager
-                        .get_next_user_id()
-                        .await
-                        ?,
+                    state.auth_manager.get_next_user_id().await?,
                     github_id,
                     user_info.login.clone(),
                     user_info.avatar_url.clone(),
