@@ -1,5 +1,6 @@
 binary_name_api := 'luxide-api'
 binary_name_cli := 'luxide-cli'
+export NVM_DIR := env('NVM_DIR', '$HOME/.nvm')
 
 default:
     @just --list --justfile {{ justfile() }}
@@ -10,7 +11,7 @@ run-docker: build-api
     docker compose up -d --build
 
 run-ui: run-docker setup-ui-env
-    cd ui && npm run dev
+	cd ui && . "$$NVM_DIR/nvm.sh" && nvm use && npm run dev
 
 [group('run')]
 run-local: build-api run-postgres
@@ -117,12 +118,7 @@ clean:
 
 [group('misc')]
 setup-ui-env:
-    cd ui \
-    && [ -s "$NVM_DIR/nvm.sh" ] \
-    && . "$NVM_DIR/nvm.sh" \
-    && nvm install \
-    && nvm use \
-    && npm install
+	cd ui && npm install
 
 [group('misc')]
 generate-jwt-keypair-pem:
