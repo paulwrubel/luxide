@@ -12,10 +12,10 @@ import {
 } from 'flowbite-react';
 
 export function UserBadge() {
-  const { isAuthenticated, user, clearToken } = useAuth();
+  const { isAuthenticated, user, clearAccessToken } = useAuth();
 
   function handleLogout() {
-    clearToken();
+    clearAccessToken();
     window.location.reload();
   }
 

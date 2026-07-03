@@ -10,7 +10,7 @@ import { Spinner } from 'flowbite-react';
 export function AuthCallbackPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { setToken } = useAuth();
+  const { setAccessToken } = useAuth();
 
   // component-level state
   const [status, setStatus] = useState<'loading' | 'error'>('loading');
@@ -29,9 +29,9 @@ export function AuthCallbackPage() {
         }
 
         // exchange code for token
-        const token = await fetchAuthTokenGitHub(code, state);
+        const accessToken = await fetchAuthTokenGitHub(code, state);
         // use auth state to handle token
-        setToken(token);
+        setAccessToken(accessToken);
 
         // redirect to home page
         navigate('/', { replace: true });
@@ -40,7 +40,7 @@ export function AuthCallbackPage() {
         setStatus('error');
       }
     })();
-  }, [searchParams, navigate, setToken]);
+  }, [searchParams, navigate, setAccessToken]);
 
   return (
     <div className="flex min-h-screen items-center justify-center">

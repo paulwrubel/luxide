@@ -1,17 +1,18 @@
 import { useEffect } from 'react';
 import { Outlet, Navigate, useLoaderData } from 'react-router-dom';
 import { useAuth } from '../providers/Auth';
+import type { AuthSession } from './authLoader';
 
 export function AuthenticatedRouteLayout() {
-  // the authLoader always returns { access_token } on success
-  const { access_token } = useLoaderData() as { access_token: string };
+  // the authLoader returns { accessToken } on success
+  const { accessToken: loadedAccessToken } = useLoaderData<AuthSession>();
   const { accessToken, setAccessToken } = useAuth();
 
   // bootstrap: pass the loader's access token into AuthProvider
   // runs once intentionally — accessToken is undefined on entry
   useEffect(() => {
     if (!accessToken) {
-      setAccessToken(access_token);
+      setAccessToken(loadedAccessToken);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

@@ -72,22 +72,17 @@ export async function fetchAuthTokenGitHub(code: string, state: string): Promise
 
   const tokenResponse = await response.json();
 
-  if (!tokenResponse.token) {
+  if (!tokenResponse.access_token) {
     throw new Error('failed to retrieve auth token: invalid response');
   }
 
-  return tokenResponse.token;
+  return tokenResponse.access_token;
 }
 
 export async function fetchUserInfo(
-  token: string,
-  customFetch?: typeof window.fetch,
+  fetcher: typeof fetch,
 ): Promise<User> {
-  const fetch = customFetch ?? window.fetch;
-
-  const response = await fetch(`${getAPIURL()}/auth/current_user_info`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await fetcher(`${getAPIURL()}/auth/current_user_info`);
 
   if (!response.ok) {
     if (response.status === 401 || response.status === 404) {
@@ -104,15 +99,12 @@ export type PostRenderResponse = Render & {
 };
 
 export async function postRender(
-  token: string,
+  fetcher: typeof fetch,
   renderConfig: NormalizedRenderConfig,
   targetUserID?: number,
 ): Promise<PostRenderResponse> {
-  const response = await fetch(appendUserID(`${getAPIURL()}/renders`, targetUserID), {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
+  const response = await fetcher(appendUserID(`${getAPIURL()}/renders`, targetUserID), {
+    headers: { 'Content-Type': 'application/json' },
     method: 'POST',
     body: JSON.stringify(renderConfig),
   });
@@ -208,12 +200,9 @@ export type Duration = {
   nanos: number;
 };
 
-export async function getAllRenders(token: string, targetUserID?: number): Promise<Render[]> {
-  const response = await fetch(
+export async function getAllRenders(fetcher: typeof fetch, targetUserID?: number): Promise<Render[]> {
+  const response = await fetcher(
     appendUserID(`${getAPIURL()}/renders?format=precise`, targetUserID),
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    },
   );
 
   if (!response.ok) {
@@ -225,15 +214,12 @@ export async function getAllRenders(token: string, targetUserID?: number): Promi
 }
 
 export async function getRender(
-  token: string,
+  fetcher: typeof fetch,
   renderID: number,
   targetUserID?: number,
 ): Promise<Render> {
-  const response = await fetch(
+  const response = await fetcher(
     appendUserID(`${getAPIURL()}/renders/${renderID}?format=precise`, targetUserID),
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    },
   );
 
   if (!response.ok) {
@@ -245,14 +231,13 @@ export async function getRender(
 }
 
 export async function pauseRender(
-  token: string,
+  fetcher: typeof fetch,
   renderID: number,
   targetUserID?: number,
 ): Promise<void> {
-  const response = await fetch(
+  const response = await fetcher(
     appendUserID(`${getAPIURL()}/renders/${renderID}/pause`, targetUserID),
     {
-      headers: { Authorization: `Bearer ${token}` },
       method: 'POST',
     },
   );
@@ -264,14 +249,13 @@ export async function pauseRender(
 }
 
 export async function resumeRender(
-  token: string,
+  fetcher: typeof fetch,
   renderID: number,
   targetUserID?: number,
 ): Promise<void> {
-  const response = await fetch(
+  const response = await fetcher(
     appendUserID(`${getAPIURL()}/renders/${renderID}/resume`, targetUserID),
     {
-      headers: { Authorization: `Bearer ${token}` },
       method: 'POST',
     },
   );
@@ -283,12 +267,11 @@ export async function resumeRender(
 }
 
 export async function deleteRender(
-  token: string,
+  fetcher: typeof fetch,
   renderID: number,
   targetUserID?: number,
 ): Promise<void> {
-  const response = await fetch(appendUserID(`${getAPIURL()}/renders/${renderID}`, targetUserID), {
-    headers: { Authorization: `Bearer ${token}` },
+  const response = await fetcher(appendUserID(`${getAPIURL()}/renders/${renderID}`, targetUserID), {
     method: 'DELETE',
   });
 
@@ -299,18 +282,15 @@ export async function deleteRender(
 }
 
 export async function updateRenderTotalCheckpoints(
-  token: string,
+  fetcher: typeof fetch,
   renderID: number,
   newTotalCheckpoints: number,
   targetUserID?: number,
 ): Promise<void> {
-  const response = await fetch(
+  const response = await fetcher(
     appendUserID(`${getAPIURL()}/renders/${renderID}/parameters/total_checkpoints`, targetUserID),
     {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       method: 'PUT',
       body: JSON.stringify({ new_total_checkpoints: newTotalCheckpoints }),
     },
@@ -323,18 +303,15 @@ export async function updateRenderTotalCheckpoints(
 }
 
 export async function updateRenderName(
-  token: string,
+  fetcher: typeof fetch,
   renderID: number,
   newName: string,
   targetUserID?: number,
 ): Promise<void> {
-  const response = await fetch(
+  const response = await fetcher(
     appendUserID(`${getAPIURL()}/renders/${renderID}/name`, targetUserID),
     {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       method: 'PUT',
       body: JSON.stringify({ name: newName }),
     },
@@ -366,15 +343,12 @@ export type RenderStats = {
 };
 
 export async function getRenderStats(
-  token: string,
+  fetcher: typeof fetch,
   renderID: number,
   targetUserID?: number,
 ): Promise<RenderStats> {
-  const response = await fetch(
+  const response = await fetcher(
     appendUserID(`${getAPIURL()}/renders/${renderID}/stats?format=precise`, targetUserID),
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    },
   );
 
   if (!response.ok) {
@@ -386,15 +360,12 @@ export async function getRenderStats(
 }
 
 export async function getLatestCheckpointImage(
-  token: string,
+  fetcher: typeof fetch,
   renderID: number,
   targetUserID?: number,
 ): Promise<Blob | null> {
-  const response = await fetch(
+  const response = await fetcher(
     appendUserID(`${getAPIURL()}/renders/${renderID}/checkpoint/latest`, targetUserID),
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    },
   );
 
   if (response.status === 404) {
@@ -409,10 +380,8 @@ export async function getLatestCheckpointImage(
   return await response.blob();
 }
 
-export async function getAllUsers(token: string): Promise<User[]> {
-  const response = await fetch(`${getAPIURL()}/users`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+export async function getAllUsers(fetcher: typeof fetch): Promise<User[]> {
+  const response = await fetcher(`${getAPIURL()}/users`);
 
   if (!response.ok) {
     const body = await response.text();
@@ -422,13 +391,10 @@ export async function getAllUsers(token: string): Promise<User[]> {
   return (await response.json()) as User[];
 }
 
-export async function updateUserRole(token: string, userID: number, role: Role): Promise<User> {
-  const response = await fetch(`${getAPIURL()}/users/${userID}/role`, {
+export async function updateUserRole(fetcher: typeof fetch, userID: number, role: Role): Promise<User> {
+  const response = await fetcher(`${getAPIURL()}/users/${userID}/role`, {
     method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ role }),
   });
 
@@ -441,18 +407,15 @@ export async function updateUserRole(token: string, userID: number, role: Role):
 }
 
 export async function updateUserQuotas(
-  token: string,
+  fetcher: typeof fetch,
   userID: number,
   maxRenders: number | null,
   maxCheckpointsPerRender: number | null,
   maxRenderPixelCount: number | null,
 ): Promise<User> {
-  const response = await fetch(`${getAPIURL()}/users/${userID}/quotas`, {
+  const response = await fetcher(`${getAPIURL()}/users/${userID}/quotas`, {
     method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       max_renders: maxRenders,
       max_checkpoints_per_render: maxCheckpointsPerRender,
@@ -468,10 +431,8 @@ export async function updateUserQuotas(
   return (await response.json()) as User;
 }
 
-export async function getStorageUsage(token: string): Promise<UsageResponse> {
-  const response = await fetch(`${getAPIURL()}/storage_usage`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+export async function getStorageUsage(fetcher: typeof fetch): Promise<UsageResponse> {
+  const response = await fetcher(`${getAPIURL()}/storage_usage`);
 
   if (!response.ok) {
     const body = await response.text();
