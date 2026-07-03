@@ -4,8 +4,11 @@ use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
 };
-use axum_extra::{TypedHeader, extract::SignedCookieJar, headers::ContentType};
+use axum_extra::{
+    TypedHeader, extract::SignedCookieJar, extract::cookie::Cookie, headers::ContentType,
+};
 use serde::{Deserialize, Serialize};
+use time::Duration;
 use uuid::Uuid;
 
 use crate::{
@@ -24,7 +27,6 @@ pub struct AuthGithubCallbackQueryParameters {
 #[serde(rename_all = "snake_case")]
 pub struct AuthLoginResponse {
     pub access_token: String,
-    pub refresh_token: String,
 }
 
 pub async fn auth_github_callback(
@@ -122,13 +124,18 @@ pub async fn auth_github_callback(
         }
     };
 
+    let refresh_cookie = Cookie::build(("refresh_token", refresh_token))
+        .path("/api/v1/auth")
+        .secure(true)
+        .http_only(true)
+        .same_site(axum_extra::extract::cookie::SameSite::Lax)
+        .max_age(Duration::days(30));
+
     (
         StatusCode::OK,
         TypedHeader(ContentType::json()),
-        Json(AuthLoginResponse {
-            access_token,
-            refresh_token,
-        }),
+        cookie_jar.add(refresh_cookie),
+        Json(AuthLoginResponse { access_token }),
     )
         .into_response()
 }

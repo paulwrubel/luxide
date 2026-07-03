@@ -4,31 +4,53 @@ use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
 };
-use serde::{Deserialize, Serialize};
+use axum_extra::extract::{SignedCookieJar, cookie::Cookie};
+use serde::Serialize;
+use time::Duration;
 
 use crate::server::LuxideState;
-
-#[derive(Debug, Deserialize)]
-pub struct RefreshRequest {
-    pub refresh_token: String,
-}
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub struct RefreshResponse {
     pub access_token: String,
-    pub refresh_token: String,
 }
 
 pub async fn auth_refresh(
     State(state): State<LuxideState>,
-    Json(request): Json<RefreshRequest>,
+    cookie_jar: SignedCookieJar,
 ) -> Response {
-    match state.auth_manager.rotate_refresh_token(&request.refresh_token).await {
-        Ok((access_token, refresh_token)) => {
+    let refresh_token = match cookie_jar.get("refresh_token") {
+        Some(cookie) => cookie.value().to_string(),
+        None => {
+            return (
+                StatusCode::UNAUTHORIZED,
+                Json(serde_json::json!({
+                    "code": 401,
+                    "message": "refresh token expired or revoked"
+                })),
+            )
+                .into_response();
+        }
+    };
+
+    match state
+        .auth_manager
+        .rotate_refresh_token(&refresh_token)
+        .await
+    {
+        Ok((access_token, new_refresh_token)) => {
+            let refresh_cookie = Cookie::build(("refresh_token", new_refresh_token))
+                .path("/api/v1/auth")
+                .secure(true)
+                .http_only(true)
+                .same_site(axum_extra::extract::cookie::SameSite::Lax)
+                .max_age(Duration::days(30));
+
             (
                 StatusCode::OK,
-                Json(RefreshResponse { access_token, refresh_token }),
+                cookie_jar.add(refresh_cookie),
+                Json(RefreshResponse { access_token }),
             )
                 .into_response()
         }
