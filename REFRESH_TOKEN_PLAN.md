@@ -2,21 +2,24 @@
 
 ## Overview
 
-Add an OAuth2-style refresh token system so that when a user's JWT expires after 24 hours, the frontend silently refreshes it without user interaction. No full-page redirect, no re-authorization.
+Add an OAuth2-style refresh token system so that when a user's JWT expires after 24 hours, the frontend silently refreshes it without user interaction.
+
+**Token storage model:**
+- **Access token (JWT)**: 24-hour lifetime, stored in JS memory only. Lost on page reload, recovered via refresh token.
+- **Refresh token**: 30-day lifetime, opaque random string, stored as SHA-256 hash in Postgres. Delivered to browser as an **httpOnly, Secure, SameSite=Lax cookie**. Never accessible to JavaScript. Automatically sent by browser on requests to the API origin.
 
 **Design decisions:**
-- One active refresh token per user (logging in on a new device revokes the old one)
-- Reactive: refresh on 401, not preemptively
-- Opaque refresh token (not a JWT), stored as SHA-256 hash in the DB
-- 30-day refresh token lifetime, reset on each refresh
-- Token rotation: each refresh invalidates the old token, issues a new one
-- Multi-tab sync via localStorage storage event
+- Reactive: refresh on 401, not preemptively (no JWT decoding in the browser)
+- Multi-token per user: logging in on a new device does not kill existing sessions
+- Token rotation: each refresh revokes the old refresh token and issues a new one (same origin_id lineage)
+- Reuse detection: presenting a stale/revoked refresh token revokes the entire origin lineage
+- Cookie-based refresh: `POST /api/v1/auth/refresh` requires no request body — the refresh token is in the cookie
 
 ---
 
 ## 1. Database Migration
 
-### Up migration
+### `migrations/20260702052852_add_refresh_tokens.up.sql`
 
 ```sql
 BEGIN;
@@ -25,6 +28,7 @@ CREATE TABLE refresh_tokens (
     id INTEGER NOT NULL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     token_hash BYTEA NOT NULL UNIQUE,
+    origin_id INTEGER NOT NULL,
     issued_at TIMESTAMPTZ NOT NULL,
     expires_at TIMESTAMPTZ NOT NULL,
     revoked BOOLEAN NOT NULL
@@ -32,398 +36,441 @@ CREATE TABLE refresh_tokens (
 
 CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
 CREATE INDEX idx_refresh_tokens_token_hash ON refresh_tokens(token_hash);
+CREATE INDEX idx_refresh_tokens_origin_id ON refresh_tokens(origin_id);
 
 END;
 ```
 
-### Down migration
+### `migrations/...down.sql`
 
 ```sql
 BEGIN;
-
 DROP TABLE refresh_tokens;
-
 END;
 ```
 
-**Notes:**
-- `token_hash` is SHA-256 of the raw opaque token string — if the DB is compromised, hashes are useless
-- `ON DELETE CASCADE` cleans up tokens when user is deleted
+**Columns:**
+- `id`: application-assigned (MAX+1 pattern, same as `renders` and `users`)
+- `token_hash`: SHA-256 of the raw opaque token string
+- `origin_id`: ID of the first token in this login's lineage. New login → points to self. Rotation → inherits origin.
 - No `DEFAULT` values — application owns every column
-- No auto-increment — application assigns IDs (same pattern as `renders` and `users` tables)
+- `ON DELETE CASCADE` cleans up tokens when user is deleted
 
 ---
 
-## 2. AuthManager — New Methods
+## 2. AuthManager — Refresh Token Methods
 
 **File:** `src/server/auth_manager.rs`
 
 ### Constants
 
 ```rust
+pub const JWT_EXPIRE_AFTER_HOURS: i64 = 24;
 pub const REFRESH_TOKEN_EXPIRE_AFTER_DAYS: i64 = 30;
 ```
 
-### `generate_refresh_token(&self, user_id: UserID) -> Result<String, AuthManagerError>`
+### `hash_refresh_token(token: &str) -> Vec<u8>`
 
-1. Generate 32 bytes of cryptographically random data (CSPRNG / `OsRng`)
-2. Hex-encode to a 64-character string (the raw token returned to caller)
+SHA-256 of the raw token bytes. Private helper.
+
+### `generate_refresh_token(&self, user_id: UserID, origin_id: Option<u32>) -> Result<String, AuthManagerError>`
+
+1. Generate 32 random bytes via `rand::random::<[u8; 32]>()`
+2. Hex-encode to 64-character string (the raw token returned to caller)
 3. SHA-256 hash the raw token bytes
-4. Revoke any existing non-revoked refresh token for this user
-5. Compute `expires_at = now + 30 days`
-6. Assigned the next ID via `storage.get_next_refresh_token_id()`
-7. Insert row into `refresh_tokens` table via storage trait
-8. Return the raw (unhashed) token string
-
-### `validate_refresh_token(&self, token: &str) -> Result<UserID, AuthManagerError>`
-
-1. SHA-256 hash the provided raw token
-2. Look up by `token_hash` where `revoked = false` and `expires_at > now()`
-3. Return the `user_id` if found
-4. Return error if expired, revoked, or not found
-
-### `revoke_refresh_tokens_for_user(&self, user_id: UserID) -> Result<(), AuthManagerError>`
-
-1. Set `revoked = true` for all rows with matching `user_id` (even if already revoked)
+4. Get next ID from storage
+5. `origin_id = origin_id.unwrap_or(id)` — None = new login (self-origin), Some(x) = rotation (inherit origin)
+6. Compute `expires_at = now + 30 days`
+7. Store row via `storage.create_refresh_token()`
+8. Return raw hex-encoded token
 
 ### `rotate_refresh_token(&self, token: &str) -> Result<(String, String), AuthManagerError>`
 
-1. Validate the old refresh token → get `user_id`
-2. Revoke the old token (set `revoked = true` where `token_hash` matches)
-3. Generate new JWT via existing `generate_new_jwt(user_id)`
-4. Generate new refresh token via `generate_refresh_token(user_id)`
-5. Return `(new_jwt, new_refresh_token)`
-
-### Implementation approach
-
-These methods delegate to new methods on the `UserStorage` trait:
-
-```rust
-async fn get_next_refresh_token_id(&self) -> Result<u32, StorageError>;
-async fn create_refresh_token(
-    &self, id: u32, user_id: UserID, token_hash: &[u8],
-    issued_at: chrono::DateTime<chrono::Utc>, expires_at: chrono::DateTime<chrono::Utc>
-) -> Result<(), StorageError>;
-async fn find_valid_refresh_token(
-    &self, token_hash: &[u8]
-) -> Result<Option<(UserID, chrono::DateTime<chrono::Utc>)>, StorageError>;
-async fn revoke_refresh_token(&self, token_hash: &[u8]) -> Result<(), StorageError>;
-async fn revoke_all_refresh_tokens_for_user(&self, user_id: UserID) -> Result<(), StorageError>;
-```
-
-The Postgres storage backend implements these with raw SQL. The InMemory and File backends return errors (not applicable). The AuthManager methods are thin wrappers that handle hashing and call these trait methods.
+1. Hash the old token
+2. Call `storage.get_refresh_token()` — single DB call
+3. If None → error (token never existed)
+4. If valid (`!revoked && expires_at > now`) → revoke old token, issue new JWT + new refresh token with same origin_id
+5. If invalid (revoked or expired) → REUSE DETECTED → call `revoke_refresh_tokens_by_origin(origin_id)` → error
 
 ---
 
-## 3. Auth Callback Handler
+## 3. Storage Trait — Refresh Token Methods
 
-**File:** `src/server/handlers/auth_callback.rs`
+**File:** `src/tracing/storage.rs`
 
-### Response type change
+### `RefreshTokenRow` struct
 
 ```rust
-pub struct AuthLoginResponse {
-    pub token: String,           // JWT access token (24hr)
-    pub refresh_token: String,   // opaque refresh token (30 day)
+pub struct RefreshTokenRow {
+    pub user_id: UserID,
+    pub origin_id: u32,
+    pub revoked: bool,
+    pub expires_at: chrono::DateTime<chrono::Utc>,
 }
 ```
 
-### Handler change
+### 5 methods on `UserStorage` trait
 
-After the existing JWT generation on line 104, add:
+| Method | Purpose |
+|---|---|
+| `get_next_refresh_token_id()` | `SELECT COALESCE(MAX(id), 0) + 1` |
+| `create_refresh_token(id, user_id, token_hash, origin_id, issued_at, expires_at)` | INSERT |
+| `get_refresh_token(token_hash)` | SELECT full row by hash |
+| `revoke_refresh_token(token_hash)` | UPDATE SET revoked=TRUE |
+| `revoke_refresh_tokens_by_origin(origin_id)` | UPDATE SET revoked=TRUE for entire lineage |
 
-```rust
-let refresh_token = state.auth_manager.generate_refresh_token(user.id).await?;
-```
-
-Then return both in the response:
-
-```rust
-Json(AuthLoginResponse { token, refresh_token })
-```
+Implemented on `PostgresStorage`. InMemoryStorage and FileStorage do NOT implement UserStorage (no stubs needed).
 
 ---
 
-## 4. Auth Refresh Handler
+## 4. OAuth Callback Handler
 
-**File:** `src/server/handlers/auth_refresh.rs` (new)
+**File:** `src/server/handlers/auth_callback.rs`
 
-### Endpoint
+### What changes
 
-```
-POST /api/v1/auth/refresh
-No authentication required (the refresh token IS the credential)
-```
+Instead of returning `refresh_token` in the JSON body, set it as an httpOnly cookie.
 
-### Request
-
+**Response:**
 ```json
-{ "refresh_token": "a1b2c3d4e5f6..." }
+{ "access_token": "eyJ..." }
 ```
 
-### Response (200 OK)
+**Cookie set:**
+```
+Set-Cookie: refresh_token=<opaque-string>; HttpOnly; Secure; SameSite=Lax; Path=/api/v1/auth; Max-Age=2592000
+```
 
+- `HttpOnly`: not accessible to JavaScript
+- `Secure`: only sent over HTTPS
+- `SameSite=Lax`: sent on same-site requests and top-level navigations, not on cross-site POSTs
+- `Path=/api/v1/auth`: only sent to auth endpoints (refresh, callback)
+- `Max-Age=2592000`: 30 days
+
+**Implementation:** Use the existing `SignedCookieJar` (already used for the OAuth `session_id` cookie). The `Key` for signing is already in `LuxideState`.
+
+**Removed from response:** `refresh_token` is no longer in `AuthLoginResponse`. Remove that field.
+
+### AuthLoginResponse
+
+```rust
+pub struct AuthLoginResponse {
+    pub access_token: String,
+}
+```
+
+The `refresh_token` is set as a signed cookie via the cookie jar, not returned in JSON.
+
+---
+
+## 5. Auth Refresh Handler
+
+**File:** `src/server/handlers/auth_refresh.rs`
+
+### Endpoint: `POST /api/v1/auth/refresh`
+
+**Request:** No JSON body needed. The refresh token comes from the `refresh_token` cookie.
+
+**Response (200):**
 ```json
-{ "token": "eyJ...", "refresh_token": "b2c3d4..." }
+{ "access_token": "eyJ..." }
 ```
 
-### Response (401 Unauthorized)
+**New cookie:** A fresh `refresh_token` cookie (rotation — old token revoked, new one issued).
 
+**Response (401):**
 ```json
 { "code": 401, "message": "refresh token expired or revoked" }
 ```
 
 ### Handler logic
 
-1. Parse `RefreshRequest { refresh_token: String }` from JSON body
-2. Call `auth_manager.rotate_refresh_token(refresh_token)`
-3. On success: return `200` with `RefreshResponse { token, refresh_token }`
-4. On error: return `401` with error JSON
+1. Read `refresh_token` from the signed cookie jar
+2. If missing → 401
+3. Call `auth_manager.rotate_refresh_token(cookie_value)`
+4. On success:
+   - Set new `refresh_token` cookie with fresh Max-Age
+   - Return 200 with new JWT
+5. On error → 401
 
 ### Request/response types
 
 ```rust
-#[derive(Deserialize)]
-pub struct RefreshRequest {
-    pub refresh_token: String,
-}
+// No request body struct needed — token comes from cookie
 
 #[derive(Serialize)]
 pub struct RefreshResponse {
-    pub token: String,
-    pub refresh_token: String,
+    pub access_token: String,
 }
 ```
 
+**No authentication required.** The cookie IS the credential. This endpoint does not use the `Claims` extractor.
+
+### Cookie jar
+
+The handler takes `SignedCookieJar` as an extractor (same as `auth_callback.rs`). Uses `cookie_jar.add(Cookie::build(...))` to set the new cookie.
+
 ---
 
-## 5. Router and Handlers Barrel
+## 6. Router
 
-### `src/server/handlers.rs`
+**File:** `src/server/router.rs`
 
-Add:
 ```rust
-mod auth_refresh;
-pub use auth_refresh::*;
-```
-
-### `src/server/router.rs`
-
-Add to `build_auth_router()`:
-```rust
-.route("/refresh", post(handlers::auth_refresh))
-```
-
----
-
-## 6. Frontend: Authenticated Fetch Singleton
-
-**File:** `ui/src/utils/authFetch.ts` (new)
-
-### Module-level state
-
-```typescript
-let accessToken: string | undefined;
-let refreshToken: string | undefined;
-let refreshPromise: Promise<boolean> | null = null;
-let onTokensRefreshed: ((newAccess: string, newRefresh: string) => void) | undefined;
-let onAuthExpired: (() => void) | undefined;
-```
-
-### `configureAuthFetch(config)` — called by AuthProvider
-
-Sets the module-level `accessToken`, `refreshToken`, `onTokensRefreshed`, and `onAuthExpired` callbacks.
-
-### `authenticatedFetch(url, init?)` — used by api.ts functions
-
-```typescript
-export async function authenticatedFetch(url: string, init?: RequestInit): Promise<Response> {
-    // 1. Add Authorization header from current accessToken
-    const headers = new Headers(init?.headers);
-    if (accessToken) {
-        headers.set('Authorization', `Bearer ${accessToken}`);
-    }
-
-    let response = await fetch(url, { ...init, headers });
-
-    // 2. If not 401, return as-is
-    if (response.status !== 401 || !refreshToken) {
-        return response;
-    }
-
-    // 3. Multi-tab sync: check if localStorage has newer tokens
-    const storedAccess = localStorage.getItem('auth_token');
-    if (storedAccess && storedAccess !== accessToken) {
-        // Another tab already refreshed — adopt their tokens
-        accessToken = storedAccess;
-        refreshToken = localStorage.getItem('refresh_token') ?? undefined;
-        onTokensRefreshed?.(storedAccess, refreshToken ?? '');
-        const retryHeaders = new Headers(init?.headers);
-        retryHeaders.set('Authorization', `Bearer ${storedAccess}`);
-        return fetch(url, { ...init, headers: retryHeaders });
-    }
-
-    // 4. Deduplicate: only one refresh at a time
-    if (!refreshPromise) {
-        refreshPromise = doRefresh();
-    }
-    const refreshed = await refreshPromise;
-
-    if (refreshed) {
-        // 5. Retry original request with new token
-        const retryHeaders = new Headers(init?.headers);
-        retryHeaders.set('Authorization', `Bearer ${accessToken}`);
-        return fetch(url, { ...init, headers: retryHeaders });
-    }
-
-    // 6. Refresh failed — trigger logout
-    onAuthExpired?.();
-    return response;
-}
-```
-
-### `doRefresh()` — internal
-
-```typescript
-async function doRefresh(): Promise<boolean> {
-    try {
-        const apiURL = `${window.location.origin}/api/v1`;
-        const res = await fetch(`${apiURL}/auth/refresh`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ refresh_token: refreshToken }),
-        });
-        if (res.ok) {
-            const { token, refresh_token } = await res.json();
-            accessToken = token;
-            refreshToken = refresh_token;
-            onTokensRefreshed?.(token, refresh_token);
-            return true;
-        }
-        return false;
-    } catch {
-        return false;
-    } finally {
-        refreshPromise = null;
-    }
+fn build_auth_router() -> Router<LuxideState> {
+    Router::new()
+        .route("/login", get(handlers::auth_login))
+        .route("/github/callback", get(handlers::auth_github_callback))
+        .route("/refresh", post(handlers::auth_refresh))
+        .route("/current_user_info", get(handlers::get_current_user_info))
 }
 ```
 
 ---
 
-## 7. Auth Context Type
+## 7. Frontend: Auth Context Type
 
 **File:** `ui/src/providers/Auth/context.ts`
 
 ```typescript
 export type AuthContextType = {
-    token: string | undefined;
-    refreshToken: string | undefined;                                     // NEW
-    user: User | undefined;
-    isAuthenticated: boolean;
-    mustGetToken: () => string;
-    setAuth: (token: string, refreshToken: string) => void;              // REPLACES setToken
-    clearToken: () => void;
+  accessToken: string | undefined;
+  user: User | undefined;
+  isAuthenticated: boolean;
+  authenticatedFetch: typeof fetch;
+  setAccessToken: (token: string) => void;
+  clearAccessToken: () => void;
 };
 ```
 
+**Removed:** `token`, `refreshToken`, `setAuth`, `setToken`, `mustGetToken`.
+
+**Added:** `accessToken`, `authenticatedFetch`, `setAccessToken`, `clearAccessToken`.
+
 ---
 
-## 8. Auth Provider
+## 8. Frontend: Auth Provider
 
 **File:** `ui/src/providers/Auth/provider.tsx`
 
-### New state
+### State
 
 ```typescript
-const [refreshToken, setRefreshTokenState] = useState<string | undefined>(() => {
-    return localStorage?.getItem('refresh_token') ?? undefined;
-});
+const [accessToken, setAccessTokenState] = useState<string | undefined>(undefined);
+const [user, setUser] = useState<User | undefined>(undefined);
+const refreshPromiseRef = useRef<Promise<boolean> | null>(null);
 ```
 
-### Sync singleton — runs on every token change
+**No localStorage.** Access token lives in JS memory only.
+
+### Mount-time refresh attempt
 
 ```typescript
 useEffect(() => {
-    configureAuthFetch({
-        accessToken: token,
-        refreshToken,
-        onTokensRefreshed: (newAccess, newRefresh) => {
-            // Silent update — don't re-fetch user info, no re-render loop
-            localStorage.setItem('auth_token', newAccess);
-            localStorage.setItem('refresh_token', newRefresh);
-            setTokenState(newAccess);
-            setRefreshTokenState(newRefresh);
-            // do NOT set user to undefined (avoids unnecessary re-fetch of user info on refresh)
-        },
-        onAuthExpired: () => {
-            clearToken();
-        },
-    });
-}, [token, refreshToken, clearToken]);
+  if (!accessToken && !user) {
+    // Try to recover a session from the refresh cookie
+    fetch(`${apiURL}/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+    })
+      .then(async (res) => {
+        if (res.ok) {
+          const { access_token } = await res.json();
+          setAccessTokenState(access_token);
+        }
+      })
+      .catch(() => {});
+  }
+}, []); // runs once on mount
 ```
 
-### `setAuth` replaces `setToken`
+This prevents the `AuthenticatedRouteLayout` from redirecting to `/login` before the refresh has a chance to run.
+
+### `authenticatedFetch`
 
 ```typescript
-const setAuth = useCallback((newToken: string, newRefreshToken: string) => {
-    localStorage.setItem('auth_token', newToken);
-    localStorage.setItem('refresh_token', newRefreshToken);
-    setTokenState(newToken);
-    setRefreshTokenState(newRefreshToken);
-    setUser(undefined); // clear user to trigger re-fetch of user info on login
+const authenticatedFetch = useCallback(async (url: string, init?: RequestInit): Promise<Response> => {
+  const headers = new Headers(init?.headers);
+  if (accessToken) {
+    headers.set('Authorization', `Bearer ${accessToken}`);
+  }
+
+  let response = await fetch(url, { ...init, headers, credentials: 'include' });
+
+  if (response.status !== 401) {
+    return response;
+  }
+
+  // Attempt refresh
+  if (!refreshPromiseRef.current) {
+    refreshPromiseRef.current = (async () => {
+      try {
+        const refreshRes = await fetch(`${apiURL}/auth/refresh`, {
+          method: 'POST',
+          credentials: 'include',
+        });
+        if (refreshRes.ok) {
+          const { access_token } = await refreshRes.json();
+          setAccessTokenState(access_token);
+          return true;
+        }
+        return false;
+      } catch {
+        return false;
+      } finally {
+        refreshPromiseRef.current = null;
+      }
+    })();
+  }
+
+  const refreshed = await refreshPromiseRef.current;
+
+  if (refreshed) {
+    // Retry with new access token
+    const retryHeaders = new Headers(init?.headers);
+    retryHeaders.set('Authorization', `Bearer ${accessToken}`);
+    return fetch(url, { ...init, headers: retryHeaders, credentials: 'include' });
+  }
+
+  // Refresh failed — logout
+  clearAccessToken();
+  return response;
+}, [accessToken, clearAccessToken]);
+```
+
+Key differences from the original singleton approach:
+- Lives in `AuthProvider` via `useCallback`, not a module-level singleton
+- Uses `useRef` for `refreshPromise` deduplication (React-idiomatic)
+- Adds `credentials: 'include'` to all fetch calls (sends the cookie)
+- No multi-tab sync needed (cookies handle this natively)
+- No refreshToken state (it's in the cookie, invisible to JS)
+
+### `setAccessToken`
+
+```typescript
+const setAccessToken = useCallback((newToken: string) => {
+  setAccessTokenState(newToken);
+  setUser(undefined); // trigger user info re-fetch
 }, []);
 ```
 
-### `clearToken` updated
+### `clearAccessToken`
 
 ```typescript
-const clearToken = useCallback(() => {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('refresh_token');
-    setTokenState(undefined);
-    setRefreshTokenState(undefined);
-    setUser(undefined);
+const clearAccessToken = useCallback(() => {
+  setAccessTokenState(undefined);
+  setUser(undefined);
 }, []);
 ```
 
-### `fetchUserInfo` call simplified
-
-The `useEffect` that calls `fetchUserInfo` no longer passes `token` (it uses `authenticatedFetch` internally):
+### User info fetch
 
 ```typescript
 useEffect(() => {
-    if (token && !user) {
-        fetchUserInfo()
-            .then(setUser)
-            .catch((e: unknown) => {
-                if (e instanceof Error && e.message === 'Unauthorized') {
-                    clearToken();
-                } else {
-                    setUser(undefined);
-                }
-            });
-    }
-}, [token, user, clearToken]);
+  if (accessToken && !user) {
+    fetchUserInfo(authenticatedFetch)
+      .then(setUser)
+      .catch((e) => {
+        if (e instanceof Error && e.message === 'Unauthorized') {
+          clearAccessToken();
+        } else {
+          setUser(undefined);
+        }
+      });
+  }
+}, [accessToken, user, clearAccessToken, authenticatedFetch]);
 ```
 
 ### Context value
 
 ```typescript
 const value: AuthContextType = {
-    token,
-    refreshToken,        // NEW
-    user,
-    isAuthenticated: !!token,
-    mustGetToken,
-    setAuth,             // REPLACES setToken
-    clearToken,
+  accessToken,
+  user,
+  isAuthenticated: !!accessToken,
+  authenticatedFetch,
+  setAccessToken,
+  clearAccessToken,
 };
 ```
 
 ---
 
-## 9. Auth Callback Page
+## 9. Frontend: API Client
+
+**File:** `ui/src/utils/api.ts`
+
+### `fetchAuthTokenGitHub` — return type change
+
+No longer returns `refresh_token` (it comes as a cookie set by the backend).
+
+```typescript
+type AuthTokenResponse = {
+  access_token: string;
+};
+
+export async function fetchAuthTokenGitHub(code: string, state: string): Promise<AuthTokenResponse> {
+  const response = await fetch(`${getAPIURL()}/auth/github/callback?code=${code}&state=${state}`, {
+    credentials: 'include', // so the cookie gets set
+  });
+  // ...
+  return { access_token: tokenResponse.access_token };
+}
+```
+
+### All other functions — take `fetch` as a parameter
+
+Every function receives a `fetcher` parameter (the `authenticatedFetch` from context):
+
+```typescript
+import type { AuthContextType } from '@/providers/Auth/context';
+
+type Fetcher = AuthContextType['authenticatedFetch'];
+
+export async function postRender(
+  fetcher: Fetcher,
+  config: NormalizedRenderConfig,
+  targetUserID?: number,
+): Promise<PostRenderResponse> {
+  const response = await fetcher(appendUserID(`${getAPIURL()}/renders`, targetUserID), {
+    headers: { 'Content-Type': 'application/json' },
+    method: 'POST',
+    body: JSON.stringify(config),
+  });
+  // error handling unchanged
+}
+```
+
+### Complete list of functions gaining `fetcher` parameter
+
+| Function | Signature |
+|---|---|
+| `fetchUserInfo` | `(fetcher, customFetch?)` |
+| `postRender` | `(fetcher, config, targetUserID?)` |
+| `getAllRenders` | `(fetcher, targetUserID?)` |
+| `getRender` | `(fetcher, renderID, targetUserID?)` |
+| `pauseRender` | `(fetcher, renderID, targetUserID?)` |
+| `resumeRender` | `(fetcher, renderID, targetUserID?)` |
+| `deleteRender` | `(fetcher, renderID, targetUserID?)` |
+| `updateRenderTotalCheckpoints` | `(fetcher, renderID, n, targetUserID?)` |
+| `updateRenderName` | `(fetcher, renderID, name, targetUserID?)` |
+| `getRenderStats` | `(fetcher, renderID, targetUserID?)` |
+| `getLatestCheckpointImage` | `(fetcher, renderID, targetUserID?)` |
+| `getAllUsers` | `(fetcher)` |
+| `updateUserRole` | `(fetcher, userID, role)` |
+| `updateUserQuotas` | `(fetcher, userID, ...)` |
+| `getStorageUsage` | `(fetcher)` |
+
+### Unchanged functions
+
+| Function | Reason |
+|---|---|
+| `navigateToAPILogin` | Never took credentials — initiates OAuth flow |
+| `fetchAuthTokenGitHub` | Only return type changes — response now has `access_token` not `token` |
+
+---
+
+## 10. Frontend: Auth Callback Page
 
 **File:** `ui/src/views/auth/github/callback/index.tsx`
 
@@ -433,157 +480,112 @@ const token = await fetchAuthTokenGitHub(code, state);
 setToken(token);
 
 // After:
-const { token, refreshToken } = await fetchAuthTokenGitHub(code, state);
-setAuth(token, refreshToken);
+const { access_token } = await fetchAuthTokenGitHub(code, state);
+setAccessToken(access_token);
 ```
+
+The refresh token is already set as a cookie by the backend — nothing to do with it.
 
 ---
 
-## 10. API Client
+## 11. Frontend: Hooks
 
-**File:** `ui/src/utils/api.ts`
-
-### `fetchAuthTokenGitHub` — return type change
-
+### Every hook changes from:
 ```typescript
-type AuthTokenResponse = {
-    token: string;
-    refresh_token: string;
-};
-
-export async function fetchAuthTokenGitHub(code: string, state: string): Promise<AuthTokenResponse>
+const { mustGetToken } = useAuth();
+const token = mustGetToken();
+// ...
+queryFn: () => getRender(token, renderID, targetUserID),
 ```
 
-### All other functions — remove `token` parameter, use `authenticatedFetch`
-
-Every function changes uniformly. Before/after example:
-
+### To:
 ```typescript
-// BEFORE
-export async function postRender(token: string, config: NormalizedRenderConfig, targetUserID?: number): Promise<PostRenderResponse> {
-    const response = await fetch(appendUserID(`${getAPIURL()}/renders`, targetUserID), {
-        headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-        },
-        method: 'POST',
-        body: JSON.stringify(renderConfig),
-    });
-    // ... error handling ...
-}
-
-// AFTER
-export async function postRender(config: NormalizedRenderConfig, targetUserID?: number): Promise<PostRenderResponse> {
-    const response = await authenticatedFetch(appendUserID(`${getAPIURL()}/renders`, targetUserID), {
-        headers: { 'Content-Type': 'application/json' },
-        method: 'POST',
-        body: JSON.stringify(renderConfig),
-    });
-    // ... error handling same ...
-}
+const { accessToken, authenticatedFetch } = useAuth();
+// guard still present (hooks render inside AuthenticatedRouteLayout)
+// ...
+queryFn: () => getRender(authenticatedFetch, renderID, targetUserID),
+queryKey: renderQueryKey(renderID, accessToken!, targetUserID),
 ```
 
-### Complete list of functions losing the `token: string` parameter
+The `accessToken` is still in query keys for automatic cache invalidation on rotation.
 
-| Function | Before | After |
-|---|---|---|
-| `fetchUserInfo` | `(token, customFetch?)` | `(customFetch?)` |
-| `postRender` | `(token, config, targetUserID?)` | `(config, targetUserID?)` |
-| `getAllRenders` | `(token, targetUserID?)` | `(targetUserID?)` |
-| `getRender` | `(token, renderID, targetUserID?)` | `(renderID, targetUserID?)` |
-| `pauseRender` | `(token, renderID, targetUserID?)` | `(renderID, targetUserID?)` |
-| `resumeRender` | `(token, renderID, targetUserID?)` | `(renderID, targetUserID?)` |
-| `deleteRender` | `(token, renderID, targetUserID?)` | `(renderID, targetUserID?)` |
-| `updateRenderTotalCheckpoints` | `(token, renderID, n, targetUserID?)` | `(renderID, n, targetUserID?)` |
-| `updateRenderName` | `(token, renderID, name, targetUserID?)` | `(renderID, name, targetUserID?)` |
-| `getRenderStats` | `(token, renderID, targetUserID?)` | `(renderID, targetUserID?)` |
-| `getLatestCheckpointImage` | `(token, renderID, targetUserID?)` | `(renderID, targetUserID?)` |
-| `getAllUsers` | `(token)` | `()` |
-| `updateUserRole` | `(token, userID, role)` | `(userID, role)` |
-| `updateUserQuotas` | `(token, userID, ...)` | `(userID, ...)` |
-| `getStorageUsage` | `(token)` | `()` |
+### 8 hook files changed:
+- `useRenders.ts`
+- `useRender.ts`
+- `useRenderMutations.ts`
+- `useRenderStats.ts`
+- `useLatestCheckpointImage.ts`
+- `useStorageUsage.ts`
+- `useAllUsers.ts`
+- `useUserMutations.ts`
 
-### Unchanged functions
+### `useEventSource.ts` — minor change
 
-| Function | Reason |
-|---|---|
-| `navigateToAPILogin` | Never took a token — initiates OAuth flow |
-| `fetchAuthTokenGitHub` | Never took a token — exchanges OAuth code (return type changes though) |
+The SSE hook receives `accessToken` from the parent hook. It uses it in the `fetch` override for EventSource. No structural change — just the prop name changes from `token` to `accessToken`.
 
 ---
 
-## 11. Hooks (8 files)
+## 12. Layouts
 
-All hooks still call `mustGetToken()` or `useAuth().token` for:
-1. **Guard:** ensuring the user is authenticated
-2. **Query keys:** including `token` so cached query data re-fetches on token rotation
+### `AuthenticatedRouteLayout`
 
-But they no longer pass `token` to the API functions.
+No change. Still checks `isAuthenticated` (derived from `!!accessToken`). On page reload, the mount-time refresh attempt in `AuthProvider` completes before the route guard redirects.
 
-### Files changed
+### `UserBadge`
 
-| File | Changes |
-|---|---|
-| `useRenders.ts` | `getAllRenders(token, targetUserID)` → `getAllRenders(targetUserID)` |
-| `useRender.ts` | `getRender(token, renderID, targetUserID)` → `getRender(renderID, targetUserID)` |
-| `useRenderMutations.ts` | All 6 mutation calls: remove `token` first argument |
-| `useRenderStats.ts` | `getRenderStats(token, renderID, targetUserID)` → `getRenderStats(renderID, targetUserID)` |
-| `useLatestCheckpointImage.ts` | `getLatestCheckpointImage(token, renderID, targetUserID)` → `getLatestCheckpointImage(renderID, targetUserID)` |
-| `useStorageUsage.ts` | `getStorageUsage(token)` → `getStorageUsage()` |
-| `useAllUsers.ts` | `getAllUsers(token)` → `getAllUsers()` |
-| `useUserMutations.ts` | `updateUserRole(token, ...)`, `updateUserQuotas(token, ...)` → remove `token` |
-
-### `useEventSource.ts` — No changes
-
-SSE uses `EventSource` (not `fetch`), so the `authenticatedFetch` singleton doesn't apply. It continues to receive `token` from the parent hook. When `token` changes (due to refresh), the `useEffect` dependency re-triggers and reconnects with the new token.
+Logout now calls `clearAccessToken()` which clears memory state. The refresh cookie cannot be cleared by JS — it expires on its own or gets revoked on the next refresh (since the server validates it). For a full logout, we'd want the server to revoke the cookie. Option: `POST /api/v1/auth/logout` that clears the cookie. Or: just clear the JS state and let the cookie expire. For now, `clearAccessToken()` is sufficient.
 
 ---
 
 ## Refresh Sequence (End-to-End)
 
 ```
-User clicks "Submit" on render form
+User on a fresh page load (no access token in memory)
     │
     ▼
-postRender(config)                         [api.ts — no token param]
+AuthProvider mounts → useEffect fires
+    │
+    ├── POST /api/v1/auth/refresh (credentials: 'include')
+    │       Browser auto-sends refresh_token cookie
+    │
+    ├── 200 { access_token: "eyJ..." }
+    │       AuthProvider sets accessToken → isAuthenticated = true
+    │       AuthenticatedRouteLayout renders page
+    │
+    └── 401 → no session → redirect to /login
+
+---
+
+Later: User clicks "Submit" on a render form
     │
     ▼
-authenticatedFetch(url, init)              [authFetch.ts]
+postRender(authenticatedFetch, config)
     │
     ▼
-fetch(url, { Authorization: Bearer ${accessToken} })
+authenticatedFetch(url, { method: 'POST', body: ... })
+    │   Adds Authorization: Bearer ${accessToken}
     │
-    ├── 200 OK ──► return response
+    ├── 200 → return response ✓
     │
     └── 401 UNAUTHORIZED
             │
-            ├── localStorage token ≠ in-memory token?
-            │   └── YES: another tab refreshed. Adopt their token, retry request ──► done
+            ├── POST /api/v1/auth/refresh (credentials: 'include')
+            │       Browser sends refresh_token cookie
             │
-            ├── refreshPromise already in flight?
-            │   └── YES: await it, then retry or fail
+            ├── 200 { access_token: "new..." }
+            │       New cookie set by backend
+            │       accessToken updated in state
+            │       Retry original request ✓
             │
-            └── Call POST /api/v1/auth/refresh with refreshToken
-                    │
-                    ├── 200 { token, refresh_token }
-                    │   ├── Update in-memory singleton
-                    │   ├── Update localStorage
-                    │   ├── Call onTokensRefreshed → React state silently updated
-                    │   └── Retry original request with new JWT ──► done
-                    │
-                    └── 401 (refresh token expired/revoked)
-                        ├── Call onAuthExpired → clearToken()
-                        └── Return original 401 to caller → user sees error or is redirected
+            └── 401 → clearAccessToken → redirect to /login
 ```
 
 ---
 
 ## What does NOT change
 
-- **`AuthenticatedRouteLayout`** — still redirects to `/login` when `!isAuthenticated`
-- **`UserBadge` logout** — still calls `clearToken()` (now also clears refresh token)
-- **SSE hooks** — still pass `token` directly, reconnect on token change
-- **Admin impersonation** — still works via `?user_id=` query param
-- **Query key structure** — still includes token (desired: re-fetch on rotation)
-- **Backend `Claims` extractor** — unchanged, still validates JWT on every protected route
-- **JWT expiry** — stays at 24 hours
+- **JWT expiry**: stays at 24 hours
+- **Backend `Claims` extractor**: unchanged
+- **Admin impersonation**: unchanged
+- **SSE hooks**: reconnects on accessToken change (same mechanism as before)
+- **Query key structure**: still includes accessToken for re-fetch on rotation
