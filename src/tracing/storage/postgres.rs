@@ -912,4 +912,115 @@ impl UserStorage for PostgresStorage {
             Err(e) => Err(format!("Failed to get next user ID: {}", e).into()),
         }
     }
+
+    async fn get_next_refresh_token_id(&self) -> Result<u32, StorageError> {
+        match sqlx::query!(
+            r#"
+                SELECT COALESCE(MAX(id), 0) + 1 as next_id
+                FROM refresh_tokens
+            "#,
+        )
+        .fetch_one(&self.pool)
+        .await
+        {
+            Ok(row) => Ok(row.next_id.unwrap_or(1) as u32),
+            Err(e) => Err(format!("Failed to get next refresh token ID: {}", e).into()),
+        }
+    }
+
+    async fn create_refresh_token(
+        &self,
+        id: u32,
+        user_id: UserID,
+        token_hash: &[u8],
+        issued_at: chrono::DateTime<chrono::Utc>,
+        expires_at: chrono::DateTime<chrono::Utc>,
+    ) -> Result<(), StorageError> {
+        match sqlx::query!(
+            r#"
+                INSERT INTO refresh_tokens (id, user_id, token_hash, issued_at, expires_at, revoked)
+                VALUES ($1, $2, $3, $4, $5, $6)
+            "#,
+            id as i32,
+            user_id as i32,
+            token_hash,
+            issued_at,
+            expires_at,
+            false,
+        )
+        .execute(&self.pool)
+        .await
+        {
+            Ok(res) => match res.rows_affected() {
+                1 => Ok(()),
+                n => Err(format!(
+                    "Failed to create refresh token: Expecting 1 row affected, got {}",
+                    n
+                )
+                .into()),
+            },
+            Err(e) => Err(format!("Failed to create refresh token: {}", e).into()),
+        }
+    }
+
+    async fn find_valid_refresh_token(
+        &self,
+        token_hash: &[u8],
+    ) -> Result<Option<UserID>, StorageError> {
+        match sqlx::query!(
+            r#"
+                SELECT user_id
+                FROM refresh_tokens
+                WHERE token_hash = $1 AND revoked = FALSE AND expires_at > NOW()
+            "#,
+            token_hash,
+        )
+        .fetch_optional(&self.pool)
+        .await
+        {
+            Ok(Some(row)) => Ok(Some(row.user_id as UserID)),
+            Ok(None) => Ok(None),
+            Err(e) => Err(format!("Failed to find valid refresh token: {}", e).into()),
+        }
+    }
+
+    async fn revoke_refresh_token(&self, token_hash: &[u8]) -> Result<(), StorageError> {
+        sqlx::query!(
+            r#"
+                UPDATE refresh_tokens
+                SET revoked = TRUE
+                WHERE token_hash = $1
+            "#,
+            token_hash,
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|e| format!("Failed to revoke refresh token: {}", e))?;
+
+        Ok(())
+    }
+
+    async fn revoke_all_refresh_tokens_for_user(
+        &self,
+        user_id: UserID,
+    ) -> Result<(), StorageError> {
+        sqlx::query!(
+            r#"
+                UPDATE refresh_tokens
+                SET revoked = TRUE
+                WHERE user_id = $1 AND revoked = FALSE
+            "#,
+            user_id as i32,
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|e| {
+            format!(
+                "Failed to revoke all refresh tokens for user {}: {}",
+                user_id, e
+            )
+        })?;
+
+        Ok(())
+    }
 }

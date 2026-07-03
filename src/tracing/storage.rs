@@ -482,4 +482,24 @@ pub trait UserStorage: Send + Sync + 'static {
     async fn delete_user(&self, id: UserID) -> Result<(), StorageError>;
 
     async fn get_next_user_id(&self) -> Result<UserID, StorageError>;
+
+    async fn get_next_refresh_token_id(&self) -> Result<u32, StorageError>;
+
+    async fn create_refresh_token(
+        &self,
+        id: u32,
+        user_id: UserID,
+        token_hash: &[u8],
+        issued_at: chrono::DateTime<chrono::Utc>,
+        expires_at: chrono::DateTime<chrono::Utc>,
+    ) -> Result<(), StorageError>;
+
+    async fn find_valid_refresh_token(
+        &self,
+        token_hash: &[u8],
+    ) -> Result<Option<UserID>, StorageError>;
+
+    async fn revoke_refresh_token(&self, token_hash: &[u8]) -> Result<(), StorageError>;
+
+    async fn revoke_all_refresh_tokens_for_user(&self, user_id: UserID) -> Result<(), StorageError>;
 }

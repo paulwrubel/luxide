@@ -15,6 +15,7 @@ use dashmap::DashMap;
 use jsonwebtoken::{DecodingKey, EncodingKey};
 use oauth2::{CsrfToken, EndpointNotSet, EndpointSet, RedirectUrl, TokenResponse};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::sync::Arc;
 use uuid::Uuid;
 
@@ -44,6 +45,7 @@ pub struct AuthManager {
 
 impl AuthManager {
     pub const JWT_EXPIRE_AFTER_HOURS: i64 = 24;
+    pub const REFRESH_TOKEN_EXPIRE_AFTER_DAYS: i64 = 30;
 
     pub fn new_github(
         storage: Arc<dyn UserStorage>,
@@ -277,6 +279,69 @@ impl AuthManager {
 
     pub fn remove_state_for_session_id(&self, session_id: SessionID) {
         self.auth_state_by_session.remove(&session_id);
+    }
+
+    fn hash_refresh_token(token: &str) -> Vec<u8> {
+        let mut hasher = Sha256::new();
+        hasher.update(token.as_bytes());
+        hasher.finalize().to_vec()
+    }
+
+    pub async fn generate_refresh_token(
+        &self,
+        user_id: UserID,
+    ) -> Result<String, AuthManagerError> {
+        // revoke any existing refresh tokens for this user
+        self.storage
+            .revoke_all_refresh_tokens_for_user(user_id)
+            .await?;
+
+        // generate 32 random bytes and hex-encode them
+        let random_bytes: [u8; 32] = rand::random();
+        let raw_token: String = random_bytes.iter().map(|b| format!("{:02x}", b)).collect();
+
+        // hash the token for storage
+        let token_hash = Self::hash_refresh_token(&raw_token);
+
+        // get the next id and compute timestamps
+        let id = self.storage.get_next_refresh_token_id().await?;
+        let now = chrono::Utc::now();
+        let expires_at = now + chrono::Duration::days(Self::REFRESH_TOKEN_EXPIRE_AFTER_DAYS);
+
+        // store the token hash
+        self.storage
+            .create_refresh_token(id, user_id, &token_hash, now, expires_at)
+            .await?;
+
+        Ok(raw_token)
+    }
+
+    pub async fn validate_refresh_token(&self, token: &str) -> Result<UserID, AuthManagerError> {
+        let token_hash = Self::hash_refresh_token(token);
+
+        match self.storage.find_valid_refresh_token(&token_hash).await? {
+            Some(user_id) => Ok(user_id),
+            None => Err("refresh token expired or revoked".to_string()),
+        }
+    }
+
+    pub async fn rotate_refresh_token(
+        &self,
+        token: &str,
+    ) -> Result<(String, String), AuthManagerError> {
+        let old_hash = Self::hash_refresh_token(token);
+
+        let user_id = match self.storage.find_valid_refresh_token(&old_hash).await? {
+            Some(uid) => uid,
+            None => return Err("refresh token expired or revoked".to_string()),
+        };
+
+        self.storage.revoke_refresh_token(&old_hash).await?;
+
+        let new_jwt = self.generate_new_jwt(user_id).await?;
+        let new_refresh = self.generate_refresh_token(user_id).await?;
+
+        Ok((new_jwt, new_refresh))
     }
 }
 
