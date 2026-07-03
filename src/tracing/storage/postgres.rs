@@ -933,17 +933,19 @@ impl UserStorage for PostgresStorage {
         id: u32,
         user_id: UserID,
         token_hash: &[u8],
+        origin_id: u32,
         issued_at: chrono::DateTime<chrono::Utc>,
         expires_at: chrono::DateTime<chrono::Utc>,
     ) -> Result<(), StorageError> {
         match sqlx::query!(
             r#"
-                INSERT INTO refresh_tokens (id, user_id, token_hash, issued_at, expires_at, revoked)
-                VALUES ($1, $2, $3, $4, $5, $6)
+                INSERT INTO refresh_tokens (id, user_id, token_hash, origin_id, issued_at, expires_at, revoked)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
             "#,
             id as i32,
             user_id as i32,
             token_hash,
+            origin_id as i32,
             issued_at,
             expires_at,
             false,
@@ -963,24 +965,30 @@ impl UserStorage for PostgresStorage {
         }
     }
 
-    async fn find_valid_refresh_token(
+    async fn get_refresh_token(
         &self,
         token_hash: &[u8],
-    ) -> Result<Option<UserID>, StorageError> {
+    ) -> Result<Option<super::RefreshTokenRow>, StorageError> {
         match sqlx::query!(
             r#"
-                SELECT user_id
+                SELECT token_hash, user_id, origin_id, revoked, expires_at
                 FROM refresh_tokens
-                WHERE token_hash = $1 AND revoked = FALSE AND expires_at > NOW()
+                WHERE token_hash = $1
             "#,
             token_hash,
         )
         .fetch_optional(&self.pool)
         .await
         {
-            Ok(Some(row)) => Ok(Some(row.user_id as UserID)),
+            Ok(Some(row)) => Ok(Some(super::RefreshTokenRow {
+                token_hash: row.token_hash,
+                user_id: row.user_id as UserID,
+                origin_id: row.origin_id as u32,
+                revoked: row.revoked,
+                expires_at: row.expires_at,
+            })),
             Ok(None) => Ok(None),
-            Err(e) => Err(format!("Failed to find valid refresh token: {}", e).into()),
+            Err(e) => Err(format!("Failed to get refresh token: {}", e).into()),
         }
     }
 
@@ -1000,26 +1008,18 @@ impl UserStorage for PostgresStorage {
         Ok(())
     }
 
-    async fn revoke_all_refresh_tokens_for_user(
-        &self,
-        user_id: UserID,
-    ) -> Result<(), StorageError> {
+    async fn revoke_refresh_tokens_by_origin(&self, origin_id: u32) -> Result<(), StorageError> {
         sqlx::query!(
             r#"
                 UPDATE refresh_tokens
                 SET revoked = TRUE
-                WHERE user_id = $1 AND revoked = FALSE
+                WHERE origin_id = $1 AND revoked = FALSE
             "#,
-            user_id as i32,
+            origin_id as i32,
         )
         .execute(&self.pool)
         .await
-        .map_err(|e| {
-            format!(
-                "Failed to revoke all refresh tokens for user {}: {}",
-                user_id, e
-            )
-        })?;
+        .map_err(|e| format!("Failed to revoke refresh tokens by origin: {}", e))?;
 
         Ok(())
     }

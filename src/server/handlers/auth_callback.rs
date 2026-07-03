@@ -110,7 +110,11 @@ pub async fn auth_github_callback(
         }
     };
 
-    let refresh_token = match state.auth_manager.generate_refresh_token(user.id).await {
+    let refresh_token = match state
+        .auth_manager
+        .generate_refresh_token(user.id, None)
+        .await
+    {
         Ok(rt) => rt,
         Err(e) => {
             eprintln!("Failed to generate refresh token: {}", e);

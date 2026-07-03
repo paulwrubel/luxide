@@ -367,6 +367,14 @@ pub trait RenderStorage: Send + Sync + 'static {
 pub type UserID = u32;
 pub type GithubID = i64;
 
+pub struct RefreshTokenRow {
+    pub token_hash: Vec<u8>,
+    pub user_id: UserID,
+    pub origin_id: u32,
+    pub revoked: bool,
+    pub expires_at: chrono::DateTime<chrono::Utc>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub struct User {
@@ -490,16 +498,17 @@ pub trait UserStorage: Send + Sync + 'static {
         id: u32,
         user_id: UserID,
         token_hash: &[u8],
+        origin_id: u32,
         issued_at: chrono::DateTime<chrono::Utc>,
         expires_at: chrono::DateTime<chrono::Utc>,
     ) -> Result<(), StorageError>;
 
-    async fn find_valid_refresh_token(
+    async fn get_refresh_token(
         &self,
         token_hash: &[u8],
-    ) -> Result<Option<UserID>, StorageError>;
+    ) -> Result<Option<RefreshTokenRow>, StorageError>;
 
     async fn revoke_refresh_token(&self, token_hash: &[u8]) -> Result<(), StorageError>;
 
-    async fn revoke_all_refresh_tokens_for_user(&self, user_id: UserID) -> Result<(), StorageError>;
+    async fn revoke_refresh_tokens_by_origin(&self, origin_id: u32) -> Result<(), StorageError>;
 }

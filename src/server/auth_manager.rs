@@ -290,12 +290,8 @@ impl AuthManager {
     pub async fn generate_refresh_token(
         &self,
         user_id: UserID,
+        origin_id: Option<u32>,
     ) -> Result<String, AuthManagerError> {
-        // revoke any existing refresh tokens for this user
-        self.storage
-            .revoke_all_refresh_tokens_for_user(user_id)
-            .await?;
-
         // generate 32 random bytes and hex-encode them
         let random_bytes: [u8; 32] = rand::random();
         let raw_token: String = random_bytes.iter().map(|b| format!("{:02x}", b)).collect();
@@ -305,24 +301,16 @@ impl AuthManager {
 
         // get the next id and compute timestamps
         let id = self.storage.get_next_refresh_token_id().await?;
+        let origin_id = origin_id.unwrap_or(id);
         let now = chrono::Utc::now();
         let expires_at = now + chrono::Duration::days(Self::REFRESH_TOKEN_EXPIRE_AFTER_DAYS);
 
         // store the token hash
         self.storage
-            .create_refresh_token(id, user_id, &token_hash, now, expires_at)
+            .create_refresh_token(id, user_id, &token_hash, origin_id, now, expires_at)
             .await?;
 
         Ok(raw_token)
-    }
-
-    pub async fn validate_refresh_token(&self, token: &str) -> Result<UserID, AuthManagerError> {
-        let token_hash = Self::hash_refresh_token(token);
-
-        match self.storage.find_valid_refresh_token(&token_hash).await? {
-            Some(user_id) => Ok(user_id),
-            None => Err("refresh token expired or revoked".to_string()),
-        }
     }
 
     pub async fn rotate_refresh_token(
@@ -331,17 +319,26 @@ impl AuthManager {
     ) -> Result<(String, String), AuthManagerError> {
         let old_hash = Self::hash_refresh_token(token);
 
-        let user_id = match self.storage.find_valid_refresh_token(&old_hash).await? {
-            Some(uid) => uid,
-            None => return Err("refresh token expired or revoked".to_string()),
-        };
-
-        self.storage.revoke_refresh_token(&old_hash).await?;
-
-        let new_jwt = self.generate_new_jwt(user_id).await?;
-        let new_refresh = self.generate_refresh_token(user_id).await?;
-
-        Ok((new_jwt, new_refresh))
+        match self.storage.get_refresh_token(&old_hash).await? {
+            None => Err("refresh token expired or revoked".to_string()),
+            Some(row) => {
+                if !row.revoked && row.expires_at > chrono::Utc::now() {
+                    // token is valid — rotate it
+                    self.storage.revoke_refresh_token(&old_hash).await?;
+                    let new_jwt = self.generate_new_jwt(row.user_id).await?;
+                    let new_refresh = self
+                        .generate_refresh_token(row.user_id, Some(row.origin_id))
+                        .await?;
+                    Ok((new_jwt, new_refresh))
+                } else {
+                    // token exists but is revoked or expired — reuse detected, nuke the origin
+                    self.storage
+                        .revoke_refresh_tokens_by_origin(row.origin_id)
+                        .await?;
+                    Err("refresh token expired or revoked".to_string())
+                }
+            }
+        }
     }
 }
 
