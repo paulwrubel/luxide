@@ -122,10 +122,6 @@ pub async fn auth_github_callback(
         }
     };
 
-    println!("Generated JWT: {}", access_token);
-
-    println!("User: {:#?}", user);
-
     (
         StatusCode::OK,
         TypedHeader(ContentType::json()),
