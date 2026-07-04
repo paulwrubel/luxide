@@ -281,7 +281,7 @@ impl AuthManager {
         self.auth_state_by_session.remove(&session_id);
     }
 
-    fn hash_refresh_token(token: &str) -> Vec<u8> {
+    pub fn hash_refresh_token(token: &str) -> Vec<u8> {
         let mut hasher = Sha256::new();
         hasher.update(token.as_bytes());
         hasher.finalize().to_vec()
@@ -311,6 +311,13 @@ impl AuthManager {
             .await?;
 
         Ok(raw_token)
+    }
+
+    pub async fn revoke_refresh_token(&self, token_hash: &[u8]) -> Result<(), AuthManagerError> {
+        self.storage
+            .revoke_refresh_token(token_hash)
+            .await
+            .map_err(AuthManagerError::from)
     }
 
     pub async fn rotate_refresh_token(

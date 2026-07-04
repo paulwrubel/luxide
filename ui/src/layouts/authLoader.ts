@@ -45,11 +45,20 @@ export function bootstrapAuth(): Promise<AuthSession | null> {
   return bootstrapPromise;
 }
 
+export function resetBootstrapCache(): void {
+  bootstrapPromise = null;
+}
+
 export async function authLoader({ request }: { request: Request }) {
   const session = await bootstrapAuth();
   if (!session) {
     const url = new URL(request.url);
-    sessionStorage.setItem('login_redirect', url.pathname + url.search);
+    if (sessionStorage.getItem('skip_redirect') === 'true') {
+      sessionStorage.removeItem('skip_redirect');
+    } else {
+      console.debug('[authLoader] saving redirect to sessionStorage:', url.pathname + url.search);
+      sessionStorage.setItem('login_redirect', url.pathname + url.search);
+    }
     throw redirect('/login');
   }
   return session;

@@ -15,7 +15,12 @@ export function UserBadge() {
   const { isAuthenticated, user, clearAccessToken, isAuthLoading } = useAuth();
 
   function handleLogout() {
-    sessionStorage.setItem('login_redirect', window.location.pathname + window.location.search);
+    // fire-and-forget: revoke the refresh token on the server
+    void fetch(`${window.location.origin}/api/v1/auth/logout`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+    sessionStorage.setItem('skip_redirect', 'true');
     clearAccessToken();
     window.location.reload();
   }
