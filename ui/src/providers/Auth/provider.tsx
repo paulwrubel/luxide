@@ -46,6 +46,21 @@ export function AuthProvider(props: AuthProviderProps) {
     });
   }, []);
 
+  // listen for logout messages from other tabs
+  useEffect(() => {
+    const channel = new BroadcastChannel('auth');
+    function handleMessage(event: MessageEvent) {
+      if (event.data?.type === 'logout') {
+        clearAccessToken();
+      }
+    }
+    channel.addEventListener('message', handleMessage);
+    return () => {
+      channel.removeEventListener('message', handleMessage);
+      channel.close();
+    };
+  }, [clearAccessToken]);
+
   // authenticatedFetch: wraps fetch with Authorization header and 401 -> refresh -> retry
   const apiURL = getAPIURL();
   const authenticatedFetch = useCallback(

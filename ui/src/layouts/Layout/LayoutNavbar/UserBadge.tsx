@@ -20,6 +20,11 @@ export function UserBadge() {
       method: 'POST',
       credentials: 'include',
     });
+    // notify other tabs to also log out
+    const channel = new BroadcastChannel('auth');
+    channel.postMessage({ type: 'logout' });
+    channel.close();
+
     sessionStorage.setItem('skip_redirect', 'true');
     clearAccessToken();
     window.location.reload();
