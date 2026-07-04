@@ -1,20 +1,20 @@
 use criterion::{BatchSize, Criterion, black_box, criterion_group, criterion_main};
 use luxide::{
-    geometry::{Geometric, Point, Ray, RayHit, Vector, primitives::Sphere},
+    geometry::{Geometric, Point, Ray, RayHit, Vector3, primitives::Sphere},
     utils::Interval,
 };
 use rand::RngExt;
 
-fn random() -> (
-    String,
-    Box<dyn Fn() -> Ray>,
-    Box<dyn Fn(Ray) -> Option<RayHit>>,
-) {
+type Id = String;
+type Setup = Box<dyn Fn() -> Ray>;
+type Routine = Box<dyn Fn(Ray) -> Option<RayHit>>;
+
+fn random() -> (Id, Setup, Routine) {
     let s = Sphere::unit();
 
     let setup = || -> Ray {
         let origin = Point::new(0.0, 0.0, 2.0);
-        let direction = Vector::random_in_unit_sphere();
+        let direction = Vector3::random_in_unit_sphere();
 
         Ray::new(origin, direction, 0.0)
     };
@@ -25,11 +25,7 @@ fn random() -> (
     ("random".to_string(), Box::new(setup), Box::new(routine))
 }
 
-fn hit() -> (
-    String,
-    Box<dyn Fn() -> Ray>,
-    Box<dyn Fn(Ray) -> Option<RayHit>>,
-) {
+fn hit() -> (Id, Setup, Routine) {
     let s = Sphere::unit();
 
     let setup = || -> Ray {
@@ -52,11 +48,7 @@ fn hit() -> (
     ("hit".to_string(), Box::new(setup), Box::new(routine))
 }
 
-fn hit_tangent() -> (
-    String,
-    Box<dyn Fn() -> Ray>,
-    Box<dyn Fn(Ray) -> Option<RayHit>>,
-) {
+fn hit_tangent() -> (Id, Setup, Routine) {
     let s = Sphere::unit();
 
     let setup = || -> Ray {
@@ -77,17 +69,13 @@ fn hit_tangent() -> (
     )
 }
 
-fn miss() -> (
-    String,
-    Box<dyn Fn() -> Ray>,
-    Box<dyn Fn(Ray) -> Option<RayHit>>,
-) {
+fn miss() -> (Id, Setup, Routine) {
     let s = Sphere::unit();
 
     let setup = || -> Ray {
         let origin = Point::new(0.0, 0.0, 2.0);
 
-        let new_target_fn = || origin + Vector::random_in_unit_sphere();
+        let new_target_fn = || origin + Vector3::random_in_unit_sphere();
         let mut target = new_target_fn();
         while origin.to(target).angle(origin.to(Point::ZERO)).as_degrees() < 45.0 {
             target = new_target_fn();
