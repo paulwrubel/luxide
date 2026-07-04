@@ -45,9 +45,11 @@ export function bootstrapAuth(): Promise<AuthSession | null> {
   return bootstrapPromise;
 }
 
-export async function authLoader() {
+export async function authLoader({ request }: { request: Request }) {
   const session = await bootstrapAuth();
   if (!session) {
+    const url = new URL(request.url);
+    sessionStorage.setItem('login_redirect', url.pathname + url.search);
     throw redirect('/login');
   }
   return session;

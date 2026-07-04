@@ -15,6 +15,7 @@ export function UserBadge() {
   const { isAuthenticated, user, clearAccessToken, isAuthLoading } = useAuth();
 
   function handleLogout() {
+    sessionStorage.setItem('login_redirect', window.location.pathname + window.location.search);
     clearAccessToken();
     window.location.reload();
   }

@@ -33,8 +33,13 @@ export function AuthCallbackPage() {
         // use auth state to handle token
         setAccessToken(accessToken);
 
-        // redirect to home page
-        navigate('/', { replace: true });
+        // redirect to stored page or home
+        const redirect = sessionStorage.getItem('login_redirect');
+        sessionStorage.removeItem('login_redirect');
+
+        // validate: must be a same-origin relative path (starts with single /, not // or https://)
+        const safeRedirect = redirect && /^\/[^/]/.test(redirect) ? redirect : '/';
+        navigate(safeRedirect, { replace: true });
       } catch (e) {
         setErrorMessage(e instanceof Error ? e.message : 'authentication failed');
         setStatus('error');

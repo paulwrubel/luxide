@@ -34,7 +34,7 @@ export function AuthenticatedRouteLayout() {
 
   // ongoing guard: redirect if token is cleared (logout, failed refresh)
   if (!accessToken) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" />;
   }
 
   return <Outlet />;
