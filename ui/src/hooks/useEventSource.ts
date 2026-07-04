@@ -5,7 +5,7 @@ import { EventSource } from 'eventsource';
 export type UseEventSourceOptions = {
   enabled?: boolean;
   path: string;
-  token: string;
+  accessToken: string;
   targetUserID?: number;
   intervalMillis: number;
   onUpdateEvent?: (event: MessageEvent) => void;
@@ -17,7 +17,7 @@ export function useEventSource(options: UseEventSourceOptions) {
   const {
     enabled = true,
     path,
-    token,
+    accessToken,
     targetUserID,
     intervalMillis,
     onUpdateEvent,
@@ -37,9 +37,10 @@ export function useEventSource(options: UseEventSourceOptions) {
       fetch: (input, init) => {
         return fetch(input, {
           ...init,
+          credentials: 'include',
           headers: {
             ...init.headers,
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${accessToken}`,
           },
         });
       },
@@ -59,7 +60,7 @@ export function useEventSource(options: UseEventSourceOptions) {
       eventSource.close();
     };
   }, [
-    token,
+    accessToken,
     enabled,
     path,
     intervalMillis,

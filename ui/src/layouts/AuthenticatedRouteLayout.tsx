@@ -1,18 +1,40 @@
-import { Outlet, Navigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Outlet, Navigate, useLoaderData } from 'react-router-dom';
 import { useAuth } from '../providers/Auth';
+import { Spinner } from 'flowbite-react';
+import type { AuthSession } from './authLoader';
 
-/**
- * layout component guarding authenticated routes.
- * checks auth state and conditionally returns <Navigate to="/login" replace />
- * if unauthenticated, or <Outlet /> if authenticated (i.e., renders child routes).
- *
- * @returns `<Navigate to="/login" replace />` if the user is unauthenticated, or `<Outlet />` if authenticated
- */
 export function AuthenticatedRouteLayout() {
-  const { isAuthenticated } = useAuth();
+  // the authLoader returns { accessToken } on success
+  const { accessToken: loadedToken } = useLoaderData<AuthSession>();
+  const { accessToken, setAccessToken } = useAuth();
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+  const [didBootstrap, setDidBootstrap] = useState(false);
+
+  // bootstrap: pass the loader's access token into AuthProvider
+  // runs once intentionally — accessToken is undefined on entry
+  useEffect(() => {
+    if (!accessToken) {
+      setAccessToken(loadedToken);
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDidBootstrap(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // show a spinner until the token is bootstrapped into context
+  // prevents the guard from redirecting before the effect fires
+  if (!didBootstrap) {
+    return (
+      <div className="flex flex-1 items-center justify-center">
+        <Spinner size="xl" />
+      </div>
+    );
+  }
+
+  // ongoing guard: redirect if token is cleared (logout, failed refresh)
+  if (!accessToken) {
+    return <Navigate to="/login" />;
   }
 
   return <Outlet />;

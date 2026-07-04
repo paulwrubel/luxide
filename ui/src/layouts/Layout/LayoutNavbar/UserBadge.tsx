@@ -12,14 +12,25 @@ import {
 } from 'flowbite-react';
 
 export function UserBadge() {
-  const { isAuthenticated, user, clearToken } = useAuth();
+  const { isAuthenticated, user, clearAccessToken, isAuthLoading } = useAuth();
 
   function handleLogout() {
-    clearToken();
+    // fire-and-forget: revoke the refresh token on the server
+    void fetch(`${window.location.origin}/api/v1/auth/logout`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+    // notify other tabs to also log out
+    const channel = new BroadcastChannel('auth');
+    channel.postMessage({ type: 'logout' });
+    channel.close();
+
+    sessionStorage.setItem('skip_redirect', 'true');
+    clearAccessToken();
     window.location.reload();
   }
 
-  if (isAuthenticated && user === undefined) {
+  if (isAuthLoading || (isAuthenticated && user === undefined)) {
     return (
       <div className="flex items-center gap-2">
         <Spinner color="info" size="sm" />

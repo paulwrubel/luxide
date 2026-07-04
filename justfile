@@ -10,7 +10,7 @@ run-docker: build-api
     docker compose up -d --build
 
 run-ui: run-docker setup-ui-env
-    cd ui && npm run dev
+	cd ui && . "$HOME/.nvm/nvm.sh" && nvm use && npm run dev
 
 [group('run')]
 run-local: build-api run-postgres
@@ -34,7 +34,7 @@ build: build-api-cli
 
 [group('build')]
 build-ui: setup-ui-env
-    cd ui && npm run build
+	cd ui && . "$HOME/.nvm/nvm.sh" && nvm use && npm run build
 
 [group('build')]
 build-api-cli: build-ui run-postgres
@@ -54,7 +54,7 @@ build-cli:
 
 [group('validate')]
 validate: cargo-check cargo-test cargo-clippy
-    cd ui \
+    cd ui && . "$HOME/.nvm/nvm.sh" && nvm use \
     && npm run lint \
     && npm run prettier-check \
     && npm run type-check
@@ -82,24 +82,24 @@ cargo-clippy-ci:
 
 [group('validate')]
 lint-ui: setup-ui-env
-    cd ui && npm run lint
+    cd ui && . "$HOME/.nvm/nvm.sh" && nvm use && npm run lint
 [group('validate')]
 lint-ui-ci:
-    cd ui && npm run lint -- --max-warnings 0
+    cd ui && . "$HOME/.nvm/nvm.sh" && nvm install && nvm use && npm run lint -- --max-warnings 0
 
 [group('validate')]
 prettier-check-ui: setup-ui-env
-    cd ui && npm run prettier-check
+    cd ui && . "$HOME/.nvm/nvm.sh" && nvm use && npm run prettier-check
 [group('validate')]
 prettier-check-ui-ci:
-    cd ui && npm run prettier-check
+    cd ui && . "$HOME/.nvm/nvm.sh" && nvm install && nvm use && npm run prettier-check
 
 [group('validate')]
 typecheck-ui: setup-ui-env
-    cd ui && npm run type-check
+    cd ui && . "$HOME/.nvm/nvm.sh" && nvm use && npm run type-check
 [group('validate')]
 typecheck-ui-ci:
-    cd ui && npm run type-check
+    cd ui && . "$HOME/.nvm/nvm.sh" && nvm install && nvm use && npm run type-check
 
 [group('build')]
 sqlx-prepare:
@@ -107,7 +107,7 @@ sqlx-prepare:
 
 [group('misc')]
 prettier-fix-ui:
-    cd ui && npm run prettier-fix
+    cd ui && . "$HOME/.nvm/nvm.sh" && nvm use && npm run prettier-fix
 
 [group('misc')]
 clean:
@@ -117,12 +117,7 @@ clean:
 
 [group('misc')]
 setup-ui-env:
-    cd ui \
-    && [ -s "$NVM_DIR/nvm.sh" ] \
-    && . "$NVM_DIR/nvm.sh" \
-    && nvm install \
-    && nvm use \
-    && npm install
+	cd ui && . "$HOME/.nvm/nvm.sh" && nvm install && nvm use && npm install
 
 [group('misc')]
 generate-jwt-keypair-pem:

@@ -9,15 +9,15 @@ export type UseAllUsersOptions = {
 export function useAllUsersQuery(options: UseAllUsersOptions = {}) {
   const { enabled = true } = options;
 
-  const { token } = useAuth();
+  const { accessToken, authenticatedFetch } = useAuth();
 
   return useQuery({
-    queryKey: allUsersQueryKey(token),
-    queryFn: () => getAllUsers(token!),
-    enabled: enabled && token !== undefined,
+    queryKey: allUsersQueryKey(),
+    queryFn: () => getAllUsers(authenticatedFetch),
+    enabled: enabled && accessToken !== undefined,
   });
 }
 
-export function allUsersQueryKey(token: string | undefined) {
-  return ['allUsers', token] as const;
+export function allUsersQueryKey() {
+  return ['allUsers'] as const;
 }

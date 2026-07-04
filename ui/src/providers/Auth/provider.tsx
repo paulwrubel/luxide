@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { AuthContext } from './context';
 import type { AuthContextType } from './context';
-import { fetchUserInfo } from '@/utils/api';
+import { fetchUserInfo, getAPIURL } from '@/utils/api';
 import type { User } from '@/utils/api';
+import { bootstrapAuth } from '@/layouts/authLoader';
 
 export type AuthProviderProps = {
   children: React.ReactNode;
@@ -11,53 +12,129 @@ export type AuthProviderProps = {
 export function AuthProvider(props: AuthProviderProps) {
   const { children } = props;
 
-  const [token, setTokenState] = useState<string | undefined>(() => {
-    return localStorage?.getItem('auth_token') ?? undefined;
-  });
+  const [accessToken, setAccessTokenState] = useState<string | undefined>(undefined);
   const [user, setUser] = useState<User | undefined>(undefined);
+  const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
+  const refreshPromiseRef = useRef<Promise<string | null> | null>(null);
 
-  const clearToken = useCallback(() => {
-    localStorage?.removeItem('auth_token');
-    setTokenState(undefined);
+  const clearAccessToken = useCallback(() => {
+    setAccessTokenState(undefined);
     setUser(undefined);
   }, []);
 
+  const mustGetAccessToken = useCallback(() => {
+    if (!accessToken) {
+      throw new Error('Access token is required but not available');
+    }
+    return accessToken;
+  }, [accessToken]);
+
+  const setAccessToken = useCallback((newToken: string) => {
+    setAccessTokenState(newToken);
+    setUser(undefined);
+  }, []);
+
+  // attempt session recovery from the refresh cookie on mount
+  // this runs on every page, not just authenticated routes, so the
+  // navbar avatar appears correctly even on the home page
   useEffect(() => {
-    if (token && !user) {
-      fetchUserInfo(token)
-        .then((fetchedUser) => {
-          setUser(fetchedUser);
+    bootstrapAuth().then((session) => {
+      if (session) {
+        setAccessTokenState(session.accessToken);
+      }
+      setIsAuthLoading(false);
+    });
+  }, []);
+
+  // listen for logout messages from other tabs
+  useEffect(() => {
+    const channel = new BroadcastChannel('auth');
+    function handleMessage(event: MessageEvent) {
+      if (event.data?.type === 'logout') {
+        clearAccessToken();
+      }
+    }
+    channel.addEventListener('message', handleMessage);
+    return () => {
+      channel.removeEventListener('message', handleMessage);
+      channel.close();
+    };
+  }, [clearAccessToken]);
+
+  // authenticatedFetch: wraps fetch with Authorization header and 401 -> refresh -> retry
+  const apiURL = getAPIURL();
+  const authenticatedFetch = useCallback(
+    async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+      const headers = new Headers(init?.headers);
+      if (accessToken) {
+        headers.set('Authorization', `Bearer ${accessToken}`);
+      }
+
+      const response = await fetch(input, { ...init, headers, credentials: 'include' });
+
+      if (response.status !== 401) {
+        return response;
+      }
+
+      // deduplicate concurrent refresh attempts
+      if (!refreshPromiseRef.current) {
+        refreshPromiseRef.current = fetch(`${apiURL}/auth/refresh`, {
+          method: 'POST',
+          credentials: 'include',
         })
+          // the /auth/refresh response shape is known: { access_token: string }
+          .then((res) => (res.ok ? (res.json() as Promise<{ access_token: string }>) : null))
+          .then((data) => (data ? data.access_token : null))
+          .catch(() => null)
+          .finally(() => {
+            refreshPromiseRef.current = null;
+          });
+      }
+
+      const newToken = await refreshPromiseRef.current;
+
+      if (newToken) {
+        setAccessTokenState(newToken);
+        const retryHeaders = new Headers(init?.headers);
+        retryHeaders.set('Authorization', `Bearer ${newToken}`);
+        return fetch(input, { ...init, headers: retryHeaders, credentials: 'include' });
+      }
+
+      // refresh failed — logout
+      clearAccessToken();
+      return response;
+    },
+    // clearAccessToken is stable, apiURL is constant
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [accessToken],
+  );
+
+  // fetch user info whenever we have a token but no user
+  useEffect(() => {
+    if (accessToken && !user) {
+      fetchUserInfo(authenticatedFetch)
+        .then(setUser)
         .catch((e: unknown) => {
           if (e instanceof Error && e.message === 'Unauthorized') {
-            clearToken();
+            clearAccessToken();
           } else {
             setUser(undefined);
           }
         });
     }
-  }, [token, user, clearToken]);
-
-  const setToken = useCallback((newToken: string) => {
-    localStorage?.setItem('auth_token', newToken);
-    setTokenState(newToken);
-    setUser(undefined);
-  }, []);
-
-  const mustGetToken = useCallback(() => {
-    if (!token) {
-      throw new Error('Authentication token is required but not available');
-    }
-    return token;
-  }, [token]);
+    // authenticatedFetch and clearAccessToken are stable (useCallback with [] deps)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accessToken, user]);
 
   const value: AuthContextType = {
-    token,
+    accessToken,
     user,
-    isAuthenticated: !!token,
-    mustGetToken,
-    setToken,
-    clearToken,
+    isAuthenticated: !!accessToken,
+    isAuthLoading,
+    authenticatedFetch,
+    mustGetAccessToken,
+    setAccessToken,
+    clearAccessToken,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -11,7 +11,7 @@ export type RenderTitleBarProps = {
 
 export function RenderTitleBar(props: RenderTitleBarProps) {
   const { renderID } = props;
-  const { mustGetToken } = useAuth();
+  const { authenticatedFetch } = useAuth();
   const {
     data: render,
     isPending: isRenderPending,
@@ -21,10 +21,9 @@ export function RenderTitleBar(props: RenderTitleBarProps) {
 
   const handleDownload = async () => {
     if (!render) return;
-    const token = mustGetToken();
     const [width, height] = render.config.parameters.image_dimensions;
     const filename = `${render.config.name}-checkpoint-${width}x${height}.png`;
-    const blob = await getLatestCheckpointImage(token, renderID);
+    const blob = await getLatestCheckpointImage(authenticatedFetch, renderID);
     if (blob === null) {
       return;
     }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { fetchAuthTokenGitHub } from '@/utils/api';
+import { resetBootstrapCache } from '@/layouts/authLoader';
 import { useAuth } from '@/providers/Auth';
 import { Spinner } from 'flowbite-react';
 
@@ -10,7 +11,7 @@ import { Spinner } from 'flowbite-react';
 export function AuthCallbackPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { setToken } = useAuth();
+  const { setAccessToken } = useAuth();
 
   // component-level state
   const [status, setStatus] = useState<'loading' | 'error'>('loading');
@@ -29,18 +30,24 @@ export function AuthCallbackPage() {
         }
 
         // exchange code for token
-        const token = await fetchAuthTokenGitHub(code, state);
+        const accessToken = await fetchAuthTokenGitHub(code, state);
         // use auth state to handle token
-        setToken(token);
+        setAccessToken(accessToken);
+        resetBootstrapCache();
 
-        // redirect to home page
-        navigate('/', { replace: true });
+        // redirect to stored page or home
+        const redirect = sessionStorage.getItem('login_redirect');
+        sessionStorage.removeItem('login_redirect');
+
+        // validate: must be a same-origin relative path (starts with single /, not // or https://)
+        const safeRedirect = redirect && /^\/[^/]/.test(redirect) ? redirect : '/';
+        navigate(safeRedirect, { replace: true });
       } catch (e) {
         setErrorMessage(e instanceof Error ? e.message : 'authentication failed');
         setStatus('error');
       }
     })();
-  }, [searchParams, navigate, setToken]);
+  }, [searchParams, navigate, setAccessToken]);
 
   return (
     <div className="flex min-h-screen items-center justify-center">

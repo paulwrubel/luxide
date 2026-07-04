@@ -45,7 +45,7 @@ impl FromRef<LuxideState> for Key {
 impl JwtValidator for LuxideState {
     type Error = AuthManagerError;
 
-    fn validate_jwt(&self, token: &str) -> Result<Claims, Self::Error> {
-        self.auth_manager.validate_jwt(token)
+    fn validate_jwt(&self, jwt: &str) -> Result<Claims, Self::Error> {
+        self.auth_manager.validate_jwt(jwt)
     }
 }

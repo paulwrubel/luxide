@@ -150,7 +150,9 @@ fn build_renders_router() -> Router<LuxideState> {
 fn build_auth_router() -> Router<LuxideState> {
     Router::new()
         .route("/login", get(handlers::auth_login))
+        .route("/logout", post(handlers::auth_logout))
         .route("/github/callback", get(handlers::auth_github_callback))
+        .route("/refresh", post(handlers::auth_refresh))
         .route("/current_user_info", get(handlers::get_current_user_info))
 }
 

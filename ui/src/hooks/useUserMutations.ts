@@ -4,14 +4,13 @@ import { useAuth } from '../providers/Auth';
 import type { Role } from '../utils/api';
 
 export function useUpdateUserRoleMutation() {
-  const { mustGetToken } = useAuth();
-  const token = mustGetToken();
+  const { authenticatedFetch } = useAuth();
 
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ userID, role }: { userID: number; role: Role }) =>
-      updateUserRole(token, userID, role),
+      updateUserRole(authenticatedFetch, userID, role),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
     },
@@ -19,8 +18,7 @@ export function useUpdateUserRoleMutation() {
 }
 
 export function useUpdateUserQuotasMutation() {
-  const { mustGetToken } = useAuth();
-  const token = mustGetToken();
+  const { authenticatedFetch } = useAuth();
 
   const queryClient = useQueryClient();
 
@@ -35,7 +33,14 @@ export function useUpdateUserQuotasMutation() {
       maxRenders: number | null;
       maxCheckpointsPerRender: number | null;
       maxRenderPixelCount: number | null;
-    }) => updateUserQuotas(token, userID, maxRenders, maxCheckpointsPerRender, maxRenderPixelCount),
+    }) =>
+      updateUserQuotas(
+        authenticatedFetch,
+        userID,
+        maxRenders,
+        maxCheckpointsPerRender,
+        maxRenderPixelCount,
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
     },

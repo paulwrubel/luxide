@@ -1,5 +1,4 @@
 import { Outlet } from 'react-router-dom';
-import {} from 'flowbite-react';
 import { LayoutNavbar } from './LayoutNavbar';
 
 /**

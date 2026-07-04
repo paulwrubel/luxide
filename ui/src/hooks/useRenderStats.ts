@@ -14,19 +14,19 @@ export type UseRenderStatsOptions = {
 export function useRenderStatsQuery(options: UseRenderStatsOptions) {
   const { renderID, streaming } = options;
 
-  const { mustGetToken } = useAuth();
-  const token = mustGetToken();
+  const { mustGetAccessToken, authenticatedFetch } = useAuth();
+  const accessToken = mustGetAccessToken();
   const { targetUserID } = useAdminUserOverride();
   const queryClient = useQueryClient();
 
   const queryKey = useMemo(
-    () => renderStatsQueryKey(renderID, token, targetUserID),
-    [renderID, token, targetUserID],
+    () => renderStatsQueryKey(renderID, targetUserID),
+    [renderID, targetUserID],
   );
 
   const queryResult = useQuery({
     queryKey,
-    queryFn: () => getRenderStats(token, renderID, targetUserID),
+    queryFn: () => getRenderStats(authenticatedFetch, renderID, targetUserID),
     staleTime: Infinity,
   });
 
@@ -46,7 +46,7 @@ export function useRenderStatsQuery(options: UseRenderStatsOptions) {
   useEventSource({
     enabled: streaming ?? false,
     path: `/renders/${renderID}/stats/stream`,
-    token,
+    accessToken,
     targetUserID,
     intervalMillis: 500,
     onUpdateEvent: handleUpdate,
@@ -56,10 +56,6 @@ export function useRenderStatsQuery(options: UseRenderStatsOptions) {
   return queryResult;
 }
 
-export function renderStatsQueryKey(
-  renderID: number,
-  token: string,
-  targetUserID: number | undefined,
-) {
-  return ['renderStats', renderID, token, targetUserID] as const;
+export function renderStatsQueryKey(renderID: number, targetUserID: number | undefined) {
+  return ['renderStats', renderID, targetUserID] as const;
 }

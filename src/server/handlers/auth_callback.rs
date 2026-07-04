@@ -4,8 +4,11 @@ use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
 };
-use axum_extra::{TypedHeader, extract::SignedCookieJar, headers::ContentType};
+use axum_extra::{
+    TypedHeader, extract::SignedCookieJar, extract::cookie::Cookie, headers::ContentType,
+};
 use serde::{Deserialize, Serialize};
+use time::Duration;
 use uuid::Uuid;
 
 use crate::{
@@ -23,7 +26,7 @@ pub struct AuthGithubCallbackQueryParameters {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub struct AuthLoginResponse {
-    pub token: String,
+    pub access_token: String,
 }
 
 pub async fn auth_github_callback(
@@ -101,22 +104,37 @@ pub async fn auth_github_callback(
         }
     };
 
-    let token = match state.auth_manager.generate_new_jwt(user.id).await {
-        Ok(token) => token,
+    let access_token = match state.auth_manager.generate_new_jwt(user.id).await {
+        Ok(access_token) => access_token,
         Err(e) => {
             eprintln!("Failed to generate new JWT: {}", e);
             return (StatusCode::BAD_REQUEST, "Failed to generate new JWT").into_response();
         }
     };
 
-    println!("Generated JWT: {}", token);
+    let refresh_token = match state
+        .auth_manager
+        .generate_refresh_token(user.id, None)
+        .await
+    {
+        Ok(rt) => rt,
+        Err(e) => {
+            eprintln!("Failed to generate refresh token: {}", e);
+            return (StatusCode::BAD_REQUEST, "Failed to generate refresh token").into_response();
+        }
+    };
 
-    println!("User: {:#?}", user);
+    let refresh_cookie = Cookie::build(("refresh_token", refresh_token))
+        .path("/api/v1/auth")
+        .http_only(true)
+        .same_site(axum_extra::extract::cookie::SameSite::Lax)
+        .max_age(Duration::days(30));
 
     (
         StatusCode::OK,
         TypedHeader(ContentType::json()),
-        Json(AuthLoginResponse { token }),
+        cookie_jar.add(refresh_cookie),
+        Json(AuthLoginResponse { access_token }),
     )
         .into_response()
 }
@@ -147,22 +165,14 @@ async fn get_user_by_github_id(
         Ok(false) => {
             let user = if state.auth_manager.github_id_is_admin(github_id) {
                 User::new_admin(
-                    state
-                        .auth_manager
-                        .get_next_user_id()
-                        .await
-                        ?,
+                    state.auth_manager.get_next_user_id().await?,
                     github_id,
                     user_info.login.clone(),
                     user_info.avatar_url.clone(),
                 )
             } else {
                 User::new(
-                    state
-                        .auth_manager
-                        .get_next_user_id()
-                        .await
-                        ?,
+                    state.auth_manager.get_next_user_id().await?,
                     github_id,
                     user_info.login.clone(),
                     user_info.avatar_url.clone(),
