@@ -37,12 +37,10 @@ export function AuthCallbackPage() {
 
         // redirect to stored page or home
         const redirect = sessionStorage.getItem('login_redirect');
-        console.debug('[callback] login_redirect from sessionStorage:', redirect);
         sessionStorage.removeItem('login_redirect');
 
         // validate: must be a same-origin relative path (starts with single /, not // or https://)
         const safeRedirect = redirect && /^\/[^/]/.test(redirect) ? redirect : '/';
-        console.debug('[callback] navigating to:', safeRedirect);
         navigate(safeRedirect, { replace: true });
       } catch (e) {
         setErrorMessage(e instanceof Error ? e.message : 'authentication failed');
