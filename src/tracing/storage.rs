@@ -368,10 +368,10 @@ pub type UserID = u32;
 pub type GithubID = i64;
 
 pub struct RefreshTokenRow {
-    pub token_hash: Vec<u8>,
     pub user_id: UserID,
     pub origin_id: u32,
     pub revoked: bool,
+    pub revoked_at: Option<chrono::DateTime<chrono::Utc>>,
     pub expires_at: chrono::DateTime<chrono::Utc>,
 }
 

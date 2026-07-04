@@ -337,8 +337,14 @@ impl AuthManager {
                         .generate_refresh_token(row.user_id, Some(row.origin_id))
                         .await?;
                     Ok((new_jwt, new_refresh))
+                } else if row.revoked
+                    && row.revoked_at.is_some()
+                    && (chrono::Utc::now() - row.revoked_at.unwrap()).num_seconds() < 10
+                {
+                    // revoked within 10s: likely a race, not an attack — just reject
+                    Err("refresh token expired or revoked".to_string())
                 } else {
-                    // token exists but is revoked or expired — reuse detected, nuke the origin
+                    // expired, or revoked outside grace window — reuse attack, nuke the origin
                     self.storage
                         .revoke_refresh_tokens_by_origin(row.origin_id)
                         .await?;

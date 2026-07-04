@@ -7,7 +7,8 @@ CREATE TABLE refresh_tokens (
     origin_id INTEGER NOT NULL,
     issued_at TIMESTAMPTZ NOT NULL,
     expires_at TIMESTAMPTZ NOT NULL,
-    revoked BOOLEAN NOT NULL
+    revoked BOOLEAN NOT NULL,
+    revoked_at TIMESTAMPTZ
 );
 
 CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);

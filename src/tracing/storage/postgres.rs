@@ -971,7 +971,7 @@ impl UserStorage for PostgresStorage {
     ) -> Result<Option<super::RefreshTokenRow>, StorageError> {
         match sqlx::query!(
             r#"
-                SELECT token_hash, user_id, origin_id, revoked, expires_at
+                SELECT user_id, origin_id, revoked, revoked_at, expires_at
                 FROM refresh_tokens
                 WHERE token_hash = $1
             "#,
@@ -981,10 +981,10 @@ impl UserStorage for PostgresStorage {
         .await
         {
             Ok(Some(row)) => Ok(Some(super::RefreshTokenRow {
-                token_hash: row.token_hash,
                 user_id: row.user_id as UserID,
                 origin_id: row.origin_id as u32,
                 revoked: row.revoked,
+                revoked_at: row.revoked_at,
                 expires_at: row.expires_at,
             })),
             Ok(None) => Ok(None),
@@ -996,10 +996,11 @@ impl UserStorage for PostgresStorage {
         sqlx::query!(
             r#"
                 UPDATE refresh_tokens
-                SET revoked = TRUE
+                SET revoked = TRUE, revoked_at = $2
                 WHERE token_hash = $1
             "#,
             token_hash,
+            chrono::Utc::now(),
         )
         .execute(&self.pool)
         .await
@@ -1012,10 +1013,11 @@ impl UserStorage for PostgresStorage {
         sqlx::query!(
             r#"
                 UPDATE refresh_tokens
-                SET revoked = TRUE
+                SET revoked = TRUE, revoked_at = $2
                 WHERE origin_id = $1 AND revoked = FALSE
             "#,
             origin_id as i32,
+            chrono::Utc::now(),
         )
         .execute(&self.pool)
         .await
