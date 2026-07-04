@@ -1,20 +1,20 @@
 use criterion::{BatchSize, Criterion, black_box, criterion_group, criterion_main};
 use luxide::{
-    geometry::{Geometric, Point, Ray, RayHit, Vector, primitives::Parallelogram},
+    geometry::{Geometric, Point, Ray, RayHit, Vector3, primitives::Parallelogram},
     utils::Interval,
 };
 use rand::{RngExt, rngs::ThreadRng};
 
-fn random() -> (
-    String,
-    Box<dyn Fn() -> Ray>,
-    Box<dyn Fn(Ray) -> Option<RayHit>>,
-) {
+type Id = String;
+type Setup = Box<dyn Fn() -> Ray>;
+type Routine = Box<dyn Fn(Ray) -> Option<RayHit>>;
+
+fn random() -> (Id, Setup, Routine) {
     let p = Parallelogram::unit();
 
     let setup = || -> Ray {
         let origin = Point::new(0.0, 0.0, 1.0);
-        let direction = Vector::random_in_unit_sphere();
+        let direction = Vector3::random_in_unit_sphere();
 
         Ray::new(origin, direction, 0.0)
     };
@@ -25,11 +25,7 @@ fn random() -> (
     ("random".to_string(), Box::new(setup), Box::new(routine))
 }
 
-fn hit() -> (
-    String,
-    Box<dyn Fn() -> Ray>,
-    Box<dyn Fn(Ray) -> Option<RayHit>>,
-) {
+fn hit() -> (Id, Setup, Routine) {
     let p = Parallelogram::unit();
 
     let setup = || -> Ray {
@@ -52,11 +48,7 @@ fn hit() -> (
     ("hit".to_string(), Box::new(setup), Box::new(routine))
 }
 
-fn miss_offset() -> (
-    String,
-    Box<dyn Fn() -> Ray>,
-    Box<dyn Fn(Ray) -> Option<RayHit>>,
-) {
+fn miss_offset() -> (Id, Setup, Routine) {
     let p = Parallelogram::unit();
 
     let setup = || -> Ray {
@@ -91,11 +83,7 @@ fn miss_offset() -> (
     )
 }
 
-fn miss_plane() -> (
-    String,
-    Box<dyn Fn() -> Ray>,
-    Box<dyn Fn(Ray) -> Option<RayHit>>,
-) {
+fn miss_plane() -> (Id, Setup, Routine) {
     let p = Parallelogram::unit();
 
     let setup = || -> Ray {
@@ -118,11 +106,7 @@ fn miss_plane() -> (
     ("miss_plane".to_string(), Box::new(setup), Box::new(routine))
 }
 
-fn miss_culled() -> (
-    String,
-    Box<dyn Fn() -> Ray>,
-    Box<dyn Fn(Ray) -> Option<RayHit>>,
-) {
+fn miss_culled() -> (Id, Setup, Routine) {
     let p = Parallelogram::unit();
 
     let setup = || -> Ray {
