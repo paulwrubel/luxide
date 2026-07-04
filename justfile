@@ -85,21 +85,21 @@ lint-ui: setup-ui-env
     cd ui && . "$HOME/.nvm/nvm.sh" && nvm use && npm run lint
 [group('validate')]
 lint-ui-ci:
-    cd ui && . "$HOME/.nvm/nvm.sh" && nvm use && npm run lint -- --max-warnings 0
+    cd ui && . "$HOME/.nvm/nvm.sh" && nvm install && nvm use && npm run lint -- --max-warnings 0
 
 [group('validate')]
 prettier-check-ui: setup-ui-env
     cd ui && . "$HOME/.nvm/nvm.sh" && nvm use && npm run prettier-check
 [group('validate')]
 prettier-check-ui-ci:
-    cd ui && . "$HOME/.nvm/nvm.sh" && nvm use && npm run prettier-check
+    cd ui && . "$HOME/.nvm/nvm.sh" && nvm install && nvm use && npm run prettier-check
 
 [group('validate')]
 typecheck-ui: setup-ui-env
     cd ui && . "$HOME/.nvm/nvm.sh" && nvm use && npm run type-check
 [group('validate')]
 typecheck-ui-ci:
-    cd ui && . "$HOME/.nvm/nvm.sh" && nvm use && npm run type-check
+    cd ui && . "$HOME/.nvm/nvm.sh" && nvm install && nvm use && npm run type-check
 
 [group('build')]
 sqlx-prepare:
@@ -117,7 +117,7 @@ clean:
 
 [group('misc')]
 setup-ui-env:
-	cd ui && . "$HOME/.nvm/nvm.sh" && nvm use && npm install
+	cd ui && . "$HOME/.nvm/nvm.sh" && nvm install && nvm use && npm install
 
 [group('misc')]
 generate-jwt-keypair-pem:
