@@ -44,7 +44,7 @@ pub struct AuthManager {
 }
 
 impl AuthManager {
-    pub const JWT_EXPIRE_AFTER_HOURS: i64 = 24;
+    pub const JWT_EXPIRE_AFTER_HOURS: i64 = 1;
     pub const REFRESH_TOKEN_EXPIRE_AFTER_DAYS: i64 = 30;
 
     pub fn new_github(
