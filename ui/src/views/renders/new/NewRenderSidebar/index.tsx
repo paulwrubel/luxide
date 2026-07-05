@@ -96,7 +96,7 @@ export function NewRenderSidebar(props: NewRenderSidebarProps) {
       <Sidebar theme={sidebarTheme} className="z-10 h-full w-lg">
         <SidebarItems className="h-full">
           <SidebarItemGroup className="flex h-full flex-col">
-            <div className="mb-0 flex flex-1 flex-col gap-2 overflow-y-auto">
+            <div className="mb-0 flex flex-1 flex-col gap-2 overflow-x-hidden overflow-y-auto">
               <Controls form={form} />
             </div>
             <div className="mt-0 flex flex-col gap-2">

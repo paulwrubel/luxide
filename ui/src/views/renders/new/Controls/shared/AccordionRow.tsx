@@ -68,7 +68,7 @@ export function AccordionRow(props: AccordionRowProps) {
           </span>
         )}
 
-        <div className="flex flex-row items-center gap-2">
+        <div className="flex shrink-0 flex-row items-center gap-2">
           {rightLabel && <LabelText text={rightLabel} type={rightLabelStyle} />}
           <div onClick={(e) => e.stopPropagation()}>{rightActions}</div>
           {isExpanded ? (
