@@ -40,12 +40,12 @@ export function DraggableGroup(props: DraggableGroupProps) {
         >
           <HiBars3 className="h-4 w-4" />
         </button>
-        <div className="flex-1 min-w-0">{first}</div>
+        <div className="min-w-0 flex-1">{first}</div>
       </div>
       {hasRest && (
         <div className="flex items-start">
           <div className="w-6 shrink-0" />
-          <div className="flex-1 min-w-0">{rest}</div>
+          <div className="min-w-0 flex-1">{rest}</div>
         </div>
       )}
     </div>
