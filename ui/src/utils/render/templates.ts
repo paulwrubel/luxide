@@ -74,7 +74,7 @@ export function getEmptyRenderConfig(): NormalizedRenderConfig {
         transmissive_weight: 0.0,
         specular_weight: 0.0,
         virtual_weight: 0.0,
-        use_multiple_importance_sampling: false,
+        use_multiple_importance_sampling: true,
       },
     },
     active_scene: 'Main',
@@ -112,37 +112,41 @@ export function getCornellBoxRenderConfig(): NormalizedRenderConfig {
       ...scenes,
       'Cornell Box': {
         ...scenes['Cornell Box'],
-        geometrics: ['Far Left Box', 'Near Right Box', ...scenes['Cornell Box'].geometrics],
+        geometrics: [
+          'Far Left Box - Rotate Y',
+          'Near Right Box - Rotate Y',
+          ...scenes['Cornell Box'].geometrics,
+        ],
       },
     },
     geometrics: {
-      ...base.geometrics,
-      'Far Left Box': {
+      'Far Left Box - Rotate Y': {
         type: 'rotate_y',
-        geometric: 'Far Left Box - Unrotated',
+        geometric: 'Far Left Box',
         degrees: 15.0,
         around: 'center',
       },
-      'Far Left Box - Unrotated': {
+      'Far Left Box': {
         type: 'box',
         a: [2.0, 0.0, -5.0],
         b: [5.0, 6.0, -8.0],
         is_culled: false,
         material: 'White',
       },
-      'Near Right Box': {
+      'Near Right Box - Rotate Y': {
         type: 'rotate_y',
-        geometric: 'Near Right Box - Unrotated',
+        geometric: 'Near Right Box',
         degrees: 342.0,
         around: 'center',
       },
-      'Near Right Box - Unrotated': {
+      'Near Right Box': {
         type: 'box',
         a: [5.0, 0.0, -2.0],
         b: [8.0, 3.0, -5.0],
         is_culled: false,
         material: 'White',
       },
+      ...base.geometrics,
     },
   };
 }
@@ -161,7 +165,6 @@ export function getCornellBoxMirrorSpheresRenderConfig(): NormalizedRenderConfig
       },
     },
     geometrics: {
-      ...base.geometrics,
       'Far Left Sphere': {
         type: 'sphere',
         center: [3.0, 2.0, -7.0],
@@ -174,15 +177,16 @@ export function getCornellBoxMirrorSpheresRenderConfig(): NormalizedRenderConfig
         radius: 1.5,
         material: 'Mirror',
       },
+      ...base.geometrics,
     },
     materials: {
-      ...base.materials,
       Mirror: {
         type: 'specular',
         reflectance_texture: 'White',
         emittance_texture: 'Black',
         roughness: 0,
       },
+      ...base.materials,
     },
   };
 }
@@ -193,15 +197,6 @@ export function getCornellBoxGlassSpheresRenderConfig(): NormalizedRenderConfig 
   return {
     ...base,
     name: 'Cornell Box — Glass Spheres',
-    parameters: {
-      ...base.parameters,
-      importance_sampling: base.parameters.importance_sampling
-        ? {
-            ...base.parameters.importance_sampling,
-            emissive_weight: 1.0,
-          }
-        : undefined,
-    },
     scenes: {
       ...scenes,
       'Cornell Box': {
@@ -210,7 +205,6 @@ export function getCornellBoxGlassSpheresRenderConfig(): NormalizedRenderConfig 
       },
     },
     geometrics: {
-      ...base.geometrics,
       'Far Left Sphere': {
         type: 'sphere',
         center: [3.0, 2.0, -7.0],
@@ -223,15 +217,16 @@ export function getCornellBoxGlassSpheresRenderConfig(): NormalizedRenderConfig 
         radius: 1.5,
         material: 'Glass',
       },
+      ...base.geometrics,
     },
     materials: {
-      ...base.materials,
       Glass: {
         type: 'dielectric',
         reflectance_texture: 'White',
         emittance_texture: 'Black',
         index_of_refraction: 1.5,
       },
+      ...base.materials,
     },
   };
 }
@@ -263,15 +258,7 @@ export function getCornellBoxBaseRenderConfig(): NormalizedRenderConfig {
     active_scene: 'Cornell Box',
     scenes: {
       'Cornell Box': {
-        geometrics: [
-          'Left Wall',
-          'Right Wall',
-          'Floor',
-          'Ceiling',
-          'Ceiling Light',
-          'Far Wall',
-          'Near Wall',
-        ],
+        geometrics: ['Walls', 'Ceiling Light'],
         use_bvh: true,
         camera: 'Main Camera',
         background_color: [0.0, 0.0, 0.0],
@@ -288,6 +275,18 @@ export function getCornellBoxBaseRenderConfig(): NormalizedRenderConfig {
       },
     },
     geometrics: {
+      'Ceiling Light': {
+        type: 'parallelogram',
+        lower_left: [3.5, 9.99, -6.5],
+        u: [3.0, 0.0, 0.0],
+        v: [0.0, 0.0, 3.0],
+        is_culled: false,
+        material: 'White Light',
+      },
+      Walls: {
+        type: 'list',
+        geometrics: ['Left Wall', 'Right Wall', 'Floor', 'Ceiling', 'Far Wall', 'Near Wall'],
+      },
       'Left Wall': {
         type: 'parallelogram',
         lower_left: [0.0, 0.0, 0.0],
@@ -336,25 +335,12 @@ export function getCornellBoxBaseRenderConfig(): NormalizedRenderConfig {
         is_culled: true,
         material: 'White',
       },
-      'Ceiling Light': {
-        type: 'parallelogram',
-        lower_left: [3.5, 9.99, -6.5],
-        u: [3.0, 0.0, 0.0],
-        v: [0.0, 0.0, 3.0],
-        is_culled: false,
-        material: 'White Light',
-      },
     },
     materials: {
       White: {
         type: 'lambertian',
         reflectance_texture: 'White',
         emittance_texture: 'Black',
-      },
-      'White Light': {
-        type: 'lambertian',
-        reflectance_texture: 'Black',
-        emittance_texture: 'White Light',
       },
       Red: {
         type: 'lambertian',
@@ -366,6 +352,11 @@ export function getCornellBoxBaseRenderConfig(): NormalizedRenderConfig {
         reflectance_texture: 'Green',
         emittance_texture: 'Black',
       },
+      'White Light': {
+        type: 'lambertian',
+        reflectance_texture: 'Black',
+        emittance_texture: 'White Light',
+      },
     },
     textures: {
       Black: {
@@ -376,10 +367,6 @@ export function getCornellBoxBaseRenderConfig(): NormalizedRenderConfig {
         type: 'color',
         color: [0.73, 0.73, 0.73],
       },
-      'White Light': {
-        type: 'color',
-        color: [7.0, 7.0, 7.0],
-      },
       Red: {
         type: 'color',
         color: [0.65, 0.05, 0.05],
@@ -387,6 +374,10 @@ export function getCornellBoxBaseRenderConfig(): NormalizedRenderConfig {
       Green: {
         type: 'color',
         color: [0.12, 0.45, 0.15],
+      },
+      'White Light': {
+        type: 'color',
+        color: [7.0, 7.0, 7.0],
       },
     },
   });
