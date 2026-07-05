@@ -4,10 +4,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     geometry::{
-        Geometric,
+        Geometric, Vector3,
         compounds::{AxisAlignedPBox, Bvh, List, ModelObj, Virtual},
         instances::{RotateXAxis, RotateYAxis, RotateZAxis, Translate},
-        primitives::{Parallelogram, Sphere, Triangle},
+        primitives::{Parallelogram, Plane, Sphere, Triangle},
         volumes,
     },
     utils::{Angle, Around},
@@ -95,6 +95,14 @@ pub enum GeometricData {
         lower_left: [f64; 3],
         u: [f64; 3],
         v: [f64; 3],
+        #[serde(skip_serializing_if = "Option::is_none")]
+        is_culled: Option<bool>,
+        material: MaterialRefOrInline,
+    },
+    #[serde(rename = "plane")]
+    PrimitivePlane {
+        point: [f64; 3],
+        normal: [f64; 3],
         #[serde(skip_serializing_if = "Option::is_none")]
         is_culled: Option<bool>,
         material: MaterialRefOrInline,
@@ -240,6 +248,28 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
                     (*u).into(),
                     (*v).into(),
                     (*is_culled).unwrap_or(false),
+                    material,
+                )))
+            }
+            Self::PrimitivePlane {
+                point,
+                normal,
+                is_culled,
+                material,
+            } => {
+                let material = material.build(builts)?;
+                let [nx, ny, nz] = normal;
+                let normal = Vector3::new(*nx, *ny, *nz);
+                // guard against zero-length normal
+                let len = normal.length();
+                if len <= 0.0 {
+                    return Err("Plane normal vector must be non-zero".to_string());
+                }
+                let is_culled = is_culled.unwrap_or(false);
+                Ok(Arc::new(Plane::new(
+                    (*point).into(),
+                    normal,
+                    is_culled,
                     material,
                 )))
             }

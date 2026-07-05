@@ -1,4 +1,5 @@
 import { MeshTransmissionMaterial } from '@react-three/drei';
+import type * as THREE from 'three';
 import { getMaterialDataSafe } from '@/utils/render/material';
 import { getTextureDataSafe } from '@/utils/render/texture';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
@@ -6,10 +7,12 @@ import type { NormalizedRenderConfig } from '@/utils/render/config';
 export type MaterialResolverProps = {
   config: NormalizedRenderConfig;
   materialName: string;
+  side?: THREE.Side;
+  shadowSide?: THREE.Side;
 };
 
 export function MaterialResolver(props: MaterialResolverProps) {
-  const { config, materialName } = props;
+  const { config, materialName, side, shadowSide } = props;
 
   const { data: materialData } = getMaterialDataSafe(config, materialName);
   const { data: reflectanceTexture } = getTextureDataSafe(config, materialData.reflectance_texture);
@@ -33,6 +36,8 @@ export function MaterialResolver(props: MaterialResolverProps) {
               transmission={1.0}
               ior={ior}
               roughness={0}
+              side={side}
+              shadowSide={shadowSide}
               {...(emissiveColor ? { emissive: emissiveColor } : {})}
             />
           );
@@ -49,6 +54,8 @@ export function MaterialResolver(props: MaterialResolverProps) {
               transmission={1.0}
               ior={ior}
               roughness={0}
+              side={side}
+              shadowSide={shadowSide}
             />
           );
         }
@@ -62,6 +69,8 @@ export function MaterialResolver(props: MaterialResolverProps) {
             <meshLambertMaterial
               attach="material"
               color={reflectanceTexture.color}
+              side={side}
+              shadowSide={shadowSide}
               {...(emissiveColor ? { emissive: emissiveColor } : {})}
             />
           );
@@ -71,7 +80,14 @@ export function MaterialResolver(props: MaterialResolverProps) {
           console.warn(
             `${reflectanceTexture.type} texture not yet supported for lambertian material`,
           );
-          return <meshLambertMaterial attach="material" color={[1, 1, 1]} />;
+          return (
+            <meshLambertMaterial
+              attach="material"
+              color={[1, 1, 1]}
+              side={side}
+              shadowSide={shadowSide}
+            />
+          );
         }
       }
     }
@@ -83,6 +99,8 @@ export function MaterialResolver(props: MaterialResolverProps) {
             <meshStandardMaterial
               attach="material"
               color={reflectanceTexture.color}
+              side={side}
+              shadowSide={shadowSide}
               {...(emissiveColor ? { emissive: emissiveColor } : {})}
               metalness={1.0}
               roughness={materialData.roughness}
@@ -98,6 +116,8 @@ export function MaterialResolver(props: MaterialResolverProps) {
             <meshStandardMaterial
               attach="material"
               color={[1, 1, 1]}
+              side={side}
+              shadowSide={shadowSide}
               metalness={1.0}
               roughness={materialData.roughness}
             />

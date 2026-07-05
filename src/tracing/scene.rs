@@ -45,11 +45,37 @@ impl SceneWorld {
         world_virtual: &[Arc<dyn Geometric>],
         use_bvh: bool,
     ) -> Self {
-        let list = List::from_vec(world.clone());
-        let compiled_world: Arc<dyn Geometric> = if use_bvh {
-            Arc::new(Bvh::from_list(list))
-        } else {
-            Arc::new(list)
+        // separate bounded and unbounded geometrics — unbounded primitives
+        // (e.g. Plane) have Aabb::UNIVERSE and would break BVH construction
+        let mut bounded = Vec::new();
+        let mut unbounded = Vec::new();
+        for geometric in world {
+            let bounding_box = geometric.bounding_box();
+            if bounding_box.is_infinite() {
+                unbounded.push(geometric.clone());
+            } else {
+                bounded.push(geometric.clone());
+            }
+        }
+
+        let compiled_world: Arc<dyn Geometric> = {
+            let bounded_list = List::from_vec(bounded);
+            let bounded_compiled: Arc<dyn Geometric> =
+                if use_bvh && !bounded_list.items().is_empty() {
+                    Arc::new(Bvh::from_list(bounded_list))
+                } else {
+                    Arc::new(bounded_list)
+                };
+
+            if unbounded.is_empty() {
+                bounded_compiled
+            } else {
+                // binary-tree style: List(BVH, List(unbounded...))
+                let mut combined = List::new();
+                combined.push(bounded_compiled);
+                combined.push(Arc::new(List::from_vec(unbounded)));
+                Arc::new(combined)
+            }
         };
 
         let mut emissives = Vec::new();

@@ -83,6 +83,11 @@ export function Controls(props: ControlsProps) {
                   description: 'Parallelogram defined by origin and two edge vectors.',
                 },
                 {
+                  subtype: 'plane',
+                  label: 'Plane',
+                  description: 'Infinite plane defined by a point and a normal vector.',
+                },
+                {
                   subtype: 'list',
                   label: 'List',
                   description: 'A group of geometrics rendered together.',

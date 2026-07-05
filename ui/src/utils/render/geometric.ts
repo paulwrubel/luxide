@@ -39,6 +39,8 @@ export function normalizeGeometricData(
       return normalizeGeometricInstanceTranslate(config, name, geometricData);
     case 'parallelogram':
       return normalizeGeometricParallelogram(config, name, geometricData);
+    case 'plane':
+      return normalizeGeometricPlane(config, name, geometricData);
     case 'sphere':
       return normalizeGeometricSphere(config, name, geometricData);
     case 'triangle':
@@ -57,6 +59,7 @@ export type NormalizedGeometricData =
   | NormalizedGeometricInstanceRotate
   | NormalizedGeometricInstanceTranslate
   | NormalizedGeometricParallelogram
+  | NormalizedGeometricPlane
   | NormalizedGeometricSphere
   | NormalizedGeometricTriangle
   | NormalizedGeometricConstantVolume
@@ -69,6 +72,7 @@ export type RawGeometricData =
   | RawGeometricInstanceRotate
   | RawGeometricInstanceTranslate
   | RawGeometricParallelogram
+  | RawGeometricPlane
   | RawGeometricSphere
   | RawGeometricTriangle
   | RawGeometricConstantVolume
@@ -86,6 +90,7 @@ export function isGeometricData(data: unknown): data is GeometricData {
       'rotate_z',
       'translate',
       'parallelogram',
+      'plane',
       'sphere',
       'triangle',
       'constant_volume',
@@ -117,6 +122,7 @@ export function getReferencedMaterialNames(
     case 'box':
     case 'obj_model':
     case 'parallelogram':
+    case 'plane':
     case 'sphere':
     case 'triangle':
       materials.push(data.material);
@@ -254,6 +260,8 @@ export function getCenterPoint(
         data.lower_left[1] + (data.u[1] + data.v[1]) / 2,
         data.lower_left[2] + (data.u[2] + data.v[2]) / 2,
       ];
+    case 'plane':
+      return data.point;
     case 'sphere':
       return data.center;
     case 'triangle':
@@ -382,6 +390,13 @@ export function defaultGeometricForType(
         lower_left: [0, 0, 0],
         u: [0, 0, 0],
         v: [0, 0, 0],
+        material: '__lambertian_white',
+      };
+    case 'plane':
+      return {
+        type: 'plane',
+        point: [0, 0, 0],
+        normal: [0, 1, 0],
         material: '__lambertian_white',
       };
     case 'sphere':
@@ -717,6 +732,52 @@ export type RawGeometricParallelogram = {
   material: string | RawMaterialData;
 };
 
+export const GeometricPlaneSchema = z.object({
+  type: z.literal('plane'),
+  point: z.tuple([z.number(), z.number(), z.number()]),
+  normal: z.tuple([z.number(), z.number(), z.number()]),
+  is_culled: z.boolean().optional(),
+  material: z.string(),
+});
+
+export type GeometricPlane = NormalizedGeometricPlane;
+
+export function normalizeGeometricPlane(
+  config: RenderConfig,
+  name: string,
+  geometricData: RawGeometricPlane,
+): NormalizedGeometricPlane {
+  const geometric = geometricData;
+
+  if (typeof geometric.material !== 'string') {
+    if (!config.materials) {
+      config.materials = {};
+    }
+
+    const materialName = getNextUniqueName(config.materials, `${name}_${geometric.material.type}`);
+    config.materials[materialName] = normalizeMaterialData(
+      config,
+      materialName,
+      geometric.material,
+    );
+    geometric.material = materialName;
+  }
+
+  return geometric as NormalizedGeometricPlane;
+}
+
+export type NormalizedGeometricPlane = Omit<RawGeometricPlane, 'material'> & {
+  material: string;
+};
+
+export type RawGeometricPlane = {
+  type: 'plane';
+  point: [number, number, number];
+  normal: [number, number, number];
+  is_culled?: boolean;
+  material: string | RawMaterialData;
+};
+
 export const GeometricSphereSchema = z.object({
   type: z.literal('sphere'),
   center: z.tuple([z.number(), z.number(), z.number()]),
@@ -897,6 +958,8 @@ export const GeometricVirtualSchema = z.object({
   geometric: z.string().nonempty(),
 });
 
+export type GeometricVirtual = NormalizedGeometricVirtual;
+
 export function normalizeGeometricVirtual(
   config: RenderConfig,
   name: string,
@@ -933,6 +996,7 @@ const geometricSchemaByType: Record<string, z.ZodTypeAny> = {
   rotate_z: GeometricInstanceRotateZSchema,
   translate: GeometricInstanceTranslateSchema,
   parallelogram: GeometricParallelogramSchema,
+  plane: GeometricPlaneSchema,
   sphere: GeometricSphereSchema,
   triangle: GeometricTriangleSchema,
   constant_volume: GeometricConstantVolumeSchema,

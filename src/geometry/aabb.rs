@@ -21,6 +21,12 @@ impl Aabb {
         z_interval: Interval::EMPTY,
     };
 
+    pub const UNIVERSE: Self = Self {
+        x_interval: Interval::UNIVERSE,
+        y_interval: Interval::UNIVERSE,
+        z_interval: Interval::UNIVERSE,
+    };
+
     pub fn new(x_interval: Interval, y_interval: Interval, z_interval: Interval) -> Self {
         Self {
             x_interval,
@@ -104,6 +110,14 @@ impl Aabb {
             }
         }
         true
+    }
+
+    /// Returns true if any axis spans the full representable range,
+    /// meaning the AABB cannot be used in a BVH.
+    pub fn is_infinite(&self) -> bool {
+        self.x_interval == Interval::UNIVERSE
+            || self.y_interval == Interval::UNIVERSE
+            || self.z_interval == Interval::UNIVERSE
     }
 
     pub fn center(&self) -> Point {
