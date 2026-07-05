@@ -49,6 +49,8 @@ export function normalizeGeometricData(
       return normalizeGeometricConstantVolume(config, name, geometricData);
     case 'virtual':
       return normalizeGeometricVirtual(config, name, geometricData);
+    case 'disk':
+      return normalizeGeometricDisk(config, name, geometricData);
   }
 }
 
@@ -63,7 +65,8 @@ export type NormalizedGeometricData =
   | NormalizedGeometricSphere
   | NormalizedGeometricTriangle
   | NormalizedGeometricConstantVolume
-  | NormalizedGeometricVirtual;
+  | NormalizedGeometricVirtual
+  | NormalizedGeometricDisk;
 
 export type RawGeometricData =
   | RawGeometricBox
@@ -76,7 +79,8 @@ export type RawGeometricData =
   | RawGeometricSphere
   | RawGeometricTriangle
   | RawGeometricConstantVolume
-  | RawGeometricVirtual;
+  | RawGeometricVirtual
+  | RawGeometricDisk;
 
 export function isGeometricData(data: unknown): data is GeometricData {
   return (
@@ -93,6 +97,7 @@ export function isGeometricData(data: unknown): data is GeometricData {
       'plane',
       'sphere',
       'triangle',
+      'disk',
       'constant_volume',
       'virtual',
     ].includes(data.type)
@@ -120,6 +125,7 @@ export function getReferencedMaterialNames(
   const materials: string[] = [];
   switch (data.type) {
     case 'box':
+    case 'disk':
     case 'obj_model':
     case 'parallelogram':
     case 'plane':
@@ -270,6 +276,8 @@ export function getCenterPoint(
         (data.a[1] + data.b[1] + data.c[1]) / 3,
         (data.a[2] + data.b[2] + data.c[2]) / 3,
       ];
+    case 'disk':
+      return data.center;
   }
 }
 
@@ -425,6 +433,16 @@ export function defaultGeometricForType(
       return {
         type: 'virtual',
         geometric: '__unit_box',
+      };
+    case 'disk':
+      return {
+        type: 'disk',
+        center: [0, 0, 0],
+        normal: [0, 1, 0],
+        radius: 1,
+        inner_radius: 0,
+        is_culled: false,
+        material: '__lambertian_white',
       };
   }
 }
@@ -987,6 +1005,61 @@ export function normalizeGeometricVirtual(
   return geometric as NormalizedGeometricVirtual;
 }
 
+export const GeometricDiskSchema = z
+  .object({
+    type: z.literal('disk'),
+    center: z.tuple([z.number(), z.number(), z.number()]),
+    normal: z.tuple([z.number(), z.number(), z.number()]),
+    radius: z.number().positive(),
+    inner_radius: z.number().min(0).optional().default(0),
+    is_culled: z.boolean().nullish(),
+    material: z.string().nonempty(),
+  })
+  .refine(({ inner_radius, radius }) => (inner_radius ?? 0.0) < radius, {
+    message: 'Inner radius must be less than the outer radius',
+    path: ['inner_radius'],
+  });
+
+export type GeometricDisk = NormalizedGeometricDisk;
+
+export function normalizeGeometricDisk(
+  config: RenderConfig,
+  name: string,
+  geometricData: RawGeometricDisk,
+): NormalizedGeometricDisk {
+  const geometric = geometricData;
+
+  if (typeof geometric.material !== 'string') {
+    if (!config.materials) {
+      config.materials = {};
+    }
+
+    const materialName = getNextUniqueName(config.materials, `${name}_${geometric.material.type}`);
+    config.materials[materialName] = normalizeMaterialData(
+      config,
+      materialName,
+      geometric.material,
+    );
+    geometric.material = materialName;
+  }
+
+  return geometric as NormalizedGeometricDisk;
+}
+
+export type NormalizedGeometricDisk = Omit<RawGeometricDisk, 'material'> & {
+  material: string;
+};
+
+export type RawGeometricDisk = {
+  type: 'disk';
+  center: [number, number, number];
+  normal: [number, number, number];
+  radius: number;
+  inner_radius?: number;
+  is_culled?: boolean;
+  material: string | RawMaterialData;
+};
+
 const geometricSchemaByType: Record<string, z.ZodTypeAny> = {
   box: GeometricBoxSchema,
   list: GeometricListSchema,
@@ -996,6 +1069,7 @@ const geometricSchemaByType: Record<string, z.ZodTypeAny> = {
   rotate_z: GeometricInstanceRotateZSchema,
   translate: GeometricInstanceTranslateSchema,
   parallelogram: GeometricParallelogramSchema,
+  disk: GeometricDiskSchema,
   plane: GeometricPlaneSchema,
   sphere: GeometricSphereSchema,
   triangle: GeometricTriangleSchema,
@@ -1044,6 +1118,7 @@ export function wrapGeometric(
     sphere: 'Sphere',
     triangle: 'Triangle',
     parallelogram: 'Parallelogram',
+    disk: 'Disk',
     obj_model: 'OBJ Model',
     list: 'List',
     rotate_x: 'Rotate X',

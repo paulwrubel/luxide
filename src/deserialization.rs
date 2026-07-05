@@ -229,6 +229,7 @@ fn get_geometric_dependencies(geometric: &GeometricData) -> Vec<String> {
         // these contain no `geometric` field, only a `material` — no geometric dependencies to track
         GeometricData::CompoundAxisAlignedPBox { .. }
         | GeometricData::CompoundModelObj { .. }
+        | GeometricData::PrimitiveDisk { .. }
         | GeometricData::PrimitiveParallelogram { .. }
         | GeometricData::PrimitivePlane { .. }
         | GeometricData::PrimitiveSphere { .. }

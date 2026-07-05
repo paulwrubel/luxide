@@ -7,7 +7,7 @@ use crate::{
         Geometric, Vector3,
         compounds::{AxisAlignedPBox, Bvh, List, ModelObj, Virtual},
         instances::{RotateXAxis, RotateYAxis, RotateZAxis, Translate},
-        primitives::{Parallelogram, Plane, Sphere, Triangle},
+        primitives::{Disk, Parallelogram, Plane, Sphere, Triangle},
         volumes,
     },
     utils::{Angle, Around},
@@ -124,6 +124,17 @@ pub enum GeometricData {
         b_normal: Option<[f64; 3]>,
         #[serde(skip_serializing_if = "Option::is_none")]
         c_normal: Option<[f64; 3]>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        is_culled: Option<bool>,
+        material: MaterialRefOrInline,
+    },
+    #[serde(rename = "disk")]
+    PrimitiveDisk {
+        center: [f64; 3],
+        normal: [f64; 3],
+        radius: f64,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        inner_radius: Option<f64>,
         #[serde(skip_serializing_if = "Option::is_none")]
         is_culled: Option<bool>,
         material: MaterialRefOrInline,
@@ -304,6 +315,25 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
                     (*is_culled).unwrap_or(false),
                     material,
                 )))
+            }
+            Self::PrimitiveDisk {
+                center,
+                normal,
+                radius,
+                inner_radius,
+                is_culled,
+                material,
+            } => {
+                let material = material.build(builts)?;
+
+                Ok(Arc::new(Disk::new(
+                    (*center).into(),
+                    (*normal).into(),
+                    *radius,
+                    (*inner_radius).unwrap_or(0.0),
+                    (*is_culled).unwrap_or(false),
+                    material,
+                )?))
             }
             Self::VolumeConstant {
                 geometric: geometric_ref,

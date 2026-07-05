@@ -166,6 +166,43 @@ export function GeometricFormControls(props: GeometricFormControlsProps) {
           <GeometricMaterialSelect form={form} name={name} items={materialItems} />
         </>
       );
+    case 'disk':
+      return (
+        <>
+          <TextArrayInputControl
+            form={form}
+            fieldName={`geometrics.${name}.center`}
+            label="Center"
+            valueLabels={['x', 'y', 'z']}
+            type="number"
+          />
+          <TextArrayInputControl
+            form={form}
+            fieldName={`geometrics.${name}.normal`}
+            label="Normal"
+            valueLabels={['x', 'y', 'z']}
+            type="number"
+          />
+          <TextInputControl
+            form={form}
+            fieldName={`geometrics.${name}.radius`}
+            label="Radius"
+            valueLabel="radius"
+            type="number"
+          />
+          <TextInputControl
+            form={form}
+            fieldName={`geometrics.${name}.inner_radius`}
+            label="Inner Radius"
+            valueLabel="inner_radius"
+            type="number"
+          />
+          <form.AppField name={`geometrics.${name}.is_culled`}>
+            {(field) => <field.ToggleControl label="Double Sided" invert />}
+          </form.AppField>
+          <GeometricMaterialSelect form={form} name={name} items={materialItems} />
+        </>
+      );
     case 'rotate_x':
     case 'rotate_y':
     case 'rotate_z': {

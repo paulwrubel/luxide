@@ -9,3 +9,6 @@ pub use sphere::Sphere;
 
 mod triangle;
 pub use triangle::Triangle;
+
+mod disk;
+pub use disk::Disk;

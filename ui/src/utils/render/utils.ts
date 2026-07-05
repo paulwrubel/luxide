@@ -164,6 +164,7 @@ export function fixReferences(config: NormalizedRenderConfig): NormalizedRenderC
   for (const geometric of Object.values(geometrics)) {
     switch (geometric.type) {
       case 'box':
+      case 'disk':
       case 'obj_model':
       case 'parallelogram':
       case 'sphere':
@@ -329,6 +330,7 @@ export function renameMaterial(
   Object.values(newConfig.geometrics ?? {}).forEach((geometric) => {
     switch (geometric.type) {
       case 'box':
+      case 'disk':
       case 'obj_model':
       case 'parallelogram':
       case 'sphere':
