@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT id, state, created_at, updated_at, config, user_id\n                FROM renders\n                WHERE id = $1\n            ",
+  "query": "\n                SELECT id, state, created_at, updated_at, config, user_id, deleted_at\n                FROM renders\n                WHERE id = $1 AND deleted_at IS NULL\n            ",
   "describe": {
     "columns": [
       {
@@ -32,6 +32,11 @@
         "ordinal": 5,
         "name": "user_id",
         "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "deleted_at",
+        "type_info": "Timestamptz"
       }
     ],
     "parameters": {
@@ -45,8 +50,9 @@
       false,
       false,
       false,
-      false
+      false,
+      true
     ]
   },
-  "hash": "e3ff7e7de3d3b8a47eb4fd2bbc851d3cec9d826d12987413ebc282ee24d0c035"
+  "hash": "e9ed008ea4e85f54c324facb039fb96a8502f38f8889bd1d627114ebfd4fbe47"
 }

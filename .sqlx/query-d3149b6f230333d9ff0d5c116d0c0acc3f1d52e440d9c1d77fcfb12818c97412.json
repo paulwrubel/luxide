@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT 1 as exists\n                FROM renders\n                WHERE id = $1\n                LIMIT 1\n            ",
+  "query": "\n                SELECT 1 as exists\n                FROM renders\n                WHERE id = $1 AND deleted_at IS NULL\n                LIMIT 1\n            ",
   "describe": {
     "columns": [
       {
@@ -18,5 +18,5 @@
       null
     ]
   },
-  "hash": "c36886854ce74ef1d2d84ff6da4f1654f8aba157cc462a412128d87ce1c4fda6"
+  "hash": "d3149b6f230333d9ff0d5c116d0c0acc3f1d52e440d9c1d77fcfb12818c97412"
 }

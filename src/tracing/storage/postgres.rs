@@ -36,9 +36,9 @@ impl RenderStorage for PostgresStorage {
     async fn get_render(&self, id: RenderID) -> Result<Option<Render>, StorageError> {
         match sqlx::query!(
             r#"
-                SELECT id, state, created_at, updated_at, config, user_id
+                SELECT id, state, created_at, updated_at, config, user_id, deleted_at
                 FROM renders
-                WHERE id = $1
+                WHERE id = $1 AND deleted_at IS NULL
             "#,
             id as i32
         )
@@ -66,6 +66,7 @@ impl RenderStorage for PostgresStorage {
                     updated_at: row.updated_at,
                     config,
                     user_id: row.user_id as UserID,
+                    deleted_at: row.deleted_at,
                 }))
             }
             Ok(None) => Ok(None),
@@ -78,7 +79,7 @@ impl RenderStorage for PostgresStorage {
             r#"
                 SELECT 1 as exists
                 FROM renders
-                WHERE id = $1
+                WHERE id = $1 AND deleted_at IS NULL
                 LIMIT 1
             "#,
             id as i32
@@ -97,7 +98,7 @@ impl RenderStorage for PostgresStorage {
             r#"
                 SELECT 1 as exists
                 FROM renders
-                WHERE id = $1 AND user_id = $2
+                WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
                 LIMIT 1
             "#,
             id as i32,
@@ -120,7 +121,7 @@ impl RenderStorage for PostgresStorage {
             r#"
                 SELECT count(*)
                 FROM renders
-                WHERE user_id = $1
+                WHERE user_id = $1 AND deleted_at IS NULL
             "#,
             user_id as i32
         )
@@ -135,8 +136,9 @@ impl RenderStorage for PostgresStorage {
     async fn get_all_renders(&self) -> Result<Vec<Render>, StorageError> {
         let rows = sqlx::query!(
             r#"
-                SELECT id, state, created_at, updated_at, config, user_id
+                SELECT id, state, created_at, updated_at, config, user_id, deleted_at
                 FROM renders
+                WHERE deleted_at IS NULL
                 ORDER BY id ASC
             "#
         )
@@ -170,6 +172,7 @@ impl RenderStorage for PostgresStorage {
                 updated_at: row.updated_at,
                 config,
                 user_id: row.user_id as UserID,
+                deleted_at: row.deleted_at,
             });
         }
 
@@ -182,9 +185,9 @@ impl RenderStorage for PostgresStorage {
     ) -> Result<Vec<Render>, StorageError> {
         let rows = sqlx::query!(
             r#"
-                SELECT id, state, created_at, updated_at, config
+                SELECT id, state, created_at, updated_at, config, deleted_at
                 FROM renders
-                WHERE user_id = $1
+                WHERE user_id = $1 AND deleted_at IS NULL
                 ORDER BY id ASC
             "#,
             user_id as i32,
@@ -219,6 +222,7 @@ impl RenderStorage for PostgresStorage {
                 updated_at: row.updated_at,
                 config,
                 user_id,
+                deleted_at: row.deleted_at,
             });
         }
 
@@ -228,8 +232,8 @@ impl RenderStorage for PostgresStorage {
     async fn create_render(&self, render: Render) -> Result<Render, StorageError> {
         match sqlx::query!(
             r#"
-                INSERT INTO renders (id, state, created_at, updated_at, config, user_id)
-                VALUES ($1, $2, $3, $4, $5, $6)
+                INSERT INTO renders (id, state, created_at, updated_at, config, user_id, deleted_at)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
             "#,
             render.id as i32,
             serde_json::to_value(&render.state).map_err(|e| format!(
@@ -243,6 +247,7 @@ impl RenderStorage for PostgresStorage {
                 render.id, e
             ))?,
             render.user_id as i32,
+            render.deleted_at,
         )
         .execute(&self.pool)
         .await
@@ -608,31 +613,40 @@ impl RenderStorage for PostgresStorage {
             .await
             .map_err(|e| format!("Failed to begin transaction: {}", e))?;
 
-        // delete checkpoints first (foreign key constraint will prevent orphaned checkpoints)
+        // clear pixel data for all checkpoints of this render
         sqlx::query!(
             r#"
-                DELETE FROM checkpoints
+                UPDATE checkpoints
+                SET pixel_data = NULL, pixel_data_cleared = TRUE
                 WHERE render_id = $1
             "#,
-            id as i32
+            id as i32,
         )
         .execute(&mut *tx)
         .await
-        .map_err(|e| format!("Failed to delete checkpoints for render id {}: {}", id, e))?;
+        .map_err(|e| format!("Failed to clear checkpoint pixel data for render {id}: {e}"))?;
 
-        // delete the render
-        sqlx::query!(
+        // soft-delete the render
+        let result = sqlx::query!(
             r#"
-                DELETE FROM renders
-                WHERE id = $1
+                UPDATE renders
+                SET deleted_at = $2
+                WHERE id = $1 AND deleted_at IS NULL
             "#,
-            id as i32
+            id as i32,
+            chrono::Utc::now(),
         )
         .execute(&mut *tx)
         .await
         .map_err(|e| format!("Failed to delete render for id {}: {}", id, e))?;
 
-        // commit the transaction
+        if result.rows_affected() != 1 {
+            tx.rollback()
+                .await
+                .map_err(|e| format!("Failed to rollback transaction: {}", e))?;
+            return Err(format!("Render {id} not found or already deleted").into());
+        }
+
         tx.commit()
             .await
             .map_err(|e| format!("Failed to commit transaction: {}", e))?;
@@ -643,18 +657,18 @@ impl RenderStorage for PostgresStorage {
     async fn get_next_id(&self) -> Result<RenderID, StorageError> {
         let row = sqlx::query!(
             r#"
-                SELECT COALESCE(MAX(id), 0) as max_id
-                FROM renders
+                SELECT nextval('renders_id_seq') as next_id
             "#
         )
         .fetch_one(&self.pool)
         .await
         .map_err(|e| format!("Failed to get next render ID: {}", e))?;
 
-        let next_id = row.max_id.unwrap_or(0) + 1;
+        // nextval returns i64; we need to cast to u32
+        let next_id: i64 = row.next_id.expect("nextval should return a value");
         Ok(next_id
             .try_into()
-            .map_err(|_| "Next render ID is too large".to_string())?)
+            .map_err(|_| "Next render ID is too large for u32".to_string())?)
     }
 
     async fn get_render_checkpoint_storage_usage_bytes(&self) -> Result<u64, StorageError> {

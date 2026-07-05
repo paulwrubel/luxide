@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT count(*)\n                FROM renders\n                WHERE user_id = $1\n            ",
+  "query": "\n                SELECT count(*)\n                FROM renders\n                WHERE user_id = $1 AND deleted_at IS NULL\n            ",
   "describe": {
     "columns": [
       {
@@ -18,5 +18,5 @@
       null
     ]
   },
-  "hash": "722574a89d61fa44ee5f412b2e571edc99f9b96702829a1ba570937a226d8e1a"
+  "hash": "4ceabd59f9ba5daa489fc61c23b8cd63f769184e6df5ec023475de55ceaf706e"
 }
