@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT id, state, created_at, updated_at, config\n                FROM renders\n                WHERE user_id = $1\n                ORDER BY id ASC\n            ",
+  "query": "\n                SELECT id, state, created_at, updated_at, config, user_id, deleted_at\n                FROM renders\n                WHERE deleted_at IS NULL\n                ORDER BY id ASC\n            ",
   "describe": {
     "columns": [
       {
@@ -27,20 +27,30 @@
         "ordinal": 4,
         "name": "config",
         "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 5,
+        "name": "user_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "deleted_at",
+        "type_info": "Timestamptz"
       }
     ],
     "parameters": {
-      "Left": [
-        "Int4"
-      ]
+      "Left": []
     },
     "nullable": [
       false,
       false,
       false,
       false,
-      false
+      false,
+      false,
+      true
     ]
   },
-  "hash": "fab2cf2b12d80c58fc757d166337e69c73a1546a1be3fd839d8d2233abc9bd67"
+  "hash": "65743a99f00d0e6ca3a010962f292265751f29c265ecba373e295149aa55d322"
 }

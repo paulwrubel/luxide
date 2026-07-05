@@ -62,6 +62,7 @@ pub struct Render {
     pub updated_at: chrono::DateTime<chrono::Utc>,
     pub config: RenderConfig,
     pub user_id: UserID,
+    pub deleted_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
 impl Render {
@@ -73,6 +74,7 @@ impl Render {
             updated_at: chrono::Utc::now(),
             config,
             user_id,
+            deleted_at: None,
         }
     }
 
