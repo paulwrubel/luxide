@@ -7,6 +7,7 @@ import { ImportConfigBody } from './ImportConfigModal/ImportConfigBody';
 import { ExistingRenderPicker } from './ExistingRenderPicker';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
 import type { Template } from '@/utils/render/templates';
+import { saveRenderDraft } from '@/hooks/useRenderForm';
 
 type Stage = 'source-choice' | 'template-picker' | 'import-json' | 'render-picker';
 
@@ -28,18 +29,21 @@ export function CreateRenderModal(props: CreateRenderModalProps) {
 
   const handleTemplateSelect = (template: Template) => {
     const config = template.config;
-    navigate('/renders/new', { state: { importedConfig: config } });
+    saveRenderDraft(config);
+    navigate('/renders/new');
     onClose();
   };
 
   const handleImportSuccess = (config: NormalizedRenderConfig) => {
-    navigate('/renders/new', { state: { importedConfig: config } });
+    saveRenderDraft(config);
+    navigate('/renders/new');
     onClose();
   };
 
   const handleExistingRenderSelect = (config: NormalizedRenderConfig) => {
     const modifiedConfig = { ...config, name: `${config.name} (copy)` };
-    navigate('/renders/new', { state: { importedConfig: modifiedConfig } });
+    saveRenderDraft(modifiedConfig);
+    navigate('/renders/new');
     onClose();
   };
 

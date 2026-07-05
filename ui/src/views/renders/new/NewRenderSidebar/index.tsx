@@ -17,6 +17,7 @@ import { useAuth } from '@/providers/Auth';
 import { useCreateRenderMutation } from '@/hooks/useRenderMutations';
 import { useRendersQuery } from '@/hooks/useRenders';
 import type { RenderForm } from '@/hooks/useRenderForm';
+import { clearRenderDraft } from '@/hooks/useRenderForm';
 import { ViewConfigJSONButton } from './ViewConfigJSONButton';
 import { ConfigJSONModal } from '@/components/ViewRenderJSONButton/ConfigJSONModal';
 import toast from 'react-hot-toast';
@@ -72,6 +73,7 @@ export function NewRenderSidebar(props: NewRenderSidebarProps) {
     createRender(form.state.values, {
       onSuccess: (response) => {
         navigate(`/renders/${response.id}`);
+        clearRenderDraft();
       },
       onError: (error) => {
         toast.error(extractErrorMessage(error));

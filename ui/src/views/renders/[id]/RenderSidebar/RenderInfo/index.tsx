@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { HiDocumentDuplicate } from 'react-icons/hi2';
 import { normalizeRenderConfig } from '@/utils/render/config';
 import { withDefaultResources } from '@/utils/render/templates';
+import { saveRenderDraft } from '@/hooks/useRenderForm';
 
 /**
  * formats a pixel sample count for display.
@@ -68,7 +69,8 @@ export function RenderInfo(props: RenderInfoProps) {
     const normalizedConfig = normalizeRenderConfig(render.config);
     const configWithDefaults = withDefaultResources(normalizedConfig);
     const modifiedConfig = { ...configWithDefaults, name: `${configWithDefaults.name} (copy)` };
-    navigate('/renders/new', { replace: true, state: { importedConfig: modifiedConfig } });
+    saveRenderDraft(modifiedConfig);
+    navigate('/renders/new', { replace: true });
   }
 
   const totalSamples = renderStats
