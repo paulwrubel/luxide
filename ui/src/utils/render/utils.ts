@@ -217,10 +217,20 @@ function moveKey<T>(
   oldName: string,
   newName: string,
 ): Record<string, T> {
-  const newCollection = { ...collection };
-  newCollection[newName] = newCollection[oldName];
-  delete newCollection[oldName];
-  return newCollection;
+  if (!collection) {
+    return {};
+  }
+
+  const result: Record<string, T> = {};
+  for (const key of Object.keys(collection)) {
+    if (key === oldName) {
+      result[newName] = collection[oldName];
+    } else {
+      result[key] = collection[key];
+    }
+  }
+
+  return result;
 }
 
 /**
