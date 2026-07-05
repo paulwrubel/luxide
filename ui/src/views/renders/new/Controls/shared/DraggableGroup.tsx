@@ -29,7 +29,7 @@ export function DraggableGroup(props: DraggableGroupProps) {
   const hasRest = rest.length > 0;
 
   return (
-    <div ref={setNodeRef} style={style} className="ml-[calc(var(--row-depth)*0.75rem)]">
+    <div ref={setNodeRef} style={style} className="ml-[calc(var(--row-depth)*0.75rem)] min-w-0">
       <div className="flex items-center">
         <button
           type="button"
@@ -40,12 +40,12 @@ export function DraggableGroup(props: DraggableGroupProps) {
         >
           <HiBars3 className="h-4 w-4" />
         </button>
-        <div className="flex-1">{first}</div>
+        <div className="flex-1 min-w-0">{first}</div>
       </div>
       {hasRest && (
         <div className="flex items-start">
           <div className="w-6 shrink-0" />
-          <div className="flex-1">{rest}</div>
+          <div className="flex-1 min-w-0">{rest}</div>
         </div>
       )}
     </div>
