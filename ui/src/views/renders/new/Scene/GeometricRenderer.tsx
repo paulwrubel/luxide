@@ -168,7 +168,12 @@ export function GeometricRenderer(props: GeometricRendererProps) {
               <bufferAttribute attach="attributes-normal" args={[geom.normals, 3]} />
               <bufferAttribute attach="index" args={[geom.indices, 1]} />
             </bufferGeometry>
-            <MaterialResolver config={config} materialName={data.material} />
+            <MaterialResolver
+              config={config}
+              materialName={data.material}
+              side={data.is_culled ? THREE.FrontSide : THREE.DoubleSide}
+              shadowSide={data.is_culled ? undefined : THREE.BackSide}
+            />
           </mesh>
           {emissiveInfo && (
             <pointLight
@@ -195,7 +200,12 @@ export function GeometricRenderer(props: GeometricRendererProps) {
               <bufferAttribute attach="attributes-normal" args={[geom.normals, 3]} />
               <bufferAttribute attach="index" args={[geom.indices, 1]} />
             </bufferGeometry>
-            <MaterialResolver config={config} materialName={data.material} />
+            <MaterialResolver
+              config={config}
+              materialName={data.material}
+              side={data.is_culled ? THREE.FrontSide : THREE.DoubleSide}
+              shadowSide={data.is_culled ? undefined : THREE.BackSide}
+            />
           </mesh>
           {emissiveInfo && (
             <pointLight
@@ -220,18 +230,22 @@ export function GeometricRenderer(props: GeometricRendererProps) {
 
       const emissiveInfo = getEmissiveInfo(config, data.material);
 
-      const extent = 1_000; // arbitrary large value to simulate an infinite plane
-
       return (
-        <>
+        <group rotation={rotation}>
           <mesh
             position={[data.point[0], data.point[1], data.point[2]]}
             rotation={[rot.x, rot.y, rot.z]}
+            frustumCulled={false}
             castShadow={!emissiveInfo}
             receiveShadow
           >
-            <planeGeometry args={[extent, extent]} />
-            <MaterialResolver config={config} materialName={data.material} />
+            <planeGeometry args={[1_000, 1_000]} />
+            <MaterialResolver
+              config={config}
+              materialName={data.material}
+              side={data.is_culled ? THREE.FrontSide : THREE.DoubleSide}
+              shadowSide={data.is_culled ? undefined : THREE.BackSide}
+            />
           </mesh>
           {emissiveInfo && (
             <pointLight
@@ -241,7 +255,7 @@ export function GeometricRenderer(props: GeometricRendererProps) {
               castShadow
             />
           )}
-        </>
+        </group>
       );
     }
 
