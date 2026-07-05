@@ -1,5 +1,9 @@
 import { useState, useMemo } from 'react';
-import { Dropdown, DropdownItem, DropdownDivider } from 'flowbite-react';
+import {
+  PortalDropdown,
+  PortalDropdownItem,
+  PortalDropdownDivider,
+} from '@/views/renders/new/Controls/shared/PortalDropdown';
 import { useSelector } from '@tanstack/react-store';
 import { HiEllipsisHorizontal } from 'react-icons/hi2';
 import {
@@ -88,44 +92,43 @@ export function GeometricMoreOptionsDropdown(props: GeometricMoreOptionsDropdown
 
   return (
     <>
-      <Dropdown
+      <PortalDropdown
         label={<HiEllipsisHorizontal className="h-5 w-5" />}
-        arrowIcon={false}
-        color="light"
-        size="sm"
-        inline
+        triggerClassName="flex items-center"
       >
-        <DropdownItem
+        <PortalDropdownItem
           onClick={() => {
             setModalOpen(true);
           }}
         >
           Wrap
-        </DropdownItem>
+        </PortalDropdownItem>
         {availableLists.length > 0 && (
-          <DropdownItem
+          <PortalDropdownItem
             onClick={() => {
               setListModalOpen(true);
             }}
           >
             Add to List
-          </DropdownItem>
+          </PortalDropdownItem>
         )}
-        <DropdownDivider />
-        <DropdownItem onClick={handleDuplicate}>Duplicate</DropdownItem>
+        <PortalDropdownDivider />
+        <PortalDropdownItem onClick={handleDuplicate}>Duplicate</PortalDropdownItem>
         {isDirectlyInActiveScene && (
           <>
-            <DropdownDivider />
-            <DropdownItem onClick={handleRemoveFromScene}>Remove from Scene</DropdownItem>
+            <PortalDropdownDivider />
+            <PortalDropdownItem onClick={handleRemoveFromScene}>
+              Remove from Scene
+            </PortalDropdownItem>
           </>
         )}
         {!isUsedByActiveScene && (
           <>
-            <DropdownDivider />
-            <DropdownItem onClick={handleAddToScene}>Add to Scene</DropdownItem>
+            <PortalDropdownDivider />
+            <PortalDropdownItem onClick={handleAddToScene}>Add to Scene</PortalDropdownItem>
           </>
         )}
-      </Dropdown>
+      </PortalDropdown>
       <WrapGeometricModal
         geometricName={geometricName}
         open={modalOpen}
