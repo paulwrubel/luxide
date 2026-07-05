@@ -1,4 +1,4 @@
-import { Dropdown, DropdownItem } from 'flowbite-react';
+import { PortalDropdown, PortalDropdownItem } from './PortalDropdown';
 import { HiEllipsisHorizontal } from 'react-icons/hi2';
 
 export type DuplicateDropdownProps = {
@@ -9,14 +9,11 @@ export function DuplicateDropdown(props: DuplicateDropdownProps) {
   const { onDuplicate } = props;
 
   return (
-    <Dropdown
+    <PortalDropdown
       label={<HiEllipsisHorizontal className="h-5 w-5" />}
-      arrowIcon={false}
-      color="light"
-      size="sm"
-      inline
+      triggerClassName="flex items-center"
     >
-      <DropdownItem onClick={onDuplicate}>Duplicate</DropdownItem>
-    </Dropdown>
+      <PortalDropdownItem onClick={onDuplicate}>Duplicate</PortalDropdownItem>
+    </PortalDropdown>
   );
 }

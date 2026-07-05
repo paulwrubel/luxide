@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dropdown, DropdownItem } from 'flowbite-react';
+import { PortalDropdown, PortalDropdownItem } from './PortalDropdown';
 import { getNextUniqueName, capitalize } from '@/utils/render/utils';
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { useSelector } from '@tanstack/react-store';
@@ -176,16 +176,20 @@ export function AddEntityDropdown<T extends EntityType>(props: AddEntityDropdown
 
   return (
     <>
-      <Dropdown label={<HiPlus className="h-6 w-6" />} arrowIcon={false} color="light" size="sm">
+      <PortalDropdown
+        label={<HiPlus className="h-6 w-6" />}
+        placement="bottom"
+        triggerClassName="p-1 rounded-md border border-gray-300 bg-white text-gray-900 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-700 flex items-center justify-center"
+      >
         {options.map(({ subtype, label }) => (
-          <DropdownItem key={subtype} onClick={() => handleDropdownClick(subtype)}>
+          <PortalDropdownItem key={subtype} onClick={() => handleDropdownClick(subtype)}>
             <div className="flex items-center gap-2">
               <HiPlus className="h-4 w-4" />
               {label}
             </div>
-          </DropdownItem>
+          </PortalDropdownItem>
         ))}
-      </Dropdown>
+      </PortalDropdown>
       {selectedSubtype && (
         <AddEntityModal
           entityType={type}
