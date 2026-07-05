@@ -1,16 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/providers/Auth';
 import { useRenderForm } from '@/hooks/useRenderForm';
 import { NewRenderSidebar } from './NewRenderSidebar';
 import { Scene } from './Scene';
-import type { NormalizedRenderConfig } from '@/utils/render/config';
 import { useSelector } from '@tanstack/react-store';
 
 export function NewRenderPage() {
   const { user } = useAuth();
-  const location = useLocation();
-  const importedConfig = location.state?.importedConfig as NormalizedRenderConfig | undefined;
 
   // canvas container sizing
   const containerRef = useRef<HTMLDivElement>(null);
@@ -30,7 +26,7 @@ export function NewRenderPage() {
     return () => observer.disconnect();
   }, []);
 
-  const form = useRenderForm({ user, initialValues: importedConfig });
+  const form = useRenderForm({ user });
 
   // canvas sizing - maintain aspect ratio in container
   const imageDimensions = useSelector(

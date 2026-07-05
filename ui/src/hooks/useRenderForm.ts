@@ -1,19 +1,55 @@
+import { useEffect, useRef, useState } from 'react';
 import { type DeepKeys } from '@tanstack/react-form';
 import { useAppForm } from '@/hooks/useAppForm';
 import { RenderConfigSchema, type NormalizedRenderConfig } from '../utils/render/config';
 import { getDefaultRenderConfig } from '../utils/render/templates';
 import type { User } from '../utils/api';
 
+const DRAFT_KEY = 'luxide-render-config-draft';
+
+function loadRenderDraft(): NormalizedRenderConfig | undefined {
+  try {
+    const raw = sessionStorage.getItem(DRAFT_KEY);
+    if (raw === null) {
+      return undefined;
+    }
+
+    const parsed = JSON.parse(raw);
+    const { data, success } = RenderConfigSchema.safeParse(parsed);
+    if (!success) {
+      return undefined;
+    }
+    return data;
+  } catch {
+    return undefined;
+  }
+}
+
+export function saveRenderDraft(config: NormalizedRenderConfig): void {
+  try {
+    sessionStorage.setItem(DRAFT_KEY, JSON.stringify(config));
+  } catch {
+    // silently ignore
+  }
+}
+
+export function clearRenderDraft(): void {
+  try {
+    sessionStorage.removeItem(DRAFT_KEY);
+  } catch {
+    // silently ignore
+  }
+}
+
 export type UseRenderFormOptions = {
   user: User | undefined;
-  initialValues?: NormalizedRenderConfig;
 };
 
 export type RenderForm = ReturnType<typeof useRenderForm>;
 export type RenderFormPath = DeepKeys<NormalizedRenderConfig>;
 
 export function useRenderForm(options: UseRenderFormOptions) {
-  const { user, initialValues } = options;
+  const { user } = options;
 
   const formSchema = RenderConfigSchema.refine(
     ({ parameters }) => {
@@ -63,10 +99,43 @@ export function useRenderForm(options: UseRenderFormOptions) {
       },
     );
 
-  return useAppForm({
-    defaultValues: initialValues ?? getDefaultRenderConfig(),
+  const [resolvedDefaults] = useState(() => {
+    return loadRenderDraft() ?? getDefaultRenderConfig();
+  });
+
+  const form = useAppForm({
+    defaultValues: resolvedDefaults,
     validators: {
       onChange: formSchema,
     },
   });
+
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(null);
+
+  // debounced auto-save: persist form values to sessionStorage after
+  // the user stops typing for 500ms, avoiding writes on every keystroke
+  useEffect(() => {
+    // subscribe to the form store — fires on every value change
+    const { unsubscribe } = form.store.subscribe(() => {
+      // a pending save is already scheduled — cancel it to reset the debounce clock
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+      // start a new 500ms timer; if no further changes arrive, persist current values
+      saveTimerRef.current = setTimeout(() => {
+        saveRenderDraft(form.state.values);
+      }, 500);
+    });
+
+    return () => {
+      // stop listening for changes on unmount
+      unsubscribe();
+      // cancel any still-pending save
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+    };
+  }, [form]);
+
+  return form;
 }
