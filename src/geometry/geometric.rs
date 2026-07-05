@@ -18,7 +18,6 @@ pub trait Geometric: std::fmt::Debug + Sync + Send {
     fn is_specular(&self) -> bool;
 
     /// Whether this geometric object contains no primitives.
-    /// Defaults to `false` — overridden by compound types like `List`.
     fn is_empty(&self) -> bool;
 
     fn surface_area(&self) -> f64;

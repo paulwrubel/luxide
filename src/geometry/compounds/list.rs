@@ -107,29 +107,55 @@ impl Geometric for List {
     }
 
     fn sample_direction_from(&self, origin: Point) -> Vector3 {
-        let total_area = self.surface_area();
+        let total_area: f64 = self
+            .items
+            .iter()
+            .map(|item| item.surface_area())
+            .filter(|a| a.is_finite() && *a > 0.0)
+            .sum();
         if total_area <= 0.0 {
             return Vector3::random_unit();
         }
         let mut threshold: f64 = rand::random::<f64>() * total_area;
         for item in &self.items {
             let area = item.surface_area();
+            // skip children with infinite or zero area — they can't be importance-sampled
+            if !area.is_finite() || area <= 0.0 {
+                continue;
+            }
             if threshold <= area {
                 return item.sample_direction_from(origin);
             }
             threshold -= area;
         }
-        // fallback (floating-point edge case)
-        self.items.last().unwrap().sample_direction_from(origin)
+        // fallback to last finite-area child, or random unit if none
+        self.items
+            .iter()
+            .rev()
+            .find(|item| {
+                let a = item.surface_area();
+                a.is_finite() && a > 0.0
+            })
+            .map(|item| item.sample_direction_from(origin))
+            .unwrap_or_else(Vector3::random_unit)
     }
 
     fn direction_pdf(&self, origin: Point, dir: Vector3) -> f64 {
-        let total_area = self.surface_area();
+        let total_area: f64 = self
+            .items
+            .iter()
+            .map(|item| item.surface_area())
+            .filter(|a| a.is_finite() && *a > 0.0)
+            .sum();
         if total_area <= 0.0 {
             return 0.0;
         }
         self.items
             .iter()
+            .filter(|item| {
+                let a = item.surface_area();
+                a.is_finite() && a > 0.0
+            })
             .map(|item| (item.surface_area() / total_area) * item.direction_pdf(origin, dir))
             .sum()
     }

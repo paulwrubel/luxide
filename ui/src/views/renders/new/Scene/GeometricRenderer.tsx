@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { getAroundPoint, getGeometricDataSafe } from '@/utils/render/geometric';
 import { toRadians } from '@/utils/render/utils';
 import { createParallelogramGeometry, createTriangleGeometry } from '@/utils/three';
@@ -194,6 +195,42 @@ export function GeometricRenderer(props: GeometricRendererProps) {
               <bufferAttribute attach="attributes-normal" args={[geom.normals, 3]} />
               <bufferAttribute attach="index" args={[geom.indices, 1]} />
             </bufferGeometry>
+            <MaterialResolver config={config} materialName={data.material} />
+          </mesh>
+          {emissiveInfo && (
+            <pointLight
+              color={emissiveInfo.color}
+              intensity={emissiveInfo.intensity}
+              position={getCenterPoint(config, data)}
+              castShadow
+            />
+          )}
+        </>
+      );
+    }
+
+    case 'plane': {
+      const normalVec = new THREE.Vector3(
+        data.normal[0],
+        data.normal[1],
+        data.normal[2],
+      ).normalize();
+      const quat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), normalVec);
+      const rot = new THREE.Euler().setFromQuaternion(quat);
+
+      const emissiveInfo = getEmissiveInfo(config, data.material);
+
+      const extent = 1_000; // arbitrary large value to simulate an infinite plane
+
+      return (
+        <>
+          <mesh
+            position={[data.point[0], data.point[1], data.point[2]]}
+            rotation={[rot.x, rot.y, rot.z]}
+            castShadow={!emissiveInfo}
+            receiveShadow
+          >
+            <planeGeometry args={[extent, extent]} />
             <MaterialResolver config={config} materialName={data.material} />
           </mesh>
           {emissiveInfo && (

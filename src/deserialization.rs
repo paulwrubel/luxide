@@ -230,6 +230,7 @@ fn get_geometric_dependencies(geometric: &GeometricData) -> Vec<String> {
         GeometricData::CompoundAxisAlignedPBox { .. }
         | GeometricData::CompoundModelObj { .. }
         | GeometricData::PrimitiveParallelogram { .. }
+        | GeometricData::PrimitivePlane { .. }
         | GeometricData::PrimitiveSphere { .. }
         | GeometricData::PrimitiveTriangle { .. } => {}
     }

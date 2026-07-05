@@ -143,6 +143,29 @@ export function GeometricFormControls(props: GeometricFormControlsProps) {
           <GeometricMaterialSelect form={form} name={name} items={materialItems} />
         </>
       );
+    case 'plane':
+      return (
+        <>
+          <TextArrayInputControl
+            form={form}
+            fieldName={`geometrics.${name}.point`}
+            label="Point"
+            valueLabels={['x', 'y', 'z']}
+            type="number"
+          />
+          <TextArrayInputControl
+            form={form}
+            fieldName={`geometrics.${name}.normal`}
+            label="Normal"
+            valueLabels={['x', 'y', 'z']}
+            type="number"
+          />
+          <form.AppField name={`geometrics.${name}.is_culled`}>
+            {(field) => <field.ToggleControl label="Double Sided" invert />}
+          </form.AppField>
+          <GeometricMaterialSelect form={form} name={name} items={materialItems} />
+        </>
+      );
     case 'rotate_x':
     case 'rotate_y':
     case 'rotate_z': {
