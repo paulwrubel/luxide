@@ -187,6 +187,48 @@ export function GeometricRenderer(props: GeometricRendererProps) {
       );
     }
 
+    case 'disk': {
+      const innerRadius = data.inner_radius ?? 0;
+
+      // orient the disk using the normal
+      const normalVec = new THREE.Vector3(
+        data.normal[0],
+        data.normal[1],
+        data.normal[2],
+      ).normalize();
+      const quat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), normalVec);
+      const rot = new THREE.Euler().setFromQuaternion(quat);
+
+      const emissiveInfo = getEmissiveInfo(config, data.material);
+
+      return (
+        <>
+          <mesh
+            position={[data.center[0], data.center[1], data.center[2]]}
+            rotation={[rot.x, rot.y, rot.z]}
+            castShadow={!emissiveInfo}
+            receiveShadow
+          >
+            <ringGeometry args={[innerRadius, data.radius, 64]} />
+            <MaterialResolver
+              config={config}
+              materialName={data.material}
+              side={data.is_culled ? THREE.FrontSide : THREE.DoubleSide}
+              shadowSide={data.is_culled ? undefined : THREE.BackSide}
+            />
+          </mesh>
+          {emissiveInfo && (
+            <pointLight
+              color={emissiveInfo.color}
+              intensity={emissiveInfo.intensity}
+              position={getCenterPoint(config, data)}
+              castShadow
+            />
+          )}
+        </>
+      );
+    }
+
     case 'triangle': {
       const geom = createTriangleGeometry(data);
 

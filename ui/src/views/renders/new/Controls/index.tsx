@@ -88,6 +88,11 @@ export function Controls(props: ControlsProps) {
                   description: 'Infinite plane defined by a point and a normal vector.',
                 },
                 {
+                  subtype: 'disk',
+                  label: 'Disk',
+                  description: 'Flat disc defined by center, normal, and radius.',
+                },
+                {
                   subtype: 'list',
                   label: 'List',
                   description: 'A group of geometrics rendered together.',
