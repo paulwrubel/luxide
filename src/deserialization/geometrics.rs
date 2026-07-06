@@ -7,7 +7,7 @@ use crate::{
         Geometric, Vector3,
         compounds::{AxisAlignedPBox, Bvh, List, ModelObj, Virtual},
         instances::{RotateXAxis, RotateYAxis, RotateZAxis, Translate},
-        primitives::{Disk, Parallelogram, Plane, Sphere, Triangle},
+        primitives::{BilinearPatch, Disk, Parallelogram, Plane, Sphere, Triangle},
         volumes,
     },
     utils::{Angle, Around},
@@ -97,6 +97,14 @@ pub enum GeometricData {
         v: [f64; 3],
         #[serde(skip_serializing_if = "Option::is_none")]
         is_culled: Option<bool>,
+        material: MaterialRefOrInline,
+    },
+    #[serde(rename = "bilinear_patch")]
+    PrimitiveBilinearPatch {
+        p00: [f64; 3],
+        p10: [f64; 3],
+        p01: [f64; 3],
+        p11: [f64; 3],
         material: MaterialRefOrInline,
     },
     #[serde(rename = "plane")]
@@ -259,6 +267,23 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
                     (*u).into(),
                     (*v).into(),
                     (*is_culled).unwrap_or(false),
+                    material,
+                )))
+            }
+            Self::PrimitiveBilinearPatch {
+                p00,
+                p10,
+                p01,
+                p11,
+                material,
+            } => {
+                let material = material.build(builts)?;
+
+                Ok(Arc::new(BilinearPatch::new(
+                    (*p00).into(),
+                    (*p10).into(),
+                    (*p01).into(),
+                    (*p11).into(),
                     material,
                 )))
             }

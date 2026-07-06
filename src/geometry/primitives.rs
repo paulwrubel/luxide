@@ -12,3 +12,6 @@ pub use triangle::Triangle;
 
 mod disk;
 pub use disk::Disk;
+
+mod bilinear_patch;
+pub use bilinear_patch::BilinearPatch;

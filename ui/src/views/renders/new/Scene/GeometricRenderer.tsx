@@ -301,6 +301,101 @@ export function GeometricRenderer(props: GeometricRendererProps) {
       );
     }
 
+    case 'bilinear_patch': {
+      const emissiveInfo = getEmissiveInfo(config, data.material);
+
+      // build subdivided bilinear patch mesh (8x8 grid)
+      const divs = 8;
+      const positions: number[] = [];
+      const normals: number[] = [];
+      const indices: number[] = [];
+
+      // helper: evaluate bilinear patch P(u,v)
+      const evalPatch = (u: number, v: number): [number, number, number] => {
+        const w00 = (1 - u) * (1 - v);
+        const w10 = u * (1 - v);
+        const w01 = (1 - u) * v;
+        const w11 = u * v;
+        return [
+          w00 * data.p00[0] + w10 * data.p10[0] + w01 * data.p01[0] + w11 * data.p11[0],
+          w00 * data.p00[1] + w10 * data.p10[1] + w01 * data.p01[1] + w11 * data.p11[1],
+          w00 * data.p00[2] + w10 * data.p10[2] + w01 * data.p01[2] + w11 * data.p11[2],
+        ];
+      };
+
+      // generate vertices and normals (divs+1 x divs+1 grid)
+      for (let j = 0; j <= divs; j++) {
+        const v = j / divs;
+        for (let i = 0; i <= divs; i++) {
+          const u = i / divs;
+          positions.push(...evalPatch(u, v));
+
+          // compute normal from partial derivatives
+          const eps = 0.001;
+          const du_u = Math.min(u + eps, 1.0);
+          const dv_v = Math.min(v + eps, 1.0);
+          const du = evalPatch(du_u, v);
+          const dv = evalPatch(u, dv_v);
+          const p = [
+            positions[positions.length - 3],
+            positions[positions.length - 2],
+            positions[positions.length - 1],
+          ];
+
+          const dp_du = [du[0] - p[0], du[1] - p[1], du[2] - p[2]];
+          const dp_dv = [dv[0] - p[0], dv[1] - p[1], dv[2] - p[2]];
+
+          // cross product dp_du x dp_dv
+          const nx = dp_du[1] * dp_dv[2] - dp_du[2] * dp_dv[1];
+          const ny = dp_du[2] * dp_dv[0] - dp_du[0] * dp_dv[2];
+          const nz = dp_du[0] * dp_dv[1] - dp_du[1] * dp_dv[0];
+          const len = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
+          normals.push(nx / len, ny / len, nz / len);
+        }
+      }
+
+      // generate triangle indices (two per grid cell)
+      for (let j = 0; j < divs; j++) {
+        for (let i = 0; i < divs; i++) {
+          const a = j * (divs + 1) + i;
+          const b = a + 1;
+          const c = a + (divs + 1);
+          const d = c + 1;
+          indices.push(a, b, d);
+          indices.push(a, d, c);
+        }
+      }
+
+      return (
+        <>
+          <mesh rotation={rotation} castShadow={!emissiveInfo} receiveShadow>
+            <bufferGeometry>
+              <bufferAttribute
+                attach="attributes-position"
+                args={[new Float32Array(positions), 3]}
+              />
+              <bufferAttribute attach="attributes-normal" args={[new Float32Array(normals), 3]} />
+              <bufferAttribute attach="index" args={[new Uint16Array(indices), 1]} />
+            </bufferGeometry>
+            <MaterialResolver
+              config={config}
+              materialName={data.material}
+              side={THREE.DoubleSide}
+              shadowSide={THREE.BackSide}
+            />
+          </mesh>
+          {emissiveInfo && (
+            <pointLight
+              color={emissiveInfo.color}
+              intensity={emissiveInfo.intensity}
+              position={getCenterPoint(config, data)}
+              castShadow
+            />
+          )}
+        </>
+      );
+    }
+
     case 'obj_model':
     case 'constant_volume':
       // todo: not yet implemented
