@@ -1,7 +1,10 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector3},
+    geometry::{
+        Aabb, Geometric, Point, Ray, RayHit, Vector3,
+        instances::Translate,
+    },
     utils::{Around, Interval},
 };
 
@@ -51,8 +54,17 @@ impl Scale {
             }
         }
 
+        // Wrap the inner geometric in a Translate so its pivot appears at origin.
+        // Without this, the inner's world-space coordinates would disagree with
+        // the pivot-centered local coordinate system used in intersect/sampling.
+        let shifted = if translation.x != 0.0 || translation.y != 0.0 || translation.z != 0.0 {
+            Arc::new(Translate::new(Arc::clone(&geometric), -translation)) as Arc<dyn Geometric>
+        } else {
+            Arc::clone(&geometric) as Arc<dyn Geometric>
+        };
+
         Ok(Self {
-            geometric: Arc::clone(&geometric),
+            geometric: shifted,
             translation,
             scale,
             inv_scale,
@@ -63,8 +75,9 @@ impl Scale {
 
 impl Geometric for Scale {
     fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit> {
-        // transform ray from world space to local (unscaled) space
-        let local_origin = Point::from_vector3((ray.origin.0 - self.translation) / self.scale);
+        // transform ray from world space to local (unscaled) space.
+        // the inner Translate wrapper already handles the pivot shift.
+        let local_origin = Point::from_vector3(ray.origin.0 / self.scale);
         let local_direction = ray.direction / self.scale;
         let local_ray = Ray::new(local_origin, local_direction, ray.time);
 
@@ -105,13 +118,13 @@ impl Geometric for Scale {
     }
 
     fn sample_direction_from(&self, origin: Point) -> Vector3 {
-        let local_origin = Point::from_vector3((origin.0 - self.translation) / self.scale);
+        let local_origin = Point::from_vector3(origin.0 / self.scale);
         let local_dir = self.geometric.sample_direction_from(local_origin);
         (local_dir * self.scale).unit_vector()
     }
 
     fn direction_pdf(&self, origin: Point, dir: Vector3) -> f64 {
-        let local_origin = Point::from_vector3((origin.0 - self.translation) / self.scale);
+        let local_origin = Point::from_vector3(origin.0 / self.scale);
         let local_dir = (dir / self.scale).unit_vector();
 
         let p_local = self.geometric.direction_pdf(local_origin, local_dir);
