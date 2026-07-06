@@ -1,44 +1,46 @@
-/// A non-uniform scale transform instance.
-///
-/// Scales a geometric object by a non-uniform scale factor along each axis.
-/// Transforms rays to local (unscaled) space for intersection, then maps
-/// hit points and normals back to world space.
 use std::sync::Arc;
 
 use crate::{
     geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector3},
-    utils::Interval,
+    utils::{Around, Interval},
 };
 
 #[derive(Clone, Debug)]
 pub struct Scale {
     geometric: Arc<dyn Geometric>,
+    translation: Vector3,
     scale: Vector3,
     inv_scale: Vector3,
     bounding_box: Aabb,
 }
 
 impl Scale {
-    pub fn new(geometric: Arc<dyn Geometric>, scale: Vector3) -> Result<Self, String> {
+    pub fn new(
+        geometric: Arc<dyn Geometric>,
+        scale: Vector3,
+        around: Around,
+    ) -> Result<Self, String> {
         if scale.x == 0.0 || scale.y == 0.0 || scale.z == 0.0 {
             return Err("scale factors must be non-zero in all axes".to_string());
         }
 
         let inv_scale = Vector3::new(1.0 / scale.x, 1.0 / scale.y, 1.0 / scale.z);
+        let translation = around.point(&geometric).0;
 
-        let bbox = geometric.bounding_box();
+        let geometric_bbox = geometric.bounding_box() - translation;
+
         let mut min_extent = Point::INFINITY;
         let mut max_extent = -Point::INFINITY;
 
         for i in 0..2 {
             for j in 0..2 {
                 for k in 0..2 {
-                    let x = i as f64 * bbox.x_interval.maximum
-                        + (1 - i) as f64 * bbox.x_interval.minimum;
-                    let y = j as f64 * bbox.y_interval.maximum
-                        + (1 - j) as f64 * bbox.y_interval.minimum;
-                    let z = k as f64 * bbox.z_interval.maximum
-                        + (1 - k) as f64 * bbox.z_interval.minimum;
+                    let x = i as f64 * geometric_bbox.x_interval.maximum
+                        + (1 - i) as f64 * geometric_bbox.x_interval.minimum;
+                    let y = j as f64 * geometric_bbox.y_interval.maximum
+                        + (1 - j) as f64 * geometric_bbox.y_interval.minimum;
+                    let z = k as f64 * geometric_bbox.z_interval.maximum
+                        + (1 - k) as f64 * geometric_bbox.z_interval.minimum;
 
                     let corner = Point::new(x, y, z);
                     let scaled_corner = Point::from_vector3(corner.0 * scale);
@@ -51,9 +53,10 @@ impl Scale {
 
         Ok(Self {
             geometric: Arc::clone(&geometric),
+            translation,
             scale,
             inv_scale,
-            bounding_box: Aabb::from_points(&[min_extent, max_extent]),
+            bounding_box: Aabb::from_points(&[min_extent, max_extent]) + translation,
         })
     }
 }
@@ -61,13 +64,13 @@ impl Scale {
 impl Geometric for Scale {
     fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit> {
         // transform ray from world space to local (unscaled) space
-        let local_origin = Point::from_vector3(ray.origin.0 / self.scale);
+        let local_origin = Point::from_vector3((ray.origin.0 - self.translation) / self.scale);
         let local_direction = ray.direction / self.scale;
         let local_ray = Ray::new(local_origin, local_direction, ray.time);
 
         self.geometric.intersect(local_ray, ray_t).map(|mut rh| {
             // transform hit point to world space
-            rh.point.0 *= self.scale;
+            rh.point.0 = rh.point.0 * self.scale + self.translation;
             // transform normal via inverse-transpose
             rh.normal = (rh.normal * self.inv_scale).unit_vector();
             rh
@@ -102,13 +105,13 @@ impl Geometric for Scale {
     }
 
     fn sample_direction_from(&self, origin: Point) -> Vector3 {
-        let local_origin = Point::from_vector3(origin.0 / self.scale);
+        let local_origin = Point::from_vector3((origin.0 - self.translation) / self.scale);
         let local_dir = self.geometric.sample_direction_from(local_origin);
         (local_dir * self.scale).unit_vector()
     }
 
     fn direction_pdf(&self, origin: Point, dir: Vector3) -> f64 {
-        let local_origin = Point::from_vector3(origin.0 / self.scale);
+        let local_origin = Point::from_vector3((origin.0 - self.translation) / self.scale);
         let local_dir = (dir / self.scale).unit_vector();
 
         let p_local = self.geometric.direction_pdf(local_origin, local_dir);

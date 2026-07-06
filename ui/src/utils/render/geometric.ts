@@ -267,10 +267,11 @@ export function getCenterPoint(
     case 'scale': {
       const { data: subData } = getGeometricDataSafe(config, data.geometric);
       const childCenter = getCenterPoint(config, subData);
+      const pivot = getAroundPoint(data.around, config, data.geometric);
       return [
-        childCenter[0] * data.scale[0],
-        childCenter[1] * data.scale[1],
-        childCenter[2] * data.scale[2],
+        pivot[0] + (childCenter[0] - pivot[0]) * data.scale[0],
+        pivot[1] + (childCenter[1] - pivot[1]) * data.scale[1],
+        pivot[2] + (childCenter[2] - pivot[2]) * data.scale[2],
       ];
     }
     case 'translate': {
@@ -424,6 +425,7 @@ export function defaultGeometricForType(
         type: 'scale',
         geometric: '__unit_box',
         scale: [1, 1, 1],
+        around: 'center',
       };
     case 'translate':
       return {
@@ -754,6 +756,7 @@ export const GeometricInstanceScaleSchema = z.object({
   type: z.literal('scale'),
   geometric: z.string().nonempty(),
   scale: z.tuple([nonZeroNumber, nonZeroNumber, nonZeroNumber]),
+  around: AroundSchema,
 });
 
 export type GeometricInstanceScale = NormalizedGeometricInstanceScale;
@@ -793,6 +796,7 @@ export type RawGeometricInstanceScale = {
   type: 'scale';
   geometric: string | RawGeometricData;
   scale: [number, number, number];
+  around: Around;
 };
 
 export const GeometricParallelogramSchema = z.object({

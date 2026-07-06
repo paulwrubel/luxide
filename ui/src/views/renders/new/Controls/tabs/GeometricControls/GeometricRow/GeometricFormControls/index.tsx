@@ -267,6 +267,7 @@ export function GeometricFormControls(props: GeometricFormControlsProps) {
             valueLabels={['x', 'y', 'z']}
             type="number"
           />
+          <AroundVariantControls form={form} geometricName={name} />
         </>
       );
     case 'translate':

@@ -148,12 +148,20 @@ export function GeometricRenderer(props: GeometricRendererProps) {
       );
     }
 
-    case 'scale':
+    case 'scale': {
+      const pivot = getAroundPoint(data.around, config, data.geometric);
       return (
-        <group scale={[data.scale[0], data.scale[1], data.scale[2]]} rotation={rotation}>
-          <GeometricRenderer config={config} name={data.geometric} />
+        <group rotation={rotation}>
+          <group position={pivot}>
+            <group scale={[data.scale[0], data.scale[1], data.scale[2]]}>
+              <group position={[-pivot[0], -pivot[1], -pivot[2]]}>
+                <GeometricRenderer config={config} name={data.geometric} />
+              </group>
+            </group>
+          </group>
         </group>
       );
+    }
 
     case 'translate':
       return (

@@ -89,6 +89,7 @@ pub enum GeometricData {
     InstanceScale {
         geometric: GeometricRefOrInline,
         scale: [f64; 3],
+        around: Around,
     },
     #[serde(rename = "translate")]
     InstanceTranslate {
@@ -253,10 +254,11 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
             Self::InstanceScale {
                 geometric: geometric_ref,
                 scale,
+                around,
             } => {
                 let geometric = geometric_ref.build(builts)?;
 
-                Ok(Arc::new(Scale::new(geometric, (*scale).into())?))
+                Ok(Arc::new(Scale::new(geometric, (*scale).into(), *around)?))
             }
             Self::InstanceTranslate {
                 geometric: geometric_ref,
