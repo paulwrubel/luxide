@@ -17,6 +17,7 @@ export function getTopLevelGeometricNames(config: NormalizedRenderConfig) {
             case 'rotate_x':
             case 'rotate_y':
             case 'rotate_z':
+            case 'scale':
             case 'translate':
             case 'constant_volume':
             case 'virtual':
@@ -117,6 +118,10 @@ export const AroundSchema = z.union([
   z.object({ point: z.tuple([z.number(), z.number(), z.number()]) }),
 ]);
 
+export const nonZeroNumber = z.number().refine((val) => val !== 0, {
+  message: 'Number must be non-zero',
+});
+
 /**
  * fixes dangling references after a geometric, material, or texture is deleted.
  * replaces broken references with default values (__white, __black, __lambertian_white, __unit_box).
@@ -187,6 +192,7 @@ export function fixReferences(config: NormalizedRenderConfig): NormalizedRenderC
       case 'rotate_x':
       case 'rotate_y':
       case 'rotate_z':
+      case 'scale':
       case 'translate':
       case 'constant_volume':
       case 'virtual':
@@ -365,6 +371,7 @@ export function renameGeometric(
       case 'rotate_x':
       case 'rotate_y':
       case 'rotate_z':
+      case 'scale':
       case 'translate':
       case 'constant_volume':
       case 'virtual': {

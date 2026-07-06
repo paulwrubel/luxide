@@ -257,6 +257,18 @@ export function GeometricFormControls(props: GeometricFormControlsProps) {
         </>
       );
     }
+    case 'scale':
+      return (
+        <>
+          <TextArrayInputControl
+            form={form}
+            fieldName={`geometrics.${name}.scale`}
+            label="Scale"
+            valueLabels={['x', 'y', 'z']}
+            type="number"
+          />
+        </>
+      );
     case 'translate':
       return (
         <>

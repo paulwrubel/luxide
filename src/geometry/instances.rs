@@ -9,3 +9,6 @@ pub use rotate_z_axis::RotateZAxis;
 
 mod translate;
 pub use translate::Translate;
+
+mod scale;
+pub use scale::Scale;

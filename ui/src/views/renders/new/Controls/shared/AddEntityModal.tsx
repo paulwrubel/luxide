@@ -12,13 +12,14 @@ import {
 import { HiPlus, HiXMark } from 'react-icons/hi2';
 import type { EntityType, EntitySubType, AddEntityDropdownOption } from './AddEntityDropdown';
 
-export type InstanceType = 'translate' | 'rotate_x' | 'rotate_y' | 'rotate_z';
+export type InstanceType = 'translate' | 'rotate_x' | 'rotate_y' | 'rotate_z' | 'scale';
 
 const INSTANCE_LABELS: Record<InstanceType, string> = {
-  translate: 'Translate',
   rotate_x: 'Rotate X',
   rotate_y: 'Rotate Y',
   rotate_z: 'Rotate Z',
+  scale: 'Scale',
+  translate: 'Translate',
 };
 
 export type AddEntityCreateConfig = {
@@ -142,10 +143,11 @@ export function AddEntityModal<T extends EntityType>(props: AddEntityModalProps<
                   onChange={(e) => setPendingInstanceType(e.target.value as InstanceType)}
                   sizing="sm"
                 >
-                  <option value="translate">Translate</option>
                   <option value="rotate_x">Rotate X</option>
                   <option value="rotate_y">Rotate Y</option>
                   <option value="rotate_z">Rotate Z</option>
+                  <option value="scale">Scale</option>
+                  <option value="translate">Translate</option>
                 </Select>
                 <Button
                   color="light"

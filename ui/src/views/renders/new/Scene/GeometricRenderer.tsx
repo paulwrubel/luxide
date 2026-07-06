@@ -148,6 +148,13 @@ export function GeometricRenderer(props: GeometricRendererProps) {
       );
     }
 
+    case 'scale':
+      return (
+        <group scale={[data.scale[0], data.scale[1], data.scale[2]]} rotation={rotation}>
+          <GeometricRenderer config={config} name={data.geometric} />
+        </group>
+      );
+
     case 'translate':
       return (
         <group position={data.translation}>

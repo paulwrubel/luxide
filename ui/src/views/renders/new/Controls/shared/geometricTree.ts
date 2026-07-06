@@ -14,10 +14,11 @@ export type GeometricDisplayNode = {
 // or an empty array if it has no children (leaf type).
 function getChildGeometricNames(geo: NormalizedGeometricData): string[] {
   switch (geo.type) {
-    case 'translate':
     case 'rotate_x':
     case 'rotate_y':
     case 'rotate_z':
+    case 'scale':
+    case 'translate':
     case 'constant_volume':
     case 'virtual':
       return [geo.geometric];
