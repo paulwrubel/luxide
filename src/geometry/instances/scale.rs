@@ -1,10 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{
-        Aabb, Geometric, Point, Ray, RayHit, Vector3,
-        instances::Translate,
-    },
+    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector3},
     utils::{Around, Interval},
 };
 
@@ -54,37 +51,32 @@ impl Scale {
             }
         }
 
-        // Wrap the inner geometric in a Translate so its pivot appears at origin.
-        // Without this, the inner's world-space coordinates would disagree with
-        // the pivot-centered local coordinate system used in intersect/sampling.
-        let shifted = if translation.x != 0.0 || translation.y != 0.0 || translation.z != 0.0 {
-            Arc::new(Translate::new(Arc::clone(&geometric), -translation)) as Arc<dyn Geometric>
-        } else {
-            Arc::clone(&geometric) as Arc<dyn Geometric>
-        };
+        let bbox_final = Aabb::from_points(&[min_extent, max_extent]) + translation;
 
         Ok(Self {
-            geometric: shifted,
+            geometric: Arc::clone(&geometric),
             translation,
             scale,
             inv_scale,
-            bounding_box: Aabb::from_points(&[min_extent, max_extent]) + translation,
+            bounding_box: bbox_final,
         })
     }
 }
 
 impl Geometric for Scale {
     fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit> {
-        // transform ray from world space to local (unscaled) space.
-        // the inner Translate wrapper already handles the pivot shift.
-        let local_origin = Point::from_vector3(ray.origin.0 / self.scale);
+        // transform ray to pivot-centered scaled local space.
+        // matches RotateYAxis pattern: subtract pivot, apply transform, add pivot back.
+        let local_origin =
+            Point::from_vector3((ray.origin.0 - self.translation) / self.scale + self.translation);
         let local_direction = ray.direction / self.scale;
         let local_ray = Ray::new(local_origin, local_direction, ray.time);
 
-        self.geometric.intersect(local_ray, ray_t).map(|mut rh| {
-            // transform hit point to world space
-            rh.point.0 = rh.point.0 * self.scale + self.translation;
-            // transform normal via inverse-transpose
+        let hit = self.geometric.intersect(local_ray, ray_t);
+        hit.map(|mut rh| {
+            // transform hit back: subtract pivot, scale, add pivot
+            rh.point.0 = (rh.point.0 - self.translation) * self.scale + self.translation;
+            // transform normal via inverse-transpose (translation invariant)
             rh.normal = (rh.normal * self.inv_scale).unit_vector();
             rh
         })
@@ -118,13 +110,15 @@ impl Geometric for Scale {
     }
 
     fn sample_direction_from(&self, origin: Point) -> Vector3 {
-        let local_origin = Point::from_vector3(origin.0 / self.scale);
+        let local_origin =
+            Point::from_vector3((origin.0 - self.translation) / self.scale + self.translation);
         let local_dir = self.geometric.sample_direction_from(local_origin);
         (local_dir * self.scale).unit_vector()
     }
 
     fn direction_pdf(&self, origin: Point, dir: Vector3) -> f64 {
-        let local_origin = Point::from_vector3(origin.0 / self.scale);
+        let local_origin =
+            Point::from_vector3((origin.0 - self.translation) / self.scale + self.translation);
         let local_dir = (dir / self.scale).unit_vector();
 
         let p_local = self.geometric.direction_pdf(local_origin, local_dir);
