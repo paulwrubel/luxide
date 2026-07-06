@@ -89,29 +89,50 @@ impl Sphere {
 impl Geometric for Sphere {
     fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit> {
         let center = self.center(ray.time);
-
-        // solve quadratic equation
         let oc = ray.origin - center;
 
         let a = ray.direction.squared_length();
         let half_b = oc.dot(ray.direction);
-        let c = oc.squared_length() - self.radius * self.radius;
-        let discriminant = half_b * half_b - a * c;
+        let oc_sq = oc.squared_length();
+        let c = oc_sq - self.radius * self.radius;
 
-        // no solutions, so escape early
+        // RTG 2019 Ch. 7: compute (r² - |OC × D̂|²) then scale by a
+        // to obtain the true half-b discriminant without catastrophic
+        // cancellation. Falls back to b'² - a·c for degenerate direction.
+        let discriminant = if a > 1e-12 {
+            let t_ca = half_b / a;
+            let d_sq = oc_sq - t_ca * half_b;
+            (self.radius * self.radius - d_sq) * a
+        } else {
+            half_b * half_b - a * c
+        };
+
         if discriminant < 0.0 {
             return None;
         }
-
-        // find closest root solution within t_min and t_max
         let disc_sqrt = discriminant.sqrt();
-        let mut root = (-half_b - disc_sqrt) / a;
-        if !ray_t.contains_excluding(root) {
-            root = (-half_b + disc_sqrt) / a;
-            if !ray_t.contains_excluding(root) {
-                return None;
-            }
-        }
+
+        // cancellation-safe roots via the half-b q-formulation:
+        // q = -(b' + sign(b')·√(b'² - a·c))
+        let q = if half_b < 0.0 {
+            -(half_b - disc_sqrt)
+        } else {
+            -(half_b + disc_sqrt)
+        };
+        let t0 = q / a;
+        let t1 = c / q;
+
+        // sort so t0 is always the closer intersection
+        let (t0, t1) = if t0 <= t1 { (t0, t1) } else { (t1, t0) };
+
+        // pick the closest valid root in [t_min, t_max]
+        let root = if ray_t.contains_excluding(t0) {
+            t0
+        } else if ray_t.contains_excluding(t1) {
+            t1
+        } else {
+            return None;
+        };
 
         let point = ray.at(root);
         let (u, v) = Self::uv(Point::from_vector3(center.to(point).unit_vector()));
@@ -119,7 +140,7 @@ impl Geometric for Sphere {
         Some(RayHit {
             t: root,
             point,
-            normal: (ray.at(root) - center) / self.radius,
+            normal: (center.to(point)) / self.radius,
             material: Arc::clone(&self.material),
             u,
             v,
