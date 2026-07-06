@@ -93,6 +93,12 @@ export function Controls(props: ControlsProps) {
                   description: 'Flat disc defined by center, normal, and radius.',
                 },
                 {
+                  subtype: 'bilinear_patch',
+                  label: 'Bilinear Patch',
+                  description:
+                    'Doubly-ruled curved surface defined by four corner points - a hyperbolic paraboloid.',
+                },
+                {
                   subtype: 'list',
                   label: 'List',
                   description: 'A group of geometrics rendered together.',

@@ -51,6 +51,8 @@ export function normalizeGeometricData(
       return normalizeGeometricVirtual(config, name, geometricData);
     case 'disk':
       return normalizeGeometricDisk(config, name, geometricData);
+    case 'bilinear_patch':
+      return normalizeGeometricBilinearPatch(config, name, geometricData);
   }
 }
 
@@ -66,7 +68,8 @@ export type NormalizedGeometricData =
   | NormalizedGeometricTriangle
   | NormalizedGeometricConstantVolume
   | NormalizedGeometricVirtual
-  | NormalizedGeometricDisk;
+  | NormalizedGeometricDisk
+  | NormalizedGeometricBilinearPatch;
 
 export type RawGeometricData =
   | RawGeometricBox
@@ -80,7 +83,8 @@ export type RawGeometricData =
   | RawGeometricTriangle
   | RawGeometricConstantVolume
   | RawGeometricVirtual
-  | RawGeometricDisk;
+  | RawGeometricDisk
+  | RawGeometricBilinearPatch;
 
 export function isGeometricData(data: unknown): data is GeometricData {
   return (
@@ -98,6 +102,7 @@ export function isGeometricData(data: unknown): data is GeometricData {
       'sphere',
       'triangle',
       'disk',
+      'bilinear_patch',
       'constant_volume',
       'virtual',
     ].includes(data.type)
@@ -126,6 +131,7 @@ export function getReferencedMaterialNames(
   switch (data.type) {
     case 'box':
     case 'disk':
+    case 'bilinear_patch':
     case 'obj_model':
     case 'parallelogram':
     case 'plane':
@@ -278,6 +284,12 @@ export function getCenterPoint(
       ];
     case 'disk':
       return data.center;
+    case 'bilinear_patch':
+      return [
+        (data.p00[0] + data.p10[0] + data.p01[0] + data.p11[0]) / 4,
+        (data.p00[1] + data.p10[1] + data.p01[1] + data.p11[1]) / 4,
+        (data.p00[2] + data.p10[2] + data.p01[2] + data.p11[2]) / 4,
+      ];
   }
 }
 
@@ -395,9 +407,9 @@ export function defaultGeometricForType(
     case 'parallelogram':
       return {
         type: 'parallelogram',
-        lower_left: [0, 0, 0],
-        u: [0, 0, 0],
-        v: [0, 0, 0],
+        lower_left: [-0.5, -0.5, 0],
+        u: [1, 0, 0],
+        v: [0, 1, 0],
         material: '__lambertian_white',
       };
     case 'plane':
@@ -417,9 +429,9 @@ export function defaultGeometricForType(
     case 'triangle':
       return {
         type: 'triangle',
-        a: [0, 0, 0],
-        b: [0, 0, 0],
-        c: [0, 0, 0],
+        a: [-0.5, -0.5, 0],
+        b: [0.5, -0.5, 0],
+        c: [0, 0.5, 0],
         material: '__lambertian_white',
       };
     case 'constant_volume':
@@ -442,6 +454,15 @@ export function defaultGeometricForType(
         radius: 1,
         inner_radius: 0,
         is_culled: false,
+        material: '__lambertian_white',
+      };
+    case 'bilinear_patch':
+      return {
+        type: 'bilinear_patch',
+        p00: [-0.5, 0, -0.5],
+        p10: [0.5, 0, -0.5],
+        p01: [-0.5, 0, 0.5],
+        p11: [0.5, 0, 0.5],
         material: '__lambertian_white',
       };
   }
@@ -1060,6 +1081,54 @@ export type RawGeometricDisk = {
   material: string | RawMaterialData;
 };
 
+export const GeometricBilinearPatchSchema = z.object({
+  type: z.literal('bilinear_patch'),
+  p00: z.tuple([z.number(), z.number(), z.number()]),
+  p10: z.tuple([z.number(), z.number(), z.number()]),
+  p01: z.tuple([z.number(), z.number(), z.number()]),
+  p11: z.tuple([z.number(), z.number(), z.number()]),
+  material: z.string().nonempty(),
+});
+
+export type GeometricBilinearPatch = NormalizedGeometricBilinearPatch;
+
+export function normalizeGeometricBilinearPatch(
+  config: RenderConfig,
+  name: string,
+  geometricData: RawGeometricBilinearPatch,
+): NormalizedGeometricBilinearPatch {
+  const geometric = geometricData;
+
+  if (typeof geometric.material !== 'string') {
+    if (!config.materials) {
+      config.materials = {};
+    }
+
+    const materialName = getNextUniqueName(config.materials, `${name}_${geometric.material.type}`);
+    config.materials[materialName] = normalizeMaterialData(
+      config,
+      materialName,
+      geometric.material,
+    );
+    geometric.material = materialName;
+  }
+
+  return geometric as NormalizedGeometricBilinearPatch;
+}
+
+export type NormalizedGeometricBilinearPatch = Omit<RawGeometricBilinearPatch, 'material'> & {
+  material: string;
+};
+
+export type RawGeometricBilinearPatch = {
+  type: 'bilinear_patch';
+  p00: [number, number, number];
+  p10: [number, number, number];
+  p01: [number, number, number];
+  p11: [number, number, number];
+  material: string | RawMaterialData;
+};
+
 const geometricSchemaByType: Record<string, z.ZodTypeAny> = {
   box: GeometricBoxSchema,
   list: GeometricListSchema,
@@ -1075,6 +1144,7 @@ const geometricSchemaByType: Record<string, z.ZodTypeAny> = {
   triangle: GeometricTriangleSchema,
   constant_volume: GeometricConstantVolumeSchema,
   virtual: GeometricVirtualSchema,
+  bilinear_patch: GeometricBilinearPatchSchema,
 };
 
 export const GeometricDataSchema = z.any().superRefine((data, ctx) => {
@@ -1115,6 +1185,7 @@ export function wrapGeometric(
 
   const typeLabels: Record<string, string> = {
     box: 'Box',
+    bilinear_patch: 'Bilinear Patch',
     sphere: 'Sphere',
     triangle: 'Triangle',
     parallelogram: 'Parallelogram',

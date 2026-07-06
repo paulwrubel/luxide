@@ -21,3 +21,6 @@ pub use time::*;
 
 mod units;
 pub use units::*;
+
+mod quadratic;
+pub use quadratic::{solve_quadratic, QuadraticRoots, QuadraticRootsIter};

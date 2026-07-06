@@ -203,6 +203,40 @@ export function GeometricFormControls(props: GeometricFormControlsProps) {
           <GeometricMaterialSelect form={form} name={name} items={materialItems} />
         </>
       );
+    case 'bilinear_patch':
+      return (
+        <>
+          <TextArrayInputControl
+            form={form}
+            fieldName={`geometrics.${name}.p00`}
+            label="P00 (corner 0,0)"
+            valueLabels={['x', 'y', 'z']}
+            type="number"
+          />
+          <TextArrayInputControl
+            form={form}
+            fieldName={`geometrics.${name}.p10`}
+            label="P10 (corner 1,0)"
+            valueLabels={['x', 'y', 'z']}
+            type="number"
+          />
+          <TextArrayInputControl
+            form={form}
+            fieldName={`geometrics.${name}.p01`}
+            label="P01 (corner 0,1)"
+            valueLabels={['x', 'y', 'z']}
+            type="number"
+          />
+          <TextArrayInputControl
+            form={form}
+            fieldName={`geometrics.${name}.p11`}
+            label="P11 (corner 1,1)"
+            valueLabels={['x', 'y', 'z']}
+            type="number"
+          />
+          <GeometricMaterialSelect form={form} name={name} items={materialItems} />
+        </>
+      );
     case 'rotate_x':
     case 'rotate_y':
     case 'rotate_z': {
