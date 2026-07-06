@@ -218,6 +218,7 @@ fn get_geometric_dependencies(geometric: &GeometricData) -> Vec<String> {
         GeometricData::InstanceRotateXAxis { geometric, .. }
         | GeometricData::InstanceRotateYAxis { geometric, .. }
         | GeometricData::InstanceRotateZAxis { geometric, .. }
+        | GeometricData::InstanceScale { geometric, .. }
         | GeometricData::InstanceTranslate { geometric, .. }
         | GeometricData::VolumeConstant { geometric, .. }
         | GeometricData::Virtual { geometric, .. } => match geometric {

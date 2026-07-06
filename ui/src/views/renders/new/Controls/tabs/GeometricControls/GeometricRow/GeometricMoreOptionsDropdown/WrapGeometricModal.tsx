@@ -10,13 +10,14 @@ import {
 } from 'flowbite-react';
 import { HiPlus, HiXMark } from 'react-icons/hi2';
 
-export type InstanceType = 'translate' | 'rotate_x' | 'rotate_y' | 'rotate_z';
+export type InstanceType = 'translate' | 'rotate_x' | 'rotate_y' | 'rotate_z' | 'scale';
 
 const INSTANCE_LABELS: Record<InstanceType, string> = {
-  translate: 'Translate',
   rotate_x: 'Rotate X',
   rotate_y: 'Rotate Y',
   rotate_z: 'Rotate Z',
+  scale: 'Scale',
+  translate: 'Translate',
 };
 
 export type WrapGeometricConfig = {
@@ -105,10 +106,11 @@ export function WrapGeometricModal(props: WrapGeometricModalProps) {
               }}
               sizing="sm"
             >
-              <option value="translate">Translate</option>
               <option value="rotate_x">Rotate X</option>
               <option value="rotate_y">Rotate Y</option>
               <option value="rotate_z">Rotate Z</option>
+              <option value="scale">Scale</option>
+              <option value="translate">Translate</option>
             </Select>
             <Button
               color="light"

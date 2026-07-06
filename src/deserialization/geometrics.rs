@@ -6,7 +6,7 @@ use crate::{
     geometry::{
         Geometric, Vector3,
         compounds::{AxisAlignedPBox, Bvh, List, ModelObj, Virtual},
-        instances::{RotateXAxis, RotateYAxis, RotateZAxis, Translate},
+        instances::{RotateXAxis, RotateYAxis, RotateZAxis, Scale, Translate},
         primitives::{BilinearPatch, Disk, Parallelogram, Plane, Sphere, Triangle},
         volumes,
     },
@@ -83,6 +83,12 @@ pub enum GeometricData {
         geometric: GeometricRefOrInline,
         #[serde(flatten)]
         angle: Angle,
+        around: Around,
+    },
+    #[serde(rename = "scale")]
+    InstanceScale {
+        geometric: GeometricRefOrInline,
+        scale: [f64; 3],
         around: Around,
     },
     #[serde(rename = "translate")]
@@ -244,6 +250,15 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
                 let geometric = geometric_ref.build(builts)?;
 
                 Ok(Arc::new(RotateZAxis::new(geometric, *angle, *around)))
+            }
+            Self::InstanceScale {
+                geometric: geometric_ref,
+                scale,
+                around,
+            } => {
+                let geometric = geometric_ref.build(builts)?;
+
+                Ok(Arc::new(Scale::new(geometric, (*scale).into(), *around)?))
             }
             Self::InstanceTranslate {
                 geometric: geometric_ref,

@@ -253,10 +253,23 @@ export function GeometricFormControls(props: GeometricFormControlsProps) {
               />
             )}
           </form.AppField>
-          <AroundVariantControls form={form} geometricName={name} />
+          <AroundVariantControls form={form} geometricName={name} pivotLabel="Rotation Point" />
         </>
       );
     }
+    case 'scale':
+      return (
+        <>
+          <TextArrayInputControl
+            form={form}
+            fieldName={`geometrics.${name}.scale`}
+            label="Scale"
+            valueLabels={['x', 'y', 'z']}
+            type="number"
+          />
+          <AroundVariantControls form={form} geometricName={name} pivotLabel="Scale Point" />
+        </>
+      );
     case 'translate':
       return (
         <>

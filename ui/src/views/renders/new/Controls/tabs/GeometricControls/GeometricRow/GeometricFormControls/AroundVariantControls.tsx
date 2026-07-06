@@ -8,10 +8,11 @@ import { AnimatedSeparator } from '@/components/AnimatedSeparator';
 export type AroundVariantControlsProps = {
   form: RenderForm;
   geometricName: string;
+  pivotLabel: string;
 };
 
 export function AroundVariantControls(props: AroundVariantControlsProps) {
-  const { form, geometricName } = props;
+  const { form, geometricName, pivotLabel } = props;
 
   return (
     <form.AppField name={`geometrics.${geometricName}.around`}>
@@ -22,7 +23,7 @@ export function AroundVariantControls(props: AroundVariantControlsProps) {
           <>
             <AnimatedSeparator visible={isPoint} />
             <field.SelectControl
-              label="Rotation Point"
+              label={pivotLabel}
               items={[
                 { label: 'Geometric Center', value: 'center' },
                 { label: 'World Origin', value: 'origin' },
@@ -54,7 +55,7 @@ export function AroundVariantControls(props: AroundVariantControlsProps) {
                 <TextArrayInputControl
                   form={form}
                   fieldName={`geometrics.${geometricName}.around.point`}
-                  label="Custom Rotation Point"
+                  label={`Custom ${pivotLabel}`}
                   valueLabels={['x', 'y', 'z']}
                   type="number"
                 />

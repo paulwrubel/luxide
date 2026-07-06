@@ -8,6 +8,7 @@ import {
   isAroundCenter,
   isAroundOrigin,
   isTypedObject,
+  nonZeroNumber,
   toRadians,
   type Angle,
   type Around,
@@ -35,6 +36,8 @@ export function normalizeGeometricData(
       return normalizeGeometricInstanceRotate(config, name, geometricData);
     case 'rotate_z':
       return normalizeGeometricInstanceRotate(config, name, geometricData);
+    case 'scale':
+      return normalizeGeometricInstanceScale(config, name, geometricData);
     case 'translate':
       return normalizeGeometricInstanceTranslate(config, name, geometricData);
     case 'parallelogram':
@@ -61,6 +64,7 @@ export type NormalizedGeometricData =
   | NormalizedGeometricList
   | NormalizedGeometricObjModel
   | NormalizedGeometricInstanceRotate
+  | NormalizedGeometricInstanceScale
   | NormalizedGeometricInstanceTranslate
   | NormalizedGeometricParallelogram
   | NormalizedGeometricPlane
@@ -76,6 +80,7 @@ export type RawGeometricData =
   | RawGeometricList
   | RawGeometricObjModel
   | RawGeometricInstanceRotate
+  | RawGeometricInstanceScale
   | RawGeometricInstanceTranslate
   | RawGeometricParallelogram
   | RawGeometricPlane
@@ -96,6 +101,7 @@ export function isGeometricData(data: unknown): data is GeometricData {
       'rotate_x',
       'rotate_y',
       'rotate_z',
+      'scale',
       'translate',
       'parallelogram',
       'plane',
@@ -111,12 +117,17 @@ export function isGeometricData(data: unknown): data is GeometricData {
 
 export function isComposite(
   data: GeometricData,
-): data is GeometricList | GeometricInstanceRotate | GeometricInstanceTranslate {
+): data is
+  | GeometricList
+  | GeometricInstanceRotate
+  | GeometricInstanceScale
+  | GeometricInstanceTranslate {
   return (
     data.type === 'list' ||
     data.type === 'rotate_x' ||
     data.type === 'rotate_y' ||
     data.type === 'rotate_z' ||
+    data.type === 'scale' ||
     data.type === 'translate' ||
     data.type === 'virtual'
   );
@@ -149,6 +160,7 @@ export function getReferencedMaterialNames(
     case 'rotate_x':
     case 'rotate_y':
     case 'rotate_z':
+    case 'scale':
     case 'translate':
     case 'constant_volume':
     case 'virtual':
@@ -252,10 +264,15 @@ export function getCenterPoint(
       const pivot = getAroundPoint(data.around, config, data.geometric);
       return rotatePoint(childCenter, data.type, angleRad, pivot);
     }
-    case 'constant_volume':
-    case 'virtual': {
+    case 'scale': {
       const { data: subData } = getGeometricDataSafe(config, data.geometric);
-      return getCenterPoint(config, subData);
+      const childCenter = getCenterPoint(config, subData);
+      const pivot = getAroundPoint(data.around, config, data.geometric);
+      return [
+        pivot[0] + (childCenter[0] - pivot[0]) * data.scale[0],
+        pivot[1] + (childCenter[1] - pivot[1]) * data.scale[1],
+        pivot[2] + (childCenter[2] - pivot[2]) * data.scale[2],
+      ];
     }
     case 'translate': {
       const { data: subData } = getGeometricDataSafe(config, data.geometric);
@@ -290,6 +307,11 @@ export function getCenterPoint(
         (data.p00[1] + data.p10[1] + data.p01[1] + data.p11[1]) / 4,
         (data.p00[2] + data.p10[2] + data.p01[2] + data.p11[2]) / 4,
       ];
+    case 'constant_volume':
+    case 'virtual': {
+      const { data: subData } = getGeometricDataSafe(config, data.geometric);
+      return getCenterPoint(config, subData);
+    }
   }
 }
 
@@ -396,6 +418,13 @@ export function defaultGeometricForType(
         type: 'rotate_z',
         geometric: '__unit_box',
         degrees: 0,
+        around: 'center',
+      };
+    case 'scale':
+      return {
+        type: 'scale',
+        geometric: '__unit_box',
+        scale: [1, 1, 1],
         around: 'center',
       };
     case 'translate':
@@ -721,6 +750,53 @@ export type RawGeometricInstanceTranslate = {
   type: 'translate';
   geometric: string | RawGeometricData;
   translation: [number, number, number];
+};
+
+export const GeometricInstanceScaleSchema = z.object({
+  type: z.literal('scale'),
+  geometric: z.string().nonempty(),
+  scale: z.tuple([nonZeroNumber, nonZeroNumber, nonZeroNumber]),
+  around: AroundSchema,
+});
+
+export type GeometricInstanceScale = NormalizedGeometricInstanceScale;
+
+export function normalizeGeometricInstanceScale(
+  config: RenderConfig,
+  name: string,
+  geometricData: RawGeometricInstanceScale,
+): NormalizedGeometricInstanceScale {
+  const geometric = geometricData;
+
+  if (typeof geometric.geometric !== 'string') {
+    if (!config.geometrics) {
+      config.geometrics = {};
+    }
+
+    const geometricName = getNextUniqueName(
+      config.geometrics,
+      `${name}_${geometric.geometric.type}`,
+    );
+    config.geometrics[geometricName] = normalizeGeometricData(
+      config,
+      geometricName,
+      geometric.geometric,
+    );
+    geometric.geometric = geometricName;
+  }
+
+  return geometric as NormalizedGeometricInstanceScale;
+}
+
+export type NormalizedGeometricInstanceScale = Omit<RawGeometricInstanceScale, 'geometric'> & {
+  geometric: string;
+};
+
+export type RawGeometricInstanceScale = {
+  type: 'scale';
+  geometric: string | RawGeometricData;
+  scale: [number, number, number];
+  around: Around;
 };
 
 export const GeometricParallelogramSchema = z.object({
@@ -1136,6 +1212,7 @@ const geometricSchemaByType: Record<string, z.ZodTypeAny> = {
   rotate_x: GeometricInstanceRotateXSchema,
   rotate_y: GeometricInstanceRotateYSchema,
   rotate_z: GeometricInstanceRotateZSchema,
+  scale: GeometricInstanceScaleSchema,
   translate: GeometricInstanceTranslateSchema,
   parallelogram: GeometricParallelogramSchema,
   disk: GeometricDiskSchema,
@@ -1176,7 +1253,14 @@ export const GeometricDataSchema = z.any().superRefine((data, ctx) => {
 export function wrapGeometric(
   config: NormalizedRenderConfig,
   geometricName: string,
-  wrapperType: 'translate' | 'rotate_x' | 'rotate_y' | 'rotate_z' | 'constant_volume' | 'virtual',
+  wrapperType:
+    | 'rotate_x'
+    | 'rotate_y'
+    | 'rotate_z'
+    | 'scale'
+    | 'translate'
+    | 'constant_volume'
+    | 'virtual',
 ): { config: NormalizedRenderConfig; wrapperName: string } {
   const geometrics = config.geometrics;
   if (!geometrics || !(geometricName in geometrics)) {
@@ -1195,6 +1279,7 @@ export function wrapGeometric(
     rotate_x: 'Rotate X',
     rotate_y: 'Rotate Y',
     rotate_z: 'Rotate Z',
+    scale: 'Scale',
     translate: 'Translate',
     constant_volume: 'Constant Volume',
     virtual: 'Virtual',
@@ -1215,6 +1300,7 @@ export function wrapGeometric(
       case 'rotate_x':
       case 'rotate_y':
       case 'rotate_z':
+      case 'scale':
       case 'translate':
       case 'constant_volume':
       case 'virtual': {

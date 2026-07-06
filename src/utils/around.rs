@@ -31,7 +31,7 @@ impl Around {
 /// Upgrades legacy `around` values in a `serde_json::Value` tree so
 /// they match the current `Around` serde format.
 ///
-/// For any object with `"type": "rotate_x" | "rotate_y" | "rotate_z"`:
+/// For any object with `"type": "rotate_x" | "rotate_y" | "rotate_z" | "scale"`:
 /// - Bare array `[x, y, z]` → wraps as `{"point": [x, y, z]}`
 /// - Missing `"around"` key → inserts `"around": "origin"`
 /// - Already a string or object → left unchanged
@@ -42,20 +42,18 @@ pub fn upgrade_legacy_around(value: &mut serde_json::Value) {
         serde_json::Value::Object(map) => {
             // only act on rotation geometrics
             if let Some(serde_json::Value::String(type_str)) = map.get("type")
-                && matches!(type_str.as_str(), "rotate_x" | "rotate_y" | "rotate_z")
+                && matches!(
+                    type_str.as_str(),
+                    "rotate_x" | "rotate_y" | "rotate_z" | "scale"
+                )
             {
                 match map.get("around") {
                     // bare array → wrap in {"point": [...]}
                     Some(serde_json::Value::Array(arr)) => {
                         let mut point_obj = serde_json::Map::new();
-                        point_obj.insert(
-                            "point".to_string(),
-                            serde_json::Value::Array(arr.clone()),
-                        );
-                        map.insert(
-                            "around".to_string(),
-                            serde_json::Value::Object(point_obj),
-                        );
+                        point_obj
+                            .insert("point".to_string(), serde_json::Value::Array(arr.clone()));
+                        map.insert("around".to_string(), serde_json::Value::Object(point_obj));
                     }
                     // missing → insert "origin"
                     None => {

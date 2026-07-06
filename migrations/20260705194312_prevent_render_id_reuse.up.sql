@@ -6,7 +6,7 @@ ALTER TABLE renders ADD COLUMN deleted_at TIMESTAMPTZ;
 -- Create sequence for auto-increment IDs that never reuse old IDs
 -- Start after the current max ID to avoid conflicts with existing rows
 CREATE SEQUENCE renders_id_seq;
-SELECT setval('renders_id_seq', COALESCE((SELECT MAX(id) FROM renders), 0));
+SELECT setval('renders_id_seq', COALESCE((SELECT MAX(id) FROM renders), 1));
 
 -- Update the render_states view to exclude soft-deleted renders
 CREATE OR REPLACE VIEW render_states AS
