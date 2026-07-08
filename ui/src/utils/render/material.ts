@@ -188,6 +188,11 @@ function normalizeMaterialDielectric(
     material.emittance_texture = textureName;
   }
 
+  // strip null from medium_data — the backend serializes None as null
+  if (material.medium_data === null) {
+    material.medium_data = undefined;
+  }
+
   return material as unknown as NormalizedMaterialDielectric;
 }
 

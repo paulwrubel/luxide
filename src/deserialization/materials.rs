@@ -70,6 +70,7 @@ pub enum MaterialData {
         reflectance_texture: TextureRefOrInline,
         emittance_texture: TextureRefOrInline,
         index_of_refraction: f64,
+        #[serde(skip_serializing_if = "Option::is_none")]
         medium_data: Option<MediumData>,
     },
     Lambertian {

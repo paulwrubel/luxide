@@ -232,12 +232,13 @@ impl Dielectric {
                     ray.current_medium,
                 ));
                 let t_total = 1.0 - r_total[i];
-                // no volume means no absorption. An infinitely thin sheet
-                //
-                // The Medium::Vacuum transmittance is always 1.0, so this is a no-op.
-                // It's left here only so it's VERY CLEAR what's happening.
-                let tint_i = Medium::Vacuum.transmittance_at(hw[i]);
-                reflectance[i] = t_total * tint_i;
+                // Thin sheets have no interior — the reflectance texture
+                // IS the material's color. Apply to transmission as well.
+                let tint = self
+                    .reflectance_texture
+                    .value(ray_hit.u, ray_hit.v, ray_hit.point)
+                    .sample_wavelength(hw[i]);
+                reflectance[i] = t_total * tint;
             }
         }
 
