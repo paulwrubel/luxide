@@ -28,17 +28,29 @@ export function MaterialResolver(props: MaterialResolverProps) {
       const ior = materialData.index_of_refraction || 1.5;
       switch (reflectanceTexture.type) {
         case 'color': {
+          const mediumData = materialData.medium_data;
+          const hasHomogeneousMedium = mediumData?.type === 'homogeneous';
           return (
             <MeshTransmissionMaterial
               attach="material"
               color={reflectanceTexture.color}
-              thickness={0.5}
+              thickness={mediumData ? 0.5 : 0}
               transmission={1.0}
               ior={ior}
               roughness={0}
               side={side}
               shadowSide={shadowSide}
-              {...(emissiveColor ? { emissive: emissiveColor } : {})}
+              {...(hasHomogeneousMedium
+                ? {
+                    attenuationColor: mediumData.transmittance,
+                    attenuationDistance: mediumData.attenuation_distance,
+                    emissive:
+                      mediumData.emittance.reduce((a, b) => a + b, 0) > 0
+                        ? mediumData.emittance
+                        : undefined,
+                  }
+                : {})}
+              {...(!hasHomogeneousMedium && emissiveColor ? { emissive: emissiveColor } : {})}
             />
           );
         }
@@ -47,15 +59,28 @@ export function MaterialResolver(props: MaterialResolverProps) {
           console.warn(
             `${reflectanceTexture.type} texture not yet supported for dielectric material`,
           );
+          const mediumData = materialData.medium_data;
+          const hasHomogeneousMedium = mediumData?.type === 'homogeneous';
           return (
             <MeshTransmissionMaterial
               attach="material"
               color={[1, 1, 1]}
+              thickness={mediumData ? 0.5 : 0}
               transmission={1.0}
               ior={ior}
               roughness={0}
               side={side}
               shadowSide={shadowSide}
+              {...(hasHomogeneousMedium
+                ? {
+                    attenuationColor: mediumData.transmittance,
+                    attenuationDistance: mediumData.attenuation_distance,
+                    emissive:
+                      mediumData.emittance.reduce((a, b) => a + b, 0) > 0
+                        ? mediumData.emittance
+                        : undefined,
+                  }
+                : {})}
             />
           );
         }

@@ -12,7 +12,7 @@ use luxide::{
         volumes,
     },
     shading::{
-        ColorRgb, ColorSpectrum, Texture,
+        ColorRgb, ColorSpectrum, Medium, Texture,
         materials::{Dielectric, Lambertian, Material, Specular},
         textures::{Checker, Image8Bit, Noise, SolidColor},
     },
@@ -167,6 +167,7 @@ fn final_scene() -> Scene {
         Arc::clone(&solid_white),
         Arc::clone(&solid_black),
         1.5,
+        Some(Medium::Vacuum),      // interior_medium (volumetric, clear)
     ));
     let specular_frosted_metal: Arc<dyn Material> = Arc::new(Specular::new(
         Arc::clone(&solid_light_grey_frosted_metal),
@@ -750,6 +751,7 @@ fn earth() -> Scene {
         Arc::clone(&solid_white),
         Arc::clone(&solid_black),
         1.5,
+        Some(Medium::Vacuum),      // interior_medium (volumetric, clear)
     ));
 
     // Primitives
@@ -875,6 +877,7 @@ fn random_spheres() -> Scene {
         Arc::clone(&solid_white),
         Arc::clone(&solid_black),
         1.5,
+        Some(Medium::Vacuum),      // interior_medium (volumetric, clear)
     ));
     let lambertian_brown: Arc<dyn Material> = Arc::new(Lambertian::new(
         Arc::clone(&solid_brown),
@@ -942,6 +945,7 @@ fn random_spheres() -> Scene {
                         Arc::clone(&albedo),
                         Arc::clone(&solid_black),
                         1.5,
+                        Some(Medium::Vacuum),      // interior_medium (volumetric, clear)
                     ));
                     world_list.push(Arc::new(Sphere::new(center, 0.2, dielectric)));
                 }

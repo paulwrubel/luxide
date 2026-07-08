@@ -15,8 +15,9 @@ function loadRenderDraft(): NormalizedRenderConfig | undefined {
     }
 
     const parsed = JSON.parse(raw);
-    const { data, success } = RenderConfigSchema.safeParse(parsed);
+    const { data, success, error } = RenderConfigSchema.safeParse(parsed);
     if (!success) {
+      console.warn('Render draft validation failed, falling back to default config', error);
       return undefined;
     }
     return data;

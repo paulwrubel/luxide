@@ -3,6 +3,25 @@ import { normalizeTextureData, type RawTextureData } from './texture';
 import { getNextUniqueName, isTypedObject } from './utils';
 import { z } from 'zod';
 
+export type MediumData =
+  | { type: 'vacuum' }
+  | {
+      type: 'homogeneous';
+      attenuation_distance: number;
+      transmittance: [number, number, number];
+      emittance: [number, number, number];
+    };
+
+const MediumDataSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('vacuum') }),
+  z.object({
+    type: z.literal('homogeneous'),
+    attenuation_distance: z.number().positive(),
+    transmittance: z.tuple([z.number(), z.number(), z.number()]),
+    emittance: z.tuple([z.number(), z.number(), z.number()]),
+  }),
+]);
+
 export type MaterialData = NormalizedMaterialData;
 
 export function normalizeMaterialData(
@@ -100,6 +119,7 @@ export function defaultMaterialForType(type: MaterialData['type']): MaterialData
         reflectance_texture: '__white',
         emittance_texture: '__black',
         index_of_refraction: 1.5,
+        medium_data: { type: 'vacuum' },
       };
     case 'lambertian':
       return {
@@ -122,6 +142,7 @@ export const MaterialDielectricSchema = z.object({
   reflectance_texture: z.string().nonempty(),
   emittance_texture: z.string().nonempty(),
   index_of_refraction: z.number().min(0),
+  medium_data: MediumDataSchema.optional(),
 });
 
 export type MaterialDielectric = NormalizedMaterialDielectric;
@@ -167,7 +188,12 @@ function normalizeMaterialDielectric(
     material.emittance_texture = textureName;
   }
 
-  return material as NormalizedMaterialDielectric;
+  // strip null from medium_data — the backend serializes None as null
+  if (material.medium_data === null) {
+    material.medium_data = undefined;
+  }
+
+  return material as unknown as NormalizedMaterialDielectric;
 }
 
 export type NormalizedMaterialDielectric = Omit<
@@ -176,6 +202,7 @@ export type NormalizedMaterialDielectric = Omit<
 > & {
   reflectance_texture: string;
   emittance_texture: string;
+  medium_data?: MediumData;
 };
 
 export type RawMaterialDielectric = {
@@ -183,6 +210,7 @@ export type RawMaterialDielectric = {
   reflectance_texture: string | RawTextureData;
   emittance_texture: string | RawTextureData;
   index_of_refraction: number;
+  medium_data?: MediumData;
 };
 
 export const MaterialLambertianSchema = z.object({

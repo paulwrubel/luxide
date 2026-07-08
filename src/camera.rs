@@ -9,6 +9,7 @@ use crate::{
         color_spectrum::SPECTRAL_SAMPLE_COUNT,
         hero_wavelengths::HERO_WAVELENGTH_COUNT,
         materials::{ScatterRecord, SpectralScatter},
+        medium::Medium,
         pdf::Pdf,
     },
     tracing::{BouncesConfig, ImportanceSamplingConfig, RenderParameters, Scene, SceneWorld},
@@ -177,6 +178,7 @@ impl Camera {
         hw: &HeroWavelengths<N>,
         scene_world: &SceneWorld,
         mut bounces: u32,
+        mut medium_stack: Vec<Medium>,
     ) -> Vector<N> {
         let mut rng = rand::rng();
 
@@ -189,6 +191,17 @@ impl Camera {
             .world
             .intersect(ray, Interval::new(0.001, f64::INFINITY))
         {
+            // volume emission: accumulate glow from the medium segment
+            // before attenuating throughput. Uses coupled Kirchhoff model:
+            // emitted = L_e * (1 - Tr).
+            let distance = ray_hit.t;
+            let emission = ray.current_medium.emission(hw, distance);
+            accumulated += attenuation * emission;
+
+            // apply Beer-Lambert attenuation for the distance traveled
+            // through the current medium (vacuum returns Vector::ONE = no-op)
+            attenuation *= ray.current_medium.transmittance(hw, distance);
+
             // emissive contribution at each hero wavelength
             let emittance = ray_hit
                 .material
@@ -221,20 +234,41 @@ impl Camera {
                 return accumulated;
             };
 
+            let entering = ray.direction.dot(ray_hit.normal) < 0.0;
+
             let outgoing_direction = (-ray.direction).unit_vector();
 
             match srec {
                 ScatterRecord::Spectral(ss) => {
                     let SpectralScatter { rays, reflectance } = *ss;
-                    // dispersive dielectric — trace each hero wavelength independently
+                    // dispersive dielectric — trace each hero wavelength independently,
+                    // managing the medium stack for entering/exiting transitions.
                     for i in 0..N {
-                        if let Some(refracted) = rays[i] {
+                        if let Some(mut refracted_or_reflected_ray) = rays[i] {
+                            let refracted =
+                                ray.direction.dot(refracted_or_reflected_ray.direction) > 0.0;
+
+                            // if we're transitioning between materials, we are experiencing a change in medium.
+                            if refracted {
+                                if entering {
+                                    // for the case of entering a new medium, the ray will already have the correct medium
+                                    // attached, from the material.
+                                    //
+                                    // all we need to do is make sure we keep track of the medium
+                                    // that we're moving out of, so that we can restore it when we exit.
+                                    medium_stack.push(ray.current_medium);
+                                } else {
+                                    let outer_medium = medium_stack.pop().unwrap_or(Medium::Vacuum);
+                                    refracted_or_reflected_ray.current_medium = outer_medium;
+                                }
+                            }
                             let single_hw = HeroWavelengths::new([hw[i]; 1]);
                             let contrib = self.trace_spectral::<1>(
-                                refracted,
+                                refracted_or_reflected_ray,
                                 &single_hw,
                                 scene_world,
                                 bounces + 1,
+                                medium_stack.clone(),
                             );
                             accumulated[i] += attenuation[i] * reflectance[i] * contrib[0];
                         }
@@ -289,7 +323,12 @@ impl Camera {
                         attenuation *= brdf_val.sample(hw) * (cos_theta / pdf_val);
                     }
 
-                    ray = Ray::new(ray_hit.point, incident_direction, ray.time);
+                    ray = Ray::new_with_medium(
+                        ray_hit.point,
+                        incident_direction,
+                        ray.time,
+                        ray.current_medium,
+                    );
                 }
             }
 
@@ -315,7 +354,8 @@ impl Camera {
 
     pub fn ray_color(&self, ray: Ray, scene_world: &SceneWorld) -> ColorRgb {
         let hw = HeroWavelengths::<HERO_WAVELENGTH_COUNT>::new_distributed();
-        let accumulated = self.trace_spectral::<HERO_WAVELENGTH_COUNT>(ray, &hw, scene_world, 0);
+        let accumulated =
+            self.trace_spectral::<HERO_WAVELENGTH_COUNT>(ray, &hw, scene_world, 0, Vec::new());
         hw.to_color_rgb(accumulated)
     }
 }

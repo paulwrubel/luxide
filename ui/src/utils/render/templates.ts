@@ -225,6 +225,7 @@ export function getCornellBoxGlassSpheresRenderConfig(): NormalizedRenderConfig 
         reflectance_texture: 'White',
         emittance_texture: 'Black',
         index_of_refraction: 1.5,
+        medium_data: { type: 'vacuum' },
       },
       ...base.materials,
     },

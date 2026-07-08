@@ -8,6 +8,7 @@ import { WarningIconOrphanGeometric } from '../../shared/icons/WarningIconOrphan
 import { InfoIconDefaultResource } from '../../shared/icons/InfoIconDefaultResource';
 import { DuplicateDropdown } from '../../shared/DuplicateDropdown';
 import { duplicateMaterial } from '@/utils/render/utils';
+import { MediumControls } from './MediumControls';
 
 export type MaterialRowProps = {
   form: RenderForm;
@@ -92,6 +93,7 @@ export function MaterialRow(props: MaterialRowProps) {
                 <field.RangeControl label="Index of Refraction" min={1.0} max={10.0} step={0.01} />
               )}
             </form.AppField>
+            <MediumControls form={form} materialName={name} />
             <TextureSelects name={name} />
           </>
         );
