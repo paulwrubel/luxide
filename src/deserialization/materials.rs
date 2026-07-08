@@ -2,7 +2,10 @@ use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 
-use crate::shading::materials::{Dielectric, Lambertian, Material, Specular};
+use crate::shading::{
+    ColorRgb, ColorSpectrum, Medium,
+    materials::{Dielectric, Lambertian, Material, Specular},
+};
 
 use super::{Build, Builts, textures::TextureRefOrInline};
 
@@ -25,6 +28,41 @@ impl Build<Arc<dyn Material>> for MaterialRefOrInline {
     }
 }
 
+/// Serializable representation of an interior medium.
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum MediumData {
+    /// Transparent interior — no absorption or emission.
+    Vacuum,
+    /// Homogeneous absorbing and emitting medium.
+    Homogeneous {
+        attenuation_distance: f64,
+        transmittance: [f64; 3],
+        emittance: [f64; 3],
+    },
+}
+
+impl From<MediumData> for Medium {
+    fn from(data: MediumData) -> Self {
+        match data {
+            MediumData::Vacuum => Medium::Vacuum,
+            MediumData::Homogeneous {
+                attenuation_distance,
+                transmittance,
+                emittance,
+            } => {
+                let transmittance = ColorSpectrum::from(ColorRgb::from(transmittance));
+                let emittance = ColorSpectrum::from(ColorRgb::from(emittance));
+                Medium::Homogeneous {
+                    attenuation_distance,
+                    transmittance,
+                    emittance,
+                }
+            }
+        }
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "type", deny_unknown_fields)]
 pub enum MaterialData {
@@ -32,6 +70,7 @@ pub enum MaterialData {
         reflectance_texture: TextureRefOrInline,
         emittance_texture: TextureRefOrInline,
         index_of_refraction: f64,
+        medium_data: Option<MediumData>,
     },
     Lambertian {
         reflectance_texture: TextureRefOrInline,
@@ -51,14 +90,29 @@ impl Build<Arc<dyn Material>> for MaterialData {
                 reflectance_texture,
                 emittance_texture,
                 index_of_refraction,
+                medium_data,
             } => {
                 let reflectance_texture = reflectance_texture.build(builts)?;
                 let emittance_texture = emittance_texture.build(builts)?;
+
+                if let Some(MediumData::Homogeneous {
+                    attenuation_distance,
+                    ..
+                }) = medium_data
+                    && *attenuation_distance <= 0.0
+                {
+                    return Err(format!(
+                        "attenuation_distance must be positive, got {attenuation_distance}",
+                    ));
+                }
+
+                let medium = medium_data.clone().map(Medium::from);
 
                 Ok(Arc::new(Dielectric::new(
                     reflectance_texture,
                     emittance_texture,
                     *index_of_refraction,
+                    medium,
                 )))
             }
             Self::Lambertian {

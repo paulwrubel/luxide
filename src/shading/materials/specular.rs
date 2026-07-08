@@ -71,10 +71,11 @@ impl Material for Specular {
     ) -> Option<ScatterRecord> {
         let reflected = ray.direction.unit_vector().reflect_around(ray_hit.normal);
 
-        let scattered = Ray::new(
+        let scattered = Ray::new_with_medium(
             ray_hit.point,
             reflected + self.roughness * Vector3::random_unit(),
             ray.time,
+            ray.current_medium,
         );
 
         if scattered.direction.dot(ray_hit.normal) > 0.0 {

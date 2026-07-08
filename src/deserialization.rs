@@ -25,7 +25,7 @@ mod geometrics;
 use self::geometrics::GeometricData;
 
 mod materials;
-use self::materials::MaterialData;
+use self::materials::{MaterialData, MediumData};
 
 mod textures;
 use self::textures::TextureData;
@@ -436,16 +436,19 @@ fn get_builtin_materials() -> IndexMap<String, MaterialData> {
             reflectance_texture: texture_fn("white"),
             emittance_texture: texture_fn("black"),
             index_of_refraction: 1.52,
+            medium_data: Some(MediumData::Vacuum),
         },
         prefix_builtin_key("dielectric_water") => MaterialData::Dielectric {
             reflectance_texture: texture_fn("white"),
             emittance_texture: texture_fn("black"),
             index_of_refraction: 1.333,
+            medium_data: Some(MediumData::Vacuum),
         },
         prefix_builtin_key("dielectric_diamond") => MaterialData::Dielectric {
             reflectance_texture: texture_fn("white"),
             emittance_texture: texture_fn("black"),
             index_of_refraction: 2.417,
+            medium_data: Some(MediumData::Vacuum),
         },
 
         // cornell box materials

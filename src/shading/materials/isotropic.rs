@@ -52,7 +52,12 @@ impl Material for Isotropic {
     ) -> Option<ScatterRecord> {
         // always scatter, and always scatter in a random direction
         Some(ScatterRecord::Delta {
-            scattered: Ray::new(ray_hit.point, Vector3::random_unit(), ray.time),
+            scattered: Ray::new_with_medium(
+                ray_hit.point,
+                Vector3::random_unit(),
+                ray.time,
+                ray.current_medium,
+            ),
         })
     }
 

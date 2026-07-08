@@ -66,20 +66,20 @@ impl Scale {
 impl Geometric for Scale {
     fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit> {
         // transform ray to pivot-centered scaled local space.
-        // matches RotateYAxis pattern: subtract pivot, apply transform, add pivot back.
-        let local_origin =
+        // subtract pivot, apply transform, add pivot back.
+        let mut local_ray = ray;
+        local_ray.origin =
             Point::from_vector3((ray.origin.0 - self.translation) / self.scale + self.translation);
-        let local_direction = ray.direction / self.scale;
-        let local_ray = Ray::new(local_origin, local_direction, ray.time);
+        local_ray.direction = ray.direction / self.scale;
 
-        let hit = self.geometric.intersect(local_ray, ray_t);
-        hit.map(|mut rh| {
-            // transform hit back: subtract pivot, scale, add pivot
-            rh.point.0 = (rh.point.0 - self.translation) * self.scale + self.translation;
-            // transform normal via inverse-transpose (translation invariant)
-            rh.normal = (rh.normal * self.inv_scale).unit_vector();
-            rh
-        })
+        let mut rayhit = self.geometric.intersect(local_ray, ray_t)?;
+
+        // transform hit back: subtract pivot, scale, add pivot
+        rayhit.point.0 = (rayhit.point.0 - self.translation) * self.scale + self.translation;
+        // transform normal via inverse-transpose (translation invariant)
+        rayhit.normal = (rayhit.normal * self.inv_scale).unit_vector();
+
+        Some(rayhit)
     }
 
     fn surface_area(&self) -> f64 {

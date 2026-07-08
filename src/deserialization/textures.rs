@@ -3,7 +3,7 @@ use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 
 use crate::shading::{
-    Texture,
+    ColorRgb, Texture,
     textures::{Checker, Image8Bit, SolidColor},
 };
 
@@ -65,9 +65,7 @@ impl Build<Arc<dyn Texture>> for TextureData {
 
                 Ok(Arc::new(image_texture))
             }
-            Self::SolidColor { color } => {
-                Ok(Arc::new(SolidColor::from_rgb(color[0], color[1], color[2])))
-            }
+            Self::SolidColor { color } => Ok(Arc::new(SolidColor::from(ColorRgb::from(*color)))),
         }
     }
 }
