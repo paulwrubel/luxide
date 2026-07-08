@@ -119,7 +119,7 @@ export function defaultMaterialForType(type: MaterialData['type']): MaterialData
         reflectance_texture: '__white',
         emittance_texture: '__black',
         index_of_refraction: 1.5,
-        medium: { type: 'vacuum' },
+        medium_data: { type: 'vacuum' },
       };
     case 'lambertian':
       return {
@@ -142,7 +142,7 @@ export const MaterialDielectricSchema = z.object({
   reflectance_texture: z.string().nonempty(),
   emittance_texture: z.string().nonempty(),
   index_of_refraction: z.number().min(0),
-  medium: MediumDataSchema.optional(),
+  medium_data: MediumDataSchema.optional(),
 });
 
 export type MaterialDielectric = NormalizedMaterialDielectric;
@@ -197,7 +197,7 @@ export type NormalizedMaterialDielectric = Omit<
 > & {
   reflectance_texture: string;
   emittance_texture: string;
-  medium?: MediumData;
+  medium_data?: MediumData;
 };
 
 export type RawMaterialDielectric = {
@@ -205,7 +205,7 @@ export type RawMaterialDielectric = {
   reflectance_texture: string | RawTextureData;
   emittance_texture: string | RawTextureData;
   index_of_refraction: number;
-  medium?: MediumData;
+  medium_data?: MediumData;
 };
 
 export const MaterialLambertianSchema = z.object({
