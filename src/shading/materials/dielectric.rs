@@ -198,14 +198,14 @@ impl Dielectric {
         let mut rays: [Option<Ray>; HERO_WAVELENGTH_COUNT] = std::array::from_fn(|_| None);
         let mut reflectance = Vector::<HERO_WAVELENGTH_COUNT>::ZERO;
 
-        let outgoing = (-ray.direction).unit_vector();
-
         // single direction decision: reflect or transmit straight through.
         // This matches the Mitsuba thindielectric / PBRT thin-dielectric
         // behavior — one decision for all wavelengths.
         if rand::random::<f64>() < avg_r {
             // reflect: both faces contribute via the analytic sum
-            let reflected = outgoing.reflect_around(ray_hit.normal);
+            let reflected = (-ray.direction)
+                .unit_vector()
+                .reflect_around(ray_hit.normal);
             for i in 0..HERO_WAVELENGTH_COUNT {
                 rays[i] = Some(Ray::new_with_medium(
                     ray_hit.point,
@@ -227,7 +227,7 @@ impl Dielectric {
             for i in 0..HERO_WAVELENGTH_COUNT {
                 rays[i] = Some(Ray::new_with_medium(
                     ray_hit.point,
-                    outgoing,
+                    ray.direction.unit_vector(),
                     ray.time,
                     ray.current_medium,
                 ));
