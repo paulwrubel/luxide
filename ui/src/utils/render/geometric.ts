@@ -56,6 +56,8 @@ export function normalizeGeometricData(
       return normalizeGeometricDisk(config, name, geometricData);
     case 'bilinear_patch':
       return normalizeGeometricBilinearPatch(config, name, geometricData);
+    case 'cylinder':
+      return normalizeGeometricCylinder(config, name, geometricData);
   }
 }
 
@@ -73,7 +75,8 @@ export type NormalizedGeometricData =
   | NormalizedGeometricConstantVolume
   | NormalizedGeometricVirtual
   | NormalizedGeometricDisk
-  | NormalizedGeometricBilinearPatch;
+  | NormalizedGeometricBilinearPatch
+  | NormalizedGeometricCylinder;
 
 export type RawGeometricData =
   | RawGeometricBox
@@ -89,7 +92,8 @@ export type RawGeometricData =
   | RawGeometricConstantVolume
   | RawGeometricVirtual
   | RawGeometricDisk
-  | RawGeometricBilinearPatch;
+  | RawGeometricBilinearPatch
+  | RawGeometricCylinder;
 
 export function isGeometricData(data: unknown): data is GeometricData {
   return (
@@ -109,6 +113,7 @@ export function isGeometricData(data: unknown): data is GeometricData {
       'triangle',
       'disk',
       'bilinear_patch',
+      'cylinder',
       'constant_volume',
       'virtual',
     ].includes(data.type)
@@ -141,6 +146,7 @@ export function getReferencedMaterialNames(
   const materials: string[] = [];
   switch (data.type) {
     case 'box':
+    case 'cylinder':
     case 'disk':
     case 'bilinear_patch':
     case 'obj_model':
@@ -301,6 +307,12 @@ export function getCenterPoint(
       ];
     case 'disk':
       return data.center;
+    case 'cylinder':
+      return [
+        (data.a[0] + data.b[0]) / 2,
+        (data.a[1] + data.b[1]) / 2,
+        (data.a[2] + data.b[2]) / 2,
+      ];
     case 'bilinear_patch':
       return [
         (data.p00[0] + data.p10[0] + data.p01[0] + data.p11[0]) / 4,
@@ -492,6 +504,16 @@ export function defaultGeometricForType(
         p10: [0.5, 0, -0.5],
         p01: [-0.5, 0, 0.5],
         p11: [0.5, 0, 0.5],
+        material: '__lambertian_white',
+      };
+    case 'cylinder':
+      return {
+        type: 'cylinder',
+        a: [0, 0, 0],
+        a_end: 'capped',
+        b: [0, 1, 0],
+        b_end: 'capped',
+        radius: 1,
         material: '__lambertian_white',
       };
   }
@@ -1205,6 +1227,70 @@ export type RawGeometricBilinearPatch = {
   material: string | RawMaterialData;
 };
 
+const CylinderEndSchema = z.enum(['capped', 'open', 'infinite']);
+
+export const GeometricCylinderSchema = z
+  .object({
+    type: z.literal('cylinder'),
+    a: z.tuple([z.number(), z.number(), z.number()]),
+    a_end: CylinderEndSchema,
+    b: z.tuple([z.number(), z.number(), z.number()]),
+    b_end: CylinderEndSchema,
+    radius: z.number().positive(),
+    material: z.string().nonempty(),
+  })
+  .refine(
+    (data) => {
+      const dx = data.b[0] - data.a[0];
+      const dy = data.b[1] - data.a[1];
+      const dz = data.b[2] - data.a[2];
+      return dx * dx + dy * dy + dz * dz > 1e-12;
+    },
+    {
+      message: 'Points a and b must be different',
+    },
+  );
+
+export type GeometricCylinder = NormalizedGeometricCylinder;
+
+export function normalizeGeometricCylinder(
+  config: RenderConfig,
+  name: string,
+  geometricData: RawGeometricCylinder,
+): NormalizedGeometricCylinder {
+  const geometric = geometricData;
+
+  if (typeof geometric.material !== 'string') {
+    if (!config.materials) {
+      config.materials = {};
+    }
+
+    const materialName = getNextUniqueName(config.materials, `${name}_${geometric.material.type}`);
+    config.materials[materialName] = normalizeMaterialData(
+      config,
+      materialName,
+      geometric.material,
+    );
+    geometric.material = materialName;
+  }
+
+  return geometric as NormalizedGeometricCylinder;
+}
+
+export type NormalizedGeometricCylinder = Omit<RawGeometricCylinder, 'material'> & {
+  material: string;
+};
+
+export type RawGeometricCylinder = {
+  type: 'cylinder';
+  a: [number, number, number];
+  a_end: 'capped' | 'open' | 'infinite';
+  b: [number, number, number];
+  b_end: 'capped' | 'open' | 'infinite';
+  radius: number;
+  material: string | RawMaterialData;
+};
+
 const geometricSchemaByType: Record<string, z.ZodTypeAny> = {
   box: GeometricBoxSchema,
   list: GeometricListSchema,
@@ -1222,6 +1308,7 @@ const geometricSchemaByType: Record<string, z.ZodTypeAny> = {
   constant_volume: GeometricConstantVolumeSchema,
   virtual: GeometricVirtualSchema,
   bilinear_patch: GeometricBilinearPatchSchema,
+  cylinder: GeometricCylinderSchema,
 };
 
 export const GeometricDataSchema = z.any().superRefine((data, ctx) => {
@@ -1270,6 +1357,7 @@ export function wrapGeometric(
   const typeLabels: Record<string, string> = {
     box: 'Box',
     bilinear_patch: 'Bilinear Patch',
+    cylinder: 'Cylinder',
     sphere: 'Sphere',
     triangle: 'Triangle',
     parallelogram: 'Parallelogram',

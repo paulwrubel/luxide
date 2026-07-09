@@ -203,6 +203,57 @@ export function GeometricFormControls(props: GeometricFormControlsProps) {
           <GeometricMaterialSelect form={form} name={name} items={materialItems} />
         </>
       );
+    case 'cylinder':
+      return (
+        <>
+          <TextArrayInputControl
+            form={form}
+            fieldName={`geometrics.${name}.a`}
+            label="Endpoint A"
+            valueLabels={['x', 'y', 'z']}
+            type="number"
+          />
+          <form.AppField name={`geometrics.${name}.a_end`}>
+            {(field) => (
+              <field.SelectControl
+                label="End A"
+                items={[
+                  { label: 'Capped', value: 'capped' },
+                  { label: 'Open', value: 'open' },
+                  { label: 'Infinite', value: 'infinite' },
+                ]}
+              />
+            )}
+          </form.AppField>
+          <TextArrayInputControl
+            form={form}
+            fieldName={`geometrics.${name}.b`}
+            label="Endpoint B"
+            valueLabels={['x', 'y', 'z']}
+            type="number"
+          />
+          <form.AppField name={`geometrics.${name}.b_end`}>
+            {(field) => (
+              <field.SelectControl
+                label="End B"
+                items={[
+                  { label: 'Capped', value: 'capped' },
+                  { label: 'Open', value: 'open' },
+                  { label: 'Infinite', value: 'infinite' },
+                ]}
+              />
+            )}
+          </form.AppField>
+          <TextInputControl
+            form={form}
+            fieldName={`geometrics.${name}.radius`}
+            label="Radius"
+            valueLabel="radius"
+            type="number"
+          />
+          <GeometricMaterialSelect form={form} name={name} items={materialItems} />
+        </>
+      );
     case 'bilinear_patch':
       return (
         <>

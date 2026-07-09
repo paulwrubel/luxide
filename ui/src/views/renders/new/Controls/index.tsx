@@ -99,6 +99,12 @@ export function Controls(props: ControlsProps) {
                     'Doubly-ruled curved surface defined by four corner points - a hyperbolic paraboloid.',
                 },
                 {
+                  subtype: 'cylinder',
+                  label: 'Cylinder',
+                  description:
+                    'Cylinder aligned to Z axis with optional finite bounds, caps, and angular sector.',
+                },
+                {
                   subtype: 'list',
                   label: 'List',
                   description: 'A group of geometrics rendered together.',
