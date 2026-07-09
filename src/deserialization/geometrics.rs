@@ -7,7 +7,9 @@ use crate::{
         Geometric, Vector3,
         compounds::{AxisAlignedPBox, Bvh, List, ModelObj, Virtual},
         instances::{RotateXAxis, RotateYAxis, RotateZAxis, Scale, Translate},
-        primitives::{BilinearPatch, Disk, Parallelogram, Plane, Sphere, Triangle},
+        primitives::{
+            BilinearPatch, Cylinder, CylinderEnd, Disk, Parallelogram, Plane, Sphere, Triangle,
+        },
         volumes,
     },
     utils::{Angle, Around},
@@ -151,6 +153,15 @@ pub enum GeometricData {
         inner_radius: Option<f64>,
         #[serde(skip_serializing_if = "Option::is_none")]
         is_culled: Option<bool>,
+        material: MaterialRefOrInline,
+    },
+    #[serde(rename = "cylinder")]
+    PrimitiveCylinder {
+        a: [f64; 3],
+        a_end: CylinderEnd,
+        b: [f64; 3],
+        b_end: CylinderEnd,
+        radius: f64,
         material: MaterialRefOrInline,
     },
     #[serde(rename = "constant_volume")]
@@ -372,6 +383,25 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
                     *radius,
                     (*inner_radius).unwrap_or(0.0),
                     (*is_culled).unwrap_or(false),
+                    material,
+                )?))
+            }
+            Self::PrimitiveCylinder {
+                a,
+                a_end,
+                b,
+                b_end,
+                radius,
+                material,
+            } => {
+                let material = material.build(builts)?;
+
+                Ok(Arc::new(Cylinder::new(
+                    (*a).into(),
+                    *a_end,
+                    (*b).into(),
+                    *b_end,
+                    *radius,
                     material,
                 )?))
             }

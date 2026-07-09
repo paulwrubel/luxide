@@ -235,6 +235,7 @@ fn get_geometric_dependencies(geometric: &GeometricData) -> Vec<String> {
         | GeometricData::PrimitivePlane { .. }
         | GeometricData::PrimitiveSphere { .. }
         | GeometricData::PrimitiveBilinearPatch { .. }
+        | GeometricData::PrimitiveCylinder { .. }
         | GeometricData::PrimitiveTriangle { .. } => {}
     }
     deps

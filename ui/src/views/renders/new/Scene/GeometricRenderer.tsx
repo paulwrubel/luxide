@@ -244,6 +244,77 @@ export function GeometricRenderer(props: GeometricRendererProps) {
       );
     }
 
+    case 'cylinder': {
+      const aVec = new THREE.Vector3(data.a[0], data.a[1], data.a[2]);
+      const bVec = new THREE.Vector3(data.b[0], data.b[1], data.b[2]);
+      const axis = bVec.clone().sub(aVec).normalize();
+      const height = aVec.distanceTo(bVec);
+      const aInfinite = data.a_end === 'infinite';
+      const bInfinite = data.b_end === 'infinite';
+
+      let displayHeight: number;
+      let center: THREE.Vector3;
+
+      const infiniteProxyLength = 10_000;
+
+      if (aInfinite && bInfinite) {
+        // both infinite — center at midpoint, large proxy height
+        displayHeight = infiniteProxyLength;
+        center = aVec.clone().add(bVec).multiplyScalar(0.5);
+      } else if (aInfinite) {
+        // a is infinite, b is finite — extend from b toward a
+        displayHeight = infiniteProxyLength;
+        center = bVec.clone().addScaledVector(axis, -displayHeight / 2);
+      } else if (bInfinite) {
+        // b is infinite, a is finite — extend from a toward b
+        displayHeight = infiniteProxyLength;
+        center = aVec.clone().addScaledVector(axis, displayHeight / 2);
+      } else {
+        // both finite — use actual height and midpoint
+        displayHeight = height;
+        center = aVec.clone().add(bVec).multiplyScalar(0.5);
+      }
+
+      const isInfinite = aInfinite || bInfinite;
+
+      const quat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), axis);
+      const rot = new THREE.Euler().setFromQuaternion(quat);
+
+      // three.js CylinderGeometry uses a single openEnded boolean for both ends,
+      // so the preview approximates: if either end isn't capped, both lack caps.
+      const openEnded = data.a_end !== 'capped' || data.b_end !== 'capped';
+
+      const emissiveInfo = getEmissiveInfo(config, data.material);
+
+      return (
+        <>
+          <mesh
+            position={[center.x, center.y, center.z]}
+            rotation={[rot.x, rot.y, rot.z]}
+            frustumCulled={!isInfinite}
+            castShadow={!emissiveInfo}
+            receiveShadow
+          >
+            <cylinderGeometry args={[data.radius, data.radius, displayHeight, 64, 1, openEnded]} />
+            <MaterialResolver
+              config={config}
+              materialName={data.material}
+              side={THREE.DoubleSide}
+              shadowSide={THREE.BackSide}
+            />
+          </mesh>
+          {emissiveInfo && (
+            <pointLight
+              color={emissiveInfo.color}
+              intensity={emissiveInfo.intensity}
+              position={[center.x, center.y, center.z]}
+              castShadow
+            />
+          )}
+        </>
+      );
+    }
+
     case 'triangle': {
       const geom = createTriangleGeometry(data);
 

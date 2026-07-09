@@ -294,7 +294,7 @@ impl Camera {
 
                     let (incident_direction, index_of_strategy) = pdf.sample();
 
-                    let cos_theta = ray_hit.normal.dot(incident_direction).max(0.0);
+                    let cos_theta = ray_hit.normal.dot(incident_direction).abs();
                     let brdf_val = ray_hit.material.brdf(
                         outgoing_direction,
                         incident_direction,

@@ -15,3 +15,7 @@ pub use disk::Disk;
 
 mod bilinear_patch;
 pub use bilinear_patch::BilinearPatch;
+
+mod cylinder;
+pub use cylinder::Cylinder;
+pub use cylinder::CylinderEnd;

@@ -65,13 +65,16 @@ impl Material for Lambertian {
 
     fn scatter(
         &self,
-        _ray: Ray,
+        ray: Ray,
         ray_hit: &RayHit,
         _hw: &HeroWavelengths<HERO_WAVELENGTH_COUNT>,
     ) -> Option<ScatterRecord> {
-        Some(ScatterRecord::Pdf(Pdf::CosineHemisphere(Onb::from_w(
-            ray_hit.normal,
-        ))))
+        let ns = if ray.direction.dot(ray_hit.normal) > 0.0 {
+            -ray_hit.normal
+        } else {
+            ray_hit.normal
+        };
+        Some(ScatterRecord::Pdf(Pdf::CosineHemisphere(Onb::from_w(ns))))
     }
 
     fn brdf(
