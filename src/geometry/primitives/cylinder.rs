@@ -31,12 +31,11 @@ pub enum CylinderEnd {
 pub struct Cylinder {
     a: Point,
     a_end: CylinderEnd,
-    b: Point,
     b_end: CylinderEnd,
     radius: f64,
     material: Arc<dyn Material>,
+
     // precomputed
-    axis: Vector3,
     height: f64,
     onb: Onb,
     bounding_box: Aabb,
@@ -132,11 +131,9 @@ impl Cylinder {
         Ok(Self {
             a,
             a_end,
-            b,
             b_end,
             radius,
             material,
-            axis,
             height,
             onb,
             bounding_box,
@@ -222,13 +219,11 @@ impl Geometric for Cylinder {
         }
 
         // cap intersections
-        for cap in [&self.a_cap, &self.b_cap] {
-            if let Some(disk) = cap {
-                if let Some(disk_hit) = disk.intersect(ray, ray_t) {
-                    if hit.is_none() || disk_hit.t < hit.as_ref().unwrap().t {
-                        hit = Some(disk_hit);
-                    }
-                }
+        for disk in [&self.a_cap, &self.b_cap].into_iter().flatten() {
+            if let Some(disk_hit) = disk.intersect(ray, ray_t)
+                && (hit.is_none() || disk_hit.t < hit.as_ref().unwrap().t)
+            {
+                hit = Some(disk_hit);
             }
         }
 
