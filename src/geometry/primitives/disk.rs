@@ -137,17 +137,10 @@ impl Geometric for Disk {
         let d = d_sq.sqrt();
         let v = (self.radius - d) / (self.radius - self.inner_radius);
 
-        // invert the normal if we are not culled and the ray hits the back side
-        let local_normal = if !self.is_culled && denominator > 0.0 {
-            -self.normal
-        } else {
-            self.normal
-        };
-
         Some(RayHit {
             t,
             point: hit_point,
-            normal: local_normal,
+            normal: self.normal,
             material: Arc::clone(&self.material),
             u,
             v,
@@ -287,7 +280,7 @@ mod tests {
         assert!(opt_hit.is_some());
         let hit = opt_hit.unwrap();
 
-        assert_eq!(hit.normal, Vector3::new(0.0, 0.0, -1.0));
+        assert_eq!(hit.normal, Vector3::new(0.0, 0.0, 1.0));
         assert_eq!(hit.point, Point::new(0.0, 0.0, 0.0));
         assert_eq!(hit.t, 1.0);
     }

@@ -74,13 +74,6 @@ impl Geometric for Plane {
 
         let hit_point = ray.at(t);
 
-        // invert the normal if we are not culled and the ray hits the back side
-        let local_normal = if !self.is_culled && denominator > 0.0 {
-            -self.normal
-        } else {
-            self.normal
-        };
-
         // unbounded UV coordinates — plane extends infinitely
         let u = (hit_point - self.point).dot(self.onb.u);
         let v = (hit_point - self.point).dot(self.onb.v);
@@ -88,7 +81,7 @@ impl Geometric for Plane {
         Some(RayHit {
             t,
             point: hit_point,
-            normal: local_normal,
+            normal: self.normal,
             material: Arc::clone(&self.material),
             u,
             v,

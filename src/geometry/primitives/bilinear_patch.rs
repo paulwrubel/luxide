@@ -152,13 +152,7 @@ impl Geometric for BilinearPatch {
             // compute normal from partial derivatives at (u, v)
             let dp_du = (1.0 - v) * self.e00_10 + v * self.e01_11;
             let dp_dv = (1.0 - u) * self.e00_01 + u * self.e10_11;
-            let mut normal = dp_du.cross(dp_dv).unit_vector();
-
-            // always face the incoming ray (always double-sided)
-            let dot_ray_normal = ray.direction.dot(normal);
-            if dot_ray_normal > 0.0 {
-                normal = -normal;
-            }
+            let normal = dp_du.cross(dp_dv).unit_vector();
 
             // evaluate hit point via the bilinear function for numerical consistency
             let point = self.point_at(u, v);

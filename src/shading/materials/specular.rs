@@ -78,7 +78,14 @@ impl Material for Specular {
             ray.current_medium,
         );
 
-        if scattered.direction.dot(ray_hit.normal) > 0.0 {
+        // validate the roughened ray stays on the reflection side
+        let ns = if ray.direction.dot(ray_hit.normal) > 0.0 {
+            -ray_hit.normal
+        } else {
+            ray_hit.normal
+        };
+
+        if scattered.direction.dot(ns) > 0.0 {
             Some(ScatterRecord::Delta { scattered })
         } else {
             None

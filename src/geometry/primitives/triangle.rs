@@ -129,13 +129,6 @@ impl Triangle {
         // find normal for the specific point on the triangle we hit
         let local_normal = self.normal_at(barycentric_alpha, barycentric_beta, barycentric_gamma);
 
-        // invert the normal if we are are not culled and the ray hits the back side
-        let local_normal = if !self.is_culled && determinant < 0.0 {
-            -local_normal
-        } else {
-            local_normal
-        };
-
         Some(RayHit {
             t,
             point: ray.at(t),
