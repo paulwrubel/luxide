@@ -1,7 +1,7 @@
 import { Tooltip } from 'flowbite-react';
 import { HiInformationCircle } from 'react-icons/hi2';
 
-export function InfoIconDefaultResource() {
+export function InfoIconDefaultEntity() {
   return (
     <Tooltip
       content={

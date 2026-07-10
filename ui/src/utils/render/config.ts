@@ -41,7 +41,7 @@ export const RenderConfigSchema = z.object({
 
 export type RenderConfig = RawRenderConfig | NormalizedRenderConfig;
 
-function removeDefaultResources(config: NormalizedRenderConfig): void {
+function removeDefaultEntities(config: NormalizedRenderConfig): void {
   const isNotDefault = (name: string) => !name.startsWith('__');
   config.scenes = filterRecord(config.scenes, isNotDefault);
   config.cameras = filterRecord(config.cameras, isNotDefault);
@@ -95,8 +95,8 @@ export function normalizeRenderConfig(config: RenderConfig): NormalizedRenderCon
     normalizeTextureData(renderConfig, textureName, texture);
   }
 
-  // pass 3: remove default fallback resources
-  removeDefaultResources(renderConfig as NormalizedRenderConfig);
+  // pass 3: remove default fallback entities
+  removeDefaultEntities(renderConfig as NormalizedRenderConfig);
 
   return renderConfig as NormalizedRenderConfig;
 }

@@ -3,7 +3,7 @@ import { Button, ModalHeader, ModalBody, ModalFooter, Spinner, Alert } from 'flo
 import { HiArrowLeft } from 'react-icons/hi2';
 import { useRendersQuery } from '@/hooks/useRenders';
 import { normalizeRenderConfig, type NormalizedRenderConfig } from '@/utils/render/config';
-import { withDefaultResources } from '@/utils/render/templates';
+import { withDefaultEntities } from '@/utils/render/templates';
 import {
   isRenderStateCreated,
   isRenderStateRunning,
@@ -49,9 +49,9 @@ export function ExistingRenderPicker(props: ExistingRenderPickerProps) {
   const handleUseConfig = () => {
     if (!selectedRender) return;
     const normalizedConfig = normalizeRenderConfig(selectedRender.config);
-    const configWithDefaults = withDefaultResources(normalizedConfig);
+    const configWithDefaults = withDefaultEntities(normalizedConfig);
 
-    // ensure default resources are present so new materials referencing __white/__black work correctly
+    // ensure default entities are present so new materials referencing __white/__black work correctly
     onSelect(configWithDefaults);
   };
 

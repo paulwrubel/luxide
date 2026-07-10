@@ -6,7 +6,7 @@ import { useSelector } from '@tanstack/react-store';
 import { AccordionRow } from '../../../shared/AccordionRow';
 import { GeometricFormControls } from './GeometricFormControls';
 import { WarningIconOrphanGeometric } from '../../../shared/icons/WarningIconOrphanGeometric';
-import { InfoIconDefaultResource } from '../../../shared/icons/InfoIconDefaultResource';
+import { InfoIconDefaultEntity } from '../../../shared/icons/InfoIconDefaultEntity';
 import { GeometricMoreOptionsDropdown } from './GeometricMoreOptionsDropdown';
 
 export type GeometricRowProps = {
@@ -25,7 +25,7 @@ export function GeometricRow(props: GeometricRowProps) {
   const afterLabel = (
     <>
       {!isUsedByActiveScene && <WarningIconOrphanGeometric />}
-      {isDefault && <InfoIconDefaultResource />}
+      {isDefault && <InfoIconDefaultEntity />}
     </>
   );
 

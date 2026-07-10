@@ -3,7 +3,7 @@ import { Button, ModalHeader, ModalBody, ModalFooter } from 'flowbite-react';
 import { HiFolderOpen } from 'react-icons/hi2';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
 import { RenderConfigSchema, normalizeRenderConfig } from '@/utils/render/config';
-import { withDefaultResources } from '@/utils/render/templates';
+import { withDefaultEntities } from '@/utils/render/templates';
 import { RenderConfigEditor } from './RenderConfigEditor';
 
 export type ImportConfigBodyProps = {
@@ -42,8 +42,8 @@ export function ImportConfigBody(props: ImportConfigBodyProps) {
       const parsed = JSON.parse(jsonText);
       const normalized = normalizeRenderConfig(parsed);
 
-      // ensure default resources are present so new materials referencing __white/__black work correctly
-      const configWithDefaults = withDefaultResources(normalized);
+      // ensure default entities are present so new materials referencing __white/__black work correctly
+      const configWithDefaults = withDefaultEntities(normalized);
 
       const result = RenderConfigSchema.safeParse(configWithDefaults);
       if (!result.success) {
