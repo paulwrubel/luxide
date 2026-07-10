@@ -45,16 +45,16 @@ Luxide renders images via Monte Carlo path tracing — simulating how light boun
 ### Scene composition
 
 - **BVH** (Bounding Volume Hierarchy) — SAH-like construction, O(log n) intersection
-- **Named resource references** — define materials, textures, geometrics, and cameras once, reference them by name anywhere
+- **Named entity references** — define materials, textures, geometrics, and cameras once, reference them by name anywhere
 - **Transforms** — translate, rotate around X/Y/Z axes with configurable pivot points
 - **Volumes** — constant-density fog/smoke via an isotropic phase function (Henyey-Greenstein style)
-- **Built-in resource library** — preset Cornell Box components, materials, textures, and cameras with `__` prefix to avoid name collisions
+- **Built-in entity library** — preset Cornell Box components, materials, textures, and cameras with `__` prefix to avoid name collisions
 
 ### Config format
 
 - **JSON** config files with a declarative, composable structure
-- Resources defined in named dictionaries (`geometrics`, `materials`, `textures`, `cameras`, `scenes`)
-- Supports both inline definitions and named references for all resource types
+- Entities defined in named dictionaries (`geometrics`, `materials`, `textures`, `cameras`, `scenes`)
+- Supports both inline definitions and named references for all entity types
 - `active_scene` selects which scene to render and can mix references with inline overrides
 
 ### CLI
@@ -86,7 +86,7 @@ cargo build --release --bin luxide-cli
 
 ## Scene configuration
 
-Config files define a complete scene graph in JSON. Resources are declared in named dictionaries and wired together through references. Here's a minimal Cornell Box with a glass sphere:
+Config files define a complete scene graph in JSON. Entities are declared in named dictionaries and wired together through references. Here's a minimal Cornell Box with a glass sphere:
 
 ```json
 {
@@ -171,7 +171,7 @@ Config files define a complete scene graph in JSON. Resources are declared in na
 }
 ```
 
-The pattern is always the same: define your resources by name, then reference them. Inline definitions work anywhere a reference is accepted, keeping small experiments concise.
+The pattern is always the same: define your entities by name, then reference them. Inline definitions work anywhere a reference is accepted, keeping small experiments concise.
 
 ---
 

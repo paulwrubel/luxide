@@ -5,7 +5,7 @@ import type { NormalizedRenderConfig } from '@/utils/render/config';
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { useSelector } from '@tanstack/react-store';
 import { WarningIconOrphanGeometric } from '../../shared/icons/WarningIconOrphanGeometric';
-import { InfoIconDefaultResource } from '../../shared/icons/InfoIconDefaultResource';
+import { InfoIconDefaultEntity } from '../../shared/icons/InfoIconDefaultEntity';
 import { DuplicateDropdown } from '../../shared/DuplicateDropdown';
 import { duplicateMaterial } from '@/utils/render/utils';
 import { MediumControls } from './MediumControls';
@@ -24,7 +24,7 @@ export function MaterialRow(props: MaterialRowProps) {
   const afterLabel = (
     <>
       {!isUsedByActiveScene && <WarningIconOrphanGeometric />}
-      {isDefault && <InfoIconDefaultResource />}
+      {isDefault && <InfoIconDefaultEntity />}
     </>
   );
 

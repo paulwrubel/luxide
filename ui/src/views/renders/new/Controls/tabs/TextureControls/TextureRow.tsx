@@ -9,7 +9,7 @@ import type { RenderForm } from '@/hooks/useRenderForm';
 import { useSelector } from '@tanstack/react-store';
 import { Separator } from '@/components/Separator';
 import { WarningIconOrphanGeometric } from '../../shared/icons/WarningIconOrphanGeometric';
-import { InfoIconDefaultResource } from '../../shared/icons/InfoIconDefaultResource';
+import { InfoIconDefaultEntity } from '../../shared/icons/InfoIconDefaultEntity';
 import { DuplicateDropdown } from '../../shared/DuplicateDropdown';
 import { duplicateTexture } from '@/utils/render/utils';
 
@@ -27,7 +27,7 @@ export function TextureRow(props: TextureRowProps) {
   const afterLabel = (
     <>
       {!isUsedByActiveScene && <WarningIconOrphanGeometric />}
-      {isDefault && <InfoIconDefaultResource />}
+      {isDefault && <InfoIconDefaultEntity />}
     </>
   );
 

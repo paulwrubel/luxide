@@ -44,18 +44,18 @@ Luxide is a **ray tracing render manager** — a multi-tenant platform where use
 
 ## 5. Development Commands
 
-| Command                         | Description                                                      |
-| ------------------------------- | ---------------------------------------------------------------- |
-| `just run`                      | Build and run via Docker Compose (API + PostgreSQL)              |
-| `just run-local`                | Build API + run PostgreSQL, then start API server locally        |
-| `just run-ui`                   | Start Docker services + Vite dev server on port 5173             |
-| `just run-postgres`             | Start PostgreSQL container + run migrations                      |
-| `just build`                    | Build UI + run migrations + build both Rust binaries (release)   |
-| `just build-api`                | Build UI + run migrations + build luxide-api (release)           |
-| `just build-cli`                | Build luxide-cli (release)                                       |
-| `just build-ui`                 | Setup Node env + build React UI                                  |
-| `just clean`                    | Cargo clean + remove ui/dist + stop Docker                       |
-| `just generate-jwt-keypair-pem` | Generate RSA keypair for JWT signing                             |
+| Command                         | Description                                                    |
+| ------------------------------- | -------------------------------------------------------------- |
+| `just run`                      | Build and run via Docker Compose (API + PostgreSQL)            |
+| `just run-local`                | Build API + run PostgreSQL, then start API server locally      |
+| `just run-ui`                   | Start Docker services + Vite dev server on port 5173           |
+| `just run-postgres`             | Start PostgreSQL container + run migrations                    |
+| `just build`                    | Build UI + run migrations + build both Rust binaries (release) |
+| `just build-api`                | Build UI + run migrations + build luxide-api (release)         |
+| `just build-cli`                | Build luxide-cli (release)                                     |
+| `just build-ui`                 | Setup Node env + build React UI                                |
+| `just clean`                    | Cargo clean + remove ui/dist + stop Docker                     |
+| `just generate-jwt-keypair-pem` | Generate RSA keypair for JWT signing                           |
 
 Note: The `just build-api` and `just run` commands embed the UI's `dist/` folder into the Rust binary at compile time via `include_dir!`. The API server serves the React SPA alongside the API routes.
 

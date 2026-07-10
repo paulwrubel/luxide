@@ -54,7 +54,7 @@ export function getDefaultRenderConfig(): NormalizedRenderConfig {
 }
 
 export function getEmptyRenderConfig(): NormalizedRenderConfig {
-  return withDefaultResources({
+  return withDefaultEntities({
     name: 'Empty',
     parameters: {
       image_dimensions: [500, 500],
@@ -233,7 +233,7 @@ export function getCornellBoxGlassSpheresRenderConfig(): NormalizedRenderConfig 
 }
 
 export function getCornellBoxBaseRenderConfig(): NormalizedRenderConfig {
-  return withDefaultResources({
+  return withDefaultEntities({
     name: 'Cornell Box — Empty',
     parameters: {
       image_dimensions: [500, 500],
@@ -384,7 +384,7 @@ export function getCornellBoxBaseRenderConfig(): NormalizedRenderConfig {
   });
 }
 
-export function withDefaultResources(config: NormalizedRenderConfig): NormalizedRenderConfig {
+export function withDefaultEntities(config: NormalizedRenderConfig): NormalizedRenderConfig {
   return {
     ...config,
     geometrics: {

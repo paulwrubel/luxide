@@ -62,7 +62,7 @@ impl RenderConfigBuilder {
     }
 
     pub fn with_builtins(mut self) -> Self {
-        // builtin resources can be "overwritten" by user-defined resources
+        // builtin entities can be "overwritten" by user-defined entities
         // so we have to make sure that we add them last
         self.0.textures.append(&mut get_builtin_textures());
         self.0.materials.append(&mut get_builtin_materials());
@@ -174,7 +174,7 @@ fn build_textures(
 
     // Build all textures
     for name in texture_data.keys() {
-        build_resource_recursive(
+        build_entity_recursive(
             name,
             texture_data,
             builts,
@@ -258,7 +258,7 @@ fn build_geometrics(
 
     // Build all geometrics
     for name in geometric_data.keys() {
-        build_resource_recursive(
+        build_entity_recursive(
             name,
             geometric_data,
             builts,
@@ -275,21 +275,21 @@ fn build_geometrics(
 const MAX_RECURSION_DEPTH: usize = 100;
 
 #[allow(clippy::too_many_arguments)]
-fn build_resource_recursive<T>(
+fn build_entity_recursive<T>(
     name: &str,
-    resource_data: &IndexMap<String, T>,
+    entity_data: &IndexMap<String, T>,
     builts: &mut Builts,
     building: &mut std::collections::HashSet<String>,
     get_dependencies: impl Fn(&T) -> Vec<String> + Copy,
     build_and_insert: impl Fn(&str, &T, &mut Builts) -> Result<(), String> + Copy,
-    resource_type: &str,
+    entity_type: &str,
     depth: usize,
 ) -> Result<(), String> {
     // Check for maximum recursion depth
     if depth >= MAX_RECURSION_DEPTH {
         return Err(format!(
             "Maximum recursion depth ({}) exceeded while building {} '{}'. This may indicate a cyclic dependency.",
-            MAX_RECURSION_DEPTH, resource_type, name
+            MAX_RECURSION_DEPTH, entity_type, name
         ));
     }
 
@@ -297,35 +297,35 @@ fn build_resource_recursive<T>(
     if building.contains(name) {
         return Err(format!(
             "Cycle detected in {} dependencies involving {}",
-            resource_type, name
+            entity_type, name
         ));
     }
 
-    // Get the resource data
-    let resource = resource_data.get(name).ok_or(format!(
+    // Get the entity data
+    let entity = entity_data.get(name).ok_or(format!(
         "{} {} not found. Is it specified in the {} list?",
-        resource_type, name, resource_type
+        entity_type, name, entity_type
     ))?;
 
-    // Mark that we're building this resource
+    // Mark that we're building this entity
     building.insert(name.to_string());
 
-    // Build any referenced resources first
-    for dep_name in get_dependencies(resource) {
-        build_resource_recursive(
+    // Build any referenced entities first
+    for dep_name in get_dependencies(entity) {
+        build_entity_recursive(
             &dep_name,
-            resource_data,
+            entity_data,
             builts,
             building,
             get_dependencies,
             build_and_insert,
-            resource_type,
+            entity_type,
             depth + 1,
         )?
     }
 
-    // Now build this resource if it hasn't been built yet
-    build_and_insert(name, resource, builts)?;
+    // Now build this entity if it hasn't been built yet
+    build_and_insert(name, entity, builts)?;
     building.remove(name);
 
     Ok(())
@@ -355,10 +355,10 @@ fn build_scenes(
     Ok(())
 }
 
-const BUILT_IN_RESOURCE_PREFIX: &str = "__";
+const BUILT_IN_ENTITY_PREFIX: &str = "__";
 
 fn prefix_builtin_key(key: &str) -> String {
-    format!("{}{}", BUILT_IN_RESOURCE_PREFIX, key)
+    format!("{}{}", BUILT_IN_ENTITY_PREFIX, key)
 }
 
 fn get_builtin_textures() -> IndexMap<String, TextureData> {
