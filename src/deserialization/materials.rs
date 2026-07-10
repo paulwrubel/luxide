@@ -71,6 +71,8 @@ pub enum MaterialData {
         emittance_texture: TextureRefOrInline,
         index_of_refraction: f64,
         #[serde(skip_serializing_if = "Option::is_none")]
+        abbe_number: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
         medium_data: Option<MediumData>,
     },
     Lambertian {
@@ -91,6 +93,7 @@ impl Build<Arc<dyn Material>> for MaterialData {
                 reflectance_texture,
                 emittance_texture,
                 index_of_refraction,
+                abbe_number,
                 medium_data,
             } => {
                 let reflectance_texture = reflectance_texture.build(builts)?;
@@ -113,8 +116,9 @@ impl Build<Arc<dyn Material>> for MaterialData {
                     reflectance_texture,
                     emittance_texture,
                     *index_of_refraction,
+                    *abbe_number,
                     medium,
-                )))
+                )?))
             }
             Self::Lambertian {
                 reflectance_texture,
