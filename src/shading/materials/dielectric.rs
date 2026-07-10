@@ -12,11 +12,17 @@ use crate::{
 
 use super::{Material, ScatterRecord, SpectralScatter};
 
+// crown glass, or close to it
+const DEFAULT_ABBE_NUMBER: f64 = 64.0;
+
 #[derive(Debug, Clone)]
 pub struct Dielectric {
     reflectance_texture: Arc<dyn Texture>,
     emittance_texture: Arc<dyn Texture>,
-    index_of_refraction: f64,
+    /// Pre-computed one-term Sellmeier coefficients (B₁, C₁), computed
+    /// eagerly at construction so `index_of_refraction_at` is a cheap lookup.
+    b1: f64,
+    c1: f64,
     /// The interior medium of this dielectric (absorption + emission).
     /// `None` means thin-walled (straight-through transmission, no volume).
     pub medium: Option<Medium>,
@@ -27,14 +33,23 @@ impl Dielectric {
         reflectance_texture: Arc<dyn Texture>,
         emittance_texture: Arc<dyn Texture>,
         index_of_refraction: f64,
+        abbe_number: Option<f64>,
         medium: Option<Medium>,
-    ) -> Dielectric {
-        Dielectric {
+    ) -> Result<Dielectric, String> {
+        let abbe = abbe_number.unwrap_or(DEFAULT_ABBE_NUMBER);
+        if abbe <= 0.0 {
+            return Err(format!("abbe_number must be positive, got {abbe}"));
+        }
+
+        let (b1, c1) = Dielectric::sellmeier_coefficients(index_of_refraction, abbe);
+
+        Ok(Dielectric {
             reflectance_texture,
             emittance_texture,
-            index_of_refraction,
+            b1,
+            c1,
             medium,
-        }
+        })
     }
 
     pub fn schlick_reflectance(cosine: f64, ref_idx: f64) -> f64 {
@@ -44,36 +59,15 @@ impl Dielectric {
     }
 
     /// Index of refraction at a specific wavelength using a one-term
-    /// Sellmeier equation fitted from the user-provided IOR.
+    /// Sellmeier equation fitted from the user-provided IOR and Abbe number.
     ///
     /// The user's IOR is assumed to be n_D — the refractive index at the
-    /// sodium D-line (589.3nm). A single Sellmeier term with an IOR-dependent
-    /// C₁ provides physically plausible dispersion across a wide range of
-    /// materials: shorter wavelengths → higher IOR.
+    /// sodium D-line (589.3nm). The Abbe number V_d quantifies dispersion
+    /// across the visible spectrum. Coefficients are pre-computed at
+    /// construction via bisection, so this is a cheap cached lookup.
     pub fn index_of_refraction_at(&self, wavelength_nm: f64) -> f64 {
-        let lambda_um = wavelength_nm / 1000.0;
-        let lambda_sq = lambda_um * lambda_um;
-
-        // D-line reference wavelength in µm
-        let d_um = 0.5893;
-        let d_sq = d_um * d_um;
-
-        let n_sq = self.index_of_refraction * self.index_of_refraction;
-
-        // C₁ models the square of the UV resonance wavelength. Higher-index
-        // materials have their resonance closer to the visible range, producing
-        // stronger dispersion. The Sellmeier term λ²/(λ² − C₁) grows more
-        // rapidly across the visible band when C₁ is larger.
-        //
-        // n=1.5 → C₁≈0.011  (moderate dispersion)
-        // n=2.4 → C₁≈0.029  (strong dispersion, ~2.6× glass)
-        let c1 = 0.005 * n_sq;
-
-        // Solve B₁ so that n(589.3nm) = user_ior
-        let b1 = (n_sq - 1.0) * (d_sq - c1) / d_sq;
-
-        // n²(λ) = 1 + B₁·λ²/(λ² − C₁)
-        let n_sq_lambda = 1.0 + b1 * lambda_sq / (lambda_sq - c1);
+        let lambda_sq = (wavelength_nm / 1000.0_f64).powi(2);
+        let n_sq_lambda = 1.0 + self.b1 * lambda_sq / (lambda_sq - self.c1);
         n_sq_lambda.sqrt().max(1.0)
     }
 
@@ -246,6 +240,52 @@ impl Dielectric {
             rays,
             reflectance,
         })))
+    }
+
+    /// Fit (B₁, C₁) of a one-term Sellmeier model satisfying two constraints:
+    ///   1. n(589.3 nm) == n_d           (D-line, user-provided IOR)
+    ///   2. the model's Abbe number == v
+    ///
+    /// The three standard Fraunhofer reference wavelengths used:
+    ///   F  — 486.1 nm (hydrogen, blue)
+    ///   d  — 589.3 nm (sodium D-line; matches user IOR convention)
+    ///   C  — 656.3 nm (hydrogen, red)
+    fn sellmeier_coefficients(n_d: f64, v: f64) -> (f64, f64) {
+        let n_sq = n_d * n_d;
+
+        // reference wavelengths² (µm²)
+        let d_sq = 0.5893_f64.powi(2);
+        let f_sq = 0.4861_f64.powi(2);
+        let c_sq = 0.6563_f64.powi(2);
+
+        // n at a wavelength λ² for a given C₁, with B₁ fixed by the
+        // D-line constraint: B₁ = (n² − 1)·(λ_D² − C₁)/λ_D²
+        let n_at = |lam_sq: f64, c1: f64| -> f64 {
+            let b1 = (n_sq - 1.0) * (d_sq - c1) / d_sq;
+            (1.0 + b1 * lam_sq / (lam_sq - c1)).sqrt()
+        };
+
+        // residual(C₁) = Vd_model − Vd_target. Monotonic decreasing in
+        // C₁ — larger C₁ pushes UV resonance toward visible → stronger
+        // dispersion → smaller Abbe number → negative residual.
+        let residual = |c1: f64| -> f64 { (n_d - 1.0) / (n_at(f_sq, c1) - n_at(c_sq, c1)) - v };
+
+        // bisection: bracket C₁ in (0, λ_F²) since the Sellmeier pole
+        // must lie below the shortest reference wavelength.
+        let (mut lo, mut hi) = (1e-12, f_sq - 1e-12);
+        for _ in 0..100 {
+            let mid = 0.5 * (lo + hi);
+            if residual(lo) * residual(mid) <= 0.0 {
+                hi = mid;
+            } else {
+                lo = mid;
+            }
+        }
+        let c1 = 0.5 * (lo + hi);
+
+        // Back out B₁ from the D-line constraint
+        let b1 = (n_sq - 1.0) * (d_sq - c1) / d_sq;
+        (b1, c1)
     }
 }
 

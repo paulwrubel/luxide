@@ -36,7 +36,7 @@ export function CameraPanel(props: CameraPanelProps) {
       <div className="flex flex-col gap-2">
         <form.AppField name={`${formPath}.vertical_field_of_view_degrees`}>
           {(field) => (
-            <field.RangeControl label="Vertical FOV (degrees)" min={10.0} max={170.0} step={1.0} />
+            <field.RangeControl label="Vertical FOV (degrees)" min={1.0} max={170.0} step={1.0} />
           )}
         </form.AppField>
         <TextArrayInputControl

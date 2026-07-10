@@ -142,6 +142,7 @@ export const MaterialDielectricSchema = z.object({
   reflectance_texture: z.string().nonempty(),
   emittance_texture: z.string().nonempty(),
   index_of_refraction: z.number().min(0),
+  abbe_number: z.number().min(1).optional(),
   medium_data: MediumDataSchema.optional(),
 });
 
@@ -210,6 +211,7 @@ export type RawMaterialDielectric = {
   reflectance_texture: string | RawTextureData;
   emittance_texture: string | RawTextureData;
   index_of_refraction: number;
+  abbe_number?: number;
   medium_data?: MediumData;
 };
 

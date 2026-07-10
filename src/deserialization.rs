@@ -437,18 +437,21 @@ fn get_builtin_materials() -> IndexMap<String, MaterialData> {
             reflectance_texture: texture_fn("white"),
             emittance_texture: texture_fn("black"),
             index_of_refraction: 1.52,
+            abbe_number: Some(64.0),
             medium_data: Some(MediumData::Vacuum),
         },
         prefix_builtin_key("dielectric_water") => MaterialData::Dielectric {
             reflectance_texture: texture_fn("white"),
             emittance_texture: texture_fn("black"),
             index_of_refraction: 1.333,
+            abbe_number: Some(72.0),
             medium_data: Some(MediumData::Vacuum),
         },
         prefix_builtin_key("dielectric_diamond") => MaterialData::Dielectric {
             reflectance_texture: texture_fn("white"),
             emittance_texture: texture_fn("black"),
             index_of_refraction: 2.417,
+            abbe_number: Some(55.0),
             medium_data: Some(MediumData::Vacuum),
         },
 

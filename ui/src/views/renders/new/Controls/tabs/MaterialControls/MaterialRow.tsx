@@ -94,6 +94,9 @@ export function MaterialRow(props: MaterialRowProps) {
               )}
             </form.AppField>
             <MediumControls form={form} materialName={name} />
+            <form.AppField name={`materials.${name}.abbe_number`}>
+              {(field) => <field.RangeControl label="Abbe Number" min={1} max={100} step={1} />}
+            </form.AppField>
             <TextureSelects name={name} />
           </>
         );
