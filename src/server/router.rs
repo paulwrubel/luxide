@@ -2,6 +2,7 @@ use std::net::{Ipv4Addr, SocketAddr};
 
 use axum::{
     Router,
+    extract::DefaultBodyLimit,
     http::Method,
     routing::{delete, get, post, put},
 };
@@ -101,7 +102,10 @@ fn build_api_router() -> Router<LuxideState> {
         .nest("/renders", build_renders_router())
         .nest("/auth", build_auth_router())
         .nest("/users", build_users_router())
-        .nest("/resources", build_resources_router())
+        .nest(
+            "/resources",
+            build_resources_router().layer(DefaultBodyLimit::max(128 * 1024 * 1024)),
+        )
         .fallback(handlers::not_found)
 }
 
