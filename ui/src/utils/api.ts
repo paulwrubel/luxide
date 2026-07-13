@@ -60,6 +60,16 @@ export type UsageResponse = {
   bytes: number;
 };
 
+export type ResourceMeta = {
+  id: number;
+  user_id: number;
+  name: string;
+  resource_type: string;
+  mime_type: string;
+  byte_size: number;
+  created_at: string;
+};
+
 export async function fetchAuthTokenGitHub(code: string, state: string): Promise<string> {
   const response = await fetch(`${getAPIURL()}/auth/github/callback?code=${code}&state=${state}`, {
     credentials: 'include',
@@ -445,6 +455,59 @@ export async function getStorageUsage(fetcher: typeof fetch): Promise<UsageRespo
   }
 
   return (await response.json()) as UsageResponse;
+}
+
+export async function getAllResourceMetadata(
+  fetcher: typeof fetch,
+  targetUserID?: number,
+): Promise<ResourceMeta[]> {
+  const response = await fetcher(appendUserID(`${getAPIURL()}/resources`, targetUserID), {
+    headers: { 'Content-Type': 'application/json' },
+    method: 'GET',
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`failed to get resources: (${response.status}: ${body})`);
+  }
+
+  return (await response.json()) as ResourceMeta[];
+}
+
+export async function createResource(
+  fetcher: typeof fetch,
+  formData: FormData,
+  targetUserID?: number,
+): Promise<ResourceMeta> {
+  const response = await fetcher(appendUserID(`${getAPIURL()}/resources`, targetUserID), {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok || response.status !== 201) {
+    const body = await response.text();
+    throw new Error(`failed to create resource: (${response.status}: ${body})`);
+  }
+
+  return (await response.json()) as ResourceMeta;
+}
+
+export async function deleteResource(
+  fetcher: typeof fetch,
+  resourceID: number,
+  targetUserID?: number,
+): Promise<void> {
+  const response = await fetcher(
+    appendUserID(`${getAPIURL()}/resources/${resourceID}`, targetUserID),
+    {
+      method: 'DELETE',
+    },
+  );
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`failed to delete resource: (${response.status}: ${body})`);
+  }
 }
 
 /**

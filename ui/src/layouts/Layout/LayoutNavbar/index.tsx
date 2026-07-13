@@ -49,6 +49,12 @@ export function LayoutNavbar() {
             Renders
           </NavbarLink>
         )}
+        {isAuthenticated && (
+          // @ts-expect-error polymorphic 'as' prop not typed in flowbite-react
+          <NavbarLink as={Link} to="/resources">
+            Resources
+          </NavbarLink>
+        )}
         {isAuthenticated && user?.role === 'admin' && (
           // @ts-expect-error polymorphic 'as' prop not typed in flowbite-react
           <NavbarLink as={Link} to="/admin">
