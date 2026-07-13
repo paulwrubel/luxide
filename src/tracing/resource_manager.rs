@@ -8,7 +8,11 @@ use axum::{
 use chrono::Utc;
 use serde::Serialize;
 
-use super::{Resource, ResourceID, ResourceMeta, ResourceStorage, StorageError, UserID};
+use crate::shading::textures::Image8Bit;
+
+use super::{
+    Resource, ResourceID, ResourceMeta, ResourceStorage, ResourceType, StorageError, UserID,
+};
 
 #[derive(Clone)]
 pub struct ResourceManager {
@@ -23,7 +27,7 @@ impl ResourceManager {
     pub async fn create_resource(
         &self,
         name: String,
-        resource_type: String,
+        resource_type: ResourceType,
         mime_type: String,
         data: Vec<u8>,
         user_id: UserID,
@@ -31,6 +35,18 @@ impl ResourceManager {
         let id = self.storage.get_next_resource_id().await?;
 
         let byte_size = data.len() as u64;
+
+        // validate that the uploaded data can actually be used as this resource type
+        match resource_type {
+            ResourceType::TextureImage => {
+                Image8Bit::from_bytes(&data, 1.0).map_err(|e| {
+                    ResourceManagerError::ClientError(
+                        StatusCode::BAD_REQUEST,
+                        format!("Invalid image file: {}", e),
+                    )
+                })?;
+            }
+        }
 
         let resource = Resource {
             id,

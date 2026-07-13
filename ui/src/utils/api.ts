@@ -43,6 +43,17 @@ export async function navigateToAPILogin() {
 
 export type Role = 'admin' | 'user';
 
+export type ResourceType = 'texture_image';
+
+export function formatResourceType(resourceType: ResourceType): string {
+  switch (resourceType) {
+    case 'texture_image':
+      return 'Texture Image';
+    default:
+      return resourceType;
+  }
+}
+
 export type User = {
   id: number;
   github_id: number;
@@ -64,7 +75,7 @@ export type ResourceMeta = {
   id: number;
   user_id: number;
   name: string;
-  resource_type: string;
+  resource_type: ResourceType;
   mime_type: string;
   byte_size: number;
   created_at: string;

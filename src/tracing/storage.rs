@@ -515,6 +515,29 @@ pub trait UserStorage: Send + Sync + 'static {
     async fn revoke_refresh_tokens_by_origin(&self, origin_id: u32) -> Result<(), StorageError>;
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ResourceType {
+    TextureImage,
+}
+
+impl Display for ResourceType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ResourceType::TextureImage => write!(f, "texture_image"),
+        }
+    }
+}
+
+impl From<String> for ResourceType {
+    fn from(value: String) -> Self {
+        match value.as_str() {
+            "texture_image" => Self::TextureImage,
+            _ => Self::TextureImage, // default fallback
+        }
+    }
+}
+
 pub type ResourceID = u32;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -522,7 +545,7 @@ pub struct Resource {
     pub id: ResourceID,
     pub user_id: UserID,
     pub name: String,
-    pub resource_type: String,
+    pub resource_type: ResourceType,
     pub mime_type: String,
     pub data: Vec<u8>,
     pub byte_size: u64,
@@ -534,7 +557,7 @@ pub struct ResourceMeta {
     pub id: ResourceID,
     pub user_id: UserID,
     pub name: String,
-    pub resource_type: String,
+    pub resource_type: ResourceType,
     pub mime_type: String,
     pub byte_size: u64,
     pub created_at: chrono::DateTime<chrono::Utc>,
@@ -560,7 +583,7 @@ impl From<&Resource> for ResourceMeta {
             id: resource.id,
             user_id: resource.user_id,
             name: resource.name.clone(),
-            resource_type: resource.resource_type.clone(),
+            resource_type: resource.resource_type,
             mime_type: resource.mime_type.clone(),
             byte_size: resource.byte_size,
             created_at: resource.created_at,

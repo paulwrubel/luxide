@@ -11,6 +11,7 @@ import {
 } from 'flowbite-react';
 import { useAllResourceMetadataQuery } from '@/hooks/useResources';
 import { useDeleteResourceMutation } from '@/hooks/useResourceMutations';
+import { formatResourceType } from '@/utils/api';
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) {
@@ -52,7 +53,7 @@ export function ResourcesTable() {
               {resources.map((resource) => (
                 <TableRow key={resource.id}>
                   <TableCell className="font-medium text-white">{resource.name}</TableCell>
-                  <TableCell>{resource.resource_type}</TableCell>
+                  <TableCell>{formatResourceType(resource.resource_type)}</TableCell>
                   <TableCell>{resource.mime_type}</TableCell>
                   <TableCell>{formatBytes(resource.byte_size)}</TableCell>
                   <TableCell>{new Date(resource.created_at).toLocaleDateString()}</TableCell>

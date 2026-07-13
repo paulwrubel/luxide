@@ -54,7 +54,7 @@ export function UploadResourceModal(props: UploadResourceModalProps) {
 
     const formData = new FormData();
     formData.append('name', name.trim());
-    formData.append('resource_type', 'texture_map');
+    formData.append('resource_type', 'texture_image');
     formData.append('mime_type', getMimeType());
     formData.append('file', file);
 

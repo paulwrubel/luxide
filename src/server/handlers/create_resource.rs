@@ -4,7 +4,10 @@ use axum::{
     response::{IntoResponse, Response},
 };
 
-use crate::server::{Claims, LuxideState, RequestedUserID, resolve_effective_user_id};
+use crate::{
+    server::{Claims, LuxideState, RequestedUserID, resolve_effective_user_id},
+    tracing::ResourceType,
+};
 
 pub async fn create_resource(
     State(state): State<LuxideState>,
@@ -55,8 +58,17 @@ pub async fn create_resource(
         }
     };
 
-    let resource_type = match resource_type {
-        Some(rt) if !rt.is_empty() => rt,
+    let resource_type: ResourceType = match resource_type {
+        Some(rt) if !rt.is_empty() => match rt.as_str() {
+            "texture_image" => ResourceType::TextureImage,
+            _ => {
+                return (
+                    StatusCode::BAD_REQUEST,
+                    format!("Unknown resource type: {}", rt),
+                )
+                    .into_response();
+            }
+        },
         _ => {
             return (
                 StatusCode::BAD_REQUEST,
