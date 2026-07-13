@@ -21,9 +21,15 @@ use super::{Render, RenderCheckpoint, RenderID, RenderStorage, Role, StorageErro
 
 use std::collections::HashSet;
 
+use indexmap::IndexMap;
+
+use crate::deserialization::TextureData;
+use crate::tracing::{ResourceID, ResourceStorage};
+
 #[derive(Clone)]
 pub struct RenderManager {
     storage: Arc<dyn RenderStorage>,
+    resource_storage: Arc<dyn ResourceStorage>,
     global_thread_pool: Option<Arc<rayon::ThreadPool>>,
     running_renders: Arc<Mutex<HashSet<RenderID>>>,
     render_state_streams: Arc<RenderStreamRegistry>,
@@ -32,16 +38,21 @@ pub struct RenderManager {
 const POLLING_INTERVAL_MS: u64 = 100;
 
 impl RenderManager {
-    pub async fn new(storage: Arc<dyn RenderStorage>) -> Result<Self, String> {
-        Self::new_with_optional_global_thread_pool(storage, None).await
+    pub async fn new(
+        storage: Arc<dyn RenderStorage>,
+        resource_storage: Arc<dyn ResourceStorage>,
+    ) -> Result<Self, String> {
+        Self::new_with_optional_global_thread_pool(storage, resource_storage, None).await
     }
 
     pub async fn new_with_global_thread_pool(
         storage: Arc<dyn RenderStorage>,
+        resource_storage: Arc<dyn ResourceStorage>,
         threads: Threads,
     ) -> Result<Self, String> {
         Self::new_with_optional_global_thread_pool(
             storage,
+            resource_storage,
             Some(Arc::new(
                 rayon::ThreadPoolBuilder::new()
                     .num_threads(threads.effective_count())
@@ -52,8 +63,9 @@ impl RenderManager {
         .await
     }
 
-    async fn new_with_optional_global_thread_pool(
+    pub async fn new_with_optional_global_thread_pool(
         storage: Arc<dyn RenderStorage>,
+        resource_storage: Arc<dyn ResourceStorage>,
         thread_pool: Option<Arc<rayon::ThreadPool>>,
     ) -> Result<Self, String> {
         // find any renders that were left in Running or Pausing state
@@ -83,6 +95,7 @@ impl RenderManager {
 
         Ok(Self {
             storage,
+            resource_storage,
             global_thread_pool: thread_pool,
             running_renders: Arc::new(Mutex::new(HashSet::new())),
             render_state_streams: Arc::new(RenderStreamRegistry::default()),
@@ -162,6 +175,7 @@ impl RenderManager {
 
         let running_renders = Arc::clone(&self.running_renders);
         let storage = Arc::clone(&self.storage);
+        let resource_storage = Arc::clone(&self.resource_storage);
         let thread_pool = self.global_thread_pool.as_ref().cloned();
         let render_state_streams = Arc::clone(&self.render_state_streams);
 
@@ -217,7 +231,22 @@ impl RenderManager {
                 None => PixelData::new(),
             };
 
-            let render_data = match render.config.compile() {
+            let resources =
+                match Self::preload_resource_data_from_storage(&render.config, &*resource_storage)
+                    .await
+                {
+                    Ok(data) => data,
+                    Err(e) => {
+                        println!(
+                            "Failed to load resource data for render {} at tracing time: {e}",
+                            render.id
+                        );
+                        running_renders.lock().unwrap().remove(&render.id);
+                        return;
+                    }
+                };
+
+            let render_data = match render.config.compile(Some(&resources)) {
                 Ok(data) => data,
                 Err(e) => {
                     println!(
@@ -671,7 +700,8 @@ impl RenderManager {
             .build();
 
         // compile for validation purposes
-        if let Err(e) = render_config.compile() {
+        // resource data is not loaded here — validation only checks structural integrity
+        if let Err(e) = render_config.compile(None) {
             return Err(RenderManagerError::ClientError(StatusCode::BAD_REQUEST, e));
         }
 
@@ -1011,6 +1041,28 @@ impl RenderManager {
 
     pub fn render_state_streams(&self) -> &Arc<RenderStreamRegistry> {
         &self.render_state_streams
+    }
+
+    /// Pre-load resource data referenced by textures in a render config.
+    /// This is needed because the spawn closure can't call `self`.
+    async fn preload_resource_data_from_storage(
+        config: &RenderConfig,
+        resource_storage: &dyn ResourceStorage,
+    ) -> Result<IndexMap<ResourceID, Vec<u8>>, StorageError> {
+        let mut ids = std::collections::HashSet::new();
+        for texture in config.textures.values() {
+            if let TextureData::Image { resource_id, .. } = texture {
+                ids.insert(*resource_id);
+            }
+        }
+
+        let mut result = IndexMap::new();
+        for id in ids {
+            if let Some(resource) = resource_storage.get_resource(id).await? {
+                result.insert(id, resource.data);
+            }
+        }
+        Ok(result)
     }
 }
 

@@ -13,7 +13,7 @@ pub enum SceneRefOrInline {
 }
 
 impl Build<Scene> for SceneRefOrInline {
-    fn build(&self, builts: &Builts) -> Result<Scene, String> {
+    fn build(&self, builts: &Builts<'_>) -> Result<Scene, String> {
         match self {
             Self::Ref(name) => Ok(builts
                 .scenes
@@ -40,7 +40,7 @@ pub struct SceneData {
 }
 
 impl Build<Scene> for SceneData {
-    fn build(&self, builts: &Builts) -> Result<Scene, String> {
+    fn build(&self, builts: &Builts<'_>) -> Result<Scene, String> {
         let mut world = Vec::new();
         let mut world_virtual = Vec::new();
 

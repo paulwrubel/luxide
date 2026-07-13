@@ -16,7 +16,10 @@ use luxide::{
         materials::{Dielectric, Lambertian, Material, Specular},
         textures::{Checker, Image8Bit, Noise, SolidColor},
     },
-    tracing::{FileStorage, RenderManager, RenderState, RenderStorage, Scene, SceneWorld, User},
+    tracing::{
+        FileStorage, InMemoryStorage, RenderManager, RenderState, RenderStorage, Scene, SceneWorld,
+        User,
+    },
     utils::{Angle, Around},
 };
 use noise::{Perlin, Turbulence};
@@ -61,7 +64,7 @@ async fn main() -> Result<(), String> {
 
     // create render manager
     let render_manager = Arc::new(
-        RenderManager::new(Arc::clone(&storage))
+        RenderManager::new(Arc::clone(&storage), Arc::new(InMemoryStorage::new()))
             .await
             .map_err(|e| format!("Failed to initialize render manager: {}", e))?,
     );

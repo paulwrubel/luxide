@@ -11,6 +11,7 @@ pub struct ApiConfig {
 
     pub render_storage: RenderStorageConfig,
     pub user_storage: UserStorageConfig,
+    pub resource_storage: ResourceStorageConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -38,11 +39,22 @@ pub enum UserStorageConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case", tag = "type")]
+pub enum ResourceStorageConfig {
+    Postgres {
+        host: String,
+        username: String,
+        db: String,
+    },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub struct ApiSecrets {
     pub auth: AuthSecrets,
     pub render_storage: Option<RenderStorageSecrets>,
     pub user_storage: Option<UserStorageSecrets>,
+    pub resource_storage: Option<ResourceStorageSecrets>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -76,6 +88,12 @@ pub enum RenderStorageSecrets {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "type")]
 pub enum UserStorageSecrets {
+    Postgres { password: String },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case", tag = "type")]
+pub enum ResourceStorageSecrets {
     Postgres { password: String },
 }
 

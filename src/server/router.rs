@@ -104,6 +104,7 @@ fn build_api_router() -> Router<LuxideState> {
         .nest("/renders", build_renders_router())
         .nest("/auth", build_auth_router())
         .nest("/users", build_users_router())
+        .nest("/resources", build_resources_router())
         .fallback(handlers::not_found)
 }
 
@@ -161,6 +162,15 @@ fn build_users_router() -> Router<LuxideState> {
         .route("/", get(handlers::get_admin_users))
         .route("/{id}/role", put(handlers::update_user_role))
         .route("/{id}/quotas", put(handlers::update_user_quotas))
+}
+
+fn build_resources_router() -> Router<LuxideState> {
+    Router::new()
+        .route("/", get(handlers::get_all_resource_metadata))
+        .route("/", post(handlers::create_resource))
+        .route("/{id}", get(handlers::get_resource_metadata))
+        .route("/{id}/data", get(handlers::get_resource_data))
+        .route("/{id}", delete(handlers::delete_resource))
 }
 
 pub async fn serve(router: Router, address: &str, port: u16) -> Result<(), String> {

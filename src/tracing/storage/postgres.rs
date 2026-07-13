@@ -4,7 +4,7 @@ use crate::utils::{ProgressInfo, decode_pixel_data, encode_pixel_data, upgrade_l
 
 use super::{
     GithubID, Render, RenderCheckpoint, RenderCheckpointMeta, RenderID, RenderState, RenderStorage,
-    StorageError, User, UserID, UserStorage,
+    Resource, ResourceID, ResourceMeta, ResourceStorage, StorageError, User, UserID, UserStorage,
 };
 
 #[derive(Clone)]
@@ -1038,5 +1038,240 @@ impl UserStorage for PostgresStorage {
         .map_err(|e| format!("Failed to revoke refresh tokens by origin: {}", e))?;
 
         Ok(())
+    }
+}
+
+#[async_trait::async_trait]
+impl ResourceStorage for PostgresStorage {
+    async fn create_resource(&self, resource: Resource) -> Result<Resource, StorageError> {
+        match sqlx::query!(
+            r#"
+                INSERT INTO resources (id, user_id, name, resource_type, mime_type, data, byte_size, created_at)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            "#,
+            resource.id as i32,
+            resource.user_id as i32,
+            resource.name,
+            resource.resource_type,
+            resource.mime_type,
+            &resource.data,
+            resource.byte_size as i64,
+            resource.created_at,
+        )
+        .execute(&self.pool)
+        .await
+        {
+            Ok(res) => match res.rows_affected() {
+                1 => Ok(resource),
+                n => Err(format!(
+                    "Failed to create resource. Expecting 1 row affected, got {n}"
+                )
+                .into()),
+            },
+            Err(e) => Err(format!("Failed to create resource for id {}: {}", resource.id, e).into()),
+        }
+    }
+
+    async fn get_resource(&self, id: ResourceID) -> Result<Option<Resource>, StorageError> {
+        match sqlx::query!(
+            r#"
+                SELECT id, user_id, name, resource_type, mime_type, data, byte_size, created_at
+                FROM resources
+                WHERE id = $1
+            "#,
+            id as i32,
+        )
+        .fetch_optional(&self.pool)
+        .await
+        {
+            Ok(Some(row)) => {
+                let resource_id: ResourceID = row
+                    .id
+                    .try_into()
+                    .map_err(|_| "Invalid resource ID (negative or too large)".to_string())?;
+                Ok(Some(Resource {
+                    id: resource_id,
+                    user_id: row.user_id as UserID,
+                    name: row.name,
+                    resource_type: row.resource_type,
+                    mime_type: row.mime_type,
+                    data: row.data,
+                    byte_size: row.byte_size as u64,
+                    created_at: row.created_at,
+                }))
+            }
+            Ok(None) => Ok(None),
+            Err(e) => Err(format!("Failed to get resource with id {id}: {e}").into()),
+        }
+    }
+
+    async fn get_resource_metadata(
+        &self,
+        id: ResourceID,
+    ) -> Result<Option<ResourceMeta>, StorageError> {
+        match sqlx::query!(
+            r#"
+                SELECT id, user_id, name, resource_type, mime_type, byte_size, created_at
+                FROM resources
+                WHERE id = $1
+            "#,
+            id as i32,
+        )
+        .fetch_optional(&self.pool)
+        .await
+        {
+            Ok(Some(row)) => {
+                let resource_id: ResourceID = row
+                    .id
+                    .try_into()
+                    .map_err(|_| "Invalid resource ID (negative or too large)".to_string())?;
+                Ok(Some(ResourceMeta {
+                    id: resource_id,
+                    user_id: row.user_id as UserID,
+                    name: row.name,
+                    resource_type: row.resource_type,
+                    mime_type: row.mime_type,
+                    byte_size: row.byte_size as u64,
+                    created_at: row.created_at,
+                }))
+            }
+            Ok(None) => Ok(None),
+            Err(e) => Err(format!("Failed to get resource metadata with id {id}: {e}").into()),
+        }
+    }
+
+    async fn get_all_resource_metadata_for_user(
+        &self,
+        user_id: UserID,
+    ) -> Result<Vec<ResourceMeta>, StorageError> {
+        match sqlx::query!(
+            r#"
+                SELECT id, user_id, name, resource_type, mime_type, byte_size, created_at
+                FROM resources
+                WHERE user_id = $1
+                ORDER BY created_at DESC
+            "#,
+            user_id as i32,
+        )
+        .fetch_all(&self.pool)
+        .await
+        {
+            Ok(rows) => Ok(rows
+                .into_iter()
+                .map(|row| ResourceMeta {
+                    id: row.id as ResourceID,
+                    user_id: row.user_id as UserID,
+                    name: row.name,
+                    resource_type: row.resource_type,
+                    mime_type: row.mime_type,
+                    byte_size: row.byte_size as u64,
+                    created_at: row.created_at,
+                })
+                .collect()),
+            Err(e) => {
+                Err(format!("Failed to get resources for user with id {user_id}: {e}").into())
+            }
+        }
+    }
+
+    async fn delete_resource(&self, id: ResourceID) -> Result<(), StorageError> {
+        match sqlx::query!(
+            r#"
+                DELETE FROM resources
+                WHERE id = $1
+            "#,
+            id as i32,
+        )
+        .execute(&self.pool)
+        .await
+        {
+            Ok(res) => match res.rows_affected() {
+                1 => Ok(()),
+                n => Err(
+                    format!("Failed to delete resource. Expecting 1 row affected, got {n}").into(),
+                ),
+            },
+            Err(e) => Err(format!("Failed to delete resource with id {id}: {e}").into()),
+        }
+    }
+
+    async fn resource_exists(&self, id: ResourceID) -> Result<bool, StorageError> {
+        match sqlx::query!(
+            r#"
+                SELECT 1 as exists
+                FROM resources
+                WHERE id = $1
+                LIMIT 1
+            "#,
+            id as i32,
+        )
+        .fetch_optional(&self.pool)
+        .await
+        {
+            Ok(Some(_)) => Ok(true),
+            Ok(None) => Ok(false),
+            Err(e) => Err(format!("Failed to check if resource with id {id} exists: {e}").into()),
+        }
+    }
+
+    async fn resource_belongs_to(
+        &self,
+        id: ResourceID,
+        user_id: UserID,
+    ) -> Result<bool, StorageError> {
+        match sqlx::query!(
+            r#"
+                SELECT 1 as exists
+                FROM resources
+                WHERE id = $1 AND user_id = $2
+                LIMIT 1
+            "#,
+            id as i32,
+            user_id as i32,
+        )
+        .fetch_optional(&self.pool)
+        .await
+        {
+            Ok(Some(_)) => Ok(true),
+            Ok(None) => Ok(false),
+            Err(e) => Err(format!(
+                "Failed to check if resource with id {id} belongs to user {user_id}: {e}"
+            )
+            .into()),
+        }
+    }
+
+    async fn get_total_resource_bytes_stored_for_user(
+        &self,
+        user_id: UserID,
+    ) -> Result<u64, StorageError> {
+        match sqlx::query!(
+            r#"
+                SELECT COALESCE(SUM(byte_size), 0)::BIGINT as "total_bytes!: i64"
+                FROM resources
+                WHERE user_id = $1
+            "#,
+            user_id as i32,
+        )
+        .fetch_one(&self.pool)
+        .await
+        {
+            Ok(row) => Ok(row.total_bytes as u64),
+            Err(e) => Err(format!("Failed to get resource byte total for user: {}", e).into()),
+        }
+    }
+
+    async fn get_next_resource_id(&self) -> Result<ResourceID, StorageError> {
+        match sqlx::query!(
+            r#"
+                SELECT nextval('resources_id_seq') as next_id
+            "#,
+        )
+        .fetch_one(&self.pool)
+        .await
+        {
+            Ok(row) => Ok(row.next_id.expect("nextval should return a value") as ResourceID),
+            Err(e) => Err(format!("Failed to get next resource id: {}", e).into()),
+        }
     }
 }

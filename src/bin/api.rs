@@ -3,12 +3,13 @@ use std::{path::PathBuf, sync::Arc};
 use clap::{Parser, ValueEnum};
 use luxide::{
     config::{
-        RenderStorageConfig, RenderStorageSecrets, UserStorageConfig, UserStorageSecrets,
-        load_api_config, load_api_secrets,
+        RenderStorageConfig, RenderStorageSecrets, ResourceStorageConfig, ResourceStorageSecrets,
+        UserStorageConfig, UserStorageSecrets, load_api_config, load_api_secrets,
     },
     server::{self, AuthManager, LuxideState, build_router},
     tracing::{
-        FileStorage, InMemoryStorage, PostgresStorage, RenderManager, RenderStorage, UserStorage,
+        FileStorage, InMemoryStorage, PostgresStorage, RenderManager, RenderStorage,
+        ResourceManager, ResourceStorage, UserStorage,
     },
 };
 
@@ -44,7 +45,7 @@ async fn main() -> Result<(), String> {
         config.address, config.port, config.render_storage, config.user_storage
     );
 
-    // Create storage backend
+    // create storage backend
     let render_storage: Arc<dyn RenderStorage> =
         match (&config.render_storage, &secrets.render_storage) {
             (RenderStorageConfig::File { output_dir }, _) => {
@@ -57,9 +58,9 @@ async fn main() -> Result<(), String> {
             ) => Arc::new(
                 PostgresStorage::new(host, username, password, db)
                     .await
-                    .map_err(|e| format!("Failed to connect to postgres: {}", e))?,
+                    .map_err(|e| format!("Failed to create render storage: {}", e))?,
             ),
-            _ => return Err("Invalid storage configuration".to_string()),
+            _ => return Err("Invalid render storage configuration".to_string()),
         };
 
     let user_storage: Arc<dyn UserStorage> = match (&config.user_storage, &secrets.user_storage) {
@@ -69,14 +70,29 @@ async fn main() -> Result<(), String> {
         ) => Arc::new(
             PostgresStorage::new(host, username, password, db)
                 .await
-                .map_err(|e| format!("Failed to connect to postgres: {}", e))?,
+                .map_err(|e| format!("Failed to create user storage: {}", e))?,
         ),
-        _ => return Err("Invalid storage configuration".to_string()),
+        _ => return Err("Invalid user storage configuration".to_string()),
     };
+
+    let resource_storage: Arc<dyn ResourceStorage> =
+        match (&config.resource_storage, &secrets.resource_storage) {
+            (
+                ResourceStorageConfig::Postgres { host, username, db },
+                Some(ResourceStorageSecrets::Postgres { password }),
+            ) => Arc::new(
+                PostgresStorage::new(host, username, password, db)
+                    .await
+                    .map_err(|e| format!("Failed to create resource storage: {}", e))?,
+            ),
+            _ => {
+                return Err("Invalid resource storage configuration".to_string());
+            }
+        };
 
     // create render manager
     let render_manager = Arc::new(
-        RenderManager::new(Arc::clone(&render_storage))
+        RenderManager::new(Arc::clone(&render_storage), Arc::clone(&resource_storage))
             .await
             .map_err(|e| format!("Failed to initialize render manager: {}", e))?,
     );
@@ -88,9 +104,13 @@ async fn main() -> Result<(), String> {
         &secrets.auth,
     ));
 
+    // create resource manager
+    let resource_manager = Arc::new(ResourceManager::new(Arc::clone(&resource_storage)));
+
     let router = build_router(&config).with_state(LuxideState::new_with_generated_key(
         Arc::clone(&render_manager),
         Arc::clone(&auth_manager),
+        Arc::clone(&resource_manager),
     ));
 
     let (_, serve_result) = tokio::join!(

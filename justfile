@@ -23,6 +23,7 @@ run-cli: build-cli
 [group('run')]
 run-postgres:
     docker compose up -d postgres
+    sleep 2
     sqlx migrate run
 
 [group('run')]

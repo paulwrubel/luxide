@@ -28,6 +28,17 @@ impl Image8Bit {
 
         Ok(Self::new(image))
     }
+
+    pub fn from_bytes(bytes: &[u8], gamma: f64) -> Result<Self, image::ImageError> {
+        let mut image = image::load_from_memory(bytes)?.into_rgba8();
+
+        // gamma correction
+        for p in image.pixels_mut() {
+            *p = ColorRgb::from_rgba_u8(p).as_gamma_corrected_rgba_u8(gamma);
+        }
+
+        Ok(Self::new(image))
+    }
 }
 
 impl Texture for Image8Bit {

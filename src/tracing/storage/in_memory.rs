@@ -6,14 +6,15 @@ use tokio::sync::RwLock;
 use crate::{shading::ColorRgb, utils::ProgressInfo};
 
 use super::{
-    Render, RenderCheckpoint, RenderCheckpointMeta, RenderID, RenderState, RenderStorage,
-    StorageError, UserID,
+    Render, RenderCheckpoint, RenderCheckpointMeta, RenderID, RenderState, RenderStorage, Resource,
+    ResourceID, ResourceMeta, ResourceStorage, StorageError, UserID,
 };
 
 #[derive(Clone)]
 pub struct InMemoryStorage {
     renders: Arc<RwLock<HashMap<RenderID, Arc<RwLock<Render>>>>>,
     checkpoints: Arc<RwLock<Vec<RenderCheckpoint>>>,
+    resources: Arc<RwLock<HashMap<ResourceID, Resource>>>,
 }
 
 impl Default for InMemoryStorage {
@@ -27,6 +28,7 @@ impl InMemoryStorage {
         Self {
             renders: Arc::new(RwLock::new(HashMap::new())),
             checkpoints: Arc::new(RwLock::new(Vec::new())),
+            resources: Arc::new(RwLock::new(HashMap::new())),
         }
     }
 }
@@ -322,5 +324,88 @@ impl RenderStorage for InMemoryStorage {
                 c.pixel_data.as_ref().map(|pd| pd.len()).unwrap_or(0) as u64 * entry_size_bytes
             })
             .sum())
+    }
+}
+
+#[async_trait::async_trait]
+impl ResourceStorage for InMemoryStorage {
+    async fn create_resource(&self, resource: Resource) -> Result<Resource, StorageError> {
+        self.resources
+            .write()
+            .await
+            .insert(resource.id, resource.clone());
+        Ok(resource)
+    }
+
+    async fn get_resource(&self, id: ResourceID) -> Result<Option<Resource>, StorageError> {
+        Ok(self.resources.read().await.get(&id).cloned())
+    }
+
+    async fn get_resource_metadata(
+        &self,
+        id: ResourceID,
+    ) -> Result<Option<ResourceMeta>, StorageError> {
+        Ok(self.resources.read().await.get(&id).map(ResourceMeta::from))
+    }
+
+    async fn get_all_resource_metadata_for_user(
+        &self,
+        user_id: UserID,
+    ) -> Result<Vec<ResourceMeta>, StorageError> {
+        Ok(self
+            .resources
+            .read()
+            .await
+            .values()
+            .filter(|r| r.user_id == user_id)
+            .map(ResourceMeta::from)
+            .collect())
+    }
+
+    async fn delete_resource(&self, id: ResourceID) -> Result<(), StorageError> {
+        self.resources.write().await.remove(&id);
+        Ok(())
+    }
+
+    async fn resource_exists(&self, id: ResourceID) -> Result<bool, StorageError> {
+        Ok(self.resources.read().await.contains_key(&id))
+    }
+
+    async fn resource_belongs_to(
+        &self,
+        id: ResourceID,
+        user_id: UserID,
+    ) -> Result<bool, StorageError> {
+        Ok(self
+            .resources
+            .read()
+            .await
+            .get(&id)
+            .is_some_and(|r| r.user_id == user_id))
+    }
+
+    async fn get_total_resource_bytes_stored_for_user(
+        &self,
+        user_id: UserID,
+    ) -> Result<u64, StorageError> {
+        Ok(self
+            .resources
+            .read()
+            .await
+            .values()
+            .filter(|r| r.user_id == user_id)
+            .map(|r| r.byte_size)
+            .sum())
+    }
+
+    async fn get_next_resource_id(&self) -> Result<ResourceID, StorageError> {
+        Ok(self
+            .resources
+            .read()
+            .await
+            .keys()
+            .max()
+            .map(|id| id + 1)
+            .unwrap_or(1))
     }
 }

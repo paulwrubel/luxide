@@ -25,7 +25,7 @@ pub enum GeometricRefOrInline {
 }
 
 impl Build<Arc<dyn Geometric>> for GeometricRefOrInline {
-    fn build(&self, builts: &Builts) -> Result<Arc<dyn Geometric>, String> {
+    fn build(&self, builts: &Builts<'_>) -> Result<Arc<dyn Geometric>, String> {
         match self {
             Self::Ref(name) => Ok(Arc::clone(builts.geometrics.get(name).ok_or(format!(
                 "Geometric {} not found. Is it specified in the geometrics list?",
@@ -175,13 +175,13 @@ pub enum GeometricData {
 }
 
 impl Build<Arc<dyn Geometric>> for &GeometricData {
-    fn build(&self, builts: &Builts) -> Result<Arc<dyn Geometric>, String> {
+    fn build(&self, builts: &Builts<'_>) -> Result<Arc<dyn Geometric>, String> {
         (*self).build(builts)
     }
 }
 
 impl Build<Arc<dyn Geometric>> for GeometricData {
-    fn build(&self, builts: &Builts) -> Result<Arc<dyn Geometric>, String> {
+    fn build(&self, builts: &Builts<'_>) -> Result<Arc<dyn Geometric>, String> {
         match self {
             Self::CompoundAxisAlignedPBox {
                 a,
