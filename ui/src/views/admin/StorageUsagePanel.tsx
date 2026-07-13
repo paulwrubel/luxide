@@ -1,5 +1,5 @@
 import { Alert, Spinner } from 'flowbite-react';
-import { useStorageUsageQuery } from '@/hooks/useStorageUsage';
+import { useRenderStorageUsageQuery } from '@/hooks/useRenderStorageUsage';
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) {
@@ -13,16 +13,18 @@ function formatBytes(bytes: number): string {
 }
 
 export function StorageUsagePanel() {
-  const { data: storageUsage, isPending, isError, error } = useStorageUsageQuery();
+  const { data: renderStorageUsage, isPending, isError, error } = useRenderStorageUsageQuery();
 
   return (
     <section>
       <h2 className="mb-2 text-lg font-semibold text-zinc-300">Checkpoint Storage Usage</h2>
       {isPending && <Spinner />}
       {isError && <Alert color="red">Error loading usage: {error?.message}</Alert>}
-      {!isPending && !isError && storageUsage && (
+      {!isPending && !isError && renderStorageUsage && (
         <div className="rounded-lg border border-zinc-700 bg-zinc-900 p-4">
-          <span className="text-2xl font-bold text-white">{formatBytes(storageUsage.bytes)}</span>
+          <span className="text-2xl font-bold text-white">
+            {formatBytes(renderStorageUsage.bytes)}
+          </span>
           <span className="ml-2 text-sm text-zinc-400">total checkpoint data</span>
         </div>
       )}

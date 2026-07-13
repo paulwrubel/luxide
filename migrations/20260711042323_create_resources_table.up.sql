@@ -16,4 +16,6 @@ CREATE TABLE resources (
     created_at TIMESTAMPTZ NOT NULL
 );
 
+ALTER TABLE users ADD max_resource_storage_bytes BIGINT;
+
 COMMIT;

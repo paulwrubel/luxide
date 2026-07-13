@@ -55,6 +55,9 @@ pub use get_render::*;
 mod get_resource_metadata;
 pub use get_resource_metadata::*;
 
+mod get_resource_storage_usage;
+pub use get_resource_storage_usage::*;
+
 mod get_resource_data;
 pub use get_resource_data::*;
 

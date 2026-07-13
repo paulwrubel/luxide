@@ -16,6 +16,7 @@ pub struct UpdateUserQuotasRequest {
     pub max_renders: Option<u32>,
     pub max_checkpoints_per_render: Option<u32>,
     pub max_render_pixel_count: Option<u32>,
+    pub max_resource_storage_bytes: Option<u64>,
 }
 
 pub async fn update_user_quotas(
@@ -43,6 +44,7 @@ pub async fn update_user_quotas(
     target_user.max_renders = body.max_renders;
     target_user.max_checkpoints_per_render = body.max_checkpoints_per_render;
     target_user.max_render_pixel_count = body.max_render_pixel_count;
+    target_user.max_resource_storage_bytes = body.max_resource_storage_bytes;
 
     // update in DB
     match state.auth_manager.update_user(target_user).await {

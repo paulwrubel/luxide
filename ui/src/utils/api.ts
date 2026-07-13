@@ -65,6 +65,7 @@ export type User = {
   max_renders: number | null;
   max_checkpoints_per_render: number | null;
   max_render_pixel_count: number | null;
+  max_resource_storage_bytes: number | null;
 };
 
 export type UsageResponse = {
@@ -438,6 +439,7 @@ export async function updateUserQuotas(
   maxRenders: number | null,
   maxCheckpointsPerRender: number | null,
   maxRenderPixelCount: number | null,
+  maxResourceStorageBytes: number | null,
 ): Promise<User> {
   const response = await fetcher(`${getAPIURL()}/users/${userID}/quotas`, {
     method: 'PUT',
@@ -446,6 +448,7 @@ export async function updateUserQuotas(
       max_renders: maxRenders,
       max_checkpoints_per_render: maxCheckpointsPerRender,
       max_render_pixel_count: maxRenderPixelCount,
+      max_resource_storage_bytes: maxResourceStorageBytes,
     }),
   });
 
@@ -457,12 +460,12 @@ export async function updateUserQuotas(
   return (await response.json()) as User;
 }
 
-export async function getStorageUsage(fetcher: typeof fetch): Promise<UsageResponse> {
-  const response = await fetcher(`${getAPIURL()}/storage_usage`);
+export async function getRenderStorageUsage(fetcher: typeof fetch): Promise<UsageResponse> {
+  const response = await fetcher(`${getAPIURL()}/renders/storage_usage`);
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`failed to get usage: (${response.status}: ${body})`);
+    throw new Error(`failed to get renders storage usage: (${response.status}: ${body})`);
   }
 
   return (await response.json()) as UsageResponse;
@@ -472,10 +475,7 @@ export async function getAllResourceMetadata(
   fetcher: typeof fetch,
   targetUserID?: number,
 ): Promise<ResourceMeta[]> {
-  const response = await fetcher(appendUserID(`${getAPIURL()}/resources`, targetUserID), {
-    headers: { 'Content-Type': 'application/json' },
-    method: 'GET',
-  });
+  const response = await fetcher(appendUserID(`${getAPIURL()}/resources`, targetUserID));
 
   if (!response.ok) {
     const body = await response.text();
@@ -519,6 +519,26 @@ export async function deleteResource(
     const body = await response.text();
     throw new Error(`failed to delete resource: (${response.status}: ${body})`);
   }
+}
+
+export type ResourceStorageUsageResponse = {
+  bytes: number;
+};
+
+export async function getResourceStorageUsage(
+  fetcher: typeof fetch,
+  targetUserID?: number,
+): Promise<ResourceStorageUsageResponse> {
+  const response = await fetcher(
+    appendUserID(`${getAPIURL()}/resources/storage_usage`, targetUserID),
+  );
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`failed to get resource storage usage: (${response.status}: ${body})`);
+  }
+
+  return (await response.json()) as ResourceStorageUsageResponse;
 }
 
 /**

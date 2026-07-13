@@ -31,6 +31,8 @@ export function QuotaEditModal(props: QuotaEditModalProps) {
       max_checkpoints_per_render_unlimited: user.max_checkpoints_per_render === null,
       max_render_pixel_count: user.max_render_pixel_count ?? 250000,
       max_render_pixel_count_unlimited: user.max_render_pixel_count === null,
+      max_resource_storage_bytes: user.max_resource_storage_bytes ?? 100 * 1024 * 1024,
+      max_resource_storage_bytes_unlimited: user.max_resource_storage_bytes === null,
     },
     validators: {
       onChange: z
@@ -41,6 +43,8 @@ export function QuotaEditModal(props: QuotaEditModalProps) {
           max_checkpoints_per_render_unlimited: z.boolean(),
           max_render_pixel_count: z.number(),
           max_render_pixel_count_unlimited: z.boolean(),
+          max_resource_storage_bytes: z.number(),
+          max_resource_storage_bytes_unlimited: z.boolean(),
         })
         .superRefine((data, ctx) => {
           if (!data.max_renders_unlimited) {
@@ -73,6 +77,18 @@ export function QuotaEditModal(props: QuotaEditModalProps) {
               });
             }
           }
+          if (!data.max_resource_storage_bytes_unlimited) {
+            if (
+              !Number.isInteger(data.max_resource_storage_bytes) ||
+              data.max_resource_storage_bytes < 1
+            ) {
+              ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: 'Must be a positive integer',
+                path: ['max_resource_storage_bytes'],
+              });
+            }
+          }
         }),
     },
   });
@@ -91,6 +107,10 @@ export function QuotaEditModal(props: QuotaEditModalProps) {
     form.store,
     (state) => state.values.max_render_pixel_count_unlimited,
   );
+  const isMaxResourceStorageBytesUnlimited = useSelector(
+    form.store,
+    (state) => state.values.max_resource_storage_bytes_unlimited,
+  );
 
   function handleSave() {
     const values = form.state.values;
@@ -104,6 +124,9 @@ export function QuotaEditModal(props: QuotaEditModalProps) {
         maxRenderPixelCount: values.max_render_pixel_count_unlimited
           ? null
           : values.max_render_pixel_count,
+        maxResourceStorageBytes: values.max_resource_storage_bytes_unlimited
+          ? null
+          : values.max_resource_storage_bytes,
       },
       { onSuccess: () => onClose() },
     );
@@ -176,6 +199,29 @@ export function QuotaEditModal(props: QuotaEditModalProps) {
             </div>
             {!isMaxPixelsUnlimited && (
               <form.AppField name="max_render_pixel_count">
+                {(field) => (
+                  <field.FormTextField type="number" valueLabel="" required className="w-full" />
+                )}
+              </form.AppField>
+            )}
+          </fieldset>
+
+          {/* max resource storage bytes */}
+          <fieldset className="flex flex-col gap-2 rounded-lg border border-zinc-700 p-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-zinc-300">Max Resource Storage (bytes)</Label>
+              <form.AppField name="max_resource_storage_bytes_unlimited">
+                {(field) => (
+                  <ToggleSwitch
+                    checked={field.state.value}
+                    label="Unlimited"
+                    onChange={(checked) => field.handleChange(checked)}
+                  />
+                )}
+              </form.AppField>
+            </div>
+            {!isMaxResourceStorageBytesUnlimited && (
+              <form.AppField name="max_resource_storage_bytes">
                 {(field) => (
                   <field.FormTextField type="number" valueLabel="" required className="w-full" />
                 )}

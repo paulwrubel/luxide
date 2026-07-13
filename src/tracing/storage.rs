@@ -390,12 +390,14 @@ pub struct User {
     pub max_renders: Option<u32>,
     pub max_checkpoints_per_render: Option<u32>,
     pub max_render_pixel_count: Option<u32>,
+    pub max_resource_storage_bytes: Option<u64>,
 }
 
 impl User {
     pub const DEFAULT_MAX_RENDERS: u32 = 1;
     pub const DEFAULT_MAX_CHECKPOINTS_PER_RENDER: u32 = 1;
     pub const DEFAULT_MAX_RENDER_PIXEL_COUNT: u32 = 500 * 500;
+    pub const DEFAULT_MAX_RESOURCE_STORAGE_BYTES: u64 = 100 * 1024 * 1024; // 100 MB
 
     pub fn new_admin(
         id: UserID,
@@ -414,6 +416,7 @@ impl User {
             max_renders: None,
             max_checkpoints_per_render: None,
             max_render_pixel_count: None,
+            max_resource_storage_bytes: None,
         }
     }
 
@@ -429,6 +432,7 @@ impl User {
             max_renders: Some(Self::DEFAULT_MAX_RENDERS),
             max_checkpoints_per_render: Some(Self::DEFAULT_MAX_CHECKPOINTS_PER_RENDER),
             max_render_pixel_count: Some(Self::DEFAULT_MAX_RENDER_PIXEL_COUNT),
+            max_resource_storage_bytes: Some(Self::DEFAULT_MAX_RESOURCE_STORAGE_BYTES),
         }
     }
 }

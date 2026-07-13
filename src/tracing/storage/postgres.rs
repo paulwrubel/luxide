@@ -692,7 +692,8 @@ impl UserStorage for PostgresStorage {
         match sqlx::query!(
             r#"
                 SELECT id, github_id, username, avatar_url, created_at, updated_at, 
-                    role, max_renders, max_checkpoints_per_render, max_render_pixel_count
+                    role, max_renders, max_checkpoints_per_render, max_render_pixel_count,
+                    max_resource_storage_bytes
                 FROM users
                 WHERE id = $1
             "#,
@@ -712,6 +713,7 @@ impl UserStorage for PostgresStorage {
                 max_renders: row.max_renders.map(|r| r as u32),
                 max_checkpoints_per_render: row.max_checkpoints_per_render.map(|c| c as u32),
                 max_render_pixel_count: row.max_render_pixel_count.map(|p| p as u32),
+                max_resource_storage_bytes: row.max_resource_storage_bytes.map(|b| b as u64),
             })),
             Ok(None) => Ok(None),
             Err(e) => Err(format!("Failed to get user with id {}: {}", id, e).into()),
@@ -722,7 +724,8 @@ impl UserStorage for PostgresStorage {
         match sqlx::query!(
             r#"
                 SELECT id, github_id, username, avatar_url, created_at, updated_at,
-                    role, max_renders, max_checkpoints_per_render, max_render_pixel_count
+                    role, max_renders, max_checkpoints_per_render, max_render_pixel_count,
+                    max_resource_storage_bytes
                 FROM users
                 ORDER BY id
             "#,
@@ -743,6 +746,7 @@ impl UserStorage for PostgresStorage {
                     max_renders: row.max_renders.map(|r| r as u32),
                     max_checkpoints_per_render: row.max_checkpoints_per_render.map(|c| c as u32),
                     max_render_pixel_count: row.max_render_pixel_count.map(|p| p as u32),
+                    max_resource_storage_bytes: row.max_resource_storage_bytes.map(|b| b as u64),
                 })
                 .collect()),
             Err(e) => Err(format!("Failed to get users: {}", e).into()),
@@ -756,7 +760,8 @@ impl UserStorage for PostgresStorage {
         match sqlx::query!(
             r#"
                 SELECT id, github_id, username, avatar_url, created_at, updated_at, 
-                    role, max_renders, max_checkpoints_per_render, max_render_pixel_count
+                    role, max_renders, max_checkpoints_per_render, max_render_pixel_count,
+                    max_resource_storage_bytes
                 FROM users
                 WHERE github_id = $1
             "#,
@@ -776,6 +781,7 @@ impl UserStorage for PostgresStorage {
                 max_renders: row.max_renders.map(|r| r as u32),
                 max_checkpoints_per_render: row.max_checkpoints_per_render.map(|c| c as u32),
                 max_render_pixel_count: row.max_render_pixel_count.map(|p| p as u32),
+                max_resource_storage_bytes: row.max_resource_storage_bytes.map(|b| b as u64),
             })),
             Ok(None) => Ok(None),
             Err(e) => Err(format!("Failed to get user with github id {}: {}", github_id, e).into()),
@@ -828,8 +834,9 @@ impl UserStorage for PostgresStorage {
         match sqlx::query!(
             r#"
                 INSERT INTO users (id, github_id, username, avatar_url, created_at, updated_at,
-                    role, max_renders, max_checkpoints_per_render, max_render_pixel_count)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                    role, max_renders, max_checkpoints_per_render, max_render_pixel_count,
+                    max_resource_storage_bytes)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
             "#,
             user.id as i32,
             user.github_id as i32,
@@ -841,6 +848,7 @@ impl UserStorage for PostgresStorage {
             user.max_renders.map(|r| r as i32),
             user.max_checkpoints_per_render.map(|c| c as i32),
             user.max_render_pixel_count.map(|p| p as i32),
+            user.max_resource_storage_bytes.map(|b| b as i64),
         )
         .execute(&self.pool)
         .await
@@ -860,7 +868,8 @@ impl UserStorage for PostgresStorage {
             r#"
                 UPDATE users
                 SET github_id = $2, username = $3, avatar_url = $4, updated_at = $5, role = $6, 
-                    max_renders = $7, max_checkpoints_per_render = $8, max_render_pixel_count = $9
+                    max_renders = $7, max_checkpoints_per_render = $8, max_render_pixel_count = $9,
+                    max_resource_storage_bytes = $10
                 WHERE id = $1
             "#,
             user.id as i32,
@@ -872,6 +881,7 @@ impl UserStorage for PostgresStorage {
             user.max_renders.map(|r| r as i32),
             user.max_checkpoints_per_render.map(|c| c as i32),
             user.max_render_pixel_count.map(|p| p as i32),
+            user.max_resource_storage_bytes.map(|b| b as i64),
         )
         .execute(&self.pool)
         .await

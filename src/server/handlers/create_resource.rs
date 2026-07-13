@@ -25,6 +25,24 @@ pub async fn create_resource(
             Err((status, message)) => return (status, message).into_response(),
         };
 
+    let user = match state.auth_manager.get_user(effective_user_id).await {
+        Ok(Some(user)) => user,
+        Ok(None) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "User not found".to_string(),
+            )
+                .into_response();
+        }
+        Err(e) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Failed to get user: {}", e),
+            )
+                .into_response();
+        }
+    };
+
     let mut name = None;
     let mut resource_type = None;
     let mut mime_type = None;
@@ -92,7 +110,7 @@ pub async fn create_resource(
 
     match state
         .resource_manager
-        .create_resource(name, resource_type, mime_type, data, effective_user_id)
+        .create_resource(name, resource_type, mime_type, data, user)
         .await
     {
         Ok(resource) => (StatusCode::CREATED, axum::Json(resource)).into_response(),

@@ -11,7 +11,7 @@ use serde::Serialize;
 use crate::shading::textures::Image8Bit;
 
 use super::{
-    Resource, ResourceID, ResourceMeta, ResourceStorage, ResourceType, StorageError, UserID,
+    Resource, ResourceID, ResourceMeta, ResourceStorage, ResourceType, StorageError, User, UserID,
 };
 
 #[derive(Clone)]
@@ -30,7 +30,7 @@ impl ResourceManager {
         resource_type: ResourceType,
         mime_type: String,
         data: Vec<u8>,
-        user_id: UserID,
+        user: User,
     ) -> Result<Resource, ResourceManagerError> {
         let id = self.storage.get_next_resource_id().await?;
 
@@ -48,9 +48,26 @@ impl ResourceManager {
             }
         }
 
+        // enforce resource storage quota
+        if let Some(limit) = user.max_resource_storage_bytes {
+            let current_usage = self
+                .storage
+                .get_total_resource_bytes_stored_for_user(user.id)
+                .await?;
+            if current_usage + byte_size > limit {
+                return Err(ResourceManagerError::ClientError(
+                    StatusCode::PAYLOAD_TOO_LARGE,
+                    format!(
+                        "Resource storage limit would be exceeded: {} bytes are currently used of a {} bytes limit, this is a {} byte upload",
+                        current_usage, limit, byte_size
+                    ),
+                ));
+            }
+        }
+
         let resource = Resource {
             id,
-            user_id,
+            user_id: user.id,
             name,
             resource_type,
             mime_type,
@@ -136,6 +153,16 @@ impl ResourceManager {
         }
 
         self.storage.delete_resource(id).await.map_err(|e| e.into())
+    }
+
+    pub async fn get_resource_storage_usage(
+        &self,
+        user_id: UserID,
+    ) -> Result<u64, ResourceManagerError> {
+        self.storage
+            .get_total_resource_bytes_stored_for_user(user_id)
+            .await
+            .map_err(|e| e.into())
     }
 }
 

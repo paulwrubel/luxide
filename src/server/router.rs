@@ -95,10 +95,7 @@ fn get_cors_layer(config: &ApiConfig) -> CorsLayer {
 }
 
 fn build_api_router() -> Router<LuxideState> {
-    let api_router = Router::new().route("/", get(handlers::index)).route(
-        "/storage_usage",
-        get(handlers::get_global_render_checkpoint_storage_usage),
-    );
+    let api_router = Router::new().route("/", get(handlers::index));
 
     api_router
         .nest("/renders", build_renders_router())
@@ -110,6 +107,10 @@ fn build_api_router() -> Router<LuxideState> {
 
 fn build_renders_router() -> Router<LuxideState> {
     Router::new()
+        .route(
+            "/storage_usage",
+            get(handlers::get_global_render_checkpoint_storage_usage),
+        )
         .route("/", get(handlers::get_all_renders))
         .route("/", post(handlers::create_render))
         .route(
@@ -168,6 +169,7 @@ fn build_resources_router() -> Router<LuxideState> {
     Router::new()
         .route("/", get(handlers::get_all_resource_metadata))
         .route("/", post(handlers::create_resource))
+        .route("/storage_usage", get(handlers::get_resource_storage_usage))
         .route("/{id}", get(handlers::get_resource_metadata))
         .route("/{id}/data", get(handlers::get_resource_data))
         .route("/{id}", delete(handlers::delete_resource))
