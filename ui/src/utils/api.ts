@@ -497,7 +497,16 @@ export async function createResource(
 
   if (!response.ok || response.status !== 201) {
     const body = await response.text();
-    throw new Error(`failed to create resource: (${response.status}: ${body})`);
+    let message = body;
+    try {
+      const parsed = JSON.parse(body) as { message?: string };
+      if (parsed.message) {
+        message = parsed.message;
+      }
+    } catch {
+      // body is not JSON, use raw text
+    }
+    throw new Error(message);
   }
 
   return (await response.json()) as ResourceMeta;
