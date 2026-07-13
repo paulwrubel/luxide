@@ -58,7 +58,7 @@ impl ResourceManager {
                 return Err(ResourceManagerError::ClientError(
                     StatusCode::PAYLOAD_TOO_LARGE,
                     format!(
-                        "Resource storage limit would be exceeded: {} bytes are currently used of a {} bytes limit, this is a {} byte upload",
+                        "Resource storage limit would be exceeded: {} bytes currently used, {} bytes limit, {} byte upload",
                         current_usage, limit, byte_size
                     ),
                 ));
