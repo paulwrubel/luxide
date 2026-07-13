@@ -1,15 +1,9 @@
 import { useState, useRef } from 'react';
-import {
-  Button,
-  Label,
-  Modal,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  TextInput,
-  Alert,
-} from 'flowbite-react';
+import { Button, Label, Modal, ModalHeader, ModalBody, ModalFooter, Alert } from 'flowbite-react';
+import { useAppForm } from '@/hooks/useAppForm';
+import { z } from 'zod';
 import { useCreateResourceMutation } from '@/hooks/useResourceMutations';
+import type { ResourceType } from '@/utils/api';
 
 export type UploadResourceModalProps = {
   show: boolean;
@@ -19,18 +13,24 @@ export type UploadResourceModalProps = {
 export function UploadResourceModal(props: UploadResourceModalProps) {
   const { show, onClose } = props;
 
-  const [name, setName] = useState('');
   const [file, setFile] = useState<File | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { mutate: uploadResource, isPending } = useCreateResourceMutation();
 
-  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const selectedFile = event.target.files?.[0] ?? null;
-    setFile(selectedFile);
-    setError(null);
-  }
+  const form = useAppForm({
+    defaultValues: {
+      name: '',
+      resource_type: 'texture_image' as ResourceType,
+    },
+    validators: {
+      onChange: z.object({
+        name: z.string().min(1, 'Name is required'),
+        resource_type: z.enum(['texture_image']),
+      }),
+    },
+  });
 
   function getMimeType(): string {
     if (file) {
@@ -40,44 +40,40 @@ export function UploadResourceModal(props: UploadResourceModalProps) {
   }
 
   function handleSubmit() {
-    setError(null);
-
-    if (!name.trim()) {
-      setError('Please enter a name for the resource.');
-      return;
-    }
+    setFileError(null);
 
     if (!file) {
-      setError('Please select a file to upload.');
+      setFileError('Please select a file to upload.');
       return;
     }
 
+    const values = form.state.values;
     const formData = new FormData();
-    formData.append('name', name.trim());
-    formData.append('resource_type', 'texture_image');
+    formData.append('name', values.name.trim());
+    formData.append('resource_type', values.resource_type);
     formData.append('mime_type', getMimeType());
     formData.append('file', file);
 
     uploadResource(formData, {
       onSuccess: () => {
-        setName('');
+        form.reset();
         setFile(null);
-        setError(null);
+        setFileError(null);
         if (fileInputRef.current) {
           fileInputRef.current.value = '';
         }
         onClose();
       },
       onError: (uploadError) => {
-        setError(uploadError instanceof Error ? uploadError.message : 'Upload failed');
+        setFileError(uploadError instanceof Error ? uploadError.message : 'Upload failed');
       },
     });
   }
 
   function handleClose() {
-    setName('');
+    form.reset();
     setFile(null);
-    setError(null);
+    setFileError(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -88,32 +84,30 @@ export function UploadResourceModal(props: UploadResourceModalProps) {
     <Modal show={show} onClose={handleClose}>
       <ModalHeader>Upload Resource</ModalHeader>
       <ModalBody>
-        <div className="flex flex-col gap-4">
-          {error && <Alert color="red">{error}</Alert>}
+        <div className="flex flex-col gap-4 text-zinc-300">
+          {fileError && <Alert color="red">{fileError}</Alert>}
+          <form.AppField name="name">
+            {(field) => <field.FormTextField valueLabel="Name" required />}
+          </form.AppField>
+          <form.AppField name="resource_type">
+            {(field) => (
+              <field.SelectControl
+                label="Resource Type"
+                items={[{ label: 'Texture Image', value: 'texture_image' }]}
+              />
+            )}
+          </form.AppField>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="resource-name" className="text-zinc-300">
-              Name
-            </Label>
-            <TextInput
-              id="resource-name"
-              placeholder="My Texture"
-              value={name}
-              onChange={(event) => {
-                setName(event.target.value);
-              }}
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="resource-file" className="text-zinc-300">
-              Image File
-            </Label>
+            <Label className="text-zinc-300">Image File</Label>
             <input
               ref={fileInputRef}
-              id="resource-file"
               type="file"
               accept="image/*"
               className="block w-full text-sm text-zinc-300 file:mr-4 file:rounded-lg file:border-0 file:bg-zinc-700 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-zinc-200 hover:file:bg-zinc-600"
-              onChange={handleFileChange}
+              onChange={(event) => {
+                setFile(event.target.files?.[0] ?? null);
+                setFileError(null);
+              }}
             />
           </div>
         </div>
