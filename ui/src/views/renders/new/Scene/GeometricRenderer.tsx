@@ -181,6 +181,7 @@ export function GeometricRenderer(props: GeometricRendererProps) {
             <bufferGeometry>
               <bufferAttribute attach="attributes-position" args={[geom.vertices, 3]} />
               <bufferAttribute attach="attributes-normal" args={[geom.normals, 3]} />
+              <bufferAttribute attach="attributes-uv" args={[geom.uvs, 2]} />
               <bufferAttribute attach="index" args={[geom.indices, 1]} />
             </bufferGeometry>
             <MaterialResolver

@@ -530,6 +530,27 @@ export async function deleteResource(
   }
 }
 
+export async function getResourceData(
+  fetcher: typeof fetch,
+  resourceID: number,
+  targetUserID?: number,
+): Promise<Blob | null> {
+  const response = await fetcher(
+    appendUserID(`${getAPIURL()}/resources/${resourceID}/data`, targetUserID),
+  );
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`failed to get resource data: (${response.status}: ${body})`);
+  }
+
+  return await response.blob();
+}
+
 export type ResourceStorageUsageResponse = {
   bytes: number;
 };

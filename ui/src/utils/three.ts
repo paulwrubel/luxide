@@ -62,6 +62,7 @@ export type ParallelogramGeometry = {
   vertices: Float32Array;
   indices: Uint16Array;
   normals: Float32Array;
+  uvs: Float32Array;
 };
 
 /**
@@ -111,5 +112,8 @@ export function createParallelogramGeometry(
     nz / len,
   ]);
 
-  return { vertices, indices, normals };
+  // uv indices: map the four corners to (0,0), (1,0), (0,1), (1,1)
+  const uvs = new Float32Array([0, 0, 1, 0, 0, 1, 1, 1]);
+
+  return { vertices, indices, normals, uvs };
 }

@@ -11,6 +11,7 @@ import { defaultTextureForType, type TextureData } from '@/utils/render/texture'
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { useSelector } from '@tanstack/react-store';
 import type { DeepPartial } from 'flowbite-react/types';
+import { useAllResourceMetadataQuery } from '@/hooks/useResources';
 
 export type ControlsProps = {
   form: RenderForm;
@@ -20,6 +21,7 @@ export function Controls(props: ControlsProps) {
   const { form } = props;
 
   const renderConfig = useSelector(form.store, (state) => state.values);
+  const { data: resources } = useAllResourceMetadataQuery();
 
   const tabsTheme: DeepPartial<TabsTheme> = {
     tablist: {
@@ -191,17 +193,26 @@ export function Controls(props: ControlsProps) {
                 },
                 {
                   subtype: 'image',
-                  label: 'Image Texture',
-                  description: 'Load a texture from an image file.',
-                  disabled: true,
+                  label: 'Texture Image',
+                  description: 'Load a texture from an uploaded texture image resource.',
+                  disabled: !resources || resources.length === 0,
                   disabledReason:
-                    'Image texture creation requires file upload support, which is not yet implemented in the UI.',
+                    'No resources available. Upload an image on the Resources page first.',
                 },
               ]}
               type="textures"
-              getDefault={(type) =>
-                defaultTextureForType(type as Exclude<TextureData['type'], 'image'>)
-              }
+              getDefault={(subtype, options) => {
+                if (subtype === 'image') {
+                  const opts = options as { resource_id: number } | undefined;
+                  if (!opts?.resource_id) {
+                    throw new Error('resource_id is required for texture images');
+                  }
+                  return defaultTextureForType('image', {
+                    resource_id: opts.resource_id,
+                  }) as TextureData;
+                }
+                return defaultTextureForType(subtype as 'color' | 'checker') as TextureData;
+              }}
             />
           </div>
         </div>
