@@ -46,8 +46,8 @@ impl Texture for Image8Bit {
         let u = Interval::new(0.0, 1.0).clamp(u);
         let v = 1.0 - Interval::new(0.0, 1.0).clamp(v);
 
-        let x = (u * self.image.width() as f64) as u32;
-        let y = (v * self.image.height() as f64) as u32;
+        let x = ((u * self.image.width() as f64) as u32).clamp(0, self.image.width() - 1);
+        let y = ((v * self.image.height() as f64) as u32).clamp(0, self.image.height() - 1);
 
         let pixel = self.image.get_pixel(x, y);
 
