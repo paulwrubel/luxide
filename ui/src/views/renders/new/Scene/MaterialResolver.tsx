@@ -1,43 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { MeshTransmissionMaterial } from '@react-three/drei';
-import * as THREE from 'three';
+import type * as THREE from 'three';
 import { getMaterialDataSafe } from '@/utils/render/material';
 import { getTextureDataSafe } from '@/utils/render/texture';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
-import { useResourceDataQuery } from '@/hooks/useResourceData';
-
-function useImageMap(resourceId: number | undefined): THREE.Texture | null {
-  const [map, setMap] = useState<THREE.Texture | null>(null);
-
-  const { data: blob } = useResourceDataQuery(resourceId ?? 0, {
-    enabled: resourceId !== undefined,
-  });
-
-  useEffect(() => {
-    if (!blob) {
-      return;
-    }
-
-    const url = URL.createObjectURL(blob);
-    const loader = new THREE.TextureLoader();
-    loader.load(
-      url,
-      (texture) => {
-        setMap(texture);
-      },
-      undefined,
-      () => {
-        console.warn('Failed to load texture from resource', resourceId);
-      },
-    );
-
-    return () => {
-      URL.revokeObjectURL(url);
-    };
-  }, [blob, resourceId]);
-
-  return resourceId !== undefined ? map : null;
-}
+import { useImageMap } from '@/hooks/useImageMap';
 
 export type MaterialResolverProps = {
   config: NormalizedRenderConfig;
@@ -61,23 +28,12 @@ export function MaterialResolver(props: MaterialResolverProps) {
   const specularMaterialRef = useRef<THREE.MeshStandardMaterial>(null);
 
   useEffect(() => {
-    if (lambertianMaterialRef.current) {
-      lambertianMaterialRef.current.map = reflectanceImageMap;
-      lambertianMaterialRef.current.needsUpdate = true;
-    }
-  }, [reflectanceImageMap]);
-
-  useEffect(() => {
-    if (dielectricMaterialRef.current) {
-      dielectricMaterialRef.current.map = reflectanceImageMap;
-      dielectricMaterialRef.current.needsUpdate = true;
-    }
-  }, [reflectanceImageMap]);
-
-  useEffect(() => {
-    if (specularMaterialRef.current) {
-      specularMaterialRef.current.map = reflectanceImageMap;
-      specularMaterialRef.current.needsUpdate = true;
+    const refs = [lambertianMaterialRef, dielectricMaterialRef, specularMaterialRef];
+    for (const ref of refs) {
+      if (ref.current) {
+        ref.current.map = reflectanceImageMap;
+        ref.current.needsUpdate = true;
+      }
     }
   }, [reflectanceImageMap]);
 
