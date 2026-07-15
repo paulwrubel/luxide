@@ -30,20 +30,35 @@ impl Disk {
         is_culled: bool,
         material: Arc<dyn Material>,
     ) -> Result<Self, String> {
+        if normal.squared_length() <= 0.0 {
+            return Err("disk normal must not be zero-length".to_string());
+        }
+        let onb = Onb::from_w(normal.unit_vector());
+        Self::new_with_onb(center, radius, inner_radius, is_culled, material, onb)
+    }
+
+    /// Construct a disk with an explicit orthonormal tangent frame `onb`
+    /// (`onb.w` is the surface normal, `onb.u`/`onb.v` span the disk plane and
+    /// determine the UV orientation). Used when the caller needs the disk's
+    /// texture axes aligned to an external convention rather than the default
+    /// frame derived from the normal.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new_with_onb(
+        center: Point,
+        radius: f64,
+        inner_radius: f64,
+        is_culled: bool,
+        material: Arc<dyn Material>,
+        onb: Onb,
+    ) -> Result<Self, String> {
         if radius <= 0.0 {
             return Err("disk radius must be positive".to_string());
         }
         if inner_radius < 0.0 || inner_radius >= radius {
             return Err("disk inner_radius must be in [0, radius)".to_string());
         }
-        if normal.squared_length() <= 0.0 {
-            return Err("disk normal must not be zero-length".to_string());
-        }
-        let normal = normal.unit_vector();
 
-        let onb = Onb::from_w(normal);
-
-        let plane_d = center.0.dot(normal);
+        let plane_d = center.0.dot(onb.w);
 
         // area of the annular disk
         let area = PI * (radius.powi(2) - inner_radius.powi(2));

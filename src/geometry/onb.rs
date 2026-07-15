@@ -25,38 +25,11 @@ impl Onb {
     /// `w = -Z`, where the shortest-arc rotation is undefined and the tangent
     /// directions become discontinuous (an unavoidable consequence of the
     /// hairy-ball theorem — no tangent frame is continuous over the whole
-    /// sphere). At that pole a fixed 180° rotation about -Y is used.
+    /// sphere). At that pole a fixed 180° rotation is used.
     pub fn from_w(normal: Vector3) -> Self {
         let w = normal.unit_vector();
-
-        let v_from = Vector3::new(0.0, 0.0, 1.0);
-        let r = v_from.dot(w) + 1.0;
-
-        // build the quaternion (qx, qy, qz, qw) rotating +Z onto w
-        let (qx, qy, qz, qw): (f64, f64, f64, f64) = if r < 1e-8 {
-            // +Z and w are antiparallel: the shortest-arc rotation is
-            // undefined, so rotate 180° about any axis in the XY-plane.
-            // -Y is perpendicular to +Z and gives a right-handed result.
-            (0.0, -1.0, 0.0, 0.0)
-        } else {
-            let cross = v_from.cross(w);
-            (cross.x, cross.y, cross.z, r)
-        };
-
-        // normalize the quaternion
-        let q_len = (qx * qx + qy * qy + qz * qz + qw * qw).sqrt();
-        let (qx, qy, qz, qw) = (qx / q_len, qy / q_len, qz / q_len, qw / q_len);
-        let q_vec = Vector3::new(qx, qy, qz);
-
-        // rotate a vector by the quaternion: v_rot = v + 2*qw*(q_vec × v) + q_vec × (2 * (q_vec × v))
-        let rotate = |v: Vector3| {
-            let t = q_vec.cross(v) * 2.0;
-            v + t * qw + q_vec.cross(t)
-        };
-
-        let u = rotate(Vector3::new(1.0, 0.0, 0.0));
-        let v = rotate(Vector3::new(0.0, 1.0, 0.0));
-
+        let u = Vector3::UNIT_X.rotated_between(Vector3::UNIT_Z, w);
+        let v = Vector3::UNIT_Y.rotated_between(Vector3::UNIT_Z, w);
         Self { u, v, w }
     }
 

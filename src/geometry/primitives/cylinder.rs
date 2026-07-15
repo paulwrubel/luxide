@@ -64,7 +64,19 @@ impl Cylinder {
 
         let axis = delta.unit_vector();
         let height = delta.length();
-        let onb = Onb::from_w(axis);
+
+        // Build a tangent frame that matches the frontend Three.js preview,
+        // whose cylinder is oriented by the shortest-arc rotation from its
+        // native +Y axis onto `axis`. Xf/Zf are the preview's local +X/+Z
+        // tangents in world space; assigning u=Zf, v=Xf, w=axis makes the
+        // torso and cap texture UVs align with the preview.
+        let xf = Vector3::UNIT_X.rotated_between(Vector3::UNIT_Y, axis);
+        let zf = Vector3::UNIT_Z.rotated_between(Vector3::UNIT_Y, axis);
+        let onb = Onb {
+            u: zf,
+            v: xf,
+            w: axis,
+        };
 
         // bounding box
         let bounding_box = {
@@ -103,19 +115,44 @@ impl Cylinder {
             }
         };
 
-        // cap disks (normals point inward, toward the cylinder interior)
+        // cap disks with explicit tangent frames matching the frontend preview.
+        // The preview's bottom cap flips the V axis (Three.js `sign = -1`), so
+        // the a-end cap uses v = -Xf; both caps keep u = Zf. w is the cap
+        // normal (a-end faces -axis, b-end faces +axis).
         let a_cap = if a_end == CylinderEnd::Capped {
             Some(
-                Disk::new(a, -axis, radius, 0.0, false, Arc::clone(&material))
-                    .expect("cap disk parameters are valid"),
+                Disk::new_with_onb(
+                    a,
+                    radius,
+                    0.0,
+                    false,
+                    Arc::clone(&material),
+                    Onb {
+                        u: zf,
+                        v: -xf,
+                        w: -axis,
+                    },
+                )
+                .expect("cap disk parameters are valid"),
             )
         } else {
             None
         };
         let b_cap = if b_end == CylinderEnd::Capped {
             Some(
-                Disk::new(b, axis, radius, 0.0, false, Arc::clone(&material))
-                    .expect("cap disk parameters are valid"),
+                Disk::new_with_onb(
+                    b,
+                    radius,
+                    0.0,
+                    false,
+                    Arc::clone(&material),
+                    Onb {
+                        u: zf,
+                        v: xf,
+                        w: axis,
+                    },
+                )
+                .expect("cap disk parameters are valid"),
             )
         } else {
             None
