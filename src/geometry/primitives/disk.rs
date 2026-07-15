@@ -129,13 +129,13 @@ impl Geometric for Disk {
             return None;
         }
 
-        // UV mapping
+        // uv mapping via cartesian projection
+        //
+        // projects the hit point onto the disk's tangent axes, then normalizes
+        // by outer radius to get [-1, 1] and maps to [0, 1].
         let hit_local = hit_point.0 - self.center.0;
-        let phi = hit_local.dot(self.v_axis).atan2(hit_local.dot(self.u_axis));
-        let phi_wrapped = if phi < 0.0 { phi + TAU } else { phi };
-        let u = phi_wrapped / TAU;
-        let d = d_sq.sqrt();
-        let v = (self.radius - d) / (self.radius - self.inner_radius);
+        let u = (hit_local.dot(self.u_axis) / self.radius + 1.0) / 2.0;
+        let v = (hit_local.dot(self.v_axis) / self.radius + 1.0) / 2.0;
 
         Some(RayHit {
             t,
@@ -220,7 +220,8 @@ mod tests {
         assert_eq!(hit.normal, Vector3::new(0.0, 0.0, 1.0));
         assert_eq!(hit.point, Point::new(0.0, 0.0, 0.0));
         assert_eq!(hit.t, 1.0);
-        assert_eq!(hit.v, 1.0);
+        assert_eq!(hit.u, 0.5);
+        assert_eq!(hit.v, 0.5);
     }
 
     #[test]
