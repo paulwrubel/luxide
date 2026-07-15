@@ -287,6 +287,13 @@ impl Geometric for Cylinder {
         self.bounding_box
     }
 
+    fn center(&self) -> Point {
+        // finite midpoint of the two endpoints (a + b) / 2, expressed via the
+        // stored axis so it stays finite even when an end is infinite. The
+        // default (bounding-box centroid) would be NaN for infinite cylinders.
+        self.a + self.onb.w * (self.height / 2.0)
+    }
+
     fn surface_area(&self) -> f64 {
         if self.a_end == CylinderEnd::Infinite || self.b_end == CylinderEnd::Infinite {
             return f64::INFINITY;

@@ -23,6 +23,17 @@ pub trait Geometric: std::fmt::Debug + Sync + Send {
     fn surface_area(&self) -> f64;
     fn bounding_box(&self) -> Aabb;
 
+    /// The center point of this geometric, used as the pivot for rotation and
+    /// scale instances with `around: "center"`.
+    ///
+    /// Defaults to the bounding-box centroid. Primitives whose bounding box can
+    /// be infinite (e.g. an infinite-ended cylinder, or a plane) MUST override
+    /// this to return a finite, well-defined center — otherwise the centroid of
+    /// an unbounded box is `NaN`, which poisons the pivot and breaks rendering.
+    fn center(&self) -> Point {
+        self.bounding_box().center()
+    }
+
     /// Sample a random direction from `origin` toward a point on this object's
     /// surface, chosen uniformly by area. The returned direction is a unit vector.
     fn sample_direction_from(&self, origin: Point) -> Vector3;

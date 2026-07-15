@@ -21,7 +21,7 @@ pub enum Around {
 impl Around {
     pub fn point(&self, geometric: &Arc<dyn Geometric>) -> Point {
         match self {
-            Around::Center => geometric.bounding_box().center(),
+            Around::Center => geometric.center(),
             Around::Origin => Point::ORIGIN,
             Around::Point(p) => (*p).into(),
         }

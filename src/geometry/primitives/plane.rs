@@ -112,6 +112,12 @@ impl Geometric for Plane {
         self.bounding_box
     }
 
+    fn center(&self) -> Point {
+        // a plane's bounding box is UNIVERSE, so the default centroid would be
+        // NaN; use the plane's defining point as a finite center instead.
+        self.point
+    }
+
     fn sample_direction_from(&self, origin: Point) -> Vector3 {
         // determine which side of the plane the origin is on
         let dir_to_point = self.point.0 - origin.0;
