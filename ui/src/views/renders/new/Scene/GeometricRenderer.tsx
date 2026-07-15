@@ -397,6 +397,7 @@ export function GeometricRenderer(props: GeometricRendererProps) {
       const positions: number[] = [];
       const normals: number[] = [];
       const indices: number[] = [];
+      const uvs: number[] = [];
 
       // helper: evaluate bilinear patch P(u,v)
       const evalPatch = (u: number, v: number): [number, number, number] => {
@@ -439,6 +440,7 @@ export function GeometricRenderer(props: GeometricRendererProps) {
           const nz = dp_du[0] * dp_dv[1] - dp_du[1] * dp_dv[0];
           const len = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
           normals.push(nx / len, ny / len, nz / len);
+          uvs.push(u, v);
         }
       }
 
@@ -463,6 +465,7 @@ export function GeometricRenderer(props: GeometricRendererProps) {
                 args={[new Float32Array(positions), 3]}
               />
               <bufferAttribute attach="attributes-normal" args={[new Float32Array(normals), 3]} />
+              <bufferAttribute attach="attributes-uv" args={[new Float32Array(uvs), 2]} />
               <bufferAttribute attach="index" args={[new Uint16Array(indices), 1]} />
             </bufferGeometry>
             <MaterialResolver
