@@ -470,9 +470,9 @@ export function defaultGeometricForType(
     case 'triangle':
       return {
         type: 'triangle',
-        a: [-0.5, -0.5, 0],
-        b: [0.5, -0.5, 0],
-        c: [0, 0.5, 0],
+        a: [0, 0, 0],
+        b: [1, 0, 0],
+        c: [0, 1, 0],
         material: '__lambertian_white',
       };
     case 'constant_volume':

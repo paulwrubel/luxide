@@ -32,7 +32,7 @@ export type AddEntityDropdownProps<T extends EntityType> = {
   form: RenderForm;
   type: T;
   options: AddEntityDropdownOption<T>[];
-  getDefault: (subtype: EntitySubType<T>) => EntityData<T>;
+  getDefault: (subtype: EntitySubType<T>, options?: Record<string, unknown>) => EntityData<T>;
   onCreated?: (name: string, type: T) => void;
 };
 
@@ -50,7 +50,7 @@ export function AddEntityDropdown<T extends EntityType>(props: AddEntityDropdown
   }
 
   function handleCreate(subtype: EntitySubType<T>, config: AddEntityCreateConfig) {
-    const newEntity = getDefault(subtype);
+    const newEntity = getDefault(subtype, { resource_id: config.resourceId });
     const option = options.find((o) => o.subtype === subtype);
     const label = option?.label ?? subtype;
     const autoName = `New ${label}`;

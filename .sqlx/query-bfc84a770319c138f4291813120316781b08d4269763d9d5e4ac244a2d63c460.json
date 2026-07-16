@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT id, github_id, username, avatar_url, created_at, updated_at, \n                    role, max_renders, max_checkpoints_per_render, max_render_pixel_count\n                FROM users\n                WHERE id = $1\n            ",
+  "query": "\n                SELECT id, github_id, username, avatar_url, created_at, updated_at, \n                    role, max_renders, max_checkpoints_per_render, max_render_pixel_count,\n                    max_resource_storage_bytes\n                FROM users\n                WHERE id = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -52,6 +52,11 @@
         "ordinal": 9,
         "name": "max_render_pixel_count",
         "type_info": "Int4"
+      },
+      {
+        "ordinal": 10,
+        "name": "max_resource_storage_bytes",
+        "type_info": "Int8"
       }
     ],
     "parameters": {
@@ -69,8 +74,9 @@
       false,
       true,
       true,
+      true,
       true
     ]
   },
-  "hash": "87c4c7d92d60f0dfa87cff3e7da2f5954c34a43c6b14e708de73c55a6377ab0c"
+  "hash": "bfc84a770319c138f4291813120316781b08d4269763d9d5e4ac244a2d63c460"
 }

@@ -134,8 +134,8 @@ impl Triangle {
             point: ray.at(t),
             normal: local_normal,
             material: Arc::clone(&self.material),
-            u: 0.0,
-            v: 0.0,
+            u,
+            v,
         })
     }
 

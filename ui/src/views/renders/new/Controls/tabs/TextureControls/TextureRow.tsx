@@ -12,6 +12,7 @@ import { WarningIconOrphanGeometric } from '../../shared/icons/WarningIconOrphan
 import { InfoIconDefaultEntity } from '../../shared/icons/InfoIconDefaultEntity';
 import { DuplicateDropdown } from '../../shared/DuplicateDropdown';
 import { duplicateTexture } from '@/utils/render/utils';
+import { useAllResourceMetadataQuery } from '@/hooks/useResources';
 
 export type TextureRowProps = {
   form: RenderForm;
@@ -21,6 +22,8 @@ export type TextureRowProps = {
 
 export function TextureRow(props: TextureRowProps) {
   const { form, textureName, isUsedByActiveScene } = props;
+
+  const { data: resources } = useAllResourceMetadataQuery();
 
   const isDefault = textureName.startsWith('__');
 
@@ -100,9 +103,24 @@ export function TextureRow(props: TextureRowProps) {
           </>
         );
       }
-      // case 'image': {
-      //   return <p className="text-sm text-zinc-500">Image texture — TODO</p>;
-      // }
+      case 'image': {
+        const resource = resources?.find((r) => r.id === data.resource_id);
+        return (
+          <div className="flex flex-col gap-1 text-sm text-zinc-400">
+            <div>
+              <span className="text-zinc-500">Resource: </span>
+              {resource ? resource.name : `#${data.resource_id}`}
+            </div>
+            <div>
+              <span className="text-zinc-500">MIME: </span>
+              {resource?.mime_type ?? 'unknown'}
+            </div>
+            <form.AppField name={`textures.${name}.gamma`}>
+              {(field) => <field.RangeControl label="Gamma" min={0.1} max={2} step={0.01} />}
+            </form.AppField>
+          </div>
+        );
+      }
       case 'color': {
         return (
           <TextArrayInputControl
@@ -125,7 +143,7 @@ export function TextureRow(props: TextureRowProps) {
         );
       }
       default:
-        return <h6 className="text-sm">Unimplemented texture: {data.type} (sorry!)</h6>;
+        return <h6 className="text-sm">Unimplemented texture (sorry!)</h6>;
     }
   }
 

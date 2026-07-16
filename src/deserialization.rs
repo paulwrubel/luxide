@@ -11,6 +11,7 @@ use crate::{
     camera::Camera,
     geometry::Geometric,
     shading::{ColorRgb, Texture, materials::Material},
+    tracing::ResourceID,
     tracing::{RenderParameters, Scene},
     utils::{Angle, Around},
 };
@@ -28,28 +29,32 @@ mod materials;
 use self::materials::{MaterialData, MediumData};
 
 mod textures;
-use self::textures::TextureData;
+pub use self::textures::TextureData;
 
-pub trait Build<Inst> {
-    fn build(&self, builts: &Builts) -> Result<Inst, String>;
+pub trait Build<Entity> {
+    fn build(&self, builts: &Builts<'_>) -> Result<Entity, String>;
 }
 
-pub struct Builts {
+pub struct Builts<'a> {
     scenes: IndexMap<String, Scene>,
     cameras: IndexMap<String, Camera>,
     geometrics: IndexMap<String, Arc<dyn Geometric>>,
     materials: IndexMap<String, Arc<dyn Material>>,
     textures: IndexMap<String, Arc<dyn Texture>>,
+
+    resources: Option<&'a IndexMap<ResourceID, Vec<u8>>>,
 }
 
-impl Builts {
-    fn new() -> Self {
+impl<'a> Builts<'a> {
+    fn new(resources: Option<&'a IndexMap<ResourceID, Vec<u8>>>) -> Self {
         Self {
             scenes: IndexMap::new(),
             cameras: IndexMap::new(),
             geometrics: IndexMap::new(),
             materials: IndexMap::new(),
             textures: IndexMap::new(),
+
+            resources,
         }
     }
 }
@@ -99,8 +104,11 @@ pub struct RenderConfig {
 }
 
 impl RenderConfig {
-    pub fn compile(&self) -> Result<RenderData, String> {
-        let mut builts = Builts::new();
+    pub fn compile(
+        &self,
+        resources: Option<&IndexMap<ResourceID, Vec<u8>>>,
+    ) -> Result<RenderData, String> {
+        let mut builts = Builts::new(resources);
 
         // setup named properties
         build_textures(&self.textures, &mut builts)?;
@@ -140,7 +148,7 @@ pub struct RenderData {
 
 fn build_textures(
     texture_data: &IndexMap<String, TextureData>,
-    builts: &mut Builts,
+    builts: &mut Builts<'_>,
 ) -> Result<(), String> {
     let mut building = std::collections::HashSet::new();
 
@@ -164,7 +172,7 @@ fn build_textures(
     };
 
     // Function to build and insert a texture
-    let build_and_insert = |name: &str, texture: &TextureData, builts: &mut Builts| {
+    let build_and_insert = |name: &str, texture: &TextureData, builts: &mut Builts<'_>| {
         if !builts.textures.contains_key(name) {
             let built = texture.build(builts)?;
             builts.textures.insert(name.to_string(), built);
@@ -190,7 +198,7 @@ fn build_textures(
 
 fn build_materials(
     material_data: &IndexMap<String, MaterialData>,
-    builts: &mut Builts,
+    builts: &mut Builts<'_>,
 ) -> Result<(), String> {
     for (name, material) in material_data {
         builts
@@ -243,12 +251,12 @@ fn get_geometric_dependencies(geometric: &GeometricData) -> Vec<String> {
 
 fn build_geometrics(
     geometric_data: &IndexMap<String, GeometricData>,
-    builts: &mut Builts,
+    builts: &mut Builts<'_>,
 ) -> Result<(), String> {
     let mut building = std::collections::HashSet::new();
 
     // Function to build and insert a geometric
-    let build_and_insert = |name: &str, geometric: &GeometricData, builts: &mut Builts| {
+    let build_and_insert = |name: &str, geometric: &GeometricData, builts: &mut Builts<'_>| {
         if !builts.geometrics.contains_key(name) {
             let built = geometric.build(builts)?;
             builts.geometrics.insert(name.to_string(), built);
@@ -278,10 +286,10 @@ const MAX_RECURSION_DEPTH: usize = 100;
 fn build_entity_recursive<T>(
     name: &str,
     entity_data: &IndexMap<String, T>,
-    builts: &mut Builts,
+    builts: &mut Builts<'_>,
     building: &mut std::collections::HashSet<String>,
     get_dependencies: impl Fn(&T) -> Vec<String> + Copy,
-    build_and_insert: impl Fn(&str, &T, &mut Builts) -> Result<(), String> + Copy,
+    build_and_insert: impl Fn(&str, &T, &mut Builts<'_>) -> Result<(), String> + Copy,
     entity_type: &str,
     depth: usize,
 ) -> Result<(), String> {
@@ -333,7 +341,7 @@ fn build_entity_recursive<T>(
 
 fn build_cameras(
     camera_data: &IndexMap<String, CameraData>,
-    builts: &mut Builts,
+    builts: &mut Builts<'_>,
 ) -> Result<(), String> {
     for (name, camera_data) in camera_data {
         builts
@@ -345,7 +353,7 @@ fn build_cameras(
 
 fn build_scenes(
     scene_data: &IndexMap<String, SceneData>,
-    builts: &mut Builts,
+    builts: &mut Builts<'_>,
 ) -> Result<(), String> {
     for (name, scene_data) in scene_data {
         builts

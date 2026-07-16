@@ -11,6 +11,7 @@ import {
 } from 'flowbite-react';
 import { HiPlus, HiXMark } from 'react-icons/hi2';
 import type { EntityType, EntitySubType, AddEntityDropdownOption } from './AddEntityDropdown';
+import { useAllResourceMetadataQuery } from '@/hooks/useResources';
 
 export type InstanceType = 'translate' | 'rotate_x' | 'rotate_y' | 'rotate_z' | 'scale';
 
@@ -27,6 +28,7 @@ export type AddEntityCreateConfig = {
   instances: InstanceType[];
   isConstantVolume: boolean;
   isVirtual: boolean;
+  resourceId?: number;
 };
 
 export type AddEntityModalProps<T extends EntityType> = {
@@ -47,6 +49,9 @@ export function AddEntityModal<T extends EntityType>(props: AddEntityModalProps<
   const [pendingInstanceType, setPendingInstanceType] = useState<InstanceType>('translate');
   const [isConstantVolume, setIsConstantVolume] = useState(false);
   const [isVirtual, setIsVirtual] = useState(false);
+  const [selectedResourceId, setSelectedResourceId] = useState<number | null>(null);
+
+  const { data: resources } = useAllResourceMetadataQuery();
 
   function handleCreate() {
     onCreate({
@@ -54,6 +59,7 @@ export function AddEntityModal<T extends EntityType>(props: AddEntityModalProps<
       instances,
       isConstantVolume,
       isVirtual,
+      resourceId: selectedResourceId ?? undefined,
     });
     // reset all state
     setCustomName('');
@@ -61,6 +67,7 @@ export function AddEntityModal<T extends EntityType>(props: AddEntityModalProps<
     setPendingInstanceType('translate');
     setIsConstantVolume(false);
     setIsVirtual(false);
+    setSelectedResourceId(null);
     onClose();
   }
 
@@ -70,6 +77,7 @@ export function AddEntityModal<T extends EntityType>(props: AddEntityModalProps<
     setPendingInstanceType('translate');
     setIsConstantVolume(false);
     setIsVirtual(false);
+    setSelectedResourceId(null);
     onClose();
   }
 
@@ -179,12 +187,43 @@ export function AddEntityModal<T extends EntityType>(props: AddEntityModalProps<
             </div>
           </>
         )}
+
+        {/* image texture: resource picker */}
+        {entityType === 'textures' && option.subtype === 'image' && (
+          <div className="mb-4">
+            <label className="mb-1 block text-sm font-medium text-gray-300">Select Resource</label>
+            {resources && resources.length > 0 ? (
+              <Select
+                value={selectedResourceId ?? ''}
+                onChange={(e) =>
+                  setSelectedResourceId(e.target.value ? Number(e.target.value) : null)
+                }
+                sizing="sm"
+              >
+                <option value="">-- Choose a resource --</option>
+                {resources.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name} ({r.mime_type})
+                  </option>
+                ))}
+              </Select>
+            ) : (
+              <p className="text-sm text-yellow-400">
+                No resources available. Upload one on the Resources page.
+              </p>
+            )}
+          </div>
+        )}
       </ModalBody>
       <ModalFooter>
         <Button color="light" onClick={handleCancel}>
           Cancel
         </Button>
-        <Button color="default" onClick={handleCreate}>
+        <Button
+          color="default"
+          onClick={handleCreate}
+          disabled={entityType === 'textures' && option.subtype === 'image' && !selectedResourceId}
+        >
           Create
         </Button>
       </ModalFooter>

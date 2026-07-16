@@ -14,5 +14,11 @@
         "host": "postgres:5432",
         "username": "luxide",
         "db": "luxide"
+    },
+    "resource_storage": {
+        "type": "postgres",
+        "host": "postgres:5432",
+        "username": "luxide",
+        "db": "luxide"
     }
 }

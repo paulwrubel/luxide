@@ -12,7 +12,7 @@ pub enum CameraRefOrInline {
 }
 
 impl Build<Camera> for CameraRefOrInline {
-    fn build(&self, builts: &Builts) -> Result<Camera, String> {
+    fn build(&self, builts: &Builts<'_>) -> Result<Camera, String> {
         match self {
             Self::Ref(name) => Ok(builts
                 .cameras
@@ -39,7 +39,7 @@ pub struct CameraData {
 }
 
 impl Build<Camera> for CameraData {
-    fn build(&self, _builts: &Builts) -> Result<Camera, String> {
+    fn build(&self, _builts: &Builts<'_>) -> Result<Camera, String> {
         let eye_location: Point = self.eye_location.into();
         let target_location: Point = self.target_location.into();
         let camera = Camera::new(

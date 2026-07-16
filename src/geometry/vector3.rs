@@ -166,6 +166,41 @@ impl Vector3 {
         self / self.length()
     }
 
+    /// Rotate `self` by the shortest-arc rotation that carries the unit vector
+    /// `from` onto the unit vector `to`.
+    ///
+    /// Builds the quaternion whose vector part is `from × to` and whose scalar
+    /// part is `1 + from·to`, normalizes it, then applies it to `self`. When
+    /// `from` and `to` are antiparallel the shortest arc is undefined, so a
+    /// 180° rotation about an axis perpendicular to `from` is used instead.
+    ///
+    /// `from` and `to` are assumed to be unit length.
+    pub fn rotated_between(self, from: Self, to: Self) -> Self {
+        let r = from.dot(to) + 1.0;
+
+        // quaternion (qx, qy, qz, qw) rotating `from` onto `to`
+        let (qx, qy, qz, qw): (f64, f64, f64, f64) = if r < 1e-8 {
+            // antiparallel: 180° about any axis perpendicular to `from`
+            if from.x.abs() > from.z.abs() {
+                (-from.y, from.x, 0.0, 0.0)
+            } else {
+                (0.0, -from.z, from.y, 0.0)
+            }
+        } else {
+            let c = from.cross(to);
+            (c.x, c.y, c.z, r)
+        };
+
+        // normalize the quaternion
+        let len = (qx * qx + qy * qy + qz * qz + qw * qw).sqrt();
+        let (qx, qy, qz, qw) = (qx / len, qy / len, qz / len, qw / len);
+        let q_vec = Self::new(qx, qy, qz);
+
+        // apply: v' = v + 2*qw*(q_vec × v) + q_vec × (2*(q_vec × v))
+        let t = q_vec.cross(self) * 2.0;
+        self + t * qw + q_vec.cross(t)
+    }
+
     pub fn is_near_zero(&self) -> bool {
         let s = 1e-8;
         self.x.abs() < s && self.y.abs() < s && self.z.abs() < s

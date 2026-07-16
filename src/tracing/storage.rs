@@ -390,12 +390,14 @@ pub struct User {
     pub max_renders: Option<u32>,
     pub max_checkpoints_per_render: Option<u32>,
     pub max_render_pixel_count: Option<u32>,
+    pub max_resource_storage_bytes: Option<u64>,
 }
 
 impl User {
     pub const DEFAULT_MAX_RENDERS: u32 = 1;
     pub const DEFAULT_MAX_CHECKPOINTS_PER_RENDER: u32 = 1;
     pub const DEFAULT_MAX_RENDER_PIXEL_COUNT: u32 = 500 * 500;
+    pub const DEFAULT_MAX_RESOURCE_STORAGE_BYTES: u64 = 100 * 1024 * 1024; // 100 MB
 
     pub fn new_admin(
         id: UserID,
@@ -414,6 +416,7 @@ impl User {
             max_renders: None,
             max_checkpoints_per_render: None,
             max_render_pixel_count: None,
+            max_resource_storage_bytes: None,
         }
     }
 
@@ -429,6 +432,7 @@ impl User {
             max_renders: Some(Self::DEFAULT_MAX_RENDERS),
             max_checkpoints_per_render: Some(Self::DEFAULT_MAX_CHECKPOINTS_PER_RENDER),
             max_render_pixel_count: Some(Self::DEFAULT_MAX_RENDER_PIXEL_COUNT),
+            max_resource_storage_bytes: Some(Self::DEFAULT_MAX_RESOURCE_STORAGE_BYTES),
         }
     }
 }
@@ -513,4 +517,114 @@ pub trait UserStorage: Send + Sync + 'static {
     async fn revoke_refresh_token(&self, token_hash: &[u8]) -> Result<(), StorageError>;
 
     async fn revoke_refresh_tokens_by_origin(&self, origin_id: u32) -> Result<(), StorageError>;
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ResourceType {
+    TextureImage,
+}
+
+impl Display for ResourceType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ResourceType::TextureImage => write!(f, "texture_image"),
+        }
+    }
+}
+
+impl From<String> for ResourceType {
+    fn from(value: String) -> Self {
+        match value.as_str() {
+            "texture_image" => Self::TextureImage,
+            _ => Self::TextureImage, // default fallback
+        }
+    }
+}
+
+pub type ResourceID = u32;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Resource {
+    pub id: ResourceID,
+    pub user_id: UserID,
+    pub name: String,
+    pub resource_type: ResourceType,
+    pub mime_type: String,
+    pub data: Vec<u8>,
+    pub byte_size: u64,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ResourceMeta {
+    pub id: ResourceID,
+    pub user_id: UserID,
+    pub name: String,
+    pub resource_type: ResourceType,
+    pub mime_type: String,
+    pub byte_size: u64,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+}
+
+impl From<Resource> for ResourceMeta {
+    fn from(resource: Resource) -> Self {
+        Self {
+            id: resource.id,
+            user_id: resource.user_id,
+            name: resource.name,
+            resource_type: resource.resource_type,
+            mime_type: resource.mime_type,
+            byte_size: resource.byte_size,
+            created_at: resource.created_at,
+        }
+    }
+}
+
+impl From<&Resource> for ResourceMeta {
+    fn from(resource: &Resource) -> Self {
+        Self {
+            id: resource.id,
+            user_id: resource.user_id,
+            name: resource.name.clone(),
+            resource_type: resource.resource_type,
+            mime_type: resource.mime_type.clone(),
+            byte_size: resource.byte_size,
+            created_at: resource.created_at,
+        }
+    }
+}
+
+#[async_trait::async_trait]
+pub trait ResourceStorage: Send + Sync + 'static {
+    async fn create_resource(&self, resource: Resource) -> Result<Resource, StorageError>;
+
+    async fn get_resource(&self, id: ResourceID) -> Result<Option<Resource>, StorageError>;
+
+    async fn get_resource_metadata(
+        &self,
+        id: ResourceID,
+    ) -> Result<Option<ResourceMeta>, StorageError>;
+
+    async fn get_all_resource_metadata_for_user(
+        &self,
+        user_id: UserID,
+    ) -> Result<Vec<ResourceMeta>, StorageError>;
+
+    async fn delete_resource(&self, id: ResourceID) -> Result<(), StorageError>;
+
+    async fn resource_exists(&self, id: ResourceID) -> Result<bool, StorageError>;
+
+    async fn resource_belongs_to(
+        &self,
+        id: ResourceID,
+        user_id: UserID,
+    ) -> Result<bool, StorageError>;
+
+    async fn get_total_resource_bytes_stored_for_user(
+        &self,
+        user_id: UserID,
+    ) -> Result<u64, StorageError>;
+
+    async fn get_next_resource_id(&self) -> Result<ResourceID, StorageError>;
 }

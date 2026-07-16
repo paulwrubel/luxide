@@ -10,6 +10,8 @@ import {
 } from '../utils/api';
 import { useAuth } from '../providers/Auth';
 import type { NormalizedRenderConfig } from '../utils/render/config';
+import { rendersQueryKey } from './useRenders';
+import { renderQueryKey } from './useRender';
 
 export function useCreateRenderMutation() {
   const { authenticatedFetch } = useAuth();
@@ -21,7 +23,7 @@ export function useCreateRenderMutation() {
     mutationFn: (config: NormalizedRenderConfig) =>
       postRender(authenticatedFetch, config, targetUserID),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['renders'] });
+      queryClient.invalidateQueries({ queryKey: rendersQueryKey(targetUserID) });
     },
   });
 }
@@ -35,8 +37,8 @@ export function usePauseRenderMutation() {
   return useMutation({
     mutationFn: (renderID: number) => pauseRender(authenticatedFetch, renderID, targetUserID),
     onSuccess: (_data, renderID) => {
-      queryClient.invalidateQueries({ queryKey: ['renders'] });
-      queryClient.invalidateQueries({ queryKey: ['render', renderID] });
+      queryClient.invalidateQueries({ queryKey: rendersQueryKey(targetUserID) });
+      queryClient.invalidateQueries({ queryKey: renderQueryKey(renderID, targetUserID) });
     },
   });
 }
@@ -50,8 +52,8 @@ export function useResumeRenderMutation() {
   return useMutation({
     mutationFn: (renderID: number) => resumeRender(authenticatedFetch, renderID, targetUserID),
     onSuccess: (_data, renderID) => {
-      queryClient.invalidateQueries({ queryKey: ['renders'] });
-      queryClient.invalidateQueries({ queryKey: ['render', renderID] });
+      queryClient.invalidateQueries({ queryKey: rendersQueryKey(targetUserID) });
+      queryClient.invalidateQueries({ queryKey: renderQueryKey(renderID, targetUserID) });
     },
   });
 }
@@ -65,7 +67,7 @@ export function useDeleteRenderMutation() {
   return useMutation({
     mutationFn: (renderID: number) => deleteRender(authenticatedFetch, renderID, targetUserID),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['renders'] });
+      queryClient.invalidateQueries({ queryKey: rendersQueryKey(targetUserID) });
     },
   });
 }
@@ -86,8 +88,8 @@ export function useUpdateRenderTotalCheckpointsMutation() {
     }) =>
       updateRenderTotalCheckpoints(authenticatedFetch, renderID, newTotalCheckpoints, targetUserID),
     onSuccess: (_data, { renderID }) => {
-      queryClient.invalidateQueries({ queryKey: ['renders'] });
-      queryClient.invalidateQueries({ queryKey: ['render', renderID] });
+      queryClient.invalidateQueries({ queryKey: rendersQueryKey(targetUserID) });
+      queryClient.invalidateQueries({ queryKey: renderQueryKey(renderID, targetUserID) });
     },
   });
 }
@@ -101,8 +103,8 @@ export function useUpdateRenderNameMutation() {
     mutationFn: ({ renderID, newName }: { renderID: number; newName: string }) =>
       updateRenderName(authenticatedFetch, renderID, newName, targetUserID),
     onSuccess: (_data, { renderID }) => {
-      queryClient.invalidateQueries({ queryKey: ['renders'] });
-      queryClient.invalidateQueries({ queryKey: ['render', renderID] });
+      queryClient.invalidateQueries({ queryKey: rendersQueryKey(targetUserID) });
+      queryClient.invalidateQueries({ queryKey: renderQueryKey(renderID, targetUserID) });
     },
   });
 }

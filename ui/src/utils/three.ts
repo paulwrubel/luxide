@@ -4,6 +4,7 @@ export type TriangleGeometry = {
   vertices: Float32Array;
   indices: Uint16Array;
   normals: Float32Array;
+  uvs: Float32Array;
 };
 
 /**
@@ -55,13 +56,17 @@ export function createTriangleGeometry(geometricData: GeometricTriangle): Triang
     ]);
   }
 
-  return { vertices, indices, normals };
+  // uvs: map vertices to barycentric coordinates A=(0,0), B=(1,0), C=(0,1)
+  const uvs = new Float32Array([0, 0, 1, 0, 0, 1]);
+
+  return { vertices, indices, normals, uvs };
 }
 
 export type ParallelogramGeometry = {
   vertices: Float32Array;
   indices: Uint16Array;
   normals: Float32Array;
+  uvs: Float32Array;
 };
 
 /**
@@ -111,5 +116,8 @@ export function createParallelogramGeometry(
     nz / len,
   ]);
 
-  return { vertices, indices, normals };
+  // uv indices: map the four corners to (0,0), (1,0), (0,1), (1,1)
+  const uvs = new Float32Array([0, 0, 1, 0, 0, 1, 1, 1]);
+
+  return { vertices, indices, normals, uvs };
 }

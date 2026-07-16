@@ -43,6 +43,17 @@ export async function navigateToAPILogin() {
 
 export type Role = 'admin' | 'user';
 
+export type ResourceType = 'texture_image';
+
+export function formatResourceType(resourceType: ResourceType): string {
+  switch (resourceType) {
+    case 'texture_image':
+      return 'Texture Image';
+    default:
+      return resourceType;
+  }
+}
+
 export type User = {
   id: number;
   github_id: number;
@@ -54,10 +65,21 @@ export type User = {
   max_renders: number | null;
   max_checkpoints_per_render: number | null;
   max_render_pixel_count: number | null;
+  max_resource_storage_bytes: number | null;
 };
 
 export type UsageResponse = {
   bytes: number;
+};
+
+export type ResourceMeta = {
+  id: number;
+  user_id: number;
+  name: string;
+  resource_type: ResourceType;
+  mime_type: string;
+  byte_size: number;
+  created_at: string;
 };
 
 export async function fetchAuthTokenGitHub(code: string, state: string): Promise<string> {
@@ -417,6 +439,7 @@ export async function updateUserQuotas(
   maxRenders: number | null,
   maxCheckpointsPerRender: number | null,
   maxRenderPixelCount: number | null,
+  maxResourceStorageBytes: number | null,
 ): Promise<User> {
   const response = await fetcher(`${getAPIURL()}/users/${userID}/quotas`, {
     method: 'PUT',
@@ -425,6 +448,7 @@ export async function updateUserQuotas(
       max_renders: maxRenders,
       max_checkpoints_per_render: maxCheckpointsPerRender,
       max_render_pixel_count: maxRenderPixelCount,
+      max_resource_storage_bytes: maxResourceStorageBytes,
     }),
   });
 
@@ -436,15 +460,115 @@ export async function updateUserQuotas(
   return (await response.json()) as User;
 }
 
-export async function getStorageUsage(fetcher: typeof fetch): Promise<UsageResponse> {
-  const response = await fetcher(`${getAPIURL()}/storage_usage`);
+export async function getRenderStorageUsage(fetcher: typeof fetch): Promise<UsageResponse> {
+  const response = await fetcher(`${getAPIURL()}/renders/storage_usage`);
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`failed to get usage: (${response.status}: ${body})`);
+    throw new Error(`failed to get renders storage usage: (${response.status}: ${body})`);
   }
 
   return (await response.json()) as UsageResponse;
+}
+
+export async function getAllResourceMetadata(
+  fetcher: typeof fetch,
+  targetUserID?: number,
+): Promise<ResourceMeta[]> {
+  const response = await fetcher(appendUserID(`${getAPIURL()}/resources`, targetUserID));
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`failed to get resources: (${response.status}: ${body})`);
+  }
+
+  return (await response.json()) as ResourceMeta[];
+}
+
+export async function createResource(
+  fetcher: typeof fetch,
+  formData: FormData,
+  targetUserID?: number,
+): Promise<ResourceMeta> {
+  const response = await fetcher(appendUserID(`${getAPIURL()}/resources`, targetUserID), {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok || response.status !== 201) {
+    const body = await response.text();
+    let message = body;
+    try {
+      const parsed = JSON.parse(body) as { message?: string };
+      if (parsed.message) {
+        message = parsed.message;
+      }
+    } catch {
+      // body is not JSON, use raw text
+    }
+    throw new Error(message);
+  }
+
+  return (await response.json()) as ResourceMeta;
+}
+
+export async function deleteResource(
+  fetcher: typeof fetch,
+  resourceID: number,
+  targetUserID?: number,
+): Promise<void> {
+  const response = await fetcher(
+    appendUserID(`${getAPIURL()}/resources/${resourceID}`, targetUserID),
+    {
+      method: 'DELETE',
+    },
+  );
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`failed to delete resource: (${response.status}: ${body})`);
+  }
+}
+
+export async function getResourceData(
+  fetcher: typeof fetch,
+  resourceID: number,
+  targetUserID?: number,
+): Promise<Blob | null> {
+  const response = await fetcher(
+    appendUserID(`${getAPIURL()}/resources/${resourceID}/data`, targetUserID),
+  );
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`failed to get resource data: (${response.status}: ${body})`);
+  }
+
+  return await response.blob();
+}
+
+export type ResourceStorageUsageResponse = {
+  bytes: number;
+};
+
+export async function getResourceStorageUsage(
+  fetcher: typeof fetch,
+  targetUserID?: number,
+): Promise<ResourceStorageUsageResponse> {
+  const response = await fetcher(
+    appendUserID(`${getAPIURL()}/resources/storage_usage`, targetUserID),
+  );
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`failed to get resource storage usage: (${response.status}: ${body})`);
+  }
+
+  return (await response.json()) as ResourceStorageUsageResponse;
 }
 
 /**

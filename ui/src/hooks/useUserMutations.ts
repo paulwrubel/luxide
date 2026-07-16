@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { updateUserRole, updateUserQuotas } from '../utils/api';
 import { useAuth } from '../providers/Auth';
 import type { Role } from '../utils/api';
+import { allUsersQueryKey } from './useAllUsers';
 
 export function useUpdateUserRoleMutation() {
   const { authenticatedFetch } = useAuth();
@@ -28,11 +29,13 @@ export function useUpdateUserQuotasMutation() {
       maxRenders,
       maxCheckpointsPerRender,
       maxRenderPixelCount,
+      maxResourceStorageBytes,
     }: {
       userID: number;
       maxRenders: number | null;
       maxCheckpointsPerRender: number | null;
       maxRenderPixelCount: number | null;
+      maxResourceStorageBytes: number | null;
     }) =>
       updateUserQuotas(
         authenticatedFetch,
@@ -40,9 +43,10 @@ export function useUpdateUserQuotasMutation() {
         maxRenders,
         maxCheckpointsPerRender,
         maxRenderPixelCount,
+        maxResourceStorageBytes,
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
+      queryClient.invalidateQueries({ queryKey: allUsersQueryKey() });
     },
   });
 }

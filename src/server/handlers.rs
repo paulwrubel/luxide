@@ -22,11 +22,20 @@ pub use auth_refresh::*;
 mod create_render;
 pub use create_render::*;
 
+mod create_resource;
+pub use create_resource::*;
+
 mod delete_render;
 pub use delete_render::*;
 
+mod delete_resource;
+pub use delete_resource::*;
+
 mod get_all_renders;
 pub use get_all_renders::*;
+
+mod get_all_resource_metadata;
+pub use get_all_resource_metadata::*;
 
 mod get_current_user_info;
 pub use get_current_user_info::*;
@@ -42,6 +51,15 @@ pub use get_render_stats::*;
 
 mod get_render;
 pub use get_render::*;
+
+mod get_resource_metadata;
+pub use get_resource_metadata::*;
+
+mod get_resource_storage_usage;
+pub use get_resource_storage_usage::*;
+
+mod get_resource_data;
+pub use get_resource_data::*;
 
 mod not_found;
 pub use not_found::*;

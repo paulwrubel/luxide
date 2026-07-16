@@ -15,27 +15,21 @@ pub struct Onb {
 impl Onb {
     /// Build an ONB from a unit surface normal.
     ///
-    /// Picks an auxiliary vector that is not parallel to `normal`,
-    /// then builds `u`, `v` via cross products so that `{u, v, w}`
-    /// forms a right-handed orthonormal basis.
+    /// `w` is the normal. `u` and `v` are found by computing the shortest-arc
+    /// rotation that carries the +Z axis onto `w`, then applying that same
+    /// rotation to the +X and +Y axes. For `w = +Z` the basis is the identity
+    /// (`u = +X`, `v = +Y`), and it varies continuously as `w` tilts away,
+    /// which keeps texture UV orientations stable and predictable.
+    ///
+    /// The frame is continuous everywhere except at the antipodal pole
+    /// `w = -Z`, where the shortest-arc rotation is undefined and the tangent
+    /// directions become discontinuous (an unavoidable consequence of the
+    /// hairy-ball theorem — no tangent frame is continuous over the whole
+    /// sphere). At that pole a fixed 180° rotation is used.
     pub fn from_w(normal: Vector3) -> Self {
         let w = normal.unit_vector();
-        let a = if w.x.abs() > 0.9 {
-            // normal is nearly parallel to +X — use +Y as auxiliary
-            Vector3 {
-                x: 0.0,
-                y: 1.0,
-                z: 0.0,
-            }
-        } else {
-            Vector3 {
-                x: 1.0,
-                y: 0.0,
-                z: 0.0,
-            }
-        };
-        let v = w.cross(a).unit_vector();
-        let u = w.cross(v); // automatically unit-length since w ⊥ v
+        let u = Vector3::UNIT_X.rotated_between(Vector3::UNIT_Z, w);
+        let v = Vector3::UNIT_Y.rotated_between(Vector3::UNIT_Z, w);
         Self { u, v, w }
     }
 

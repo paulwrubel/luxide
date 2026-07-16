@@ -74,13 +74,16 @@ export function getTextureData(
 }
 
 // function overloads for compile-time type checking
-export function defaultTextureForType(type: 'image', options: { filename: string }): TextureImage;
+export function defaultTextureForType(
+  type: 'image',
+  options: { resource_id: number },
+): TextureImage;
 export function defaultTextureForType(type: Exclude<TextureData['type'], 'image'>): TextureData;
 
 // implementation
 export function defaultTextureForType(
   type: TextureData['type'],
-  options?: { filename: string },
+  options?: { resource_id: number },
 ): TextureData {
   switch (type) {
     case 'checker':
@@ -91,12 +94,12 @@ export function defaultTextureForType(
         odd_texture: '__black',
       };
     case 'image':
-      if (!options || options.filename.length === 0) {
-        throw new Error('filename option required for image texture');
+      if (!options || options.resource_id <= 0) {
+        throw new Error('resource_id option required for image texture');
       }
       return {
         type: 'image',
-        filename: options.filename,
+        resource_id: options.resource_id,
         gamma: 1,
       };
     case 'color':
@@ -160,7 +163,7 @@ export type RawTextureChecker = {
 
 export const TextureImageSchema = z.object({
   type: z.literal('image'),
-  filename: z.string().nonempty(),
+  resource_id: z.number().int().nonnegative(),
   gamma: z.number().min(0),
 });
 
@@ -168,7 +171,7 @@ export type TextureImage = NormalizedTextureImage;
 export type NormalizedTextureImage = RawTextureImage;
 export type RawTextureImage = {
   type: 'image';
-  filename: string;
+  resource_id: number;
   gamma: number;
 };
 

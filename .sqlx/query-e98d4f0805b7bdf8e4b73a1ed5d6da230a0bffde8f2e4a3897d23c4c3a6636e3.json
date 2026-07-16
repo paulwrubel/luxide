@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT 1 as exists\n                FROM resources\n                WHERE id = $1 AND user_id = $2\n                LIMIT 1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "exists",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "e98d4f0805b7bdf8e4b73a1ed5d6da230a0bffde8f2e4a3897d23c4c3a6636e3"
+}

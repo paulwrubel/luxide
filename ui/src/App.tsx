@@ -11,6 +11,7 @@ import { RenderDetailPage } from './views/renders/[id]';
 import { NewRenderPage } from './views/renders/new';
 import { AdminRouteLayout } from './layouts/AdminRouteLayout';
 import { AdminPage } from './views/admin';
+import { ResourcesPage } from './views/resources';
 
 const router = createBrowserRouter([
   {
@@ -31,6 +32,7 @@ const router = createBrowserRouter([
               { path: '/renders', element: <RendersPage /> },
               { path: '/renders/:id', element: <RenderDetailPage /> },
               { path: '/renders/new', element: <NewRenderPage /> },
+              { path: '/resources', element: <ResourcesPage /> },
             ],
           },
           // admin routes — nested inside admin layout to redirect non-admins

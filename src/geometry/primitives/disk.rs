@@ -2,7 +2,7 @@ use std::f64::consts::{PI, TAU};
 use std::sync::Arc;
 
 use crate::{
-    geometry::{Aabb, Geometric, Point, Ray, RayHit, Vector3},
+    geometry::{Aabb, Geometric, Onb, Point, Ray, RayHit, Vector3},
     shading::materials::{Lambertian, Material},
     utils::Interval,
 };
@@ -10,13 +10,11 @@ use crate::{
 #[derive(Clone, Debug)]
 pub struct Disk {
     center: Point,
-    normal: Vector3,
     radius: f64,
     inner_radius: f64,
     is_culled: bool,
     plane_d: f64,
-    u_axis: Vector3,
-    v_axis: Vector3,
+    onb: Onb,
     material: Arc<dyn Material>,
     bounding_box: Aabb,
     area: f64,
@@ -32,36 +30,44 @@ impl Disk {
         is_culled: bool,
         material: Arc<dyn Material>,
     ) -> Result<Self, String> {
+        if normal.squared_length() <= 0.0 {
+            return Err("disk normal must not be zero-length".to_string());
+        }
+        let onb = Onb::from_w(normal.unit_vector());
+        Self::new_with_onb(center, radius, inner_radius, is_culled, material, onb)
+    }
+
+    /// Construct a disk with an explicit orthonormal tangent frame `onb`
+    /// (`onb.w` is the surface normal, `onb.u`/`onb.v` span the disk plane and
+    /// determine the UV orientation). Used when the caller needs the disk's
+    /// texture axes aligned to an external convention rather than the default
+    /// frame derived from the normal.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new_with_onb(
+        center: Point,
+        radius: f64,
+        inner_radius: f64,
+        is_culled: bool,
+        material: Arc<dyn Material>,
+        onb: Onb,
+    ) -> Result<Self, String> {
         if radius <= 0.0 {
             return Err("disk radius must be positive".to_string());
         }
         if inner_radius < 0.0 || inner_radius >= radius {
             return Err("disk inner_radius must be in [0, radius)".to_string());
         }
-        if normal.squared_length() <= 0.0 {
-            return Err("disk normal must not be zero-length".to_string());
-        }
-        let normal = normal.unit_vector();
 
-        // tangent basis
-        let reference = if normal.y.abs() < 0.999 {
-            Vector3::new(0.0, 1.0, 0.0)
-        } else {
-            Vector3::new(1.0, 0.0, 0.0)
-        };
-        let u_axis = reference.cross(normal).unit_vector();
-        let v_axis = normal.cross(u_axis);
-
-        let plane_d = center.0.dot(normal);
+        let plane_d = center.0.dot(onb.w);
 
         // area of the annular disk
         let area = PI * (radius.powi(2) - inner_radius.powi(2));
 
         // bounding box: for each axis, compute the half-extent as the
         // maximum projection of the disk's tangent vectors
-        let ex = ((u_axis.x * radius).powi(2) + (v_axis.x * radius).powi(2)).sqrt();
-        let ey = ((u_axis.y * radius).powi(2) + (v_axis.y * radius).powi(2)).sqrt();
-        let ez = ((u_axis.z * radius).powi(2) + (v_axis.z * radius).powi(2)).sqrt();
+        let ex = ((onb.u.x * radius).powi(2) + (onb.v.x * radius).powi(2)).sqrt();
+        let ey = ((onb.u.y * radius).powi(2) + (onb.v.y * radius).powi(2)).sqrt();
+        let ez = ((onb.u.z * radius).powi(2) + (onb.v.z * radius).powi(2)).sqrt();
         let points = [
             center + Vector3::new(-ex, -ey, -ez),
             center + Vector3::new(-ex, -ey, ez),
@@ -75,13 +81,11 @@ impl Disk {
 
         Ok(Self {
             center,
-            normal,
             radius,
             inner_radius,
             is_culled,
             plane_d,
-            u_axis,
-            v_axis,
+            onb,
             material,
             bounding_box: Aabb::from_points(&points).pad(0.0001),
             area,
@@ -103,7 +107,7 @@ impl Disk {
 
 impl Geometric for Disk {
     fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit> {
-        let denominator = self.normal.dot(ray.direction);
+        let denominator = self.onb.w.dot(ray.direction);
 
         // parallel ray — no intersection
         if denominator.abs() < 1e-8 {
@@ -115,7 +119,7 @@ impl Geometric for Disk {
             return None;
         }
 
-        let t = (self.plane_d - self.normal.dot(ray.origin.0)) / denominator;
+        let t = (self.plane_d - self.onb.w.dot(ray.origin.0)) / denominator;
         if !ray_t.contains_including(t) {
             return None;
         }
@@ -129,18 +133,18 @@ impl Geometric for Disk {
             return None;
         }
 
-        // UV mapping
+        // uv mapping via cartesian projection
+        //
+        // projects the hit point onto the disk's tangent axes, then normalizes
+        // by outer radius to get [-1, 1] and maps to [0, 1].
         let hit_local = hit_point.0 - self.center.0;
-        let phi = hit_local.dot(self.v_axis).atan2(hit_local.dot(self.u_axis));
-        let phi_wrapped = if phi < 0.0 { phi + TAU } else { phi };
-        let u = phi_wrapped / TAU;
-        let d = d_sq.sqrt();
-        let v = (self.radius - d) / (self.radius - self.inner_radius);
+        let u = (hit_local.dot(self.onb.u) / self.radius + 1.0) / 2.0;
+        let v = (hit_local.dot(self.onb.v) / self.radius + 1.0) / 2.0;
 
         Some(RayHit {
             t,
             point: hit_point,
-            normal: self.normal,
+            normal: self.onb.w,
             material: Arc::clone(&self.material),
             u,
             v,
@@ -182,7 +186,7 @@ impl Geometric for Disk {
             + self.inner_radius.powi(2);
         let r = r_sq.sqrt();
         let phi: f64 = rand::random::<f64>() * TAU;
-        let p = self.center + r * phi.cos() * self.u_axis + r * phi.sin() * self.v_axis;
+        let p = self.center + r * phi.cos() * self.onb.u + r * phi.sin() * self.onb.v;
         origin.to(p).unit_vector()
     }
 
@@ -220,7 +224,8 @@ mod tests {
         assert_eq!(hit.normal, Vector3::new(0.0, 0.0, 1.0));
         assert_eq!(hit.point, Point::new(0.0, 0.0, 0.0));
         assert_eq!(hit.t, 1.0);
-        assert_eq!(hit.v, 1.0);
+        assert_eq!(hit.u, 0.5);
+        assert_eq!(hit.v, 0.5);
     }
 
     #[test]

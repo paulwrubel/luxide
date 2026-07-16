@@ -17,43 +17,55 @@ pub struct RotateYAxis {
 impl RotateYAxis {
     pub fn new(geometric: Arc<dyn Geometric>, angle: Angle, around: Around) -> Self {
         let translation = around.point(&geometric).0;
-        let geometric_bbox = geometric.bounding_box() - translation;
 
         let sin_theta = angle.as_radians().sin();
         let cos_theta = angle.as_radians().cos();
 
-        let mut min_extent = Point::new(f64::INFINITY, f64::INFINITY, f64::INFINITY);
-        let mut max_extent = Point::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+        let child_bbox = geometric.bounding_box();
+        let bounding_box = if child_bbox.is_infinite() {
+            // a rotated unbounded volume is still unbounded; a finite AABB can't
+            // represent it (and rotating infinite corners yields NaN), so mark it
+            // UNIVERSE to route it to the scene's unbounded list.
+            Aabb::UNIVERSE
+        } else {
+            let geometric_bbox = child_bbox - translation;
 
-        for i in 0..2 {
-            for j in 0..2 {
-                for k in 0..2 {
-                    // grab one of the four corners of the bounding box
-                    let x = i as f64 * geometric_bbox.x_interval.maximum
-                        + (1 - i) as f64 * geometric_bbox.x_interval.minimum;
-                    let y = j as f64 * geometric_bbox.y_interval.maximum
-                        + (1 - j) as f64 * geometric_bbox.y_interval.minimum;
-                    let z = k as f64 * geometric_bbox.z_interval.maximum
-                        + (1 - k) as f64 * geometric_bbox.z_interval.minimum;
+            let mut min_extent = Point::new(f64::INFINITY, f64::INFINITY, f64::INFINITY);
+            let mut max_extent =
+                Point::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
 
-                    // rotate it
-                    let new_x = x * cos_theta + z * sin_theta;
-                    let new_z = -x * sin_theta + z * cos_theta;
+            for i in 0..2 {
+                for j in 0..2 {
+                    for k in 0..2 {
+                        // grab one of the four corners of the bounding box
+                        let x = i as f64 * geometric_bbox.x_interval.maximum
+                            + (1 - i) as f64 * geometric_bbox.x_interval.minimum;
+                        let y = j as f64 * geometric_bbox.y_interval.maximum
+                            + (1 - j) as f64 * geometric_bbox.y_interval.minimum;
+                        let z = k as f64 * geometric_bbox.z_interval.maximum
+                            + (1 - k) as f64 * geometric_bbox.z_interval.minimum;
 
-                    let rotated_point = Point::new(new_x, y, new_z);
+                        // rotate it
+                        let new_x = x * cos_theta + z * sin_theta;
+                        let new_z = -x * sin_theta + z * cos_theta;
 
-                    min_extent = min_extent.min_components_point(rotated_point);
-                    max_extent = max_extent.max_components_point(rotated_point);
+                        let rotated_point = Point::new(new_x, y, new_z);
+
+                        min_extent = min_extent.min_components_point(rotated_point);
+                        max_extent = max_extent.max_components_point(rotated_point);
+                    }
                 }
             }
-        }
+
+            Aabb::from_points(&[min_extent, max_extent]) + translation
+        };
 
         Self {
             geometric: Arc::clone(&geometric),
             translation,
             sin_theta,
             cos_theta,
-            bounding_box: Aabb::from_points(&[min_extent, max_extent]) + translation,
+            bounding_box,
         }
     }
 

@@ -2,6 +2,7 @@ use std::net::{Ipv4Addr, SocketAddr};
 
 use axum::{
     Router,
+    extract::DefaultBodyLimit,
     http::Method,
     routing::{delete, get, post, put},
 };
@@ -95,20 +96,25 @@ fn get_cors_layer(config: &ApiConfig) -> CorsLayer {
 }
 
 fn build_api_router() -> Router<LuxideState> {
-    let api_router = Router::new().route("/", get(handlers::index)).route(
-        "/storage_usage",
-        get(handlers::get_global_render_checkpoint_storage_usage),
-    );
+    let api_router = Router::new().route("/", get(handlers::index));
 
     api_router
         .nest("/renders", build_renders_router())
         .nest("/auth", build_auth_router())
         .nest("/users", build_users_router())
+        .nest(
+            "/resources",
+            build_resources_router().layer(DefaultBodyLimit::max(128 * 1024 * 1024)),
+        )
         .fallback(handlers::not_found)
 }
 
 fn build_renders_router() -> Router<LuxideState> {
     Router::new()
+        .route(
+            "/storage_usage",
+            get(handlers::get_global_render_checkpoint_storage_usage),
+        )
         .route("/", get(handlers::get_all_renders))
         .route("/", post(handlers::create_render))
         .route(
@@ -161,6 +167,16 @@ fn build_users_router() -> Router<LuxideState> {
         .route("/", get(handlers::get_admin_users))
         .route("/{id}/role", put(handlers::update_user_role))
         .route("/{id}/quotas", put(handlers::update_user_quotas))
+}
+
+fn build_resources_router() -> Router<LuxideState> {
+    Router::new()
+        .route("/", get(handlers::get_all_resource_metadata))
+        .route("/", post(handlers::create_resource))
+        .route("/storage_usage", get(handlers::get_resource_storage_usage))
+        .route("/{id}", get(handlers::get_resource_metadata))
+        .route("/{id}/data", get(handlers::get_resource_data))
+        .route("/{id}", delete(handlers::delete_resource))
 }
 
 pub async fn serve(router: Router, address: &str, port: u16) -> Result<(), String> {
