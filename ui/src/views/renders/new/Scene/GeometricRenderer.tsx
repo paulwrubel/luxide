@@ -392,8 +392,8 @@ export function GeometricRenderer(props: GeometricRendererProps) {
     case 'bilinear_patch': {
       const emissiveInfo = getEmissiveInfo(config, data.material);
 
-      // build subdivided bilinear patch mesh (8x8 grid)
-      const divs = 8;
+      // build subdivided bilinear patch mesh (16x16 grid)
+      const divs = 16;
       const positions: number[] = [];
       const normals: number[] = [];
       const indices: number[] = [];
@@ -421,8 +421,8 @@ export function GeometricRenderer(props: GeometricRendererProps) {
 
           // compute normal from partial derivatives
           const eps = 0.001;
-          const du_u = Math.min(u + eps, 1.0);
-          const dv_v = Math.min(v + eps, 1.0);
+          const du_u = Math.min(u + eps, 1.0 + eps);
+          const dv_v = Math.min(v + eps, 1.0 + eps);
           const du = evalPatch(du_u, v);
           const dv = evalPatch(u, dv_v);
           const p = [

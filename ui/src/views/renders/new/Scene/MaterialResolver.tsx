@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { MeshTransmissionMaterial } from '@react-three/drei';
 import type * as THREE from 'three';
+import { Color } from 'three';
 import { getMaterialDataSafe } from '@/utils/render/material';
 import { getTextureDataSafe } from '@/utils/render/texture';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
@@ -22,6 +23,9 @@ export function MaterialResolver(props: MaterialResolverProps) {
   const reflectanceImageMap = useImageMap(
     reflectanceTexture.type === 'image' ? reflectanceTexture.resource_id : undefined,
   );
+  const emittanceImageMap = useImageMap(
+    emittanceTexture.type === 'image' ? emittanceTexture.resource_id : undefined,
+  );
 
   const lambertianMaterialRef = useRef<THREE.MeshLambertMaterial>(null);
   const dielectricMaterialRef = useRef<React.ComponentRef<typeof MeshTransmissionMaterial>>(null);
@@ -32,10 +36,18 @@ export function MaterialResolver(props: MaterialResolverProps) {
     for (const ref of refs) {
       if (ref.current) {
         ref.current.map = reflectanceImageMap;
+        ref.current.emissiveMap = emittanceImageMap;
+        if (emittanceImageMap) {
+          // emissiveMap is multiplied by the emissive color, which defaults
+          // to black. Set white so the map shows at its natural brightness
+          ref.current.emissive = new Color(1, 1, 1);
+        } else {
+          ref.current.emissive = new Color(0, 0, 0);
+        }
         ref.current.needsUpdate = true;
       }
     }
-  }, [reflectanceImageMap]);
+  }, [reflectanceImageMap, emittanceImageMap]);
 
   const emissiveColor =
     emittanceTexture.type === 'color' && emittanceTexture.color.reduce((a, b) => a + b, 0) > 0
