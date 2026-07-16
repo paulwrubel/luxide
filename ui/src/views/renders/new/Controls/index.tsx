@@ -117,7 +117,7 @@ export function Controls(props: ControlsProps) {
                   description: 'Import a 3D model from an OBJ file.',
                   disabled: true,
                   disabledReason:
-                    'OBJ model creation requires file upload support, which is not yet implemented in the UI.',
+                    'Resource uploads currently support texture images only; OBJ file uploads are not yet available.',
                 },
               ]}
               type="geometrics"
