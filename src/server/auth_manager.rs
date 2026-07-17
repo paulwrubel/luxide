@@ -90,7 +90,7 @@ impl AuthManager {
 
         Self {
             storage,
-            admin_github_ids: secrets.admin_github_ids.clone(),
+            admin_github_ids: secrets.github.admin_user_ids.clone(),
             jwt_encoding_secret: EncodingKey::from_rsa_pem(&jwt_private_key)
                 .expect("Failed to parse JWT encoding secret PEM"),
             jwt_decoding_secret: DecodingKey::from_rsa_pem(&jwt_public_key)

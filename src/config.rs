@@ -60,14 +60,15 @@ pub struct ApiSecrets {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub struct AuthSecrets {
+    pub cookie_jar_signing_key: String,
     pub github: GitHubSecrets,
     pub jwt: JwtSecrets,
-    pub admin_github_ids: Vec<GithubID>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub struct GitHubSecrets {
+    pub admin_user_ids: Vec<GithubID>,
     pub client_id: String,
     pub client_secret: String,
 }
