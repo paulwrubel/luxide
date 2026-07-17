@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { MeshTransmissionMaterial } from '@react-three/drei';
 import type * as THREE from 'three';
-import { Color } from 'three';
 import { getMaterialDataSafe } from '@/utils/render/material';
 import { getTextureDataSafe } from '@/utils/render/texture';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
@@ -31,28 +30,30 @@ export function MaterialResolver(props: MaterialResolverProps) {
   const dielectricMaterialRef = useRef<React.ComponentRef<typeof MeshTransmissionMaterial>>(null);
   const specularMaterialRef = useRef<THREE.MeshStandardMaterial>(null);
 
-  useEffect(() => {
-    const refs = [lambertianMaterialRef, dielectricMaterialRef, specularMaterialRef];
-    for (const ref of refs) {
-      if (ref.current) {
-        ref.current.map = reflectanceImageMap;
-        ref.current.emissiveMap = emittanceImageMap;
-        if (emittanceImageMap) {
-          // emissiveMap is multiplied by the emissive color, which defaults
-          // to black. Set white so the map shows at its natural brightness
-          ref.current.emissive = new Color(1, 1, 1);
-        } else {
-          ref.current.emissive = new Color(0, 0, 0);
-        }
-        ref.current.needsUpdate = true;
-      }
-    }
-  }, [reflectanceImageMap, emittanceImageMap]);
-
   const emissiveColor =
     emittanceTexture.type === 'color' && emittanceTexture.color.reduce((a, b) => a + b, 0) > 0
       ? emittanceTexture.color
       : undefined;
+
+  // single source of truth for emissive across all material types
+  const resolvedEmissive: [number, number, number] = emittanceImageMap
+    ? [1, 1, 1] // white so emissiveMap shows at natural brightness
+    : (emissiveColor ?? [0, 0, 0]);
+
+  const hasReflectanceMap = reflectanceImageMap !== null;
+  const hasEmittanceMap = emittanceImageMap !== null;
+
+  // recompile when map/emissiveMap presence toggles (null ↔ texture);
+  // three.js needs this for USE_MAP / USE_EMISSIVEMAP shader defines,
+  // but R3F does not set needsUpdate automatically
+  useEffect(() => {
+    const refs = [lambertianMaterialRef, dielectricMaterialRef, specularMaterialRef];
+    for (const ref of refs) {
+      if (ref.current) {
+        ref.current.needsUpdate = true;
+      }
+    }
+  }, [hasReflectanceMap, hasEmittanceMap]);
 
   switch (materialData.type) {
     case 'dielectric': {
@@ -66,6 +67,8 @@ export function MaterialResolver(props: MaterialResolverProps) {
               ref={dielectricMaterialRef}
               attach="material"
               color={reflectanceTexture.color}
+              map={reflectanceImageMap}
+              emissiveMap={emittanceImageMap}
               thickness={mediumData ? 0.5 : 0}
               transmission={1.0}
               ior={ior}
@@ -82,7 +85,7 @@ export function MaterialResolver(props: MaterialResolverProps) {
                         : undefined,
                   }
                 : {})}
-              {...(!hasHomogeneousMedium && emissiveColor ? { emissive: emissiveColor } : {})}
+              {...(!hasHomogeneousMedium ? { emissive: resolvedEmissive } : {})}
             />
           );
         }
@@ -97,6 +100,8 @@ export function MaterialResolver(props: MaterialResolverProps) {
               ref={dielectricMaterialRef}
               attach="material"
               color={[1, 1, 1]}
+              map={reflectanceImageMap}
+              emissiveMap={emittanceImageMap}
               thickness={mediumData ? 0.5 : 0}
               transmission={1.0}
               ior={ior}
@@ -113,6 +118,7 @@ export function MaterialResolver(props: MaterialResolverProps) {
                         : undefined,
                   }
                 : {})}
+              {...(!hasHomogeneousMedium ? { emissive: resolvedEmissive } : {})}
             />
           );
         }
@@ -124,6 +130,8 @@ export function MaterialResolver(props: MaterialResolverProps) {
               ref={dielectricMaterialRef}
               attach="material"
               color={[1, 1, 1]}
+              map={reflectanceImageMap}
+              emissiveMap={emittanceImageMap}
               thickness={mediumData ? 0.5 : 0}
               transmission={1.0}
               ior={ior}
@@ -140,6 +148,7 @@ export function MaterialResolver(props: MaterialResolverProps) {
                         : undefined,
                   }
                 : {})}
+              {...(!hasHomogeneousMedium ? { emissive: resolvedEmissive } : {})}
             />
           );
         }
@@ -153,10 +162,12 @@ export function MaterialResolver(props: MaterialResolverProps) {
             <meshLambertMaterial
               ref={lambertianMaterialRef}
               attach="material"
-              color={reflectanceTexture.color}
+              color={reflectanceTexture.type === 'color' ? reflectanceTexture.color : [1, 1, 1]}
+              map={reflectanceImageMap}
+              emissiveMap={emittanceImageMap}
+              emissive={resolvedEmissive}
               side={side}
               shadowSide={shadowSide}
-              {...(emissiveColor ? { emissive: emissiveColor } : {})}
             />
           );
         }
@@ -169,6 +180,9 @@ export function MaterialResolver(props: MaterialResolverProps) {
               ref={lambertianMaterialRef}
               attach="material"
               color={[1, 1, 1]}
+              map={reflectanceImageMap}
+              emissiveMap={emittanceImageMap}
+              emissive={resolvedEmissive}
               side={side}
               shadowSide={shadowSide}
             />
@@ -180,6 +194,9 @@ export function MaterialResolver(props: MaterialResolverProps) {
               ref={lambertianMaterialRef}
               attach="material"
               color={[1, 1, 1]}
+              map={reflectanceImageMap}
+              emissiveMap={emittanceImageMap}
+              emissive={resolvedEmissive}
               side={side}
               shadowSide={shadowSide}
             />
@@ -195,10 +212,12 @@ export function MaterialResolver(props: MaterialResolverProps) {
             <meshStandardMaterial
               ref={specularMaterialRef}
               attach="material"
-              color={reflectanceTexture.color}
+              color={reflectanceTexture.type === 'color' ? reflectanceTexture.color : [1, 1, 1]}
+              map={reflectanceImageMap}
+              emissiveMap={emittanceImageMap}
+              emissive={resolvedEmissive}
               side={side}
               shadowSide={shadowSide}
-              {...(emissiveColor ? { emissive: emissiveColor } : {})}
               metalness={1.0}
               roughness={materialData.roughness}
             />
@@ -213,6 +232,9 @@ export function MaterialResolver(props: MaterialResolverProps) {
               ref={specularMaterialRef}
               attach="material"
               color={[1, 1, 1]}
+              map={reflectanceImageMap}
+              emissiveMap={emittanceImageMap}
+              emissive={resolvedEmissive}
               side={side}
               shadowSide={shadowSide}
               metalness={1.0}
@@ -226,6 +248,9 @@ export function MaterialResolver(props: MaterialResolverProps) {
               ref={specularMaterialRef}
               attach="material"
               color={[1, 1, 1]}
+              map={reflectanceImageMap}
+              emissiveMap={emittanceImageMap}
+              emissive={resolvedEmissive}
               side={side}
               shadowSide={shadowSide}
               metalness={1.0}
