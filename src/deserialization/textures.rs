@@ -63,25 +63,26 @@ impl Build<Arc<dyn Texture>> for TextureData {
                 Ok(Arc::new(Checker::new(*scale, even, odd)))
             }
             Self::Image { resource_id, gamma } => {
-                let data = match builts.resources {
+                match builts.resources {
                     // validation mode — return a 1x1 placeholder, no DB fetch needed
-                    None => {
-                        return Ok(Arc::new(Image8Bit::new(image::RgbaImage::from_pixel(
-                            1,
-                            1,
-                            image::Rgba([255, 0, 255, 255]),
-                        ))));
+                    None => Ok(Arc::new(Image8Bit::new(image::RgbaImage::from_pixel(
+                        1,
+                        1,
+                        image::Rgba([255, 0, 255, 255]),
+                    )))),
+                    Some(resources) => {
+                        let texture =
+                            resources
+                                .get(&(*resource_id, gamma.to_bits()))
+                                .ok_or_else(|| {
+                                    format!(
+                                        "Resource {} with gamma {} not found in pre-loaded data",
+                                        resource_id, gamma
+                                    )
+                                })?;
+                        Ok(Arc::clone(texture) as Arc<dyn Texture>)
                     }
-                    Some(resources) => resources.get(resource_id).ok_or_else(|| {
-                        format!("Resource {} not found in pre-loaded data", resource_id)
-                    })?,
-                };
-
-                let image_texture = Image8Bit::from_bytes(data, *gamma).map_err(|err| {
-                    format!("Error loading image from resource {}: {}", resource_id, err)
-                })?;
-
-                Ok(Arc::new(image_texture))
+                }
             }
             Self::SolidColor { color } => Ok(Arc::new(SolidColor::from(ColorRgb::from(*color)))),
         }

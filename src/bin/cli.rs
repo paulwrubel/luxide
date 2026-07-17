@@ -17,8 +17,8 @@ use luxide::{
         textures::{Checker, Image8Bit, Noise, SolidColor},
     },
     tracing::{
-        FileStorage, InMemoryStorage, RenderManager, RenderState, RenderStorage, Scene, SceneWorld,
-        User,
+        FileStorage, InMemoryStorage, RenderManager, RenderState, RenderStorage, ResourceManager,
+        Scene, SceneWorld, User,
     },
     utils::{Angle, Around},
 };
@@ -62,9 +62,12 @@ async fn main() -> Result<(), String> {
     let render_config: RenderConfig = serde_json::from_str(&render_config_str)
         .map_err(|err| format!("Failed to parse configuration file: {}", err))?;
 
+    // create resource manager (for CLI, in-memory storage; no eviction task needed)
+    let resource_manager = Arc::new(ResourceManager::new(Arc::new(InMemoryStorage::new())));
+
     // create render manager
     let render_manager = Arc::new(
-        RenderManager::new(Arc::clone(&storage), Arc::new(InMemoryStorage::new()))
+        RenderManager::new(Arc::clone(&storage), Arc::clone(&resource_manager))
             .await
             .map_err(|e| format!("Failed to initialize render manager: {}", e))?,
     );

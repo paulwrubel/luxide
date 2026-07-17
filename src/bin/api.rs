@@ -90,9 +90,12 @@ async fn main() -> Result<(), String> {
             }
         };
 
+    // create resource manager (must be constructed before render manager)
+    let resource_manager = Arc::new(ResourceManager::new(Arc::clone(&resource_storage)));
+
     // create render manager
     let render_manager = Arc::new(
-        RenderManager::new(Arc::clone(&render_storage), Arc::clone(&resource_storage))
+        RenderManager::new(Arc::clone(&render_storage), Arc::clone(&resource_manager))
             .await
             .map_err(|e| format!("Failed to initialize render manager: {}", e))?,
     );
@@ -103,9 +106,6 @@ async fn main() -> Result<(), String> {
         &config,
         &secrets.auth,
     ));
-
-    // create resource manager
-    let resource_manager = Arc::new(ResourceManager::new(Arc::clone(&resource_storage)));
 
     let router = build_router(&config).with_state(LuxideState::new_with_generated_key(
         Arc::clone(&render_manager),
