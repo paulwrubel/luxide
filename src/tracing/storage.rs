@@ -393,11 +393,14 @@ pub struct User {
     pub max_resource_storage_bytes: Option<u64>,
 }
 
+const KILOBYTE: u64 = 1024;
+const MEGABYTE: u64 = KILOBYTE * 1024;
+
 impl User {
     pub const DEFAULT_MAX_RENDERS: u32 = 1;
     pub const DEFAULT_MAX_CHECKPOINTS_PER_RENDER: u32 = 1;
     pub const DEFAULT_MAX_RENDER_PIXEL_COUNT: u32 = 500 * 500;
-    pub const DEFAULT_MAX_RESOURCE_STORAGE_BYTES: u64 = 100 * 1024 * 1024; // 100 MB
+    pub const DEFAULT_MAX_RESOURCE_STORAGE_BYTES: u64 = 20 * MEGABYTE;
 
     pub fn new_admin(
         id: UserID,
