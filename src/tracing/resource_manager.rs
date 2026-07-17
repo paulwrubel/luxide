@@ -14,14 +14,68 @@ use super::{
     Resource, ResourceID, ResourceMeta, ResourceStorage, ResourceType, StorageError, User, UserID,
 };
 
+use std::collections::HashSet;
+
+use super::texture_cache::TextureCache;
+
+use indexmap::IndexMap;
+
+use crate::deserialization::{RenderConfig, TextureData};
+
 #[derive(Clone)]
 pub struct ResourceManager {
     storage: Arc<dyn ResourceStorage>,
+    texture_cache: Arc<TextureCache>,
 }
 
 impl ResourceManager {
     pub fn new(storage: Arc<dyn ResourceStorage>) -> Self {
-        Self { storage }
+        Self {
+            storage,
+            texture_cache: TextureCache::new(),
+        }
+    }
+
+    // preload all image textures referenced by a render config.
+    // checks the cache first; on miss, fetches from storage, decodes, and caches.
+    pub async fn get_textures_for_config(
+        &self,
+        config: &RenderConfig,
+    ) -> Result<IndexMap<(ResourceID, u64), Arc<Image8Bit>>, StorageError> {
+        // collect unique (resource_id, gamma) pairs from config
+        let mut pairs = HashSet::new();
+        for texture in config.textures.values() {
+            if let TextureData::Image { resource_id, gamma } = texture {
+                pairs.insert((*resource_id, gamma.to_bits()));
+            }
+        }
+
+        let mut result = IndexMap::new();
+        for (resource_id, gamma_bits) in pairs {
+            let key = (resource_id, gamma_bits);
+
+            // check cache first
+            if let Some(texture) = self.texture_cache.get(&key) {
+                result.insert(key, texture);
+                continue;
+            }
+
+            // cache miss: fetch from storage, decode, cache
+            if let Some(resource) = self.storage.get_resource(resource_id).await? {
+                let gamma = f64::from_bits(gamma_bits);
+                let image = Image8Bit::from_bytes(&resource.data, gamma).map_err(|e| {
+                    StorageError(format!(
+                        "Failed to decode image for resource {}: {}",
+                        resource_id, e
+                    ))
+                })?;
+                let texture = Arc::new(image);
+                self.texture_cache.insert(key, Arc::clone(&texture));
+                result.insert(key, texture);
+            }
+        }
+
+        Ok(result)
     }
 
     pub async fn create_resource(

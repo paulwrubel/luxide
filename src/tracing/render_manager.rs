@@ -21,15 +21,12 @@ use super::{Render, RenderCheckpoint, RenderID, RenderStorage, Role, StorageErro
 
 use std::collections::HashSet;
 
-use indexmap::IndexMap;
-
-use crate::deserialization::TextureData;
-use crate::tracing::{ResourceID, ResourceStorage};
+use crate::tracing::ResourceManager;
 
 #[derive(Clone)]
 pub struct RenderManager {
     storage: Arc<dyn RenderStorage>,
-    resource_storage: Arc<dyn ResourceStorage>,
+    resource_manager: Arc<ResourceManager>,
     global_thread_pool: Option<Arc<rayon::ThreadPool>>,
     running_renders: Arc<Mutex<HashSet<RenderID>>>,
     render_state_streams: Arc<RenderStreamRegistry>,
@@ -40,19 +37,19 @@ const POLLING_INTERVAL_MS: u64 = 100;
 impl RenderManager {
     pub async fn new(
         storage: Arc<dyn RenderStorage>,
-        resource_storage: Arc<dyn ResourceStorage>,
+        resource_manager: Arc<ResourceManager>,
     ) -> Result<Self, String> {
-        Self::new_with_optional_global_thread_pool(storage, resource_storage, None).await
+        Self::new_with_optional_global_thread_pool(storage, resource_manager, None).await
     }
 
     pub async fn new_with_global_thread_pool(
         storage: Arc<dyn RenderStorage>,
-        resource_storage: Arc<dyn ResourceStorage>,
+        resource_manager: Arc<ResourceManager>,
         threads: Threads,
     ) -> Result<Self, String> {
         Self::new_with_optional_global_thread_pool(
             storage,
-            resource_storage,
+            resource_manager,
             Some(Arc::new(
                 rayon::ThreadPoolBuilder::new()
                     .num_threads(threads.effective_count())
@@ -65,7 +62,7 @@ impl RenderManager {
 
     pub async fn new_with_optional_global_thread_pool(
         storage: Arc<dyn RenderStorage>,
-        resource_storage: Arc<dyn ResourceStorage>,
+        resource_manager: Arc<ResourceManager>,
         thread_pool: Option<Arc<rayon::ThreadPool>>,
     ) -> Result<Self, String> {
         // find any renders that were left in Running or Pausing state
@@ -95,7 +92,7 @@ impl RenderManager {
 
         Ok(Self {
             storage,
-            resource_storage,
+            resource_manager,
             global_thread_pool: thread_pool,
             running_renders: Arc::new(Mutex::new(HashSet::new())),
             render_state_streams: Arc::new(RenderStreamRegistry::default()),
@@ -175,7 +172,7 @@ impl RenderManager {
 
         let running_renders = Arc::clone(&self.running_renders);
         let storage = Arc::clone(&self.storage);
-        let resource_storage = Arc::clone(&self.resource_storage);
+        let resource_manager = Arc::clone(&self.resource_manager);
         let thread_pool = self.global_thread_pool.as_ref().cloned();
         let render_state_streams = Arc::clone(&self.render_state_streams);
 
@@ -232,9 +229,7 @@ impl RenderManager {
             };
 
             let resources =
-                match Self::preload_resource_data_from_storage(&render.config, &*resource_storage)
-                    .await
-                {
+                match resource_manager.get_textures_for_config(&render.config).await {
                     Ok(data) => data,
                     Err(e) => {
                         println!(
@@ -1043,27 +1038,6 @@ impl RenderManager {
         &self.render_state_streams
     }
 
-    /// Pre-load resource data referenced by textures in a render config.
-    /// This is needed because the spawn closure can't call `self`.
-    async fn preload_resource_data_from_storage(
-        config: &RenderConfig,
-        resource_storage: &dyn ResourceStorage,
-    ) -> Result<IndexMap<ResourceID, Vec<u8>>, StorageError> {
-        let mut ids = std::collections::HashSet::new();
-        for texture in config.textures.values() {
-            if let TextureData::Image { resource_id, .. } = texture {
-                ids.insert(*resource_id);
-            }
-        }
-
-        let mut result = IndexMap::new();
-        for id in ids {
-            if let Some(resource) = resource_storage.get_resource(id).await? {
-                result.insert(id, resource.data);
-            }
-        }
-        Ok(result)
-    }
 }
 
 #[derive(Clone, Copy, Serialize)]

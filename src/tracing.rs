@@ -7,6 +7,8 @@ pub use render_manager::*;
 mod resource_manager;
 pub use resource_manager::*;
 
+mod texture_cache;
+
 mod scene;
 pub use scene::*;
 
