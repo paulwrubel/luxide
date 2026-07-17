@@ -1,5 +1,6 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef } from 'react';
 import { Button, ModalHeader, ModalBody, ModalFooter } from 'flowbite-react';
+import { useAppForm } from '@/hooks/useAppForm';
 import { HiFolderOpen } from 'react-icons/hi2';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
 import { RenderConfigSchema, normalizeRenderConfig } from '@/utils/render/config';
@@ -14,24 +15,32 @@ export type ImportConfigBodyProps = {
 export function ImportConfigBody(props: ImportConfigBodyProps) {
   const { onImportSuccess, onCancel } = props;
 
-  const [jsonText, setJsonText] = useState('');
+  const form = useAppForm({
+    defaultValues: {
+      jsonText: '',
+    },
+  });
   const [error, setError] = useState<string | null>(null);
   const [isValidating, setIsValidating] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      return;
+    }
     const reader = new FileReader();
     reader.onload = () => {
-      setJsonText(reader.result as string);
+      // the FileReader result is guaranteed to be a string after readAsText
+      form.setFieldValue('jsonText', reader.result as string);
       setError(null);
     };
     reader.readAsText(file);
     e.target.value = '';
-  }, []);
+  }
 
-  const handleImportConfig = useCallback(async () => {
+  async function handleImportConfig() {
+    const jsonText = form.state.values.jsonText;
     if (!jsonText.trim()) {
       setError('Please enter or import a JSON configuration.');
       return;
@@ -61,7 +70,7 @@ export function ImportConfigBody(props: ImportConfigBodyProps) {
     } finally {
       setIsValidating(false);
     }
-  }, [jsonText, onImportSuccess, onCancel]);
+  }
 
   return (
     <>
@@ -81,13 +90,17 @@ export function ImportConfigBody(props: ImportConfigBodyProps) {
               hidden
             />
           </div>
-          <RenderConfigEditor
-            value={jsonText}
-            onChange={(value) => {
-              setJsonText(value);
-              setError(null);
-            }}
-          />
+          <form.AppField name="jsonText">
+            {(field) => (
+              <RenderConfigEditor
+                value={field.state.value}
+                onChange={(value) => {
+                  field.handleChange(value);
+                  setError(null);
+                }}
+              />
+            )}
+          </form.AppField>
           {error && (
             <div className="rounded-lg bg-red-900/30 p-3 text-sm whitespace-pre-wrap text-red-300">
               {error}
