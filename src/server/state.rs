@@ -30,19 +30,6 @@ impl LuxideState {
             cookie_jar_key,
         }
     }
-
-    pub fn new_with_generated_key(
-        render_manager: Arc<RenderManager>,
-        auth_manager: Arc<AuthManager>,
-        resource_manager: Arc<ResourceManager>,
-    ) -> Self {
-        Self::new(
-            render_manager,
-            auth_manager,
-            resource_manager,
-            Key::generate(),
-        )
-    }
 }
 
 impl FromRef<LuxideState> for Key {

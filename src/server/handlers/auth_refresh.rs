@@ -23,6 +23,9 @@ pub async fn auth_refresh(
     let refresh_token = match cookie_jar.get("refresh_token") {
         Some(cookie) => cookie.value().to_string(),
         None => {
+            eprintln!(
+                "Refresh attempt with missing or unverifiable refresh_token cookie (possible cookie signing key mismatch)"
+            );
             return (
                 StatusCode::UNAUTHORIZED,
                 Json(serde_json::json!({
@@ -54,7 +57,7 @@ pub async fn auth_refresh(
                 .into_response()
         }
         Err(e) => {
-            eprintln!("Failed to refresh token: {}", e);
+            eprintln!("Refresh token rejected: {}", e);
             (
                 StatusCode::UNAUTHORIZED,
                 Json(serde_json::json!({

@@ -1,5 +1,7 @@
 use std::{path::PathBuf, sync::Arc};
 
+use axum_extra::extract::cookie::Key;
+use base64::Engine as _;
 use clap::{Parser, ValueEnum};
 use luxide::{
     config::{
@@ -107,10 +109,22 @@ async fn main() -> Result<(), String> {
         &secrets.auth,
     ));
 
-    let router = build_router(&config).with_state(LuxideState::new_with_generated_key(
+    // build the cookie signing key from secrets so signed cookies survive restarts
+    let cookie_key_bytes = base64::engine::general_purpose::STANDARD
+        .decode(&secrets.auth.cookie_jar_signing_key)
+        .map_err(|e| format!("Failed to base64-decode auth.cookie_jar_signing_key: {}", e))?;
+    let cookie_jar_key = Key::try_from(cookie_key_bytes.as_slice()).map_err(|e| {
+        format!(
+            "Invalid auth.cookie_jar_signing_key (need at least 64 decoded bytes): {}",
+            e
+        )
+    })?;
+
+    let router = build_router(&config).with_state(LuxideState::new(
         Arc::clone(&render_manager),
         Arc::clone(&auth_manager),
         Arc::clone(&resource_manager),
+        cookie_jar_key,
     ));
 
     let (_, serve_result) = tokio::join!(

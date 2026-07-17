@@ -124,3 +124,7 @@ setup-ui-env:
 generate-jwt-keypair-pem:
     openssl genpkey -algorithm RSA -out jwt-key-private.pem -pkeyopt rsa_keygen_bits:2048
     openssl rsa -in jwt-key-private.pem -pubout -out jwt-key-public.pem
+
+[group('misc')]
+generate-cookie-jar-signing-key:
+    @openssl rand -base64 64 | tr -d '\n'; echo
