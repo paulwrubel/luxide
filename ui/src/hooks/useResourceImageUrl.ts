@@ -1,9 +1,13 @@
 import { useEffect, useMemo } from 'react';
 import { useResourceDataQuery } from './useResourceData';
 
-export function useResourceImageUrl(resourceId: number | undefined): string | null {
+export function useResourceImageUrl(
+  resourceId: number | undefined,
+  maxDim?: number,
+): string | null {
   const { data: blob } = useResourceDataQuery(resourceId ?? 0, {
     enabled: resourceId !== undefined,
+    maxDim,
   });
 
   const url = useMemo(() => {

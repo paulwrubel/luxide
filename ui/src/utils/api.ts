@@ -534,10 +534,11 @@ export async function getResourceData(
   fetcher: typeof fetch,
   resourceID: number,
   targetUserID?: number,
+  maxDim?: number,
 ): Promise<Blob | null> {
-  const response = await fetcher(
-    appendUserID(`${getAPIURL()}/resources/${resourceID}/data`, targetUserID),
-  );
+  const baseURL = `${getAPIURL()}/resources/${resourceID}/data`;
+  const urlWithSize = maxDim !== undefined ? `${baseURL}?max_dim=${maxDim}` : baseURL;
+  const response = await fetcher(appendUserID(urlWithSize, targetUserID));
 
   if (response.status === 404) {
     return null;

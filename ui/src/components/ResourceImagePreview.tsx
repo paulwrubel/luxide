@@ -7,7 +7,8 @@ export type ResourceImagePreviewProps = {
 export function ResourceImagePreview(props: ResourceImagePreviewProps) {
   const { resourceId } = props;
 
-  const url = useResourceImageUrl(resourceId);
+  // request 2x display size for hi-dpi screens
+  const url = useResourceImageUrl(resourceId, 256);
 
   if (resourceId === undefined) {
     return null;

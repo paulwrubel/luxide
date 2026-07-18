@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { useResourceImageUrl } from './useResourceImageUrl';
 
-export function useImageMap(resourceId: number | undefined): THREE.Texture | null {
+export function useImageMap(resourceId: number | undefined, maxDim?: number): THREE.Texture | null {
   const [map, setMap] = useState<THREE.Texture | null>(null);
 
-  const url = useResourceImageUrl(resourceId);
+  const url = useResourceImageUrl(resourceId, maxDim);
 
   useEffect(() => {
     if (!url) {

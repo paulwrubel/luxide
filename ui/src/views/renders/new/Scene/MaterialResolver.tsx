@@ -6,6 +6,9 @@ import { getTextureDataSafe } from '@/utils/render/texture';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
 import { useImageMap } from '@/hooks/useImageMap';
 
+// viewport preview textures don't need full resolution; the actual render always uses the original
+const VIEWPORT_TEXTURE_MAX_DIM = 1024;
+
 export type MaterialResolverProps = {
   config: NormalizedRenderConfig;
   materialName: string;
@@ -21,9 +24,11 @@ export function MaterialResolver(props: MaterialResolverProps) {
   const { data: emittanceTexture } = getTextureDataSafe(config, materialData.emittance_texture);
   const reflectanceImageMap = useImageMap(
     reflectanceTexture.type === 'image' ? reflectanceTexture.resource_id : undefined,
+    VIEWPORT_TEXTURE_MAX_DIM,
   );
   const emittanceImageMap = useImageMap(
     emittanceTexture.type === 'image' ? emittanceTexture.resource_id : undefined,
+    VIEWPORT_TEXTURE_MAX_DIM,
   );
 
   const lambertianMaterialRef = useRef<THREE.MeshLambertMaterial>(null);
