@@ -5,22 +5,23 @@ import { useAdminUserOverride } from '@/providers/AdminUserOverride';
 
 export type UseResourceDataOptions = {
   enabled?: boolean;
+  maxDim?: number;
 };
 
 export function useResourceDataQuery(resourceId: number, options: UseResourceDataOptions = {}) {
-  const { enabled = true } = options;
+  const { enabled = true, maxDim } = options;
 
   const { authenticatedFetch, accessToken } = useAuth();
   const { targetUserID } = useAdminUserOverride();
 
   return useQuery({
-    queryKey: resourceDataQueryKey(resourceId),
-    queryFn: () => getResourceData(authenticatedFetch, resourceId, targetUserID),
+    queryKey: resourceDataQueryKey(resourceId, maxDim),
+    queryFn: () => getResourceData(authenticatedFetch, resourceId, targetUserID, maxDim),
     enabled: enabled && accessToken !== undefined,
     staleTime: Infinity,
   });
 }
 
-export function resourceDataQueryKey(resourceId: number) {
-  return ['resourceData', resourceId] as const;
+export function resourceDataQueryKey(resourceId: number, maxDim?: number) {
+  return ['resourceData', resourceId, maxDim ?? 'full'] as const;
 }

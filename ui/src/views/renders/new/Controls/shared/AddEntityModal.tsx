@@ -14,6 +14,7 @@ import { z } from 'zod';
 import type { InstanceType } from '@/components/form-controls/InstancesBuilderControl';
 import type { EntityType, EntitySubType, AddEntityDropdownOption } from './AddEntityDropdown';
 import { useAllResourceMetadataQuery } from '@/hooks/useResources';
+import { ResourceImagePreview } from '@/components/ResourceImagePreview';
 
 export type AddEntityCreateConfig = {
   customName?: string;
@@ -192,6 +193,11 @@ export function AddEntityModal<T extends EntityType>(props: AddEntityModalProps<
                     No resources available. Upload one on the Resources page.
                   </p>
                 )}
+                <div className="mt-3">
+                  <ResourceImagePreview
+                    resourceId={field.state.value === '' ? undefined : Number(field.state.value)}
+                  />
+                </div>
               </div>
             )}
           </form.AppField>
