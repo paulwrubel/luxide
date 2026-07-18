@@ -212,13 +212,22 @@ export function GeometricControls(props: GeometricControlsProps) {
 
   // renders a node and its descendants recursively.
   // parentIsList: true when the direct parent is a list (children get DraggableGroup).
-  function renderNode(node: GeometricDisplayNode, parentIsList: boolean): React.ReactNode {
+  // frameDepth: depth of the nearest ancestor that owns a DraggableGroup rest area,
+  // so indentation is relative to that owner's row edge rather than absolute depth.
+  function renderNode(
+    node: GeometricDisplayNode,
+    parentIsList: boolean,
+    frameDepth: number,
+  ): React.ReactNode {
     const children = childrenByParent.get(node.formName) ?? [];
     const isRoot = node.parentID === null;
     const isList = node.type === 'list';
     const nextIsList = isList;
 
-    const grandchildren = children.map((child) => renderNode(child, nextIsList));
+    // roots and list children start a new frame, shifting the coordinate base.
+    // plain nodes inherit the current frame.
+    const nextFrameDepth = isRoot || parentIsList ? node.depth : frameDepth;
+    const grandchildren = children.map((child) => renderNode(child, nextIsList, nextFrameDepth));
 
     if (isRoot) {
       // root always gets a DraggableGroup. list children are rendered as flat siblings
@@ -238,13 +247,14 @@ export function GeometricControls(props: GeometricControlsProps) {
     }
 
     if (parentIsList) {
-      // list child — gets its own DraggableGroup for reordering.
-      // rendered as a flat sibling by the parent list root.
+      // frame-relative depth: the parent DraggableGroup's rest area shifts the
+      // coordinate base to the parent row edge, so indent from there.
       return (
         <DraggableGroup
           key={node.formName}
           id={makeListChildID(node.parentID!, node.formName)}
-          depth={1}
+          depth={node.depth - frameDepth}
+          handleOffset
         >
           <GeometricRow
             form={form}
@@ -263,7 +273,7 @@ export function GeometricControls(props: GeometricControlsProps) {
         <GeometricRow
           form={form}
           geometricName={node.formName}
-          depth={node.depth}
+          depth={node.depth - frameDepth}
           isUsedByActiveScene={node.isUsedByActiveScene}
           isDirectlyInActiveScene={node.isDirectlyInActiveScene}
         />
@@ -284,7 +294,7 @@ export function GeometricControls(props: GeometricControlsProps) {
       onDragEnd={handleDragEnd}
     >
       <SortableContext items={allSortableIDs} strategy={verticalListSortingStrategy}>
-        <div className="flex flex-col">{roots.map((node) => renderNode(node, false))}</div>
+        <div className="flex flex-col">{roots.map((node) => renderNode(node, false, 0))}</div>
       </SortableContext>
       <DragOverlay>
         {activeID
@@ -309,7 +319,7 @@ export function GeometricControls(props: GeometricControlsProps) {
                     isUsedByActiveScene={node.isUsedByActiveScene}
                     isDirectlyInActiveScene={node.isDirectlyInActiveScene}
                   />
-                  {childNodes.map((child) => renderNode(child, false))}
+                  {childNodes.map((child) => renderNode(child, false, 0))}
                 </div>
               );
             })()

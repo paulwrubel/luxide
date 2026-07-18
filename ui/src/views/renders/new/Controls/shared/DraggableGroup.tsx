@@ -7,10 +7,11 @@ export type DraggableGroupProps = {
   id: string;
   children: React.ReactNode;
   depth?: number;
+  handleOffset?: boolean;
 };
 
 export function DraggableGroup(props: DraggableGroupProps) {
-  const { id, children, depth = 0 } = props;
+  const { id, children, depth = 0, handleOffset = false } = props;
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
@@ -24,12 +25,18 @@ export function DraggableGroup(props: DraggableGroupProps) {
     '--row-depth': depth,
   } as React.CSSProperties;
 
+  // when handleOffset is set, the drag handle "hangs" into the indent gutter
+  // so the row's content edge lands exactly on the depth grid
+  const marginClass = handleOffset
+    ? 'ml-[calc(var(--row-depth)*0.75rem-1.5rem)]'
+    : 'ml-[calc(var(--row-depth)*0.75rem)]';
+
   const childArray = Children.toArray(children);
   const [first, ...rest] = childArray;
   const hasRest = rest.length > 0;
 
   return (
-    <div ref={setNodeRef} style={style} className="ml-[calc(var(--row-depth)*0.75rem)] min-w-0">
+    <div ref={setNodeRef} style={style} className={`${marginClass} min-w-0`}>
       <div className="flex items-center">
         <button
           type="button"
