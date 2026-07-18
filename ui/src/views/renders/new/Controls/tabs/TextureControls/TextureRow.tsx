@@ -13,6 +13,7 @@ import { InfoIconDefaultEntity } from '../../shared/icons/InfoIconDefaultEntity'
 import { DuplicateDropdown } from '../../shared/DuplicateDropdown';
 import { duplicateTexture } from '@/utils/render/utils';
 import { useAllResourceMetadataQuery } from '@/hooks/useResources';
+import { ResourceImagePreview } from '@/components/ResourceImagePreview';
 
 export type TextureRowProps = {
   form: RenderForm;
@@ -107,6 +108,7 @@ export function TextureRow(props: TextureRowProps) {
         const resource = resources?.find((r) => r.id === data.resource_id);
         return (
           <div className="flex flex-col gap-1 text-sm text-zinc-400">
+            <ResourceImagePreview resourceId={data.resource_id} />
             <div>
               <span className="text-zinc-500">Resource: </span>
               {resource ? resource.name : `#${data.resource_id}`}
