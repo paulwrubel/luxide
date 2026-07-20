@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Button, Spinner } from 'flowbite-react';
 import { useNavigate } from 'react-router-dom';
+import { DeleteRenderModal } from './DeleteRenderModal';
 import { useRenderQuery } from '@/hooks/useRender';
 import {
   usePauseRenderMutation,
@@ -29,6 +31,8 @@ export function RenderControls(props: RenderControlsProps) {
   const { mutate: pauseRender, isPending: isPausePending } = usePauseRenderMutation();
   const { mutate: resumeRender, isPending: isResumePending } = useResumeRenderMutation();
   const { mutate: deleteRender, isPending: isDeletePending } = useDeleteRenderMutation();
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   if (isRenderLoading || !render) {
     return <Spinner size="md" className="fill-zinc-400" />;
@@ -94,7 +98,7 @@ export function RenderControls(props: RenderControlsProps) {
 
       <Button
         color="red"
-        onClick={handleDelete}
+        onClick={() => setShowDeleteModal(true)}
         disabled={isDeletePending || isPausing || isRunning}
       >
         {isDeletePending ? (
@@ -106,6 +110,14 @@ export function RenderControls(props: RenderControlsProps) {
           'Delete Render'
         )}
       </Button>
+
+      <DeleteRenderModal
+        show={showDeleteModal}
+        renderName={render.config.name}
+        isPending={isDeletePending}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }
