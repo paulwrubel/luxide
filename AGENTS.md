@@ -87,6 +87,10 @@ Dark mode requires THREE things simultaneously:
 - The Rust project is a single crate with two binaries (NOT a workspace with multiple crates).
 - The Rust crate uses `#![forbid(unsafe_code)]` — no unsafe Rust anywhere.
 
-## 7. React Component Conventions
+## 7. Applicable Skills
 
-Load the `react-code-conventions` skill (`.opencode/skills/react-code-conventions/`) when editing any TypeScript file in `ui/src/`. All UI components must use `export type` props, function declaration, and first-line destructure.
+Load the `react-code-conventions` skill (`.opencode/skills/react-code-conventions/`) when editing any TypeScript file in `ui/`.
+
+Load the `postgres-queries` skill (`.opencode/skills/postgres-queries/`) when interacting with live renders, or when asked to view a render.
+
+Load the `git-conventions` skill (`.opencode/skills/git-conventions/`) when creating commits, branches, or pull requests.
