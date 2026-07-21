@@ -66,3 +66,18 @@ Apply rule 2. Commit messages describe the change in plain sentence-case. No typ
 ## When branching
 
 Apply rule 3. Use kebab-case with a type prefix.
+
+## When pushing
+
+4. **Use bare `git push` or `git push -u origin <branch>`** — Never use `git push origin <branch>` without `-u`. The `-u` flag sets the upstream tracking reference so that subsequent bare `git push` commands work.
+
+   ✅ Correct:
+   ```
+   git push
+   git push -u origin feat/my-branch
+   ```
+
+   ❌ Anti-pattern:
+   ```
+   git push origin feat/my-branch    (missing -u flag)
+   ```
