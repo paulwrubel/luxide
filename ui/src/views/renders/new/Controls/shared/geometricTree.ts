@@ -14,9 +14,20 @@ export type GeometricDisplayNode = {
 // or an empty array if it has no children (leaf type).
 function getChildGeometricNames(geo: NormalizedGeometricData): string[] {
   switch (geo.type) {
+    case 'box':
+    case 'bilinear_patch':
+    case 'cylinder':
+    case 'disk':
+    case 'obj_model':
+    case 'parallelogram':
+    case 'plane':
+    case 'sphere':
+    case 'triangle':
+      return [];
     case 'rotate_x':
     case 'rotate_y':
     case 'rotate_z':
+    case 'rotate_quaternion':
     case 'scale':
     case 'translate':
     case 'constant_volume':
@@ -24,8 +35,6 @@ function getChildGeometricNames(geo: NormalizedGeometricData): string[] {
       return [geo.geometric];
     case 'list':
       return geo.geometrics;
-    default:
-      return [];
   }
 }
 

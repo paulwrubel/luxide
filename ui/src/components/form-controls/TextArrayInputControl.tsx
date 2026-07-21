@@ -1,4 +1,4 @@
-import { getGridColumnsTemplateForPercentage } from './utils';
+import { getGridColumnsStyle } from './utils';
 import type { RenderForm, RenderFormPath } from '@/hooks/useRenderForm';
 
 export type TextArrayInputControlProps = {
@@ -6,7 +6,7 @@ export type TextArrayInputControlProps = {
   fieldName: RenderFormPath;
   type?: 'text' | 'number';
   label: string | React.ReactNode;
-  labelSpacePercentage?: 0 | 10 | 20 | 30 | 40 | 50 | 60 | 70 | 80 | 90 | 100;
+  labelSpacePercentage?: number;
   allowWrappingLabel?: boolean;
   labelPrefix?: React.ReactNode;
   labelSuffix?: React.ReactNode;
@@ -28,10 +28,10 @@ export function TextArrayInputControl(props: TextArrayInputControlProps) {
     unenforcedStep,
   } = props;
 
-  const gridStr = getGridColumnsTemplateForPercentage(labelSpacePercentage);
+  const gridStyle = getGridColumnsStyle(labelSpacePercentage);
 
   return (
-    <div className={`grid items-center ${gridStr}`}>
+    <div className="grid items-center" style={gridStyle}>
       <h6 className="mt-3 overflow-hidden font-normal">
         <span
           className={`flex items-center gap-2 ${allowWrappingLabel ? 'whitespace-normal' : 'whitespace-nowrap'}`}

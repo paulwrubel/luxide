@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '@/providers/Auth';
 import { useRenderForm } from '@/hooks/useRenderForm';
 import { NewRenderSidebar } from './NewRenderSidebar';
 import { Scene } from './Scene';
 import { useSelector } from '@tanstack/react-store';
+import { GizmoProvider } from '@/providers/Gizmo';
 
 export function NewRenderPage() {
   const { user } = useAuth();
@@ -28,6 +29,13 @@ export function NewRenderPage() {
 
   const form = useRenderForm({ user });
 
+  const handleQuaternionChange = useCallback(
+    (geometricName: string, q: [number, number, number, number]) => {
+      form.setFieldValue(`geometrics.${geometricName}.quaternion` as never, q as never);
+    },
+    [form],
+  );
+
   // canvas sizing - maintain aspect ratio in container
   const imageDimensions = useSelector(
     form.store,
@@ -49,16 +57,18 @@ export function NewRenderPage() {
   }
 
   return (
-    <div className="flex h-full w-full">
-      <NewRenderSidebar form={form} />
-      <div ref={containerRef} className="m-8 flex flex-1 items-center justify-center">
-        <div
-          style={{ width: canvasWidth, height: canvasHeight }}
-          className="box-border border border-zinc-500"
-        >
-          {canvasWidth > 0 && canvasHeight > 0 && <Scene form={form} />}
+    <GizmoProvider onQuaternionChange={handleQuaternionChange}>
+      <div className="flex h-full w-full">
+        <NewRenderSidebar form={form} />
+        <div ref={containerRef} className="m-8 flex flex-1 items-center justify-center">
+          <div
+            style={{ width: canvasWidth, height: canvasHeight }}
+            className="box-border border border-zinc-500"
+          >
+            {canvasWidth > 0 && canvasHeight > 0 && <Scene form={form} />}
+          </div>
         </div>
       </div>
-    </div>
+    </GizmoProvider>
   );
 }

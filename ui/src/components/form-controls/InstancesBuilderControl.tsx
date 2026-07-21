@@ -3,12 +3,19 @@ import { useFieldContext } from '@/hooks/formContext';
 import { Button, Label, Select } from 'flowbite-react';
 import { HiPlus, HiXMark } from 'react-icons/hi2';
 
-export type InstanceType = 'translate' | 'rotate_x' | 'rotate_y' | 'rotate_z' | 'scale';
+export type InstanceType =
+  | 'translate'
+  | 'rotate_x'
+  | 'rotate_y'
+  | 'rotate_z'
+  | 'rotate_quaternion'
+  | 'scale';
 
 const INSTANCE_LABELS: Record<InstanceType, string> = {
   rotate_x: 'Rotate X',
   rotate_y: 'Rotate Y',
   rotate_z: 'Rotate Z',
+  rotate_quaternion: 'Rotate (Quaternion)',
   scale: 'Scale',
   translate: 'Translate',
 };
@@ -74,6 +81,7 @@ export function InstancesBuilderControl(props: InstancesBuilderControlProps) {
           <option value="rotate_x">Rotate X</option>
           <option value="rotate_y">Rotate Y</option>
           <option value="rotate_z">Rotate Z</option>
+          <option value="rotate_quaternion">Rotate (Quaternion)</option>
           <option value="scale">Scale</option>
           <option value="translate">Translate</option>
         </Select>

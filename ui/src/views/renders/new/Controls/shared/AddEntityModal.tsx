@@ -54,7 +54,9 @@ export function AddEntityModal<T extends EntityType>(props: AddEntityModalProps<
       onChange: z
         .object({
           customName: z.string(),
-          instances: z.array(z.enum(['translate', 'rotate_x', 'rotate_y', 'rotate_z', 'scale'])),
+          instances: z.array(
+            z.enum(['translate', 'rotate_x', 'rotate_y', 'rotate_z', 'rotate_quaternion', 'scale']),
+          ),
           isConstantVolume: z.boolean(),
           isVirtual: z.boolean(),
           selectedResourceId: z.string(),

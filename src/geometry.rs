@@ -1,5 +1,6 @@
 pub mod compounds;
 pub mod instances;
+pub mod matrix;
 pub mod primitives;
 pub mod volumes;
 
@@ -8,12 +9,16 @@ pub use aabb::Aabb;
 
 mod geometric;
 pub use geometric::Geometric;
+pub use matrix::Matrix3;
 
 mod onb;
 pub use onb::Onb;
 
 mod point;
 pub use point::Point;
+
+mod quaternion;
+pub use quaternion::Quaternion;
 
 mod ray_hit;
 pub use ray_hit::RayHit;

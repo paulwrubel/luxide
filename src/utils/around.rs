@@ -44,7 +44,7 @@ pub fn upgrade_legacy_around(value: &mut serde_json::Value) {
             if let Some(serde_json::Value::String(type_str)) = map.get("type")
                 && matches!(
                     type_str.as_str(),
-                    "rotate_x" | "rotate_y" | "rotate_z" | "scale"
+                    "rotate_x" | "rotate_y" | "rotate_z" | "rotate_quaternion" | "scale"
                 )
             {
                 match map.get("around") {

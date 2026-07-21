@@ -4,9 +4,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     geometry::{
-        Geometric, Vector3,
+        Geometric, Quaternion, Vector3,
         compounds::{AxisAlignedPBox, Bvh, List, ModelObj, Virtual},
-        instances::{RotateXAxis, RotateYAxis, RotateZAxis, Scale, Translate},
+        instances::{RotateQuaternion, RotateXAxis, RotateYAxis, RotateZAxis, Scale, Translate},
         primitives::{
             BilinearPatch, Cylinder, CylinderEnd, Disk, Parallelogram, Plane, Sphere, Triangle,
         },
@@ -85,6 +85,12 @@ pub enum GeometricData {
         geometric: GeometricRefOrInline,
         #[serde(flatten)]
         angle: Angle,
+        around: Around,
+    },
+    #[serde(rename = "rotate_quaternion")]
+    InstanceRotateQuaternion {
+        geometric: GeometricRefOrInline,
+        quaternion: [f64; 4],
         around: Around,
     },
     #[serde(rename = "scale")]
@@ -261,6 +267,19 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
                 let geometric = geometric_ref.build(builts)?;
 
                 Ok(Arc::new(RotateZAxis::new(geometric, *angle, *around)))
+            }
+            Self::InstanceRotateQuaternion {
+                geometric: geometric_ref,
+                quaternion,
+                around,
+            } => {
+                let geometric = geometric_ref.build(builts)?;
+
+                Ok(Arc::new(RotateQuaternion::new(
+                    geometric,
+                    Quaternion::from_array(*quaternion),
+                    *around,
+                )))
             }
             Self::InstanceScale {
                 geometric: geometric_ref,
