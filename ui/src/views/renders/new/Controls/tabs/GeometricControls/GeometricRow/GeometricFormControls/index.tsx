@@ -308,6 +308,19 @@ export function GeometricFormControls(props: GeometricFormControlsProps) {
         </>
       );
     }
+    case 'rotate_quaternion':
+      return (
+        <>
+          <TextArrayInputControl
+            form={form}
+            fieldName={`geometrics.${name}.quaternion`}
+            label="Quaternion"
+            valueLabels={['w', 'x', 'y', 'z']}
+            type="number"
+          />
+          <AroundVariantControls form={form} geometricName={name} pivotLabel="Rotation Point" />
+        </>
+      );
     case 'scale':
       return (
         <>

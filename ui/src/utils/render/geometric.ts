@@ -36,6 +36,8 @@ export function normalizeGeometricData(
       return normalizeGeometricInstanceRotate(config, name, geometricData);
     case 'rotate_z':
       return normalizeGeometricInstanceRotate(config, name, geometricData);
+    case 'rotate_quaternion':
+      return normalizeGeometricInstanceRotateQuaternion(config, name, geometricData);
     case 'scale':
       return normalizeGeometricInstanceScale(config, name, geometricData);
     case 'translate':
@@ -66,6 +68,7 @@ export type NormalizedGeometricData =
   | NormalizedGeometricList
   | NormalizedGeometricObjModel
   | NormalizedGeometricInstanceRotate
+  | NormalizedGeometricInstanceRotateQuaternion
   | NormalizedGeometricInstanceScale
   | NormalizedGeometricInstanceTranslate
   | NormalizedGeometricParallelogram
@@ -83,6 +86,7 @@ export type RawGeometricData =
   | RawGeometricList
   | RawGeometricObjModel
   | RawGeometricInstanceRotate
+  | RawGeometricInstanceRotateQuaternion
   | RawGeometricInstanceScale
   | RawGeometricInstanceTranslate
   | RawGeometricParallelogram
@@ -105,6 +109,7 @@ export function isGeometricData(data: unknown): data is GeometricData {
       'rotate_x',
       'rotate_y',
       'rotate_z',
+      'rotate_quaternion',
       'scale',
       'translate',
       'parallelogram',
@@ -125,6 +130,7 @@ export function isComposite(
 ): data is
   | GeometricList
   | GeometricInstanceRotate
+  | GeometricInstanceRotateQuaternion
   | GeometricInstanceScale
   | GeometricInstanceTranslate {
   return (
@@ -132,6 +138,7 @@ export function isComposite(
     data.type === 'rotate_x' ||
     data.type === 'rotate_y' ||
     data.type === 'rotate_z' ||
+    data.type === 'rotate_quaternion' ||
     data.type === 'scale' ||
     data.type === 'translate' ||
     data.type === 'virtual'
@@ -170,6 +177,7 @@ export function getReferencedMaterialNames(
     case 'translate':
     case 'constant_volume':
     case 'virtual':
+    case 'rotate_quaternion':
       materials.push(...getReferencedMaterialNames(config, data.geometric));
       break;
   }
@@ -216,6 +224,37 @@ function rotatePoint(
       rz = vz;
       break;
   }
+
+  return [rx + px, ry + py, rz + pz];
+}
+
+// rotate a point around a pivot by a unit quaternion (scalar-first: [w, x, y, z]).
+// matches the Rust backend's RotateQuaternion convention.
+function rotatePointByQuaternion(
+  point: [number, number, number],
+  quaternion: [number, number, number, number],
+  pivot: [number, number, number],
+): [number, number, number] {
+  const [px, py, pz] = pivot;
+  const [qw, qx, qy, qz] = quaternion;
+
+  const vx = point[0] - px;
+  const vy = point[1] - py;
+  const vz = point[2] - pz;
+
+  // apply quaternion rotation matrix
+  const rx =
+    (1 - 2 * qy * qy - 2 * qz * qz) * vx +
+    (2 * qx * qy - 2 * qw * qz) * vy +
+    (2 * qx * qz + 2 * qw * qy) * vz;
+  const ry =
+    (2 * qx * qy + 2 * qw * qz) * vx +
+    (1 - 2 * qx * qx - 2 * qz * qz) * vy +
+    (2 * qy * qz - 2 * qw * qx) * vz;
+  const rz =
+    (2 * qx * qz - 2 * qw * qy) * vx +
+    (2 * qy * qz + 2 * qw * qx) * vy +
+    (1 - 2 * qx * qx - 2 * qy * qy) * vz;
 
   return [rx + px, ry + py, rz + pz];
 }
@@ -269,6 +308,12 @@ export function getCenterPoint(
       const angleRad = toRadians(data);
       const pivot = getAroundPoint(data.around, config, data.geometric);
       return rotatePoint(childCenter, data.type, angleRad, pivot);
+    }
+    case 'rotate_quaternion': {
+      const { data: subData } = getGeometricDataSafe(config, data.geometric);
+      const childCenter = getCenterPoint(config, subData);
+      const pivot = getAroundPoint(data.around, config, data.geometric);
+      return rotatePointByQuaternion(childCenter, data.quaternion, pivot);
     }
     case 'scale': {
       const { data: subData } = getGeometricDataSafe(config, data.geometric);
@@ -430,6 +475,13 @@ export function defaultGeometricForType(
         type: 'rotate_z',
         geometric: '__unit_box',
         degrees: 0,
+        around: 'center',
+      };
+    case 'rotate_quaternion':
+      return {
+        type: 'rotate_quaternion',
+        geometric: '__unit_box',
+        quaternion: [1, 0, 0, 0],
         around: 'center',
       };
     case 'scale':
@@ -725,6 +777,56 @@ export type RawGeometricInstanceRotate = {
   geometric: string | RawGeometricData;
   around: Around;
 } & Angle;
+
+export const GeometricInstanceRotateQuaternionSchema = z.object({
+  type: z.literal('rotate_quaternion'),
+  geometric: z.string().nonempty(),
+  quaternion: z.tuple([z.number(), z.number(), z.number(), z.number()]),
+  around: AroundSchema,
+});
+
+export type GeometricInstanceRotateQuaternion = NormalizedGeometricInstanceRotateQuaternion;
+
+export type NormalizedGeometricInstanceRotateQuaternion = {
+  type: 'rotate_quaternion';
+  geometric: string;
+  quaternion: [number, number, number, number];
+  around: Around;
+};
+
+export type RawGeometricInstanceRotateQuaternion = {
+  type: 'rotate_quaternion';
+  geometric: string | RawGeometricData;
+  quaternion: [number, number, number, number];
+  around: Around;
+};
+
+export function normalizeGeometricInstanceRotateQuaternion(
+  config: RenderConfig,
+  name: string,
+  geometricData: RawGeometricInstanceRotateQuaternion,
+): NormalizedGeometricInstanceRotateQuaternion {
+  const geometric = geometricData;
+
+  if (typeof geometric.geometric !== 'string') {
+    if (!config.geometrics) {
+      config.geometrics = {};
+    }
+
+    const geometricName = getNextUniqueName(
+      config.geometrics,
+      `${name}_${geometric.geometric.type}`,
+    );
+    config.geometrics[geometricName] = normalizeGeometricData(
+      config,
+      geometricName,
+      geometric.geometric,
+    );
+    geometric.geometric = geometricName;
+  }
+
+  return geometric as NormalizedGeometricInstanceRotateQuaternion;
+}
 
 export const GeometricInstanceTranslateSchema = z.object({
   type: z.literal('translate'),
@@ -1298,6 +1400,7 @@ const geometricSchemaByType: Record<string, z.ZodTypeAny> = {
   rotate_x: GeometricInstanceRotateXSchema,
   rotate_y: GeometricInstanceRotateYSchema,
   rotate_z: GeometricInstanceRotateZSchema,
+  rotate_quaternion: GeometricInstanceRotateQuaternionSchema,
   scale: GeometricInstanceScaleSchema,
   translate: GeometricInstanceTranslateSchema,
   parallelogram: GeometricParallelogramSchema,
@@ -1344,6 +1447,7 @@ export function wrapGeometric(
     | 'rotate_x'
     | 'rotate_y'
     | 'rotate_z'
+    | 'rotate_quaternion'
     | 'scale'
     | 'translate'
     | 'constant_volume'
@@ -1367,6 +1471,7 @@ export function wrapGeometric(
     rotate_x: 'Rotate X',
     rotate_y: 'Rotate Y',
     rotate_z: 'Rotate Z',
+    rotate_quaternion: 'Rotate (Quaternion)',
     scale: 'Scale',
     translate: 'Translate',
     constant_volume: 'Constant Volume',
@@ -1379,7 +1484,10 @@ export function wrapGeometric(
 
   // create the wrapper (but don't add it yet — reference update must run first
   // so the wrapper itself doesn't get its own reference rewritten)
-  const wrapper = { ...defaultGeometricForType(wrapperType), geometric: geometricName };
+  const wrapper = {
+    ...defaultGeometricForType(wrapperType),
+    geometric: geometricName,
+  };
 
   // update all composite/list references: if they point to geometricName,
   // point them to wrapperName instead (so they use the wrapped version)
@@ -1388,6 +1496,7 @@ export function wrapGeometric(
       case 'rotate_x':
       case 'rotate_y':
       case 'rotate_z':
+      case 'rotate_quaternion':
       case 'scale':
       case 'translate':
       case 'constant_volume':

@@ -67,6 +67,7 @@ export function AddEntityDropdown<T extends EntityType>(props: AddEntityDropdown
         rotate_x: 'Rotate X',
         rotate_y: 'Rotate Y',
         rotate_z: 'Rotate Z',
+        rotate_quaternion: 'Rotate (Quaternion)',
       };
       const nameChain: { oldName: string; typeLabel: string }[] = [];
       let currentRecord = { ...record };

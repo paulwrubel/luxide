@@ -150,6 +150,22 @@ export function GeometricRenderer(props: GeometricRendererProps) {
       );
     }
 
+    case 'rotate_quaternion': {
+      const [w, x, y, z] = data.quaternion;
+      const pivot = getAroundPoint(data.around, config, data.geometric);
+      return (
+        <group rotation={rotation}>
+          <group position={pivot}>
+            <group quaternion={[x, y, z, w]}>
+              <group position={[-pivot[0], -pivot[1], -pivot[2]]}>
+                <GeometricRenderer config={config} name={data.geometric} />
+              </group>
+            </group>
+          </group>
+        </group>
+      );
+    }
+
     case 'scale': {
       const pivot = getAroundPoint(data.around, config, data.geometric);
       return (
