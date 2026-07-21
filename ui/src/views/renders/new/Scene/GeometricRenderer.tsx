@@ -1,4 +1,6 @@
+import { useRef, useCallback } from 'react';
 import * as THREE from 'three';
+import { TransformControls } from '@react-three/drei';
 import {
   getAroundPoint,
   getCenterPoint,
@@ -13,6 +15,7 @@ import { MaterialResolver } from './MaterialResolver';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
 import { getMaterialDataSafe } from '@/utils/render/material';
 import { getTextureDataSafe } from '@/utils/render/texture';
+import { useGizmo } from '@/providers/Gizmo';
 
 type EmissiveInfo = { color: [number, number, number]; intensity: number };
 
@@ -46,7 +49,20 @@ export type GeometricRendererProps = {
 export function GeometricRenderer(props: GeometricRendererProps) {
   const { config, name, rotation = [0, 0, 0] } = props;
 
+  const { activeGizmos, onQuaternionChange } = useGizmo();
+
   const { data } = getGeometricDataSafe(config, name);
+
+  // only used in the rotate_quaternion case — harmless for other types
+  const quatGroupRef = useRef<THREE.Group>(null);
+
+  const handleQuaternionObjectChange = useCallback(() => {
+    if (!quatGroupRef.current) {
+      return;
+    }
+    const q = quatGroupRef.current.quaternion;
+    onQuaternionChange(name, [q.w, q.x, q.y, q.z]);
+  }, [name, onQuaternionChange]);
 
   switch (data.type) {
     case 'box': {
@@ -159,15 +175,23 @@ export function GeometricRenderer(props: GeometricRendererProps) {
       const len = Math.hypot(w, x, y, z);
       const [nw, nx, ny, nz] = len > 0 ? [w / len, x / len, y / len, z / len] : [1, 0, 0, 0];
       const pivot = getAroundPoint(data.around, config, data.geometric);
+      const isActive = activeGizmos.has(name);
       return (
         <group rotation={rotation}>
           <group position={pivot}>
-            <group quaternion={[nx, ny, nz, nw]}>
+            <group ref={quatGroupRef} quaternion={[nx, ny, nz, nw]}>
               <group position={[-pivot[0], -pivot[1], -pivot[2]]}>
                 <GeometricRenderer config={config} name={data.geometric} />
               </group>
             </group>
           </group>
+          {isActive && (
+            <TransformControls
+              object={quatGroupRef as React.RefObject<THREE.Object3D>}
+              mode="rotate"
+              onObjectChange={handleQuaternionObjectChange}
+            />
+          )}
         </group>
       );
     }

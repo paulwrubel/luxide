@@ -7,6 +7,8 @@ import { GeometricTextureSelect } from './GeometricTextureSelect';
 import { ListControls } from './ListControls';
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { useSelector } from '@tanstack/react-store';
+import { ToggleSwitch } from 'flowbite-react';
+import { useGizmo } from '@/providers/Gizmo';
 
 export type GeometricFormControlsProps = {
   form: RenderForm;
@@ -19,6 +21,8 @@ export function GeometricFormControls(props: GeometricFormControlsProps) {
   const renderConfig = useSelector(form.store, (state) => state.values);
 
   const { data } = getGeometricData(renderConfig, name);
+
+  const { activeGizmos, toggleGizmo } = useGizmo();
 
   // build material select items
   const materialItems = Object.keys(renderConfig.materials ?? {}).map((key) => ({
@@ -308,9 +312,17 @@ export function GeometricFormControls(props: GeometricFormControlsProps) {
         </>
       );
     }
-    case 'rotate_quaternion':
+    case 'rotate_quaternion': {
+      const isGizmoActive = activeGizmos.has(name);
+
       return (
         <>
+          <div className="flex max-w-full flex-col">
+            <div className="flex w-full items-center justify-between py-2">
+              <h6 className="overflow-hidden font-normal">Show Interactive Rotation Gizmo</h6>
+              <ToggleSwitch checked={isGizmoActive} onChange={() => toggleGizmo(name)} />
+            </div>
+          </div>
           <TextArrayInputControl
             form={form}
             fieldName={`geometrics.${name}.quaternion`}
@@ -323,6 +335,7 @@ export function GeometricFormControls(props: GeometricFormControlsProps) {
           <AroundVariantControls form={form} geometricName={name} pivotLabel="Rotation Point" />
         </>
       );
+    }
     case 'scale':
       return (
         <>
