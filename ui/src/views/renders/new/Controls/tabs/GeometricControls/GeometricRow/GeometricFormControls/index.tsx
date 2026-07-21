@@ -327,7 +327,7 @@ export function GeometricFormControls(props: GeometricFormControlsProps) {
             form={form}
             fieldName={`geometrics.${name}.quaternion`}
             label="Quaternion"
-            labelSpacePercentage={30}
+            labelSpacePercentage={25}
             valueLabels={['w', 'x', 'y', 'z']}
             type="number"
             unenforcedStep={0.1}
