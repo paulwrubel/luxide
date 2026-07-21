@@ -1,6 +1,6 @@
 import { TextArrayInputControl } from '@/components/form-controls/TextArrayInputControl';
 import { TextInputControl } from '@/components/form-controls/TextInputControl';
-import { getGeometricData } from '@/utils/render/geometric';
+import { getGeometricData, assertExhaustive } from '@/utils/render/geometric';
 import { AroundVariantControls } from './AroundVariantControls';
 import { GeometricMaterialSelect } from './GeometricMaterialSelect';
 import { GeometricTextureSelect } from './GeometricTextureSelect';
@@ -315,8 +315,10 @@ export function GeometricFormControls(props: GeometricFormControlsProps) {
             form={form}
             fieldName={`geometrics.${name}.quaternion`}
             label="Quaternion"
+            labelSpacePercentage={30}
             valueLabels={['w', 'x', 'y', 'z']}
             type="number"
+            unenforcedStep={0.1}
           />
           <AroundVariantControls form={form} geometricName={name} pivotLabel="Rotation Point" />
         </>
@@ -359,7 +361,8 @@ export function GeometricFormControls(props: GeometricFormControlsProps) {
       return <p className="text-sm text-zinc-500">Virtual wrapper — transparent in rendering.</p>;
     case 'list':
       return <ListControls form={form} name={name} />;
-    default:
-      return <h6 className="text-sm">Unknown or unimplemented geometric: {data.type} (sorry!)</h6>;
+    case 'obj_model':
+      return <p className="text-sm text-zinc-500">OBJ model — imported from file.</p>;
   }
+  assertExhaustive(data);
 }

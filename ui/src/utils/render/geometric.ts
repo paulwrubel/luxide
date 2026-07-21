@@ -15,6 +15,16 @@ import {
 } from './utils';
 import { z } from 'zod';
 
+/**
+ * exhaustiveness check for geometric type switches. Place after a switch
+ * that handles every member of a discriminated union. If a new type is
+ * added to the union without a corresponding case, TypeScript will error
+ * here because the argument no longer narrows to `never`.
+ */
+export function assertExhaustive(_value: never): never {
+  throw new Error(`Unhandled geometric type: ${String(_value)}`);
+}
+
 // geometric types
 export type GeometricData = NormalizedGeometricData;
 
