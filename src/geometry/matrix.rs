@@ -2,6 +2,8 @@ use auto_ops::impl_op_ex;
 
 use crate::geometry::{Point, Vector3};
 
+use super::quaternion::Quaternion;
+
 /// A 3×3 matrix, stored in row-major order.
 #[derive(Clone, Copy, Debug)]
 pub struct Matrix3 {
@@ -14,12 +16,25 @@ impl Matrix3 {
         Self { m }
     }
 
-    /// Build a rotation matrix from a unit quaternion (scalar-first: w, x, y, z).
-    ///
-    /// The caller is responsible for normalizing the quaternion before passing
-    /// it here. An unnormalized quaternion produces an incorrect rotation matrix
-    /// that may scale or shear.
-    pub fn from_quaternion(w: f64, x: f64, y: f64, z: f64) -> Self {
+    /// Return the transpose of this matrix.
+    pub fn transpose(&self) -> Self {
+        Self {
+            m: [
+                [self.m[0][0], self.m[1][0], self.m[2][0]],
+                [self.m[0][1], self.m[1][1], self.m[2][1]],
+                [self.m[0][2], self.m[1][2], self.m[2][2]],
+            ],
+        }
+    }
+}
+
+impl From<Quaternion> for Matrix3 {
+    /// Build a rotation matrix from a unit quaternion.
+    fn from(q: Quaternion) -> Self {
+        let w = q.w;
+        let x = q.x;
+        let y = q.y;
+        let z = q.z;
         let xx = x * x;
         let yy = y * y;
         let zz = z * z;
@@ -30,24 +45,11 @@ impl Matrix3 {
         let wy = w * y;
         let wz = w * z;
 
-        Self {
-            m: [
-                [1.0 - 2.0 * (yy + zz), 2.0 * (xy - wz), 2.0 * (xz + wy)],
-                [2.0 * (xy + wz), 1.0 - 2.0 * (xx + zz), 2.0 * (yz - wx)],
-                [2.0 * (xz - wy), 2.0 * (yz + wx), 1.0 - 2.0 * (xx + yy)],
-            ],
-        }
-    }
-
-    /// Return the transpose of this matrix.
-    pub fn transpose(&self) -> Self {
-        Self {
-            m: [
-                [self.m[0][0], self.m[1][0], self.m[2][0]],
-                [self.m[0][1], self.m[1][1], self.m[2][1]],
-                [self.m[0][2], self.m[1][2], self.m[2][2]],
-            ],
-        }
+        Self::new([
+            [1.0 - 2.0 * (yy + zz), 2.0 * (xy - wz), 2.0 * (xz + wy)],
+            [2.0 * (xy + wz), 1.0 - 2.0 * (xx + zz), 2.0 * (yz - wx)],
+            [2.0 * (xz - wy), 2.0 * (yz + wx), 1.0 - 2.0 * (xx + yy)],
+        ])
     }
 }
 

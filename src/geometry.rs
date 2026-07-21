@@ -17,6 +17,9 @@ pub use onb::Onb;
 mod point;
 pub use point::Point;
 
+mod quaternion;
+pub use quaternion::Quaternion;
+
 mod ray_hit;
 pub use ray_hit::RayHit;
 

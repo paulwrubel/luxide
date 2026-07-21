@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    geometry::{Aabb, Geometric, Matrix3, Point, Ray, RayHit, Vector3},
+    geometry::{Aabb, Geometric, Matrix3, Point, Quaternion, Ray, RayHit, Vector3},
     utils::{Around, Interval},
 };
 
@@ -15,20 +15,10 @@ pub struct RotateQuaternion {
 }
 
 impl RotateQuaternion {
-    pub fn new(geometric: Arc<dyn Geometric>, quaternion: [f64; 4], around: Around) -> Self {
+    pub fn new(geometric: Arc<dyn Geometric>, quaternion: Quaternion, around: Around) -> Self {
         let translation = around.point(&geometric).0;
 
-        // normalize the quaternion; fall back to identity if degenerate
-        let [w, x, y, z] = quaternion;
-        let len_sq = w * w + x * x + y * y + z * z;
-        let (w, x, y, z) = if len_sq <= 0.0 {
-            (1.0, 0.0, 0.0, 0.0)
-        } else {
-            let inv_len = 1.0 / len_sq.sqrt();
-            (w * inv_len, x * inv_len, y * inv_len, z * inv_len)
-        };
-
-        let rotation = Matrix3::from_quaternion(w, x, y, z);
+        let rotation: Matrix3 = quaternion.into();
         let inv_rotation = rotation.transpose();
 
         let child_bbox = geometric.bounding_box();

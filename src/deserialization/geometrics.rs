@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     geometry::{
-        Geometric, Vector3,
+        Geometric, Quaternion, Vector3,
         compounds::{AxisAlignedPBox, Bvh, List, ModelObj, Virtual},
         instances::{RotateQuaternion, RotateXAxis, RotateYAxis, RotateZAxis, Scale, Translate},
         primitives::{
@@ -277,7 +277,7 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
 
                 Ok(Arc::new(RotateQuaternion::new(
                     geometric,
-                    *quaternion,
+                    Quaternion::from_array(*quaternion),
                     *around,
                 )))
             }
