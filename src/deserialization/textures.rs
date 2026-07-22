@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     shading::{
         ColorRgb, Texture,
-        textures::{Checker, Image8Bit, SolidColor},
+        textures::{Checker, ImageLinearF64, SolidColor},
     },
     tracing::ResourceID,
 };
@@ -41,7 +41,6 @@ pub enum TextureData {
     },
     Image {
         resource_id: ResourceID,
-        gamma: f64,
     },
     #[serde(rename = "color")]
     SolidColor {
@@ -62,24 +61,18 @@ impl Build<Arc<dyn Texture>> for TextureData {
 
                 Ok(Arc::new(Checker::new(*scale, even, odd)))
             }
-            Self::Image { resource_id, gamma } => {
+            Self::Image { resource_id } => {
                 match builts.resources {
-                    // validation mode — return a 1x1 placeholder, no DB fetch needed
-                    None => Ok(Arc::new(Image8Bit::new(image::RgbaImage::from_pixel(
-                        1,
-                        1,
-                        image::Rgba([255, 0, 255, 255]),
-                    )))),
+                    // validation mode - return a 1x1 placeholder, no DB fetch needed
+                    None => Ok(Arc::new(ImageLinearF64 {
+                        width: 1,
+                        height: 1,
+                        data: vec![[1.0, 0.0, 1.0]],
+                    })),
                     Some(resources) => {
-                        let texture =
-                            resources
-                                .get(&(*resource_id, gamma.to_bits()))
-                                .ok_or_else(|| {
-                                    format!(
-                                        "Resource {} with gamma {} not found in pre-loaded data",
-                                        resource_id, gamma
-                                    )
-                                })?;
+                        let texture = resources.get(resource_id).ok_or_else(|| {
+                            format!("Resource {} not found in pre-loaded data", resource_id)
+                        })?;
                         Ok(Arc::clone(texture) as Arc<dyn Texture>)
                     }
                 }

@@ -8,7 +8,7 @@ use axum::{
 use chrono::Utc;
 use serde::Serialize;
 
-use crate::shading::textures::Image8Bit;
+use crate::shading::textures::ImageLinearF64;
 
 use super::{
     Resource, ResourceID, ResourceMeta, ResourceStorage, ResourceType, StorageError, User, UserID,
@@ -41,37 +41,34 @@ impl ResourceManager {
     pub async fn get_textures_for_config(
         &self,
         config: &RenderConfig,
-    ) -> Result<IndexMap<(ResourceID, u64), Arc<Image8Bit>>, StorageError> {
-        // collect unique (resource_id, gamma) pairs from config
-        let mut pairs = HashSet::new();
+    ) -> Result<IndexMap<ResourceID, Arc<ImageLinearF64>>, StorageError> {
+        // collect unique resource IDs from config
+        let mut ids = HashSet::new();
         for texture in config.textures.values() {
-            if let TextureData::Image { resource_id, gamma } = texture {
-                pairs.insert((*resource_id, gamma.to_bits()));
+            if let TextureData::Image { resource_id, .. } = texture {
+                ids.insert(*resource_id);
             }
         }
 
         let mut result = IndexMap::new();
-        for (resource_id, gamma_bits) in pairs {
-            let key = (resource_id, gamma_bits);
-
+        for resource_id in ids {
             // check cache first
-            if let Some(texture) = self.texture_cache.get(&key) {
-                result.insert(key, texture);
+            if let Some(texture) = self.texture_cache.get(&resource_id) {
+                result.insert(resource_id, texture);
                 continue;
             }
 
             // cache miss: fetch from storage, decode, cache
             if let Some(resource) = self.storage.get_resource(resource_id).await? {
-                let gamma = f64::from_bits(gamma_bits);
-                let image = Image8Bit::from_bytes(&resource.data, gamma).map_err(|e| {
+                let image = ImageLinearF64::from_srgb_bytes(&resource.data).map_err(|e| {
                     StorageError(format!(
                         "Failed to decode image for resource {}: {}",
                         resource_id, e
                     ))
                 })?;
                 let texture = Arc::new(image);
-                self.texture_cache.insert(key, Arc::clone(&texture));
-                result.insert(key, texture);
+                self.texture_cache.insert(resource_id, Arc::clone(&texture));
+                result.insert(resource_id, texture);
             }
         }
 
@@ -93,7 +90,7 @@ impl ResourceManager {
         // validate that the uploaded data can actually be used as this resource type
         match resource_type {
             ResourceType::TextureImage => {
-                Image8Bit::from_bytes(&data, 1.0).map_err(|e| {
+                ImageLinearF64::from_srgb_bytes(&data).map_err(|e| {
                     ResourceManagerError::ClientError(
                         StatusCode::BAD_REQUEST,
                         format!("Invalid image file: {}", e),

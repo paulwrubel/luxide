@@ -10,7 +10,7 @@ use textures::TextureRefOrInline;
 use crate::{
     camera::Camera,
     geometry::Geometric,
-    shading::textures::Image8Bit,
+    shading::textures::ImageLinearF64,
     shading::{ColorRgb, Texture, materials::Material},
     tracing::ResourceID,
     tracing::{RenderParameters, Scene},
@@ -43,11 +43,11 @@ pub struct Builts<'a> {
     materials: IndexMap<String, Arc<dyn Material>>,
     textures: IndexMap<String, Arc<dyn Texture>>,
 
-    resources: Option<&'a IndexMap<(ResourceID, u64), Arc<Image8Bit>>>,
+    resources: Option<&'a IndexMap<ResourceID, Arc<ImageLinearF64>>>,
 }
 
 impl<'a> Builts<'a> {
-    fn new(resources: Option<&'a IndexMap<(ResourceID, u64), Arc<Image8Bit>>>) -> Self {
+    fn new(resources: Option<&'a IndexMap<ResourceID, Arc<ImageLinearF64>>>) -> Self {
         Self {
             scenes: IndexMap::new(),
             cameras: IndexMap::new(),
@@ -107,7 +107,7 @@ pub struct RenderConfig {
 impl RenderConfig {
     pub fn compile(
         &self,
-        resources: Option<&IndexMap<(ResourceID, u64), Arc<Image8Bit>>>,
+        resources: Option<&IndexMap<ResourceID, Arc<ImageLinearF64>>>,
     ) -> Result<RenderData, String> {
         let mut builts = Builts::new(resources);
 

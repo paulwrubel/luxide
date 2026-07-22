@@ -14,7 +14,7 @@ use luxide::{
     shading::{
         ColorRgb, ColorSpectrum, Medium, Texture,
         materials::{Dielectric, Lambertian, Material, Specular},
-        textures::{Checker, Image8Bit, Noise, SolidColor},
+        textures::{Checker, ImageLinearF64, Noise, SolidColor},
     },
     tracing::{
         FileStorage, InMemoryStorage, RenderManager, RenderState, RenderStorage, ResourceManager,
@@ -134,7 +134,7 @@ fn final_scene() -> Scene {
         Arc::new(SolidColor::from_rgb(0.9, 0.9, 0.8));
     let solid_blue_glass: Arc<dyn Texture> = Arc::new(SolidColor::from_rgb(0.2, 0.4, 0.9));
     let image_earth_day: Arc<dyn Texture> =
-        Arc::new(Image8Bit::from_filename("./texture_images/8k_earth_daymap.jpg", 2.0).unwrap());
+        Arc::new(ImageLinearF64::from_filename("./texture_images/8k_earth_daymap.jpg").unwrap());
 
     //perlin noise
     let input_fn = |p: Point| Point::from_vector3(0.1 * p.0);
@@ -736,13 +736,13 @@ fn earth() -> Scene {
     // Textures
     let solid_black: Arc<dyn Texture> = Arc::new(SolidColor::new(ColorSpectrum::ZERO));
     let image_earth_day: Arc<dyn Texture> =
-        Arc::new(Image8Bit::from_filename("./texture_images/8k_earth_daymap.jpg", 2.0).unwrap());
+        Arc::new(ImageLinearF64::from_filename("./texture_images/8k_earth_daymap.jpg").unwrap());
     // let image_earth_night: Arc<dyn Texture> =
-    //     Arc::new(Image8Bit::from_filename("./texture_images/8k_earth_nightmap.jpg", 2.0).unwrap());
+    //     Arc::new(ImageLinearF64::from_filename("./texture_images/8k_earth_nightmap.jpg").unwrap());
     let image_moon: Arc<dyn Texture> =
-        Arc::new(Image8Bit::from_filename("./texture_images/8k_moon.jpg", 2.0).unwrap());
+        Arc::new(ImageLinearF64::from_filename("./texture_images/8k_moon.jpg").unwrap());
     // let image_stars_milky_way =
-    //     Arc::new(Image8Bit::from_filename("./texture_images/8k_stars_milky_way.jpg", 2.0).unwrap());
+    //     Arc::new(ImageLinearF64::from_filename("./texture_images/8k_stars_milky_way.jpg").unwrap());
     let solid_white: Arc<dyn Texture> = Arc::new(SolidColor::new(ColorSpectrum::ONE));
 
     // Materials

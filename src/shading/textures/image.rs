@@ -1,5 +1,3 @@
-use image::RgbaImage;
-
 use crate::{
     geometry::Point,
     shading::{ColorRgb, ColorSpectrum, color_spectrum::SPECTRAL_SAMPLE_COUNT},
@@ -9,53 +7,59 @@ use crate::{
 use super::Texture;
 
 #[derive(Debug, Clone)]
-pub struct Image8Bit {
-    pub image: RgbaImage,
+pub struct ImageLinearF64 {
+    pub width: u32,
+    pub height: u32,
+    pub data: Vec<[f64; 3]>,
 }
 
-impl Image8Bit {
-    pub fn new(image: RgbaImage) -> Self {
-        Self { image }
-    }
+impl ImageLinearF64 {
+    pub fn from_filename(filename: &str) -> Result<Self, image::ImageError> {
+        let image = image::open(filename)?.into_rgba8();
+        let (width, height) = image.dimensions();
 
-    pub fn from_filename(filename: &str, gamma: f64) -> Result<Self, image::ImageError> {
-        let mut image = image::open(filename)?.into_rgba8();
-
-        // gamma correction
-        for p in image.pixels_mut() {
-            *p = ColorRgb::from_rgba_u8(p).as_gamma_corrected_rgba_u8(gamma);
+        let mut data = Vec::with_capacity((width * height) as usize);
+        for p in image.pixels() {
+            let linear: [f64; 3] = ColorRgb::decode_from_srgb_u8(p).into();
+            data.push(linear);
         }
 
-        Ok(Self::new(image))
+        Ok(Self {
+            width,
+            height,
+            data,
+        })
     }
 
-    pub fn from_bytes(bytes: &[u8], gamma: f64) -> Result<Self, image::ImageError> {
-        let mut image = image::load_from_memory(bytes)?.into_rgba8();
+    pub fn from_srgb_bytes(bytes: &[u8]) -> Result<Self, image::ImageError> {
+        let image = image::load_from_memory(bytes)?.into_rgba8();
+        let (width, height) = image.dimensions();
 
-        // gamma correction
-        for p in image.pixels_mut() {
-            *p = ColorRgb::from_rgba_u8(p).as_gamma_corrected_rgba_u8(gamma);
+        let mut data = Vec::with_capacity((width * height) as usize);
+        for p in image.pixels() {
+            let linear: [f64; 3] = ColorRgb::decode_from_srgb_u8(p).into();
+            data.push(linear);
         }
 
-        Ok(Self::new(image))
+        Ok(Self {
+            width,
+            height,
+            data,
+        })
     }
 }
 
-impl Texture for Image8Bit {
+impl Texture for ImageLinearF64 {
     fn value(&self, u: f64, v: f64, _p: Point) -> ColorSpectrum<SPECTRAL_SAMPLE_COUNT> {
         let u = Interval::new(0.0, 1.0).clamp(u);
         let v = 1.0 - Interval::new(0.0, 1.0).clamp(v);
 
-        let x = ((u * self.image.width() as f64) as u32).clamp(0, self.image.width() - 1);
-        let y = ((v * self.image.height() as f64) as u32).clamp(0, self.image.height() - 1);
+        let x = ((u * self.width as f64) as u32).clamp(0, self.width.saturating_sub(1));
+        let y = ((v * self.height as f64) as u32).clamp(0, self.height.saturating_sub(1));
 
-        let pixel = self.image.get_pixel(x, y);
+        let idx = (y * self.width + x) as usize;
+        let pixel = self.data[idx];
 
-        ColorRgb::new(
-            pixel[0] as f64 / 255.0,
-            pixel[1] as f64 / 255.0,
-            pixel[2] as f64 / 255.0,
-        )
-        .into()
+        ColorRgb::new(pixel[0], pixel[1], pixel[2]).into()
     }
 }

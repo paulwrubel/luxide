@@ -4,7 +4,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use crate::shading::textures::Image8Bit;
+use crate::shading::textures::ImageLinearF64;
 
 use super::ResourceID;
 
@@ -12,12 +12,12 @@ pub(crate) const TEXTURE_CACHE_TTL: Duration = Duration::from_secs(300); // 5 mi
 pub(crate) const TEXTURE_CACHE_EVICTION_INTERVAL: Duration = Duration::from_secs(30);
 
 struct CacheEntry {
-    texture: Arc<Image8Bit>,
+    texture: Arc<ImageLinearF64>,
     last_accessed: Instant,
 }
 
 pub(crate) struct TextureCache {
-    entries: RwLock<HashMap<(ResourceID, u64), CacheEntry>>,
+    entries: RwLock<HashMap<ResourceID, CacheEntry>>,
 }
 
 impl TextureCache {
@@ -39,7 +39,7 @@ impl TextureCache {
     }
 
     // returns a clone if found, and updates last_accessed
-    pub(crate) fn get(&self, key: &(ResourceID, u64)) -> Option<Arc<Image8Bit>> {
+    pub(crate) fn get(&self, key: &ResourceID) -> Option<Arc<ImageLinearF64>> {
         let mut entries = self.entries.write().unwrap();
         if let Some(entry) = entries.get_mut(key) {
             entry.last_accessed = Instant::now();
@@ -49,7 +49,7 @@ impl TextureCache {
         }
     }
 
-    pub(crate) fn insert(&self, key: (ResourceID, u64), texture: Arc<Image8Bit>) {
+    pub(crate) fn insert(&self, key: ResourceID, texture: Arc<ImageLinearF64>) {
         let mut entries = self.entries.write().unwrap();
         entries.insert(
             key,

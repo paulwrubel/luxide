@@ -22,7 +22,6 @@ export const RenderParametersSchema = z
   .object({
     image_dimensions: z.tuple([z.number().int().min(1), z.number().int().min(1)]),
     tile_dimensions: z.tuple([z.number().int().min(1), z.number().int().min(1)]),
-    gamma_correction: z.number().min(1).max(5),
     samples_per_checkpoint: z.number().int().min(1),
     total_checkpoints: z.number().int().min(1),
     saved_checkpoint_limit: z.number().int().min(0).optional(),
