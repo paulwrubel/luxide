@@ -79,13 +79,16 @@ impl Material for Lambertian {
 
     fn brdf(
         &self,
-        _outgoing_direction: Vector3,
-        _incident_direction: Vector3,
-        _normal: Vector3,
+        outgoing_direction: Vector3,
+        incident_direction: Vector3,
+        normal: Vector3,
         u: f64,
         v: f64,
         p: Point,
     ) -> ColorSpectrum<SPECTRAL_SAMPLE_COUNT> {
+        if normal.dot(outgoing_direction) * normal.dot(incident_direction) <= 0.0 {
+            return ColorSpectrum::ZERO;
+        }
         let albedo = self.reflectance_texture.value(u, v, p);
         albedo / std::f64::consts::PI
     }

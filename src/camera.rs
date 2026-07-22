@@ -238,6 +238,14 @@ impl Camera {
 
             let outgoing_direction = (-ray.direction).unit_vector();
 
+            // flip the geometric normal so shading calculations use the hemisphere
+            // the ray is actually incident from (back-face hit → normal points toward ray)
+            let shading_normal = if ray.direction.dot(ray_hit.normal) > 0.0 {
+                -ray_hit.normal
+            } else {
+                ray_hit.normal
+            };
+
             match srec {
                 ScatterRecord::Spectral(ss) => {
                     let SpectralScatter { rays, reflectance } = *ss;
@@ -294,11 +302,14 @@ impl Camera {
 
                     let (incident_direction, index_of_strategy) = pdf.sample();
 
-                    let cos_theta = ray_hit.normal.dot(incident_direction).abs();
+                    let cos_theta = shading_normal.dot(incident_direction);
+                    if cos_theta <= 0.0 {
+                        return accumulated;
+                    }
                     let brdf_val = ray_hit.material.brdf(
                         outgoing_direction,
                         incident_direction,
-                        ray_hit.normal,
+                        shading_normal,
                         ray_hit.u,
                         ray_hit.v,
                         ray_hit.point,
