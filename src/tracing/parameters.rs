@@ -14,7 +14,6 @@ pub struct RenderParameters {
     pub image_dimensions: (u32, u32),
     pub tile_dimensions: (u32, u32),
 
-    pub gamma_correction: f64,
     pub samples_per_checkpoint: u32,
     pub total_checkpoints: u32,
     pub saved_checkpoint_limit: Option<u32>,

@@ -106,11 +106,9 @@ impl RenderCheckpoint {
         for ((x, y), color) in pixel_data.iter() {
             let pixel = img.get_pixel_mut(*x, *y);
             *pixel = if params.use_scaling_truncation {
-                color
-                    .scale_down(1.0)
-                    .as_gamma_corrected_rgba_u8(1.0 / params.gamma_correction)
+                color.scale_down(1.0).encode_to_srgb_u8()
             } else {
-                color.as_gamma_corrected_rgba_u8(1.0 / params.gamma_correction)
+                color.encode_to_srgb_u8()
             }
         }
 
@@ -121,16 +119,12 @@ impl RenderCheckpoint {
         render_id: RenderID,
         iteration: u32,
         image: RgbaImage,
-        params: &RenderParameters,
         started_at: chrono::DateTime<chrono::Utc>,
         ended_at: chrono::DateTime<chrono::Utc>,
     ) -> Self {
         let mut pixel_data = PixelData::new();
         for (x, y, pixel) in image.enumerate_pixels() {
-            pixel_data.insert(
-                (x, y),
-                ColorRgb::from_gamma_corrected_rgba_u8(pixel, params.gamma_correction),
-            );
+            pixel_data.insert((x, y), ColorRgb::decode_from_srgb_u8(pixel));
         }
         Self {
             render_id,

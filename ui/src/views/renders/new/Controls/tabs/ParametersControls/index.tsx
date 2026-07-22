@@ -81,17 +81,6 @@ export function ParametersControls(props: ParametersControlsProps) {
 
         <TextInputControl
           form={form}
-          fieldName="parameters.gamma_correction"
-          label="Gamma Correction"
-          labelSpacePercentage={70}
-          allowWrappingLabel
-          valueLabel="gamma"
-          type="number"
-          labelSuffix={<WarningIconAdvancedProperty />}
-        />
-
-        <TextInputControl
-          form={form}
           fieldName="parameters.samples_per_checkpoint"
           label="Samples Per Checkpoint"
           labelSpacePercentage={70}

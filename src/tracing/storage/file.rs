@@ -235,7 +235,7 @@ impl RenderStorage for FileStorage {
         iteration: u32,
     ) -> Result<Option<RenderCheckpoint>, StorageError> {
         let renders = self.renders.read().await;
-        let (render, dir) = match renders.iter().find(|(r, _)| r.id == id) {
+        let (_, dir) = match renders.iter().find(|(r, _)| r.id == id) {
             Some((r, dir)) => (r, dir),
             None => return Err(format!("Render {} not found", id).into()),
         };
@@ -291,7 +291,6 @@ impl RenderStorage for FileStorage {
             id,
             iteration,
             image,
-            &render.config.parameters,
             meta.started_at,
             meta.ended_at,
         )))

@@ -100,7 +100,6 @@ export function defaultTextureForType(
       return {
         type: 'image',
         resource_id: options.resource_id,
-        gamma: 1,
       };
     case 'color':
       return {
@@ -164,7 +163,6 @@ export type RawTextureChecker = {
 export const TextureImageSchema = z.object({
   type: z.literal('image'),
   resource_id: z.number().int().nonnegative(),
-  gamma: z.number().min(0),
 });
 
 export type TextureImage = NormalizedTextureImage;
@@ -172,7 +170,6 @@ export type NormalizedTextureImage = RawTextureImage;
 export type RawTextureImage = {
   type: 'image';
   resource_id: number;
-  gamma: number;
 };
 
 export const TextureSolidColorSchema = z.object({

@@ -6,7 +6,7 @@ mod checker;
 pub use checker::Checker;
 
 mod image;
-pub use image::Image8Bit;
+pub use image::ImageLinearF64;
 
 mod noise;
 pub use noise::Noise;

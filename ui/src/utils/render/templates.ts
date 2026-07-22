@@ -59,7 +59,6 @@ export function getEmptyRenderConfig(): NormalizedRenderConfig {
     parameters: {
       image_dimensions: [500, 500],
       tile_dimensions: [1, 1],
-      gamma_correction: 2.0,
       samples_per_checkpoint: 16,
       total_checkpoints: 100,
       saved_checkpoint_limit: 1,
@@ -238,7 +237,6 @@ export function getCornellBoxBaseRenderConfig(): NormalizedRenderConfig {
     parameters: {
       image_dimensions: [500, 500],
       tile_dimensions: [1, 1],
-      gamma_correction: 2.0,
       samples_per_checkpoint: 16,
       total_checkpoints: 100,
       saved_checkpoint_limit: 1,

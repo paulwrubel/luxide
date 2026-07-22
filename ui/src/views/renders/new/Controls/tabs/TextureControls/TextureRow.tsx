@@ -117,9 +117,6 @@ export function TextureRow(props: TextureRowProps) {
               <span className="text-zinc-500">MIME: </span>
               {resource?.mime_type ?? 'unknown'}
             </div>
-            <form.AppField name={`textures.${name}.gamma`}>
-              {(field) => <field.RangeControl label="Gamma" min={0.1} max={2} step={0.01} />}
-            </form.AppField>
           </div>
         );
       }

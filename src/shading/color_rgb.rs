@@ -4,6 +4,8 @@ use image::Rgba;
 
 use crate::geometry::Vector3;
 
+const SRGB_GAMMA: f64 = 2.2;
+
 #[derive(Debug, Copy, Clone, PartialEq, Default, Encode, Decode)]
 pub struct ColorRgb(Vector3);
 
@@ -30,19 +32,11 @@ impl ColorRgb {
         Self(vector)
     }
 
-    pub fn from_rgba_u8(rgba: &Rgba<u8>) -> Self {
+    pub fn decode_from_srgb_u8(rgba: &Rgba<u8>) -> Self {
         Self(Vector3::new(
-            rgba.0[0] as f64 / u8::MAX as f64,
-            rgba.0[1] as f64 / u8::MAX as f64,
-            rgba.0[2] as f64 / u8::MAX as f64,
-        ))
-    }
-
-    pub fn from_gamma_corrected_rgba_u8(rgba: &Rgba<u8>, decoding_gamma: f64) -> Self {
-        Self(Vector3::new(
-            (rgba.0[0] as f64 / u8::MAX as f64).powf(decoding_gamma),
-            (rgba.0[1] as f64 / u8::MAX as f64).powf(decoding_gamma),
-            (rgba.0[2] as f64 / u8::MAX as f64).powf(decoding_gamma),
+            (rgba.0[0] as f64 / u8::MAX as f64).powf(SRGB_GAMMA),
+            (rgba.0[1] as f64 / u8::MAX as f64).powf(SRGB_GAMMA),
+            (rgba.0[2] as f64 / u8::MAX as f64).powf(SRGB_GAMMA),
         ))
     }
 
@@ -64,12 +58,12 @@ impl ColorRgb {
         ])
     }
 
-    pub fn as_gamma_corrected_rgba_u8(&self, encoding_gamma: f64) -> image::Rgba<u8> {
+    pub fn encode_to_srgb_u8(&self) -> image::Rgba<u8> {
         let vec = self.0.de_nan();
         image::Rgba([
-            (vec.x.powf(encoding_gamma).clamp(0.0, 1.0) * u8::MAX as f64).round() as u8,
-            (vec.y.powf(encoding_gamma).clamp(0.0, 1.0) * u8::MAX as f64).round() as u8,
-            (vec.z.powf(encoding_gamma).clamp(0.0, 1.0) * u8::MAX as f64).round() as u8,
+            (vec.x.powf(1.0 / SRGB_GAMMA).clamp(0.0, 1.0) * u8::MAX as f64).round() as u8,
+            (vec.y.powf(1.0 / SRGB_GAMMA).clamp(0.0, 1.0) * u8::MAX as f64).round() as u8,
+            (vec.z.powf(1.0 / SRGB_GAMMA).clamp(0.0, 1.0) * u8::MAX as f64).round() as u8,
             u8::MAX,
         ])
     }

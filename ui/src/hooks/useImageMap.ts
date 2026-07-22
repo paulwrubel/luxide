@@ -16,6 +16,7 @@ export function useImageMap(resourceId: number | undefined, maxDim?: number): TH
     loader.load(
       url,
       (texture) => {
+        texture.colorSpace = THREE.SRGBColorSpace;
         setMap(texture);
       },
       undefined,
