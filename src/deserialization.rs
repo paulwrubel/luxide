@@ -494,49 +494,36 @@ fn get_builtin_geometrics() -> IndexMap<String, GeometricData> {
             lower_left: [0.0, 0.0, 0.0],
             u: [0.0, 0.0, -1.0],
             v: [0.0, 1.0, 0.0],
-            is_culled: None,
             material: material_fn("lambertian_cornell_box_green"),
         },
         prefix_builtin_key("cornell_box_right_wall") => GeometricData::PrimitiveParallelogram {
             lower_left: [1.0, 0.0, -1.0],
             u: [0.0, 0.0, 1.0],
             v: [0.0, 1.0, 0.0],
-            is_culled: None,
             material: material_fn("lambertian_cornell_box_red"),
         },
         prefix_builtin_key("cornell_box_floor") => GeometricData::PrimitiveParallelogram {
             lower_left: [0.0, 0.0, 0.0],
             u: [1.0, 0.0, 0.0],
             v: [0.0, 0.0, -1.0],
-            is_culled: None,
             material: material_fn("lambertian_cornell_box_white"),
         },
         prefix_builtin_key("cornell_box_ceiling") => GeometricData::PrimitiveParallelogram {
             lower_left: [0.0, 1.0, -1.0],
             u: [1.0, 0.0, 0.0],
             v: [0.0, 0.0, 1.0],
-            is_culled: None,
             material: material_fn("lambertian_cornell_box_white"),
         },
         prefix_builtin_key("cornell_box_far_wall") => GeometricData::PrimitiveParallelogram {
             lower_left: [0.0, 0.0, -1.0],
             u: [1.0, 0.0, 0.0],
             v: [0.0, 1.0, 0.0],
-            is_culled: None,
-            material: material_fn("lambertian_cornell_box_white"),
-        },
-        prefix_builtin_key("cornell_box_near_wall") => GeometricData::PrimitiveParallelogram {
-            lower_left: [1.0, 0.0, 0.0],
-            u: [-1.0, 0.0, 0.0],
-            v: [0.0, 1.0, 0.0],
-            is_culled: Some(true),
             material: material_fn("lambertian_cornell_box_white"),
         },
         prefix_builtin_key("cornell_box_ceiling_light") => GeometricData::PrimitiveParallelogram {
             lower_left: [0.35, 0.999, -0.65],
             u: [0.3, 0.0, 0.0],
             v: [0.0, 0.0, 0.3],
-            is_culled: None,
             material: material_fn("lambertian_cornell_box_white_light"),
         },
         prefix_builtin_key("cornell_box_room") => GeometricData::CompoundList {
@@ -546,14 +533,12 @@ fn get_builtin_geometrics() -> IndexMap<String, GeometricData> {
                 "cornell_box_floor",
                 "cornell_box_ceiling",
                 "cornell_box_ceiling_light",
-                "cornell_box_far_wall",
-                "cornell_box_near_wall"].iter().map(|g| GeometricRefOrInline::Ref(prefix_builtin_key(g))).collect(),
+                "cornell_box_far_wall"].iter().map(|g| GeometricRefOrInline::Ref(prefix_builtin_key(g))).collect(),
         },
         prefix_builtin_key("cornell_box_far_left_box") => GeometricData::InstanceRotateYAxis {
             geometric: GeometricRefOrInline::Inline(Box::new(GeometricData::CompoundAxisAlignedPBox {
                 a: [0.2, 0.0, -0.5],
                 b: [0.5, 0.6, -0.8],
-                is_culled:None,
                 material: material_fn("lambertian_cornell_box_white"),
              })),
             angle: Angle::Degrees(15.0),
@@ -563,7 +548,6 @@ fn get_builtin_geometrics() -> IndexMap<String, GeometricData> {
             geometric: GeometricRefOrInline::Inline(Box::new(GeometricData::CompoundAxisAlignedPBox {
                 a: [0.5, 0.0, -0.2],
                 b: [0.8, 0.3, -0.5],
-                is_culled:None,
                 material: material_fn("lambertian_cornell_box_white"),
             })),
             angle: Angle::Degrees(-18.0),
@@ -597,5 +581,82 @@ fn get_builtin_scenes() -> IndexMap<String, SceneData> {
             camera: CameraRefOrInline::Ref(prefix_builtin_key("cornell_box")),
             background_color: [0.0, 0.0, 0.0],
         }
+    }
+}
+
+/// Upgrades legacy `around` values in a `serde_json::Value` tree so
+/// they match the current `Around` serde format.
+///
+/// For any object with `"type": "rotate_x" | "rotate_y" | "rotate_z" | "scale"`:
+/// - Bare array `[x, y, z]` → wraps as `{"point": [x, y, z]}`
+/// - Missing `"around"` key → inserts `"around": "origin"`
+/// - Already a string or object → left unchanged
+///
+/// Idempotent — calling on already-upgraded values is a no-op.
+pub fn upgrade_legacy_around(value: &mut serde_json::Value) {
+    match value {
+        serde_json::Value::Object(map) => {
+            // only act on rotation geometrics
+            if let Some(serde_json::Value::String(type_str)) = map.get("type")
+                && matches!(
+                    type_str.as_str(),
+                    "rotate_x" | "rotate_y" | "rotate_z" | "rotate_quaternion" | "scale"
+                )
+            {
+                match map.get("around") {
+                    // bare array → wrap in {"point": [...]}
+                    Some(serde_json::Value::Array(arr)) => {
+                        let mut point_obj = serde_json::Map::new();
+                        point_obj
+                            .insert("point".to_string(), serde_json::Value::Array(arr.clone()));
+                        map.insert("around".to_string(), serde_json::Value::Object(point_obj));
+                    }
+                    // missing → insert "origin"
+                    None => {
+                        map.insert(
+                            "around".to_string(),
+                            serde_json::Value::String("origin".to_string()),
+                        );
+                    }
+                    // already a string or object → leave as-is
+                    _ => {}
+                }
+            }
+            // recurse into all values
+            for v in map.values_mut() {
+                upgrade_legacy_around(v);
+            }
+        }
+        serde_json::Value::Array(arr) => {
+            for v in arr.iter_mut() {
+                upgrade_legacy_around(v);
+            }
+        }
+        _ => {}
+    }
+}
+
+/// Upgrades legacy `is_culled` values in a `serde_json::Value` tree so
+/// old render configs that include `"is_culled": true/false` don't fail
+/// `deny_unknown_fields` deserialization.
+///
+/// Strips the `"is_culled"` key from every object in the tree, regardless
+/// of type — the field is no longer used by any geometric variant.
+///
+/// Idempotent — calling on already-cleaned values is a no-op.
+pub fn upgrade_legacy_is_culled(value: &mut serde_json::Value) {
+    match value {
+        serde_json::Value::Object(map) => {
+            map.remove("is_culled");
+            for v in map.values_mut() {
+                upgrade_legacy_is_culled(v);
+            }
+        }
+        serde_json::Value::Array(arr) => {
+            for v in arr.iter_mut() {
+                upgrade_legacy_is_culled(v);
+            }
+        }
+        _ => {}
     }
 }

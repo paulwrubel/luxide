@@ -12,7 +12,6 @@ pub struct Disk {
     center: Point,
     radius: f64,
     inner_radius: f64,
-    is_culled: bool,
     plane_d: f64,
     onb: Onb,
     material: Arc<dyn Material>,
@@ -27,14 +26,13 @@ impl Disk {
         normal: Vector3,
         radius: f64,
         inner_radius: f64,
-        is_culled: bool,
         material: Arc<dyn Material>,
     ) -> Result<Self, String> {
         if normal.squared_length() <= 0.0 {
             return Err("disk normal must not be zero-length".to_string());
         }
         let onb = Onb::from_w(normal.unit_vector());
-        Self::new_with_onb(center, radius, inner_radius, is_culled, material, onb)
+        Self::new_with_onb(center, radius, inner_radius, material, onb)
     }
 
     /// Construct a disk with an explicit orthonormal tangent frame `onb`
@@ -47,7 +45,6 @@ impl Disk {
         center: Point,
         radius: f64,
         inner_radius: f64,
-        is_culled: bool,
         material: Arc<dyn Material>,
         onb: Onb,
     ) -> Result<Self, String> {
@@ -83,7 +80,6 @@ impl Disk {
             center,
             radius,
             inner_radius,
-            is_culled,
             plane_d,
             onb,
             material,
@@ -98,7 +94,6 @@ impl Disk {
             Vector3::new(0.0, 0.0, 1.0),
             1.0,
             0.0,
-            true,
             Arc::new(Lambertian::white()),
         )
         .expect("unit disk parameters are valid")
@@ -111,11 +106,6 @@ impl Geometric for Disk {
 
         // parallel ray — no intersection
         if denominator.abs() < 1e-8 {
-            return None;
-        }
-
-        // back-face culling
-        if self.is_culled && denominator >= -1e-8 {
             return None;
         }
 
@@ -256,24 +246,12 @@ mod tests {
     }
 
     #[test]
-    fn misses_culled_back() {
-        let d = Disk::unit();
-
-        let ray = Ray::new(Point::new(0.0, 0.0, -1.0), Vector3::new(0.0, 0.0, 1.0), 0.0);
-        let ray_t = Interval::new(0.0, f64::INFINITY);
-
-        let opt_hit = d.intersect(ray, ray_t);
-        assert!(opt_hit.is_none());
-    }
-
-    #[test]
-    fn hits_unculled_back() {
+    fn hits_back() {
         let d = Disk::new(
             Point::new(0.0, 0.0, 0.0),
             Vector3::new(0.0, 0.0, 1.0),
             1.0,
             0.0,
-            false,
             Arc::new(Lambertian::white()),
         )
         .unwrap();
@@ -308,7 +286,6 @@ mod tests {
             Vector3::new(0.0, 0.0, 1.0),
             1.0,
             0.5,
-            true,
             Arc::new(Lambertian::white()),
         )
         .unwrap();
@@ -335,7 +312,6 @@ mod tests {
             Vector3::new(0.0, 0.0, 1.0),
             1.0,
             0.5,
-            true,
             Arc::new(Lambertian::white()),
         )
         .unwrap();

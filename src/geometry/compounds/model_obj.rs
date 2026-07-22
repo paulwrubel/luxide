@@ -117,7 +117,6 @@ impl ModelObj {
                     a_normal,
                     b_normal,
                     c_normal,
-                    false,
                     Arc::clone(&material),
                 )));
             }

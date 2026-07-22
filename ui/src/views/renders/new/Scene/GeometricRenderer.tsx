@@ -228,8 +228,8 @@ export function GeometricRenderer(props: GeometricRendererProps) {
             <MaterialResolver
               config={config}
               materialName={data.material}
-              side={data.is_culled ? THREE.FrontSide : THREE.DoubleSide}
-              shadowSide={data.is_culled ? undefined : THREE.BackSide}
+              side={THREE.DoubleSide}
+              shadowSide={THREE.BackSide}
             />
           </mesh>
           {emissiveInfo && (
@@ -270,8 +270,8 @@ export function GeometricRenderer(props: GeometricRendererProps) {
             <MaterialResolver
               config={config}
               materialName={data.material}
-              side={data.is_culled ? THREE.FrontSide : THREE.DoubleSide}
-              shadowSide={data.is_culled ? undefined : THREE.BackSide}
+              side={THREE.DoubleSide}
+              shadowSide={THREE.BackSide}
             />
           </mesh>
           {emissiveInfo && (
@@ -367,8 +367,8 @@ export function GeometricRenderer(props: GeometricRendererProps) {
             <MaterialResolver
               config={config}
               materialName={data.material}
-              side={data.is_culled ? THREE.FrontSide : THREE.DoubleSide}
-              shadowSide={data.is_culled ? undefined : THREE.BackSide}
+              side={THREE.DoubleSide}
+              shadowSide={THREE.BackSide}
             />
           </mesh>
           {emissiveInfo && (
@@ -407,8 +407,8 @@ export function GeometricRenderer(props: GeometricRendererProps) {
             <MaterialResolver
               config={config}
               materialName={data.material}
-              side={data.is_culled ? THREE.FrontSide : THREE.DoubleSide}
-              shadowSide={data.is_culled ? undefined : THREE.BackSide}
+              side={THREE.DoubleSide}
+              shadowSide={THREE.BackSide}
             />
           </mesh>
           {emissiveInfo && (

@@ -556,7 +556,6 @@ export function defaultGeometricForType(
         normal: [0, 1, 0],
         radius: 1,
         inner_radius: 0,
-        is_culled: false,
         material: '__lambertian_white',
       };
     case 'bilinear_patch':
@@ -585,7 +584,6 @@ export const GeometricBoxSchema = z.object({
   type: z.literal('box'),
   a: z.tuple([z.number(), z.number(), z.number()]),
   b: z.tuple([z.number(), z.number(), z.number()]),
-  is_culled: z.boolean().nullish(),
   material: z.string().nonempty(),
 });
 
@@ -623,7 +621,6 @@ export type RawGeometricBox = {
   type: 'box';
   a: [number, number, number];
   b: [number, number, number];
-  is_culled?: boolean;
   material: string | RawMaterialData;
 };
 
@@ -938,7 +935,6 @@ export const GeometricParallelogramSchema = z.object({
   lower_left: z.tuple([z.number(), z.number(), z.number()]),
   u: z.tuple([z.number(), z.number(), z.number()]),
   v: z.tuple([z.number(), z.number(), z.number()]),
-  is_culled: z.boolean().nullish(),
   material: z.string().nonempty(),
 });
 
@@ -977,7 +973,6 @@ export type RawGeometricParallelogram = {
   lower_left: [number, number, number];
   u: [number, number, number];
   v: [number, number, number];
-  is_culled?: boolean;
   material: string | RawMaterialData;
 };
 
@@ -985,7 +980,6 @@ export const GeometricPlaneSchema = z.object({
   type: z.literal('plane'),
   point: z.tuple([z.number(), z.number(), z.number()]),
   normal: z.tuple([z.number(), z.number(), z.number()]),
-  is_culled: z.boolean().optional(),
   material: z.string(),
 });
 
@@ -1023,7 +1017,6 @@ export type RawGeometricPlane = {
   type: 'plane';
   point: [number, number, number];
   normal: [number, number, number];
-  is_culled?: boolean;
   material: string | RawMaterialData;
 };
 
@@ -1079,7 +1072,6 @@ export const GeometricTriangleSchema = z.object({
   a_normal: z.tuple([z.number(), z.number(), z.number()]).nullish(),
   b_normal: z.tuple([z.number(), z.number(), z.number()]).nullish(),
   c_normal: z.tuple([z.number(), z.number(), z.number()]).nullish(),
-  is_culled: z.boolean().nullish(),
   material: z.string().nonempty(),
 });
 
@@ -1121,7 +1113,6 @@ export type RawGeometricTriangle = {
   a_normal?: [number, number, number];
   b_normal?: [number, number, number];
   c_normal?: [number, number, number];
-  is_culled?: boolean;
   material: string | RawMaterialData;
 };
 
@@ -1243,7 +1234,6 @@ export const GeometricDiskSchema = z
     normal: z.tuple([z.number(), z.number(), z.number()]),
     radius: z.number().positive(),
     inner_radius: z.number().min(0).optional().default(0),
-    is_culled: z.boolean().nullish(),
     material: z.string().nonempty(),
   })
   .refine(({ inner_radius, radius }) => (inner_radius ?? 0.0) < radius, {
@@ -1287,7 +1277,6 @@ export type RawGeometricDisk = {
   normal: [number, number, number];
   radius: number;
   inner_radius?: number;
-  is_culled?: boolean;
   material: string | RawMaterialData;
 };
 

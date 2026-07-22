@@ -43,8 +43,6 @@ pub enum GeometricData {
     CompoundAxisAlignedPBox {
         a: [f64; 3],
         b: [f64; 3],
-        #[serde(skip_serializing_if = "Option::is_none")]
-        is_culled: Option<bool>,
         material: MaterialRefOrInline,
     },
     #[serde(rename = "list")]
@@ -109,8 +107,6 @@ pub enum GeometricData {
         lower_left: [f64; 3],
         u: [f64; 3],
         v: [f64; 3],
-        #[serde(skip_serializing_if = "Option::is_none")]
-        is_culled: Option<bool>,
         material: MaterialRefOrInline,
     },
     #[serde(rename = "bilinear_patch")]
@@ -125,8 +121,6 @@ pub enum GeometricData {
     PrimitivePlane {
         point: [f64; 3],
         normal: [f64; 3],
-        #[serde(skip_serializing_if = "Option::is_none")]
-        is_culled: Option<bool>,
         material: MaterialRefOrInline,
     },
     #[serde(rename = "sphere")]
@@ -146,8 +140,6 @@ pub enum GeometricData {
         b_normal: Option<[f64; 3]>,
         #[serde(skip_serializing_if = "Option::is_none")]
         c_normal: Option<[f64; 3]>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        is_culled: Option<bool>,
         material: MaterialRefOrInline,
     },
     #[serde(rename = "disk")]
@@ -157,8 +149,6 @@ pub enum GeometricData {
         radius: f64,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         inner_radius: Option<f64>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        is_culled: Option<bool>,
         material: MaterialRefOrInline,
     },
     #[serde(rename = "cylinder")]
@@ -189,18 +179,12 @@ impl Build<Arc<dyn Geometric>> for &GeometricData {
 impl Build<Arc<dyn Geometric>> for GeometricData {
     fn build(&self, builts: &Builts<'_>) -> Result<Arc<dyn Geometric>, String> {
         match self {
-            Self::CompoundAxisAlignedPBox {
-                a,
-                b,
-                is_culled,
-                material,
-            } => {
+            Self::CompoundAxisAlignedPBox { a, b, material } => {
                 let material = material.build(builts)?;
 
                 Ok(Arc::new(AxisAlignedPBox::new(
                     (*a).into(),
                     (*b).into(),
-                    (*is_culled).unwrap_or(false),
                     material,
                 )))
             }
@@ -302,7 +286,6 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
                 lower_left,
                 u,
                 v,
-                is_culled,
                 material,
             } => {
                 let material = material.build(builts)?;
@@ -311,7 +294,6 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
                     (*lower_left).into(),
                     (*u).into(),
                     (*v).into(),
-                    (*is_culled).unwrap_or(false),
                     material,
                 )))
             }
@@ -335,7 +317,6 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
             Self::PrimitivePlane {
                 point,
                 normal,
-                is_culled,
                 material,
             } => {
                 let material = material.build(builts)?;
@@ -346,13 +327,7 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
                 if len <= 0.0 {
                     return Err("Plane normal vector must be non-zero".to_string());
                 }
-                let is_culled = is_culled.unwrap_or(false);
-                Ok(Arc::new(Plane::new(
-                    (*point).into(),
-                    normal,
-                    is_culled,
-                    material,
-                )))
+                Ok(Arc::new(Plane::new((*point).into(), normal, material)))
             }
             Self::PrimitiveSphere {
                 center,
@@ -370,7 +345,6 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
                 a_normal,
                 b_normal,
                 c_normal,
-                is_culled,
                 material,
             } => {
                 let material = material.build(builts)?;
@@ -382,7 +356,6 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
                     a_normal.as_ref().map(|a| (*a).into()),
                     b_normal.as_ref().map(|b| (*b).into()),
                     c_normal.as_ref().map(|c| (*c).into()),
-                    (*is_culled).unwrap_or(false),
                     material,
                 )))
             }
@@ -391,7 +364,6 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
                 normal,
                 radius,
                 inner_radius,
-                is_culled,
                 material,
             } => {
                 let material = material.build(builts)?;
@@ -401,7 +373,6 @@ impl Build<Arc<dyn Geometric>> for GeometricData {
                     (*normal).into(),
                     *radius,
                     (*inner_radius).unwrap_or(0.0),
-                    (*is_culled).unwrap_or(false),
                     material,
                 )?))
             }

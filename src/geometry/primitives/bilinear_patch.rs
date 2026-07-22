@@ -40,8 +40,8 @@ impl BilinearPatch {
         let bounding_box = Aabb::from_points(&[p00, p10, p01, p11]).pad(0.0001);
 
         // two-triangle proxy for surface area, sampling, and PDF
-        let tri1 = Arc::new(Triangle::new(p00, p10, p11, false, Arc::clone(&material)));
-        let tri2 = Arc::new(Triangle::new(p00, p11, p01, false, Arc::clone(&material)));
+        let tri1 = Arc::new(Triangle::new(p00, p10, p11, Arc::clone(&material)));
+        let tri2 = Arc::new(Triangle::new(p00, p11, p01, Arc::clone(&material)));
         let proxy_triangles_list = List::from_vec(vec![tri1, tri2]);
 
         Self {

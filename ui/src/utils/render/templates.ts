@@ -129,7 +129,6 @@ export function getCornellBoxRenderConfig(): NormalizedRenderConfig {
         type: 'box',
         a: [2.0, 0.0, -5.0],
         b: [5.0, 6.0, -8.0],
-        is_culled: false,
         material: 'White',
       },
       'Near Right Box - Rotate Y': {
@@ -142,7 +141,6 @@ export function getCornellBoxRenderConfig(): NormalizedRenderConfig {
         type: 'box',
         a: [5.0, 0.0, -2.0],
         b: [8.0, 3.0, -5.0],
-        is_culled: false,
         material: 'White',
       },
       ...base.geometrics,
@@ -279,19 +277,17 @@ export function getCornellBoxBaseRenderConfig(): NormalizedRenderConfig {
         lower_left: [3.5, 9.99, -6.5],
         u: [3.0, 0.0, 0.0],
         v: [0.0, 0.0, 3.0],
-        is_culled: false,
         material: 'White Light',
       },
       Walls: {
         type: 'list',
-        geometrics: ['Left Wall', 'Right Wall', 'Floor', 'Ceiling', 'Far Wall', 'Near Wall'],
+        geometrics: ['Left Wall', 'Right Wall', 'Floor', 'Ceiling', 'Far Wall'],
       },
       'Left Wall': {
         type: 'parallelogram',
         lower_left: [0.0, 0.0, 0.0],
         u: [0.0, 0.0, -10.0],
         v: [0.0, 10.0, 0.0],
-        is_culled: false,
         material: 'Green',
       },
       'Right Wall': {
@@ -299,7 +295,6 @@ export function getCornellBoxBaseRenderConfig(): NormalizedRenderConfig {
         lower_left: [10.0, 0.0, -10.0],
         u: [0.0, 0.0, 10.0],
         v: [0.0, 10.0, 0.0],
-        is_culled: false,
         material: 'Red',
       },
       Floor: {
@@ -307,7 +302,6 @@ export function getCornellBoxBaseRenderConfig(): NormalizedRenderConfig {
         lower_left: [0.0, 0.0, 0.0],
         u: [10.0, 0.0, 0.0],
         v: [0.0, 0.0, -10.0],
-        is_culled: false,
         material: 'White',
       },
       Ceiling: {
@@ -315,7 +309,6 @@ export function getCornellBoxBaseRenderConfig(): NormalizedRenderConfig {
         lower_left: [0.0, 10.0, -10.0],
         u: [10.0, 0.0, 0.0],
         v: [0.0, 0.0, 10.0],
-        is_culled: false,
         material: 'White',
       },
       'Far Wall': {
@@ -323,15 +316,6 @@ export function getCornellBoxBaseRenderConfig(): NormalizedRenderConfig {
         lower_left: [0.0, 0.0, -10.0],
         u: [10.0, 0.0, 0.0],
         v: [0.0, 10.0, 0.0],
-        is_culled: false,
-        material: 'White',
-      },
-      'Near Wall': {
-        type: 'parallelogram',
-        lower_left: [10.0, 0.0, 0.0],
-        u: [-10.0, 0.0, 0.0],
-        v: [0.0, 10.0, 0.0],
-        is_culled: true,
         material: 'White',
       },
     },
@@ -406,7 +390,6 @@ function getDefaultGeometrics(): Record<string, GeometricData> {
       type: 'box',
       a: [-0.5, 0.0, 0.5],
       b: [0.5, 1.0, -0.5],
-      is_culled: false,
       material: '__lambertian_white',
     },
   };

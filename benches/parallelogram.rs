@@ -106,35 +106,8 @@ fn miss_plane() -> (Id, Setup, Routine) {
     ("miss_plane".to_string(), Box::new(setup), Box::new(routine))
 }
 
-fn miss_culled() -> (Id, Setup, Routine) {
-    let p = Parallelogram::unit();
-
-    let setup = || -> Ray {
-        let mut rng = rand::rng();
-
-        let origin = Point::new(0.0, 0.0, -1.0);
-        let target = Point::new(
-            rng.random_range(-0.5..0.5),
-            rng.random_range(-0.5..0.5),
-            0.0,
-        );
-        let direction = origin.to(target).unit_vector();
-
-        Ray::new(origin, direction, 0.0)
-    };
-
-    let ray_t = Interval::new(0.001, f64::INFINITY);
-    let routine = move |ray| p.intersect(black_box(ray), ray_t);
-
-    (
-        "miss_culled".to_string(),
-        Box::new(setup),
-        Box::new(routine),
-    )
-}
-
 fn parallelogram_intersect(c: &mut Criterion) {
-    let cases = [random(), hit(), miss_offset(), miss_plane(), miss_culled()];
+    let cases = [random(), hit(), miss_offset(), miss_plane()];
 
     let mut group = c.benchmark_group("parallelogram_intersect");
     for (id, setup, routine) in cases {
