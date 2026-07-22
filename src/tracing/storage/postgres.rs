@@ -1,6 +1,7 @@
 use sqlx::{Pool, Postgres};
 
-use crate::utils::{ProgressInfo, decode_pixel_data, encode_pixel_data, upgrade_legacy_around};
+use crate::deserialization::{upgrade_legacy_around, upgrade_legacy_is_culled};
+use crate::utils::{ProgressInfo, decode_pixel_data, encode_pixel_data};
 
 use super::{
     GithubID, Render, RenderCheckpoint, RenderCheckpointMeta, RenderID, RenderState, RenderStorage,
@@ -51,6 +52,7 @@ impl RenderStorage for PostgresStorage {
                 })?;
 
                 upgrade_legacy_around(&mut row.config);
+                upgrade_legacy_is_culled(&mut row.config);
                 let config = serde_json::from_value(row.config).map_err(|e| {
                     format!("Failed to deserialize render config for id {}: {}", id, e)
                 })?;
@@ -155,6 +157,7 @@ impl RenderStorage for PostgresStorage {
                 )
             })?;
             upgrade_legacy_around(&mut row.config);
+            upgrade_legacy_is_culled(&mut row.config);
             let config = serde_json::from_value(row.config).map_err(|e| {
                 format!(
                     "Failed to deserialize render config for id {}: {}",
@@ -205,6 +208,7 @@ impl RenderStorage for PostgresStorage {
                 )
             })?;
             upgrade_legacy_around(&mut row.config);
+            upgrade_legacy_is_culled(&mut row.config);
             let config = serde_json::from_value(row.config).map_err(|e| {
                 format!(
                     "Failed to deserialize render config for id {}: {}",

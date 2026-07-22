@@ -10,7 +10,6 @@ use crate::{
 pub struct Plane {
     point: Point,
     normal: Vector3,
-    is_culled: bool,
     plane_d: f64,
     onb: Onb,
     bounding_box: Aabb,
@@ -18,12 +17,7 @@ pub struct Plane {
 }
 
 impl Plane {
-    pub fn new(
-        point: Point,
-        normal: Vector3,
-        is_culled: bool,
-        material: Arc<dyn Material>,
-    ) -> Self {
+    pub fn new(point: Point, normal: Vector3, material: Arc<dyn Material>) -> Self {
         let normal = normal.unit_vector();
         let onb = Onb::from_w(normal);
         let bounding_box = Aabb::new(
@@ -46,7 +40,6 @@ impl Plane {
         Self {
             point,
             normal,
-            is_culled,
             plane_d: point.0.dot(normal),
             onb,
             bounding_box,
@@ -59,10 +52,7 @@ impl Geometric for Plane {
     fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit> {
         let denominator = self.normal.dot(ray.direction);
 
-        if self.is_culled && denominator >= -1e-8 {
-            // if we are culled, then back-hitting rays do not intersect
-            return None;
-        } else if denominator.abs() <= 1e-8 {
+        if denominator.abs() <= 1e-8 {
             // if the ray is parallel to the plane, then there is no intersection
             return None;
         }

@@ -12,7 +12,6 @@ pub struct Parallelogram {
     u: Vector3,
     v: Vector3,
     normal: Vector3,
-    is_culled: bool,
     plane_d: f64,
     w: Vector3,
     material: Arc<dyn Material>,
@@ -21,13 +20,7 @@ pub struct Parallelogram {
 }
 
 impl Parallelogram {
-    pub fn new(
-        lower_left: Point,
-        u: Vector3,
-        v: Vector3,
-        is_culled: bool,
-        material: Arc<dyn Material>,
-    ) -> Self {
+    pub fn new(lower_left: Point, u: Vector3, v: Vector3, material: Arc<dyn Material>) -> Self {
         let n = u.cross(v);
         let normal = n.unit_vector();
         Self {
@@ -35,7 +28,6 @@ impl Parallelogram {
             u,
             v,
             normal,
-            is_culled,
             plane_d: lower_left.0.dot(normal),
             w: n / n.dot(n),
             material,
@@ -49,7 +41,6 @@ impl Parallelogram {
             Point::new(-0.5, -0.5, 0.0),
             Vector3::new(1.0, 0.0, 0.0),
             Vector3::new(0.0, 1.0, 0.0),
-            true,
             Arc::new(Lambertian::white()),
         )
     }
@@ -59,10 +50,7 @@ impl Geometric for Parallelogram {
     fn intersect(&self, ray: Ray, ray_t: Interval) -> Option<RayHit> {
         let denominator = self.normal.dot(ray.direction);
 
-        if self.is_culled && denominator >= -1e-8 {
-            // if we are culled, then back-hitting rays do not intersect
-            return None;
-        } else if denominator.abs() <= 1e-8 {
+        if denominator.abs() <= 1e-8 {
             // if the ray is parallel to the plane, then there is no intersection
             return None;
         }
@@ -160,12 +148,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn hits_unculled_front_center() {
+    fn hits_front_center() {
         let p = Parallelogram::new(
             Point::new(0.0, 0.0, 0.0),
             Vector3::new(1.0, 0.0, 0.0),
             Vector3::new(0.0, 1.0, 0.0),
-            false,
             Arc::new(Lambertian::white()),
         );
 
@@ -184,12 +171,11 @@ mod tests {
     }
 
     #[test]
-    fn hits_unculled_back_center() {
+    fn hits_back_center() {
         let p = Parallelogram::new(
             Point::new(0.0, 0.0, 0.0),
             Vector3::new(1.0, 0.0, 0.0),
             Vector3::new(0.0, 1.0, 0.0),
-            false,
             Arc::new(Lambertian::white()),
         );
 
@@ -205,47 +191,6 @@ mod tests {
         assert_eq!(hit.v, 0.5);
         assert_eq!(hit.point, Point::new(0.5, 0.5, 0.0));
         assert_eq!(hit.t, 1.0);
-    }
-
-    #[test]
-    fn hits_culled_front_center() {
-        let p = Parallelogram::new(
-            Point::new(0.0, 0.0, 0.0),
-            Vector3::new(1.0, 0.0, 0.0),
-            Vector3::new(0.0, 1.0, 0.0),
-            true,
-            Arc::new(Lambertian::white()),
-        );
-
-        let ray = Ray::new(Point::new(0.5, 0.5, 1.0), Vector3::new(0.0, 0.0, -1.0), 0.0);
-        let ray_t = Interval::new(0.0, f64::INFINITY);
-
-        let opt_hit = p.intersect(ray, ray_t);
-        assert!(opt_hit.is_some());
-        let hit = opt_hit.unwrap();
-
-        assert_eq!(hit.normal, Vector3::new(0.0, 0.0, 1.0));
-        assert_eq!(hit.u, 0.5);
-        assert_eq!(hit.v, 0.5);
-        assert_eq!(hit.point, Point::new(0.5, 0.5, 0.0));
-        assert_eq!(hit.t, 1.0);
-    }
-
-    #[test]
-    fn misses_culled_back_center() {
-        let p = Parallelogram::new(
-            Point::new(0.0, 0.0, 0.0),
-            Vector3::new(1.0, 0.0, 0.0),
-            Vector3::new(0.0, 1.0, 0.0),
-            true,
-            Arc::new(Lambertian::white()),
-        );
-
-        let ray = Ray::new(Point::new(0.5, 0.5, -1.0), Vector3::new(0.0, 0.0, 1.0), 0.0);
-        let ray_t = Interval::new(0.0, f64::INFINITY);
-
-        let opt_hit = p.intersect(ray, ray_t);
-        assert!(opt_hit.is_none());
     }
 
     #[test]
@@ -254,7 +199,6 @@ mod tests {
             Point::new(0.0, 0.0, 0.0),
             Vector3::new(1.0, 0.0, 0.0),
             Vector3::new(0.0, 1.0, 0.0),
-            false,
             Arc::new(Lambertian::white()),
         );
 
@@ -271,7 +215,6 @@ mod tests {
             Point::new(0.0, 0.0, 0.0),
             Vector3::new(1.0, 0.0, 0.0),
             Vector3::new(0.0, 1.0, 0.0),
-            false,
             Arc::new(Lambertian::white()),
         );
 
@@ -288,7 +231,6 @@ mod tests {
             Point::new(0.0, 0.0, 0.0),
             Vector3::new(1.0, 0.0, 0.0),
             Vector3::new(0.0, 1.0, 0.0),
-            false,
             Arc::new(Lambertian::white()),
         );
 
@@ -305,7 +247,6 @@ mod tests {
             Point::new(0.0, 0.0, 0.0),
             Vector3::new(1.0, 0.0, 0.0),
             Vector3::new(0.0, 1.0, 0.0),
-            false,
             Arc::new(Lambertian::white()),
         );
 
@@ -322,7 +263,6 @@ mod tests {
             Point::new(0.0, 0.0, 0.0),
             Vector3::new(1.0, 0.0, 0.0),
             Vector3::new(0.0, 1.0, 0.0),
-            true,
             Arc::new(Lambertian::white()),
         );
 
@@ -346,7 +286,6 @@ mod tests {
             Point::new(0.0, 0.0, 0.0),
             Vector3::new(1.0, 0.0, 0.0),
             Vector3::new(0.0, 1.0, 0.0),
-            true,
             Arc::new(Lambertian::white()),
         );
 

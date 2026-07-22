@@ -12,7 +12,7 @@ use super::List;
 pub struct AxisAlignedPBox(List);
 
 impl AxisAlignedPBox {
-    pub fn new(a: Point, b: Point, is_culled: bool, material: Arc<dyn Material>) -> Self {
+    pub fn new(a: Point, b: Point, material: Arc<dyn Material>) -> Self {
         let min = a.min_components_point(b);
         let max = a.max_components_point(b);
 
@@ -26,7 +26,6 @@ impl AxisAlignedPBox {
             Point::new(min.0.x, min.0.y, max.0.z),
             dx,
             dy,
-            is_culled,
             Arc::clone(&material),
         )));
         // right
@@ -34,7 +33,6 @@ impl AxisAlignedPBox {
             Point::new(max.0.x, min.0.y, max.0.z),
             -dz,
             dy,
-            is_culled,
             Arc::clone(&material),
         )));
         // back
@@ -42,7 +40,6 @@ impl AxisAlignedPBox {
             Point::new(max.0.x, min.0.y, min.0.z),
             -dx,
             dy,
-            is_culled,
             Arc::clone(&material),
         )));
         // left
@@ -50,7 +47,6 @@ impl AxisAlignedPBox {
             Point::new(min.0.x, min.0.y, min.0.z),
             dz,
             dy,
-            is_culled,
             Arc::clone(&material),
         )));
         // top
@@ -58,7 +54,6 @@ impl AxisAlignedPBox {
             Point::new(min.0.x, max.0.y, max.0.z),
             dx,
             -dz,
-            is_culled,
             Arc::clone(&material),
         )));
         // bottom
@@ -66,7 +61,6 @@ impl AxisAlignedPBox {
             Point::new(min.0.x, min.0.y, min.0.z),
             dx,
             dz,
-            is_culled,
             Arc::clone(&material),
         )));
 

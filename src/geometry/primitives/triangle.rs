@@ -14,26 +14,16 @@ pub struct Triangle {
     a_normal: Vector3,
     b_normal: Vector3,
     c_normal: Vector3,
-    is_culled: bool,
     material: Arc<dyn Material>,
     bounding_box: Aabb,
     area: f64, // cache this because it's used quite often in sampling
 }
 
 impl Triangle {
-    pub fn new(a: Point, b: Point, c: Point, is_culled: bool, material: Arc<dyn Material>) -> Self {
+    pub fn new(a: Point, b: Point, c: Point, material: Arc<dyn Material>) -> Self {
         let plane_normal = a.to(b).cross(a.to(c));
 
-        Self::new_with_normals(
-            a,
-            b,
-            c,
-            plane_normal,
-            plane_normal,
-            plane_normal,
-            is_culled,
-            material,
-        )
+        Self::new_with_normals(a, b, c, plane_normal, plane_normal, plane_normal, material)
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -44,7 +34,6 @@ impl Triangle {
         a_normal: Option<Vector3>,
         b_normal: Option<Vector3>,
         c_normal: Option<Vector3>,
-        is_culled: bool,
         material: Arc<dyn Material>,
     ) -> Self {
         let plane_normal = a.to(b).cross(a.to(c));
@@ -53,7 +42,7 @@ impl Triangle {
         let b_normal = b_normal.unwrap_or(plane_normal);
         let c_normal = c_normal.unwrap_or(plane_normal);
 
-        Self::new_with_normals(a, b, c, a_normal, b_normal, c_normal, is_culled, material)
+        Self::new_with_normals(a, b, c, a_normal, b_normal, c_normal, material)
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -64,7 +53,6 @@ impl Triangle {
         a_normal: Vector3,
         b_normal: Vector3,
         c_normal: Vector3,
-        is_culled: bool,
         material: Arc<dyn Material>,
     ) -> Self {
         let bounding_box = Aabb::from_points(&[a, b, c]).pad(0.0001);
@@ -79,7 +67,6 @@ impl Triangle {
             a_normal: a_normal.unit_vector(),
             b_normal: b_normal.unit_vector(),
             c_normal: c_normal.unit_vector(),
-            is_culled,
             material,
             bounding_box,
             area,
@@ -94,10 +81,7 @@ impl Triangle {
         let determinant = ab.dot(p_vector);
 
         // determine planar intersection
-        if self.is_culled && determinant <= -1e-8 {
-            // if we are culled, then back-hitting rays do not intersect
-            return None;
-        } else if determinant.abs() <= 1e-8 {
+        if determinant.abs() <= 1e-8 {
             // if the ray is parallel to the plane, then there is no intersection
             return None;
         }

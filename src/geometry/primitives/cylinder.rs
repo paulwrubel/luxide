@@ -125,7 +125,6 @@ impl Cylinder {
                     a,
                     radius,
                     0.0,
-                    false,
                     Arc::clone(&material),
                     Onb {
                         u: zf,
@@ -144,7 +143,6 @@ impl Cylinder {
                     b,
                     radius,
                     0.0,
-                    false,
                     Arc::clone(&material),
                     Onb {
                         u: zf,

@@ -211,7 +211,6 @@ fn final_scene() -> Scene {
             ground_boxes.push(Arc::new(AxisAlignedPBox::new(
                 Point::new(x0, y0, z0),
                 Point::new(x1, y1, z1),
-                true,
                 Arc::clone(&lambertian_ground),
             )))
         }
@@ -222,7 +221,6 @@ fn final_scene() -> Scene {
         Point::new(123.0, 554.0, 147.0),
         Vector3::new(300.0, 0.0, 0.0),
         Vector3::new(0.0, 0.0, 265.0),
-        false,
         Arc::clone(&lambertian_light),
     ));
     world.push(light_panel);
@@ -369,7 +367,6 @@ fn cornell_box() -> Scene {
         Point::new(0.0, 0.0, 0.0),
         Vector3::new(0.0, 0.0, -1.0),
         Vector3::new(0.0, 1.0, 0.0),
-        true,
         Arc::clone(&lambertian_green),
     )));
     // right wall (red)
@@ -377,7 +374,6 @@ fn cornell_box() -> Scene {
         Point::new(1.0, 0.0, -1.0),
         Vector3::new(0.0, 0.0, 1.0),
         Vector3::new(0.0, 1.0, 0.0),
-        true,
         Arc::clone(&lambertian_red),
     )));
     // floor (white)
@@ -385,7 +381,6 @@ fn cornell_box() -> Scene {
         Point::new(0.0, 0.0, 0.0),
         Vector3::new(1.0, 0.0, 0.0),
         Vector3::new(0.0, 0.0, -1.0),
-        true,
         Arc::clone(&lambertian_white),
     )));
     // ceiling (white)
@@ -393,7 +388,6 @@ fn cornell_box() -> Scene {
         Point::new(0.0, 1.0, -1.0),
         Vector3::new(1.0, 0.0, 0.0),
         Vector3::new(0.0, 0.0, 1.0),
-        true,
         Arc::clone(&lambertian_white),
     )));
     // back wall (white)
@@ -401,7 +395,6 @@ fn cornell_box() -> Scene {
         Point::new(0.0, 0.0, -1.0),
         Vector3::new(1.0, 0.0, 0.0),
         Vector3::new(0.0, 1.0, 0.0),
-        true,
         Arc::clone(&lambertian_white),
     )));
     // ceiling light
@@ -409,7 +402,6 @@ fn cornell_box() -> Scene {
         Point::new(1.0 - (343.0 / 555.0), 554.0 / 555.0, -332.0 / 555.0),
         Vector3::new(130.0 / 555.0, 0.0, 0.0),
         Vector3::new(0.0, 0.0, 105.0 / 555.0),
-        false,
         Arc::clone(&lambertian_white_light),
     )));
 
@@ -417,7 +409,6 @@ fn cornell_box() -> Scene {
     let far_left_box = Arc::new(AxisAlignedPBox::new(
         Point::ZERO,
         Point::ZERO + Vector3::new(-165.0, 330.0, -165.0) / 555.0,
-        false,
         Arc::clone(&lambertian_white),
     ));
     let far_left_box = Arc::new(RotateYAxis::new(
@@ -440,7 +431,6 @@ fn cornell_box() -> Scene {
     let near_right_box = Arc::new(AxisAlignedPBox::new(
         Point::ZERO,
         Point::ZERO + Vector3::new(-165.0, 165.0, -165.0) / 555.0,
-        false,
         Arc::clone(&lambertian_white),
     ));
     let near_right_box = Arc::new(RotateYAxis::new(
@@ -533,7 +523,6 @@ fn simple_light() -> Scene {
         Point::new(3.0, 1.0, -2.0),
         Vector3::new(2.0, 0.0, 0.0),
         Vector3::new(0.0, 2.0, 0.0),
-        true,
         Arc::clone(&lambertian_light),
     )));
     world.push(Arc::new(Sphere::new(
@@ -601,41 +590,35 @@ fn quads() -> Scene {
     ));
 
     // Primitives
-    let is_culled = false;
     let mut world = List::new();
     world.push(Arc::new(Parallelogram::new(
         Point::new(-3.0, -2.0, 5.0),
         Vector3::new(0.0, 0.0, -4.0),
         Vector3::new(0.0, 4.0, 0.0),
-        is_culled,
         Arc::clone(&lambertian_red),
     )));
     world.push(Arc::new(Parallelogram::new(
         Point::new(-2.0, -2.0, 0.0),
         Vector3::new(4.0, 0.0, 0.0),
         Vector3::new(0.0, 4.0, 0.0),
-        is_culled,
         Arc::clone(&lambertian_green),
     )));
     world.push(Arc::new(Parallelogram::new(
         Point::new(3.0, -2.0, 1.0),
         Vector3::new(0.0, 0.0, 4.0),
         Vector3::new(0.0, 4.0, 0.0),
-        is_culled,
         Arc::clone(&lambertian_blue),
     )));
     world.push(Arc::new(Parallelogram::new(
         Point::new(-2.0, 3.0, 1.0),
         Vector3::new(4.0, 0.0, 0.0),
         Vector3::new(0.0, 0.0, 4.0),
-        is_culled,
         Arc::clone(&lambertian_orange),
     )));
     world.push(Arc::new(Parallelogram::new(
         Point::new(-2.0, -3.0, 5.0),
         Vector3::new(4.0, 0.0, 0.0),
         Vector3::new(0.0, 0.0, -4.0),
-        is_culled,
         Arc::clone(&lambertian_teal),
     )));
 
