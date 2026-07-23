@@ -13,8 +13,8 @@ export function useCreateResourceMutation() {
   return useMutation({
     mutationFn: (formData: FormData) => createResource(authenticatedFetch, formData, targetUserID),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: allResourceMetadataQueryKey() });
-      queryClient.invalidateQueries({ queryKey: resourceStorageUsageQueryKey() });
+      queryClient.invalidateQueries({ queryKey: allResourceMetadataQueryKey(targetUserID) });
+      queryClient.invalidateQueries({ queryKey: resourceStorageUsageQueryKey(targetUserID) });
     },
   });
 }
@@ -28,8 +28,8 @@ export function useDeleteResourceMutation() {
     mutationFn: (resourceID: number) =>
       deleteResource(authenticatedFetch, resourceID, targetUserID),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: allResourceMetadataQueryKey() });
-      queryClient.invalidateQueries({ queryKey: resourceStorageUsageQueryKey() });
+      queryClient.invalidateQueries({ queryKey: allResourceMetadataQueryKey(targetUserID) });
+      queryClient.invalidateQueries({ queryKey: resourceStorageUsageQueryKey(targetUserID) });
     },
   });
 }

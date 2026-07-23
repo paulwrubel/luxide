@@ -100,6 +100,13 @@ export function UsersTable() {
                       <Button
                         color="default"
                         size="xs"
+                        onClick={() => navigate(`/resources?user_id=${user.id}`)}
+                      >
+                        View Resources
+                      </Button>
+                      <Button
+                        color="default"
+                        size="xs"
                         disabled={user.id === currentUser!.id}
                         onClick={() =>
                           setConfirmTarget({

@@ -8,12 +8,12 @@ export function useAllResourceMetadataQuery() {
   const { targetUserID } = useAdminUserOverride();
 
   return useQuery({
-    queryKey: allResourceMetadataQueryKey(),
+    queryKey: allResourceMetadataQueryKey(targetUserID),
     queryFn: () => getAllResourceMetadata(authenticatedFetch, targetUserID),
     enabled: accessToken !== undefined,
   });
 }
 
-export function allResourceMetadataQueryKey() {
-  return ['allResourceMetadata'] as const;
+export function allResourceMetadataQueryKey(targetUserID?: number) {
+  return ['allResourceMetadata', targetUserID] as const;
 }

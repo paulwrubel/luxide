@@ -15,13 +15,13 @@ export function useResourceDataQuery(resourceId: number, options: UseResourceDat
   const { targetUserID } = useAdminUserOverride();
 
   return useQuery({
-    queryKey: resourceDataQueryKey(resourceId, maxDim),
+    queryKey: resourceDataQueryKey(resourceId, maxDim, targetUserID),
     queryFn: () => getResourceData(authenticatedFetch, resourceId, targetUserID, maxDim),
     enabled: enabled && accessToken !== undefined,
     staleTime: Infinity,
   });
 }
 
-export function resourceDataQueryKey(resourceId: number, maxDim?: number) {
-  return ['resourceData', resourceId, maxDim ?? 'full'] as const;
+export function resourceDataQueryKey(resourceId: number, maxDim?: number, targetUserID?: number) {
+  return ['resourceData', resourceId, maxDim ?? 'full', targetUserID] as const;
 }

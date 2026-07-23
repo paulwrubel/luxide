@@ -165,6 +165,7 @@ fn build_auth_router() -> Router<LuxideState> {
 fn build_users_router() -> Router<LuxideState> {
     Router::new()
         .route("/", get(handlers::get_admin_users))
+        .route("/{id}", get(handlers::get_admin_user))
         .route("/{id}/role", put(handlers::update_user_role))
         .route("/{id}/quotas", put(handlers::update_user_quotas))
 }
