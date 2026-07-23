@@ -414,6 +414,17 @@ export async function getAllUsers(fetcher: typeof fetch): Promise<User[]> {
   return (await response.json()) as User[];
 }
 
+export async function getUser(fetcher: typeof fetch, userID: number): Promise<User> {
+  const response = await fetcher(`${getAPIURL()}/users/${userID}`);
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`failed to get user: (${response.status}: ${body})`);
+  }
+
+  return (await response.json()) as User;
+}
+
 export async function updateUserRole(
   fetcher: typeof fetch,
   userID: number,

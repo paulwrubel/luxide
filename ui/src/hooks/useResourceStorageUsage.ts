@@ -8,12 +8,12 @@ export function useResourceStorageUsageQuery() {
   const { targetUserID } = useAdminUserOverride();
 
   return useQuery({
-    queryKey: resourceStorageUsageQueryKey(),
+    queryKey: resourceStorageUsageQueryKey(targetUserID),
     queryFn: () => getResourceStorageUsage(authenticatedFetch, targetUserID),
     enabled: accessToken !== undefined,
   });
 }
 
-export function resourceStorageUsageQueryKey() {
-  return ['resourceStorageUsage'] as const;
+export function resourceStorageUsageQueryKey(targetUserID?: number) {
+  return ['resourceStorageUsage', targetUserID] as const;
 }
