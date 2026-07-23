@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useSelector } from '@tanstack/react-store';
 import { getSceneData } from '@/utils/render/scene';
-import { removeDefaults } from '@/utils/render/utils';
+import { removeDefaults, getTopLevelTextureNames } from '@/utils/render/utils';
 import { buildGeometricTree } from '../../shared/geometricTree';
 
 import {
@@ -86,10 +86,7 @@ export function TextureControls(props: { form: RenderForm }) {
     return used;
   }, [geometricTree, usedMaterialNames, renderConfig.materials, renderConfig.geometrics]);
 
-  const textureNames = useMemo(
-    () => Object.keys(renderConfig.textures ?? {}),
-    [renderConfig.textures],
-  );
+  const textureNames = useMemo(() => getTopLevelTextureNames(renderConfig), [renderConfig]);
 
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
 
