@@ -1,3 +1,4 @@
+import { FieldLabel } from '@/components/FieldLabel';
 import { useFieldContext } from '@/hooks/formContext';
 import { Label, RangeSlider } from 'flowbite-react';
 
@@ -5,13 +6,14 @@ export type RangeControlProps = {
   label: string;
   labelPrefix?: React.ReactNode;
   labelSuffix?: React.ReactNode;
+  tooltip?: React.ReactNode;
   min?: number;
   max?: number;
   step?: number;
 };
 
 export function RangeControl(props: RangeControlProps) {
-  const { label, labelPrefix, labelSuffix, min, max, step } = props;
+  const { label, labelPrefix, labelSuffix, tooltip, min, max, step } = props;
 
   const field = useFieldContext<number>();
 
@@ -20,7 +22,7 @@ export function RangeControl(props: RangeControlProps) {
       <span className="flex justify-between">
         <span className="flex gap-2">
           {labelPrefix}
-          {label}
+          <FieldLabel tooltipContent={tooltip}>{label}</FieldLabel>
           {labelSuffix}
         </span>
         <span>{field.state.value}</span>

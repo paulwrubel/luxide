@@ -1,5 +1,5 @@
 import { AccordionRow } from '../../shared/AccordionRow';
-import { WarningIconAdvancedProperty } from '../../shared/icons/WarningIconAdvancedProperty';
+import { RENDER_FIELD_COPY } from '@/data/renderFieldCopy';
 import { TextInputControl } from '@/components/form-controls/TextInputControl';
 import { TextArrayInputControl } from '@/components/form-controls/TextArrayInputControl';
 import { HelperText } from 'flowbite-react';
@@ -9,6 +9,7 @@ import { useSelector } from '@tanstack/react-store';
 import { CheckpointLimitControls } from './CheckpointLimitControls';
 import { RussianRouletteControls } from './RussianRouletteControls';
 import { ImportanceSamplingControls } from './ImportanceSamplingControls';
+import { WarningIconAdvancedProperty } from '../../shared/icons/WarningIconAdvancedProperty';
 
 export type ParametersControlsProps = {
   form: RenderForm;
@@ -23,7 +24,13 @@ export function ParametersControls(props: ParametersControlsProps) {
   return (
     <AccordionRow leftLabel="Parameters" leftLabelStyle="light" startExpanded>
       <div className="flex flex-col gap-2">
-        <TextInputControl form={form} fieldName="name" label="Name" valueLabel="name" />
+        <TextInputControl
+          form={form}
+          fieldName="name"
+          label="Name"
+          valueLabel="name"
+          tooltip={RENDER_FIELD_COPY.parameters.name.description}
+        />
 
         <form.AppField name="parameters.image_dimensions">
           {(arrayField) => (
@@ -34,6 +41,7 @@ export function ParametersControls(props: ParametersControlsProps) {
                 label="Size"
                 valueLabels={['width', 'height']}
                 type="number"
+                tooltip={RENDER_FIELD_COPY.parameters.imageDimensions.description}
               />
               {(() => {
                 const [w, h] = parameters.image_dimensions;
@@ -77,6 +85,7 @@ export function ParametersControls(props: ParametersControlsProps) {
           valueLabels={['width', 'height']}
           type="number"
           labelSuffix={<WarningIconAdvancedProperty />}
+          tooltip={RENDER_FIELD_COPY.parameters.tileDimensions.description}
         />
 
         <TextInputControl
@@ -86,6 +95,7 @@ export function ParametersControls(props: ParametersControlsProps) {
           labelSpacePercentage={70}
           valueLabel="samples"
           type="number"
+          tooltip={RENDER_FIELD_COPY.parameters.samplesPerCheckpoint.description}
         />
 
         <TextInputControl
@@ -95,7 +105,18 @@ export function ParametersControls(props: ParametersControlsProps) {
           labelSpacePercentage={70}
           valueLabel="checkpoints"
           type="number"
+          tooltip={RENDER_FIELD_COPY.parameters.totalCheckpoints.description}
         />
+
+        <form.AppField name="parameters.use_scaling_truncation">
+          {(field) => (
+            <field.ToggleControl
+              label="Use Scaling Truncation"
+              labelSuffix={<WarningIconAdvancedProperty />}
+              tooltip={RENDER_FIELD_COPY.parameters.useScalingTruncation.description}
+            />
+          )}
+        </form.AppField>
 
         <CheckpointLimitControls form={form} />
 
@@ -107,16 +128,8 @@ export function ParametersControls(props: ParametersControlsProps) {
           valueLabel="bounces"
           type="number"
           labelSuffix={<WarningIconAdvancedProperty />}
+          tooltip={RENDER_FIELD_COPY.parameters.maxLightBounces.description}
         />
-
-        <form.AppField name="parameters.use_scaling_truncation">
-          {(field) => (
-            <field.ToggleControl
-              label="Use Scaling Truncation"
-              labelSuffix={<WarningIconAdvancedProperty />}
-            />
-          )}
-        </form.AppField>
 
         <RussianRouletteControls form={form} />
 

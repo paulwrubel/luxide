@@ -1,3 +1,4 @@
+import { FieldLabel } from '@/components/FieldLabel';
 import { useFieldContext } from '@/hooks/formContext';
 import { ToggleSwitch } from 'flowbite-react';
 
@@ -7,10 +8,11 @@ export type ToggleControlProps = {
   labelPrefix?: React.ReactNode;
   labelSuffix?: React.ReactNode;
   disabled?: boolean;
+  tooltip?: React.ReactNode;
 };
 
 export function ToggleControl(props: ToggleControlProps) {
-  const { label, labelPrefix, labelSuffix, disabled } = props;
+  const { label, labelPrefix, labelSuffix, disabled, tooltip } = props;
 
   const field = useFieldContext<boolean>();
 
@@ -20,7 +22,7 @@ export function ToggleControl(props: ToggleControlProps) {
         <h6 className="overflow-hidden font-normal">
           <span className="flex items-center gap-2">
             {labelPrefix}
-            {label}
+            <FieldLabel tooltipContent={tooltip}>{label}</FieldLabel>
             {labelSuffix}
           </span>
         </h6>

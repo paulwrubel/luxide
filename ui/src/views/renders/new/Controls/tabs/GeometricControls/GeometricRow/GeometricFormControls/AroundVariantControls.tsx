@@ -4,6 +4,7 @@ import { isAroundPoint } from '@/utils/render/utils';
 import type { Around } from '@/utils/render/utils';
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { AnimatedSeparator } from '@/components/AnimatedSeparator';
+import { RENDER_FIELD_COPY } from '@/data/renderFieldCopy';
 
 export type AroundVariantControlsProps = {
   form: RenderForm;
@@ -24,6 +25,7 @@ export function AroundVariantControls(props: AroundVariantControlsProps) {
             <AnimatedSeparator visible={isPoint} />
             <field.SelectControl
               label={pivotLabel}
+              tooltip={RENDER_FIELD_COPY.geometrics.rotate.rotationPoint.description}
               items={[
                 { label: 'Geometric Center', value: 'center' },
                 { label: 'World Origin', value: 'origin' },
@@ -56,6 +58,7 @@ export function AroundVariantControls(props: AroundVariantControlsProps) {
                   form={form}
                   fieldName={`geometrics.${geometricName}.around.point`}
                   label={`Custom ${pivotLabel}`}
+                  tooltip={RENDER_FIELD_COPY.geometrics.rotate.customPivotPoint.description}
                   valueLabels={['x', 'y', 'z']}
                   type="number"
                 />
