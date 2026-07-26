@@ -46,7 +46,7 @@ impl Tracer {
         checkpoint: u32,
         pixel_data: PixelData,
         render_data: &RenderData,
-        progress_sender: mpsc::Sender<ProgressPacket>,
+        progress_sender: mpsc::UnboundedSender<ProgressPacket>,
     ) -> PixelData {
         self.parallel_render_round(checkpoint, pixel_data, render_data, progress_sender)
     }
@@ -56,7 +56,7 @@ impl Tracer {
         checkpoint: u32,
         mut pixel_data: PixelData,
         render_data: &RenderData,
-        progress_sender: mpsc::Sender<ProgressPacket>,
+        progress_sender: mpsc::UnboundedSender<ProgressPacket>,
     ) -> PixelData {
         let RenderData { parameters, scene } = render_data;
 
@@ -101,8 +101,7 @@ impl Tracer {
                             // done with pixel!
 
                             // send progress
-                            if let Err(e) =
-                                progress_sender.blocking_send(ProgressPacket { coords: (x, y) })
+                            if let Err(e) = progress_sender.send(ProgressPacket { coords: (x, y) })
                             {
                                 println!("Failed to send progress! {:?}", e);
                             }

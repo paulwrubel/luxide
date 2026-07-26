@@ -228,18 +228,20 @@ impl RenderManager {
                 None => PixelData::new(),
             };
 
-            let resources =
-                match resource_manager.get_textures_for_config(&render.config).await {
-                    Ok(data) => data,
-                    Err(e) => {
-                        println!(
-                            "Failed to load resource data for render {} at tracing time: {e}",
-                            render.id
-                        );
-                        running_renders.lock().unwrap().remove(&render.id);
-                        return;
-                    }
-                };
+            let resources = match resource_manager
+                .get_textures_for_config(&render.config)
+                .await
+            {
+                Ok(data) => data,
+                Err(e) => {
+                    println!(
+                        "Failed to load resource data for render {} at tracing time: {e}",
+                        render.id
+                    );
+                    running_renders.lock().unwrap().remove(&render.id);
+                    return;
+                }
+            };
 
             let render_data = match render.config.compile(Some(&resources)) {
                 Ok(data) => data,
@@ -253,7 +255,7 @@ impl RenderManager {
                 }
             };
 
-            let (sender, mut receiver) = mpsc::channel(100);
+            let (sender, mut receiver) = mpsc::unbounded_channel();
 
             let (width, height) = render.config.parameters.image_dimensions;
             let started_at = chrono::Utc::now();
@@ -1037,7 +1039,6 @@ impl RenderManager {
     pub fn render_state_streams(&self) -> &Arc<RenderStreamRegistry> {
         &self.render_state_streams
     }
-
 }
 
 #[derive(Clone, Copy, Serialize)]
