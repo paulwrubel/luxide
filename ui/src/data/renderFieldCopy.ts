@@ -2,104 +2,150 @@ export type FieldCopy = {
   /** human-readable label shown in the form */
   label: string;
   /** tooltip/help text explaining the field in plain language */
-  description: string;
+  description: string | string[];
 };
 
 export const RENDER_FIELD_COPY = {
   parameters: {
     name: {
       label: 'Name',
-      description: `A unique identifier for this render configuration.
-Used to reference the render in the dashboard and exported file names.`,
+      description: `A human-readable name for this render configuration.
+      Used to reference the render in the dashboard.`,
     },
     imageDimensions: {
       label: 'Size (width x height)',
-      description: `The resolution of the final rendered image, measured in pixels.
-Higher resolutions produce sharper images but take significantly longer to render.
-Common values are 1920x1080 (Full HD) or 3840x2160 (4K).`,
+      description: [
+        `The resolution of the rendered image, measured in pixels. 
+        Higher resolutions produce sharper images but take significantly longer to render, as the time scales linearly with pixel count.`,
+
+        `Common values are 300x300 or 500x500 for testing, or 1920x1080 (Full HD) or 3840x2160 (4K) for production renders.`,
+      ],
     },
     tileDimensions: {
       label: 'Tile Size',
-      description: `The size in pixels of each square tile the renderer processes in parallel.
-Smaller tiles update the preview more frequently but add scheduling overhead.`,
+      description: [
+        `The size in pixels of each square tile the renderer processes in parallel. 
+        Changing this setting is almost certain to have absolutely no effect on your render, in terms of visuals or rendering efficiency.`,
+
+        `It is recommended to leave this at the default value of 1x1 unless you have a specific reason to change it.`,
+      ],
     },
     samplesPerCheckpoint: {
       label: 'Samples Per Checkpoint',
-      description: `How many rays are traced through each pixel before a checkpoint image is saved.
-Higher values reduce noise but make each checkpoint take longer.
-Each checkpoint builds on the previous one, progressively refining the image.`,
+      description: `How many samples are traced for each pixel before a checkpoint image is saved.
+      Higher values reduce noise but make each checkpoint take longer.`,
     },
     totalCheckpoints: {
       label: 'Total Checkpoints',
-      description: `The total number of checkpoint images the renderer will produce before stopping.
-More checkpoints mean a longer render with finer-grained progress updates.
-The final image quality depends on the total samples (samples per checkpoint x total checkpoints).`,
+      description: [
+        `The total number of checkpoint images the renderer will produce before stopping.
+        A greater total checkpoint count means a longer render with a higher sampled final result.`,
+
+        `The final image quality depends on the total samples (samples per checkpoint x total checkpoints).
+        Please note that the same total sample count will take longer if configured with more checkpoints and
+        less samples per checkpoint, due to the overhead of saving more intermediate images to the backend storage.`,
+      ],
+    },
+    useScalingTruncation: {
+      label: 'Use Scaling Truncation',
+      description: [
+        `Whether to scale color channel values when clamping them, to preserve the color hues.`,
+
+        `When a pixel color value exceeds 1.0, it must be clamped to fit within the displayable range.
+        This can cause the hue of a pixel to change if one channel is clamped while others are not.
+        Enabling this parameter ensures all channels are scaled proportionally to preserve the original 
+        hue, at the cost of potentially losing some brightness.`,
+      ],
+    },
+    enforceCheckpointLimit: {
+      label: 'Enforce Checkpoint Limit?',
+      description: [
+        `Whether to enforce a limit on the total number of saved checkpoint images, by discarding old checkpoints.`,
+
+        `When disabled, all checkpoints are kept until the render completes.`,
+      ],
     },
     savedCheckpointLimit: {
       label: 'Saved Checkpoint Limit',
       description: `The maximum number of checkpoint images kept on disk at once.
-When the limit is reached, older checkpoints are discarded as new ones are saved.`,
-    },
-    enforceCheckpointLimit: {
-      label: 'Enforce Checkpoint Limit?',
-      description: `Whether to enforce the saved checkpoint limit by discarding old checkpoints.
-When disabled, all checkpoints are kept until the render completes.`,
+      When the limit is reached, older checkpoints are discarded as new ones are saved.
+      The number is always the most recent n checkpoints.`,
     },
     maxLightBounces: {
       label: 'Max Light Bounces',
       description: `The maximum number of times a light ray can reflect or refract before the tracer stops following it.
-Higher values produce more realistic lighting but increase render time.
-A value of 10–50 is typical for most scenes.`,
-    },
-    useScalingTruncation: {
-      label: 'Use Scaling Truncation',
-      description: `Whether to truncate very small ray contributions instead of following them to zero.
-This can slightly speed up renders by cutting insignificant paths, but may introduce subtle energy loss.`,
+      Higher values produce more realistic lighting but increase render time. A value of 10-50 is typical for most scenes.`,
     },
     useRussianRoulette: {
       label: 'Use Russian Roulette?',
-      description: `A technique that probabilistically terminates low-energy rays to reduce render time without noticeably affecting quality.
-Rays with low contribution are randomly terminated based on their remaining energy.`,
+      description: `A technique that probabilistically terminates low-energy rays to reduce render time without 
+      noticeably affecting quality. Rays with low contribution are randomly terminated based on their remaining energy.`,
     },
     minBouncesBeforeRoulette: {
       label: 'Minimum Bounces Before Activation',
       description: `The minimum number of bounces a ray must complete before Russian roulette can terminate it.
-This ensures early bounces — which carry the most visual energy — are always fully computed.`,
+      This ensures early bounces, which carry the most visual energy, are always fully computed.`,
     },
     useImportanceSampling: {
       label: 'Use Importance Sampling?',
-      description: `Whether to bias ray sampling toward light sources and important directions to reduce noise.
-When enabled, the renderer allocates more samples to significant light paths.`,
+      description: [
+        `Whether to bias ray sampling toward specific directions and geometries to reduce noise and converge faster. 
+        When enabled and tuned correctly, the renderer can converge significantly faster.`,
+        `All values are unitless weights that determine the relative probability of sampling rays in each category.`,
+      ],
     },
     brdfWeight: {
       label: 'BRDF Weight',
-      description: `The sampling weight assigned to the BRDF (surface reflection) component when importance sampling is active.
-Higher values increase the proportion of rays that follow surface reflections.`,
+      description: [
+        `The weight assigned to the BRDF (surface reflection) component when importance sampling is active.
+        Higher values increase the proportion of rays that follow surface reflections.`,
+
+        `This is the default sampling method, and is guaranteed to correctly converge for all scenes, but 
+        may converge much slower than when combined with other importance sampling methods.`,
+
+        `Setting this to 1 and all other weights to 0 effectively disables importance sampling.`,
+      ],
     },
     emissiveWeight: {
       label: 'Emissive Weight',
-      description: `The sampling weight assigned to emissive (self-illuminating) surfaces when importance sampling is active.
-Higher values increase the proportion of rays directed toward light-emitting objects.`,
+      description: [
+        `The weight assigned to emissive (light-emitting) surfaces when importance sampling is active.`,
+
+        `A non-zero weight will result in light being directly sent towards emissive geometrics
+        (where the emissive texture has a non-black component).`,
+      ],
     },
     transmissiveWeight: {
       label: 'Transmissive Weight',
-      description: `The sampling weight assigned to transmissive (light-passing) materials when importance sampling is active.
-Higher values increase the proportion of rays that pass through transparent objects.`,
+      description: [
+        `The weight assigned to transmissive (light-passing) materials when importance sampling is active.`,
+
+        `This may or may not result in the scene converging slower or faster. Use with caution.`,
+      ],
     },
     specularWeight: {
       label: 'Specular Weight',
-      description: `The sampling weight assigned to specular (mirror-like) reflections when importance sampling is active.
-Higher values increase the proportion of rays that produce sharp reflections.`,
+      description: [
+        `The weight assigned to specular (mirror-like) reflections when importance sampling is active.`,
+
+        `This will only accelerate convergence for very specific scenes. Use with caution.`,
+      ],
     },
     virtualWeight: {
       label: 'Virtual Weight',
-      description: `The sampling weight assigned to virtual light paths when importance sampling is active.
-Higher values increase the proportion of rays that follow indirect illumination paths.`,
+      description: [
+        `The weight assigned to virtual geometrics when importance sampling is active.`,
+
+        `This can be used to direct light in directions that are not represented by a physically-placed
+        scene object. For example, this can be used to direct light towards a virtual rectangle near the crack under
+        a door, in a scene where most illumination would come from that direction.`,
+      ],
     },
     useMultipleImportanceSampling: {
       label: 'Use Multiple Importance Sampling',
-      description: `Combines samples from both the BRDF and light source distributions to reduce noise, especially in scenes with small or bright light sources.
-This produces cleaner renders but increases computational cost.`,
+      description: [
+        `An advanced setting that controls some fancy math under the hood. You should probably leave this on.`,
+      ],
     },
   },
   cameras: {
@@ -107,7 +153,7 @@ This produces cleaner renders but increases computational cost.`,
       label: 'Vertical FOV (degrees)',
       description: `How wide the camera's view is, measured in degrees.
 Higher values show more of the scene but can cause fisheye distortion.
-Typical values are 40–90°.`,
+Typical values are 40-90°.`,
     },
     eyeLocation: {
       label: 'Eye (x/y/z)',
@@ -389,8 +435,8 @@ Higher values create stronger refraction effects.`,
       abbeNumber: {
         label: 'Abbe Number',
         description: `Quantifies the material's chromatic dispersion — how much the index of refraction varies by wavelength.
-Lower values (20–40) produce stronger rainbow-like color fringing; higher values (50–80) produce less dispersion.
-Typical glass ranges from 30–60.`,
+Lower values (20-40) produce stronger rainbow-like color fringing; higher values (50-80) produce less dispersion.
+Typical glass ranges from 30-60.`,
       },
       hasInteriorMedium: {
         label: 'Has Interior Medium?',
