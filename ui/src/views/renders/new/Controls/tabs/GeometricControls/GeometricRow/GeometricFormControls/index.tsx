@@ -306,7 +306,8 @@ export function GeometricFormControls(props: GeometricFormControlsProps) {
           <TextArrayInputControl
             form={form}
             fieldName={`geometrics.${name}.p00`}
-            label="P00 (corner 0,0)"
+            label="P00"
+            labelSpacePercentage={20}
             tooltip={RENDER_FIELD_COPY.geometrics.bilinear_patch.bilinearCorner.description}
             valueLabels={['x', 'y', 'z']}
             type="number"
@@ -314,7 +315,8 @@ export function GeometricFormControls(props: GeometricFormControlsProps) {
           <TextArrayInputControl
             form={form}
             fieldName={`geometrics.${name}.p10`}
-            label="P10 (corner 1,0)"
+            label="P10"
+            labelSpacePercentage={20}
             tooltip={RENDER_FIELD_COPY.geometrics.bilinear_patch.bilinearCorner.description}
             valueLabels={['x', 'y', 'z']}
             type="number"
@@ -322,7 +324,8 @@ export function GeometricFormControls(props: GeometricFormControlsProps) {
           <TextArrayInputControl
             form={form}
             fieldName={`geometrics.${name}.p01`}
-            label="P01 (corner 0,1)"
+            label="P01"
+            labelSpacePercentage={20}
             tooltip={RENDER_FIELD_COPY.geometrics.bilinear_patch.bilinearCorner.description}
             valueLabels={['x', 'y', 'z']}
             type="number"
@@ -330,7 +333,8 @@ export function GeometricFormControls(props: GeometricFormControlsProps) {
           <TextArrayInputControl
             form={form}
             fieldName={`geometrics.${name}.p11`}
-            label="P11 (corner 1,1)"
+            label="P11"
+            labelSpacePercentage={20}
             tooltip={RENDER_FIELD_COPY.geometrics.bilinear_patch.bilinearCorner.description}
             valueLabels={['x', 'y', 'z']}
             type="number"
