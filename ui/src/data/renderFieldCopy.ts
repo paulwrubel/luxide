@@ -152,32 +152,30 @@ export const RENDER_FIELD_COPY = {
     verticalFOV: {
       label: 'Vertical FOV (degrees)',
       description: `How wide the camera's view is, measured in degrees.
-Higher values show more of the scene but can cause fisheye distortion.
-Typical values are 40-90°.`,
+      Higher values show more of the scene but cause perspective stretching at the edges, 
+      causing objects near the frame border to appear elongated.
+      Typical values are 40-90.`,
     },
     eyeLocation: {
       label: 'Eye (x/y/z)',
       description: `The 3D position of the camera in world space.
-Uses Y-up coordinates: X = right, Y = up, Z = forward.
-Moving the eye changes what part of the scene is visible.`,
+      Moving the eye changes what part of the scene is visible.`,
     },
     targetLocation: {
       label: 'Target (x/y/z)',
       description: `The 3D point the camera is looking at in world space.
-Uses Y-up coordinates: X = right, Y = up, Z = forward.
-Moving the target changes the direction the camera faces.`,
+      Moving the target changes the direction the camera faces.`,
     },
     viewUp: {
       label: 'View Up (x/y/z)',
       description: `The upward direction vector for the camera, defining its roll orientation.
-Uses Y-up coordinates: X = right, Y = up, Z = forward.
-The default is (0, 1, 0), meaning the camera's top points along the world Y axis.`,
+      The default is (0, 1, 0), meaning the camera's top points along the world Y axis.`,
     },
     defocusAngle: {
       label: 'Defocus Angle (degrees)',
       description: `Controls the depth-of-field blur effect by simulating a finite aperture.
-A value of 0 produces a perfectly sharp image.
-Higher values increase background blur, drawing attention to in-focus subjects.`,
+      A value of 0 produces a perfectly sharp image.
+      Higher values increase background blur, drawing attention to in-focus subjects.`,
     },
   },
   geometrics: {
@@ -192,133 +190,122 @@ Select from the materials defined in the Materials tab.`,
       corner1: {
         label: 'Corner 1',
         description: `The first corner of the box in world space.
-Uses Y-up coordinates: X = right, Y = up, Z = forward.
-Together with Corner 2, this defines the box's extents.`,
+        Together with Corner 2, this defines the box's extents.`,
       },
       corner2: {
         label: 'Corner 2',
         description: `The opposite corner of the box in world space.
-Uses Y-up coordinates: X = right, Y = up, Z = forward.
-Together with Corner 1, this defines the box's extents.`,
+        Together with Corner 1, this defines the box's extents.`,
       },
     },
     sphere: {
       center: {
         label: 'Center',
-        description: `The center position of the sphere or disk in world space.
-Uses Y-up coordinates: X = right, Y = up, Z = forward.`,
+        description: `The center position of the sphere or disk in world space.`,
       },
       radius: {
         label: 'Radius',
-        description: `The radius of the sphere, disk, or cylinder. Larger values create bigger objects that occupy more of the scene.`,
+        description: `The radius of the sphere. 
+        Larger values create bigger objects that occupy more of the scene.`,
       },
     },
     triangle: {
       pointA: {
         label: 'Point A',
         description: `The first vertex of the triangle in world space.
-Uses Y-up coordinates: X = right, Y = up, Z = forward.
-The triangle is formed by Points A, B, and C in order.`,
+        The triangle is formed by Points A, B, and C in order.`,
       },
       pointB: {
         label: 'Point B',
-        description: `The second vertex of the triangle in world space.
-Uses Y-up coordinates: X = right, Y = up, Z = forward.`,
+        description: `The second vertex of the triangle in world space.`,
       },
       pointC: {
         label: 'Point C',
-        description: `The third vertex of the triangle in world space.
-Uses Y-up coordinates: X = right, Y = up, Z = forward.`,
+        description: `The third vertex of the triangle in world space.`,
       },
     },
     parallelogram: {
       lowerLeft: {
         label: 'Lower Left',
         description: `The origin corner of the parallelogram in world space.
-Uses Y-up coordinates: X = right, Y = up, Z = forward.
-The parallelogram extends along the u and v vectors from this point.`,
+        The parallelogram extends along the u and v vectors from this point.`,
       },
       uVector: {
         label: 'u Vector',
         description: `The first edge direction and length of the parallelogram.
-Together with the v vector, it defines the shape and orientation of the surface.`,
+        Together with the v vector, it defines the shape and orientation of the surface.`,
       },
       vVector: {
         label: 'v Vector',
         description: `The second edge direction and length of the parallelogram.
-Together with the u vector, it defines the shape and orientation of the surface.`,
+        Together with the u vector, it defines the shape and orientation of the surface.`,
       },
     },
     plane: {
       point: {
         label: 'Point',
         description: `An anchor point on the infinite plane in world space.
-Uses Y-up coordinates: X = right, Y = up, Z = forward.
-The plane passes through this point and extends infinitely.`,
+        The plane passes through this point and extends infinitely.`,
       },
       normal: {
         label: 'Normal',
         description: `The surface normal vector for a plane or disk, defining which direction the surface faces.
-A normal of (0, 1, 0) faces upward.
-The surface is only visible from the side the normal points toward.`,
+        A normal of (0, 1, 0) faces upward.`,
       },
     },
     disk: {
       center: {
         label: 'Center',
-        description: `The center position of the sphere or disk in world space.
-Uses Y-up coordinates: X = right, Y = up, Z = forward.`,
+        description: `The center position of the sphere or disk in world space.`,
       },
       normal: {
         label: 'Normal',
         description: `The surface normal vector for a plane or disk, defining which direction the surface faces.
-A normal of (0, 1, 0) faces upward.
-The surface is only visible from the side the normal points toward.`,
+        A normal of (0, 1, 0) faces upward.`,
       },
       radius: {
         label: 'Radius',
-        description: `The radius of the sphere, disk, or cylinder. Larger values create bigger objects that occupy more of the scene.`,
+        description: `The radius of the disk.`,
       },
       innerRadius: {
         label: 'Inner Radius',
         description: `The inner radius of the ring-shaped disk.
-The area between the inner radius and the outer radius forms the visible surface.
-Setting this to 0 creates a solid disk.`,
+        The area between the inner radius and the outer radius forms the visible surface.
+        Setting this to 0 creates a solid disk.`,
       },
     },
     cylinder: {
       endpointA: {
         label: 'Endpoint A',
         description: `The first endpoint of the cylinder's center axis in world space.
-Uses Y-up coordinates: X = right, Y = up, Z = forward.
-The cylinder extends along the line between Endpoint A and Endpoint B.`,
+        The cylinder extends along the line between Endpoint A and Endpoint B.`,
       },
       endA: {
         label: 'End A',
-        description: `Whether the cylinder's first end is capped (closed with a flat surface), open (hollow), or infinite (extends forever in that direction).
-Capped ends block light; open ends let it pass through.`,
+        description: `Whether the cylinder's first end is capped (closed with a disk), 
+        open (hollow), or infinite (extends forever in that direction).`,
       },
       endpointB: {
         label: 'Endpoint B',
-        description: `The second endpoint of the cylinder's center axis in world space.
-Uses Y-up coordinates: X = right, Y = up, Z = forward.`,
+        description: `The second endpoint of the cylinder's center axis in world space.`,
       },
       endB: {
         label: 'End B',
-        description: `Whether the cylinder's second end is capped (closed with a flat surface), open (hollow), or infinite (extends forever in that direction).
-Capped ends block light; open ends let it pass through.`,
+        description: `Whether the cylinder's second end is capped (closed with a disk), 
+        open (hollow), or infinite (extends forever in that direction).`,
       },
       radius: {
         label: 'Radius',
-        description: `The radius of the sphere, disk, or cylinder. Larger values create bigger objects that occupy more of the scene.`,
+        description: `The radius of the cylinder.`,
       },
     },
     bilinear_patch: {
       bilinearCorner: {
         label: 'P00 / P10 / P01 / P11',
-        description: `The four corner points of a bilinear patch, a curved surface defined by interpolation between these points.
-P00, P10, P01, and P11 represent the four corners in grid order.
-Uses Y-up coordinates: X = right, Y = up, Z = forward.`,
+        description: [
+          `The four corner points of a bilinear patch, a double-ruled and curved surface defined by interpolation between these points.`,
+          `P00, P10, P01, and P11 represent the four corners in grid order.`,
+        ],
       },
     },
     rotate: {
