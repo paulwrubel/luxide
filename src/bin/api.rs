@@ -1,4 +1,4 @@
-use std::{num::NonZero, path::PathBuf, sync::Arc};
+use std::{path::PathBuf, sync::Arc};
 
 use axum_extra::extract::cookie::Key;
 use base64::Engine as _;
@@ -11,7 +11,7 @@ use luxide::{
     server::{self, AuthManager, LuxideState, build_router},
     tracing::{
         FileStorage, InMemoryStorage, PostgresStorage, RenderManager, RenderStorage,
-        ResourceManager, ResourceStorage, Threads, UserStorage,
+        ResourceManager, ResourceStorage, UserStorage,
     },
 };
 
@@ -95,16 +95,11 @@ async fn main() -> Result<(), String> {
     // create resource manager (must be constructed before render manager)
     let resource_manager = Arc::new(ResourceManager::new(Arc::clone(&resource_storage)));
 
-    // create render manager with a shared global thread pool
-    // so rayon threads persist across checkpoint iterations
+    // create render manager
     let render_manager = Arc::new(
-        RenderManager::new_with_global_thread_pool(
-            Arc::clone(&render_storage),
-            Arc::clone(&resource_manager),
-            Threads::AllWithDefault(NonZero::new(24).unwrap()),
-        )
-        .await
-        .map_err(|e| format!("Failed to initialize render manager: {}", e))?,
+        RenderManager::new(Arc::clone(&render_storage), Arc::clone(&resource_manager))
+            .await
+            .map_err(|e| format!("Failed to initialize render manager: {}", e))?,
     );
 
     // create auth manager
