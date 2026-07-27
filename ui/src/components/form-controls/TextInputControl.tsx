@@ -14,7 +14,7 @@ export type TextInputControlProps = {
   allowWrappingLabel?: boolean;
   labelPrefix?: React.ReactNode;
   labelSuffix?: React.ReactNode;
-  tooltip?: React.ReactNode;
+  tooltip?: string | string[];
   valueLabel: string;
 };
 

@@ -11,7 +11,7 @@ export type TextArrayInputControlProps = {
   allowWrappingLabel?: boolean;
   labelPrefix?: React.ReactNode;
   labelSuffix?: React.ReactNode;
-  tooltip?: React.ReactNode;
+  tooltip?: string | string[];
   valueLabels: string[];
   unenforcedStep?: number;
 };

@@ -4,7 +4,7 @@ export type GeometricMaterialSelectProps = {
   form: RenderForm;
   name: string;
   items: { label: string; value: string }[];
-  tooltip?: React.ReactNode;
+  tooltip?: string | string[];
 };
 
 export function GeometricMaterialSelect(props: GeometricMaterialSelectProps) {

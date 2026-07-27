@@ -8,7 +8,7 @@ export type ToggleControlProps = {
   labelPrefix?: React.ReactNode;
   labelSuffix?: React.ReactNode;
   disabled?: boolean;
-  tooltip?: React.ReactNode;
+  tooltip?: string | string[];
 };
 
 export function ToggleControl(props: ToggleControlProps) {

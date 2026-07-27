@@ -4,7 +4,7 @@ export type GeometricTextureSelectProps = {
   form: RenderForm;
   name: string;
   items: { label: string; value: string }[];
-  tooltip?: React.ReactNode;
+  tooltip?: string | string[];
 };
 
 export function GeometricTextureSelect(props: GeometricTextureSelectProps) {

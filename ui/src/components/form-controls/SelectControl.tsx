@@ -12,7 +12,7 @@ export type SelectControlProps = {
   label: string;
   labelPrefix?: React.ReactNode;
   labelSuffix?: React.ReactNode;
-  tooltip?: React.ReactNode;
+  tooltip?: string | string[];
   items: SelectItem[];
   onChange?: (value: string) => void;
   mapValue?: (value: string) => string;

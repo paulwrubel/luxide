@@ -6,7 +6,7 @@ export type RangeControlProps = {
   label: string;
   labelPrefix?: React.ReactNode;
   labelSuffix?: React.ReactNode;
-  tooltip?: React.ReactNode;
+  tooltip?: string | string[];
   min?: number;
   max?: number;
   step?: number;
