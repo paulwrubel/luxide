@@ -15,7 +15,7 @@ export const RENDER_FIELD_COPY = {
     imageDimensions: {
       label: 'Size (width x height)',
       description: [
-        `The resolution of the rendered image, measured in pixels. 
+        `The resolution of the rendered image, measured in pixels.
         Higher resolutions produce sharper images but take significantly longer to render, as the time scales linearly with pixel count.`,
 
         `Common values are 300x300 or 500x500 for testing, or 1920x1080 (Full HD) or 3840x2160 (4K) for production renders.`,
@@ -24,7 +24,7 @@ export const RENDER_FIELD_COPY = {
     tileDimensions: {
       label: 'Tile Size',
       description: [
-        `The size in pixels of each square tile the renderer processes in parallel. 
+        `The size in pixels of each square tile the renderer processes in parallel.
         Changing this setting is almost certain to have absolutely no effect on your render, in terms of visuals or rendering efficiency.`,
 
         `It is recommended to leave this at the default value of 1x1 unless you have a specific reason to change it.`,
@@ -53,7 +53,7 @@ export const RENDER_FIELD_COPY = {
 
         `When a pixel color value exceeds 1.0, it must be clamped to fit within the displayable range.
         This can cause the hue of a pixel to change if one channel is clamped while others are not.
-        Enabling this parameter ensures all channels are scaled proportionally to preserve the original 
+        Enabling this parameter ensures all channels are scaled proportionally to preserve the original
         hue, at the cost of potentially losing some brightness.`,
       ],
     },
@@ -78,7 +78,7 @@ export const RENDER_FIELD_COPY = {
     },
     useRussianRoulette: {
       label: 'Use Russian Roulette?',
-      description: `A technique that probabilistically terminates low-energy rays to reduce render time without 
+      description: `A technique that probabilistically terminates low-energy rays to reduce render time without
       noticeably affecting quality. Rays with low contribution are randomly terminated based on their remaining energy.`,
     },
     minBouncesBeforeRoulette: {
@@ -89,7 +89,7 @@ export const RENDER_FIELD_COPY = {
     useImportanceSampling: {
       label: 'Use Importance Sampling?',
       description: [
-        `Whether to bias ray sampling toward specific directions and geometries to reduce noise and converge faster. 
+        `Whether to bias ray sampling toward specific directions and geometries to reduce noise and converge faster.
         When enabled and tuned correctly, the renderer can converge significantly faster.`,
         `All values are unitless weights that determine the relative probability of sampling rays in each category.`,
       ],
@@ -100,7 +100,7 @@ export const RENDER_FIELD_COPY = {
         `The weight assigned to the BRDF (surface reflection) component when importance sampling is active.
         Higher values increase the proportion of rays that follow surface reflections.`,
 
-        `This is the default sampling method, and is guaranteed to correctly converge for all scenes, but 
+        `This is the default sampling method, and is guaranteed to correctly converge for all scenes, but
         may converge much slower than when combined with other importance sampling methods.`,
 
         `Setting this to 1 and all other weights to 0 effectively disables importance sampling.`,
@@ -152,7 +152,7 @@ export const RENDER_FIELD_COPY = {
     verticalFOV: {
       label: 'Vertical FOV (degrees)',
       description: `How wide the camera's view is, measured in degrees.
-      Higher values show more of the scene but cause perspective stretching at the edges, 
+      Higher values show more of the scene but cause perspective stretching at the edges,
       causing objects near the frame border to appear elongated.
       Typical values are 40-90.`,
     },
@@ -182,8 +182,9 @@ export const RENDER_FIELD_COPY = {
     _shared: {
       material: {
         label: 'Material',
-        description: `The material assigned to this geometric surface, determining its visual properties such as color, roughness, and reflectance.
-Select from the materials defined in the Materials tab.`,
+        description: `The material assigned to this geometric surface,
+        determining its visual properties such as color, roughness, and reflectance.
+        Select from the materials defined in the Materials tab.`,
       },
     },
     box: {
@@ -205,7 +206,7 @@ Select from the materials defined in the Materials tab.`,
       },
       radius: {
         label: 'Radius',
-        description: `The radius of the sphere. 
+        description: `The radius of the sphere.
         Larger values create bigger objects that occupy more of the scene.`,
       },
     },
@@ -282,7 +283,7 @@ Select from the materials defined in the Materials tab.`,
       },
       endA: {
         label: 'End A',
-        description: `Whether the cylinder's first end is capped (closed with a disk), 
+        description: `Whether the cylinder's first end is capped (closed with a disk),
         open (hollow), or infinite (extends forever in that direction).`,
       },
       endpointB: {
@@ -291,7 +292,7 @@ Select from the materials defined in the Materials tab.`,
       },
       endB: {
         label: 'End B',
-        description: `Whether the cylinder's second end is capped (closed with a disk), 
+        description: `Whether the cylinder's second end is capped (closed with a disk),
         open (hollow), or infinite (extends forever in that direction).`,
       },
       radius: {
@@ -304,6 +305,7 @@ Select from the materials defined in the Materials tab.`,
         label: 'P00 / P10 / P01 / P11',
         description: [
           `The four corner points of a bilinear patch, a double-ruled and curved surface defined by interpolation between these points.`,
+
           `P00, P10, P01, and P11 represent the four corners in grid order.`,
         ],
       },
@@ -312,80 +314,82 @@ Select from the materials defined in the Materials tab.`,
       degreesOfRotation: {
         label: 'Degrees of Rotation',
         description: `The angle of rotation applied around the chosen axis, measured in degrees.
-A full rotation is 360°.
-Positive values rotate counterclockwise when looking along the axis toward the origin.`,
+        A full rotation is 360 degrees.
+        Positive values rotate counterclockwise when looking along the axis toward the origin.`,
       },
       radiansOfRotation: {
         label: 'Radians of Rotation',
         description: `The angle of rotation applied around the chosen axis, measured in radians.
-A full rotation is 2π (approximately 6.283).
-Positive values rotate counterclockwise when looking along the axis toward the origin.`,
+        A full rotation is 2π (approximately 6.283).
+        Positive values rotate counterclockwise when looking along the axis toward the origin.`,
       },
       rotationPoint: {
         label: 'Rotation Point / Scale Point',
         description: `Controls the pivot around which rotation or scaling is applied.
-"Centroid" uses the geometric center, "Custom" lets you specify a point directly, and "Origin" uses the world origin.`,
+        "Geometric Center" uses the geometric center,
+        "Custom Point" lets you specify a point directly, and 
+        "World Origin" uses the world origin.`,
       },
       customPivotPoint: {
         label: 'Custom Rotation Point / Custom Scale Point',
-        description: `The custom 3D point used as the pivot for rotation or scaling when the pivot mode is set to "Custom".
- Uses Y-up coordinates: X = right, Y = up, Z = forward.`,
+        description: `The custom 3D point used as the pivot for rotation or scaling when the pivot mode is set to "Custom Point".`,
       },
     },
     rotate_quaternion: {
       quaternion: {
         label: 'Quaternion',
         description: `A four-component rotation representation (w, x, y, z) that avoids gimbal lock.
- Quaternions define a rotation axis and angle without the singularities of Euler angles.
- The w component represents the cosine of half the rotation angle.`,
+        Quaternions define a rotation axis and angle without the singularities of Euler angles.
+        The w component represents the cosine of half the rotation angle.`,
       },
       rotationPoint: {
         label: 'Rotation Point / Scale Point',
         description: `Controls the pivot around which rotation or scaling is applied.
- "Centroid" uses the geometric center, "Custom" lets you specify a point directly, and "Origin" uses the world origin.`,
+        "Geometric Center" uses the geometric center, 
+        "Custom Point" lets you specify a point directly, and 
+        "World Origin" uses the world origin.`,
       },
       customPivotPoint: {
         label: 'Custom Rotation Point / Custom Scale Point',
-        description: `The custom 3D point used as the pivot for rotation or scaling when the pivot mode is set to "Custom".
- Uses Y-up coordinates: X = right, Y = up, Z = forward.`,
+        description: `The custom 3D point used as the pivot for rotation or scaling when the pivot mode is set to "Custom Point".`,
       },
     },
     scale: {
       scale: {
         label: 'Scale',
         description: `A uniform or per-axis scaling factor applied to the geometry.
- A value of 1 leaves the size unchanged.
- Values greater than 1 enlarge the object; values between 0 and 1 shrink it.`,
+        A value of 1 leaves the size unchanged.
+        Values greater than 1 enlarge the object; values between 0 and 1 shrink it.`,
       },
       rotationPoint: {
         label: 'Rotation Point / Scale Point',
         description: `Controls the pivot around which rotation or scaling is applied.
- "Centroid" uses the geometric center, "Custom" lets you specify a point directly, and "Origin" uses the world origin.`,
+        "Geometric Center" uses the geometric center, 
+        "Custom Point" lets you specify a point directly, and 
+        "World Origin" uses the world origin.`,
       },
       customPivotPoint: {
         label: 'Custom Rotation Point / Custom Scale Point',
-        description: `The custom 3D point used as the pivot for rotation or scaling when the pivot mode is set to "Custom".
-Uses Y-up coordinates: X = right, Y = up, Z = forward.`,
+        description: `The custom 3D point used as the pivot for rotation or scaling when the pivot mode is set to "Custom Point".`,
       },
     },
     translate: {
       translation: {
         label: 'Translation',
         description: `The offset applied to move the geometry in world space.
-Uses Y-up coordinates: X = right, Y = up, Z = forward.
-This shifts the object from its original position by the specified amounts.`,
+        This shifts the object from its original position by the specified amounts.`,
       },
     },
     constant_volume: {
       density: {
         label: 'Density',
         description: `The density of the constant-volume medium, controlling how much light is scattered or absorbed as it passes through.
-Higher densities create thicker, more opaque volumes.`,
+        Higher densities create thicker, more opaque volumes.`,
       },
       reflectanceTexture: {
         label: 'Reflectance Texture',
         description: `A texture that maps surface reflectance across the volume, determining how much light is reflected at each point.
-Select from the textures defined in the Textures tab.`,
+        Select from the textures defined in the Textures tab.`,
       },
     },
   },
@@ -394,13 +398,13 @@ Select from the textures defined in the Textures tab.`,
       reflectanceTexture: {
         label: 'Reflectance Texture',
         description: `A texture that maps surface reflectance (color/albedo) across the material, determining the base color at each point on the surface.
-Select from the textures defined in the Textures tab.`,
+        Select from the textures defined in the Textures tab.`,
       },
       emittanceTexture: {
         label: 'Emittance Texture',
         description: `A texture that controls where and how strongly the surface emits light, effectively turning parts of the material into light sources.
-White areas emit strongly; black areas do not emit.
-Select from the textures defined in the Textures tab.`,
+        White areas emit strongly; black areas do not emit.
+        Select from the textures defined in the Textures tab.`,
       },
     },
     lambertian: {},
@@ -408,51 +412,56 @@ Select from the textures defined in the Textures tab.`,
       roughness: {
         label: 'Roughness',
         description: `Controls how rough or smooth the surface is.
-0 = perfectly mirror-like, 1 = completely diffuse/matte.
-Rough surfaces scatter reflected light in many directions, creating soft reflections.`,
+        0 = perfectly mirror-like, 1 = completely diffuse/matte.
+        Rough surfaces scatter reflected light in many directions, creating soft reflections.`,
       },
     },
     dielectric: {
       indexOfRefraction: {
         label: 'Index of Refraction',
         description: `Determines how much light bends when entering the material.
-Water is ~1.33, glass is ~1.5, diamond is ~2.4.
-Higher values create stronger refraction effects.`,
+        Water is ~1.33, glass is ~1.5, diamond is ~2.4.
+        Higher values create stronger refraction effects.`,
       },
       abbeNumber: {
         label: 'Abbe Number',
-        description: `Quantifies the material's chromatic dispersion — how much the index of refraction varies by wavelength.
-Lower values (20-40) produce stronger rainbow-like color fringing; higher values (50-80) produce less dispersion.
-Typical glass ranges from 30-60.`,
+        description: `Quantifies the material's chromatic dispersion, i.e. how much the index of refraction varies by wavelength.
+        Lower values (20-40) produce stronger rainbow-like color fringing; higher values (50-80) produce less dispersion.
+        Typical glass ranges from 30-60.`,
       },
       hasInteriorMedium: {
         label: 'Has Interior Medium?',
-        description: `Whether the dielectric (transparent) material contains an interior medium such as smoke, fog, or colored glass.
-When enabled, light passing through the material interacts with the medium's properties.`,
+        description: [
+          `When enabled, the dielectric is treated as a solid volume with real ray refraction and an interior medium. 
+          When disabled, it uses a fast thin-slab approximation: Rays pass straight through with no bending and no volume effects.`,
+
+          `Most of the time, this setting should probably match the nature of the geometric it is attached to: 
+          3D, volumetric geometrics like spheres and boxes should have an interior medium, and 
+          2D geometrics like parallelograms, planes, disks, and bilinear patches should have this disabled.`,
+        ],
       },
       mediumType: {
         label: 'Type',
-        description: `The type of interior medium.
-"Vacuum" is empty space with no light interaction.
-"Homogeneous" has uniform optical properties throughout — light is scattered or absorbed evenly as it passes through.`,
+        description: `"Vacuum" behaves as clear glass: Real refraction with no absorption or emission. 
+        "Homogeneous" adds uniform absorption and emission throughout the volume, useful for colored glass or glowing gases.`,
       },
       transmittance: {
         label: 'Transmittance',
         description: `The color of light that passes through the homogeneous medium.
-White means all wavelengths pass equally.
-Tinted values (such as a green tint) absorb complementary colors, giving the medium a colored appearance.`,
+        White means all wavelengths pass equally. Tinted values absorb complementary colors,
+        giving the medium a colored appearance. Red tint absorbs blue and green, making the volume look red.`,
       },
       attenuationDistance: {
         label: 'Attenuation Distance',
-        description: `The distance light travels through the homogeneous medium before its intensity is reduced by approximately 63%.
-Smaller values create denser, more opaque media.
-Larger values create clearer, more transparent media.`,
+        description: `The reference distance at which the transmittance value applies.
+        At this distance, the fraction of light surviving equals the transmittance.
+        Smaller values create denser, more opaque media; larger values create clearer, more transparent media.`,
       },
       emittance: {
         label: 'Emittance',
-        description: `The color and intensity of light emitted by the homogeneous medium itself.
-A black value means the medium does not emit light.
-Non-black values cause the medium to glow from within, like a neon tube or fire.`,
+        description: `The color and intensity of light emitted by the medium itself. 
+        A black value means the medium does not glow. Non-black values cause the medium to
+        emit light from within. The glow is strongest where the medium is thickest or densest.`,
       },
     },
   },
@@ -460,8 +469,8 @@ Non-black values cause the medium to glow from within, like a neon tube or fire.
     scale: {
       label: 'Scale',
       description: `Controls the size of the checker pattern.
-Smaller values create more, smaller checks across the surface.
-Larger values create fewer, larger checks.`,
+      Smaller values create more, smaller checks across the surface.
+      Larger values create fewer, larger checks.`,
     },
     color: {
       label: 'Color',
