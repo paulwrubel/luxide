@@ -228,18 +228,20 @@ impl RenderManager {
                 None => PixelData::new(),
             };
 
-            let resources =
-                match resource_manager.get_textures_for_config(&render.config).await {
-                    Ok(data) => data,
-                    Err(e) => {
-                        println!(
-                            "Failed to load resource data for render {} at tracing time: {e}",
-                            render.id
-                        );
-                        running_renders.lock().unwrap().remove(&render.id);
-                        return;
-                    }
-                };
+            let resources = match resource_manager
+                .get_textures_for_config(&render.config)
+                .await
+            {
+                Ok(data) => data,
+                Err(e) => {
+                    println!(
+                        "Failed to load resource data for render {} at tracing time: {e}",
+                        render.id
+                    );
+                    running_renders.lock().unwrap().remove(&render.id);
+                    return;
+                }
+            };
 
             let render_data = match render.config.compile(Some(&resources)) {
                 Ok(data) => data,
@@ -253,12 +255,41 @@ impl RenderManager {
                 }
             };
 
-            let (sender, mut receiver) = mpsc::channel(100);
+            let (sender, mut receiver) = mpsc::unbounded_channel();
+
+            // watch channel decouples progress reporting from the render's
+            // compute loop. the receiver loop pushes progress to the watch
+            // sender (instant, non-blocking); a spawned task drains the
+            // watch receiver, writing to the DB at its own pace. watch
+            // inherently coalesces: send() overwrites the stored value
+            // and changed() always returns the freshest one. ordering is
+            // guaranteed because the receiver loop is single-threaded.
+            let (progress_watch_tx, mut progress_watch_rx) =
+                tokio::sync::watch::channel(ProgressInfo::empty());
+
+            let db_task = tokio::spawn({
+                let storage = Arc::clone(&storage);
+                async move {
+                    loop {
+                        match progress_watch_rx.changed().await {
+                            Ok(_) => {
+                                let info = *progress_watch_rx.borrow();
+                                storage.update_progress(render.id, info).await;
+                            }
+                            Err(_) => {
+                                // sender dropped — flush the final value
+                                let info = *progress_watch_rx.borrow();
+                                storage.update_progress(render.id, info).await;
+                                break;
+                            }
+                        }
+                    }
+                }
+            });
 
             let (width, height) = render.config.parameters.image_dimensions;
             let started_at = chrono::Utc::now();
             let new_pixel_data = {
-                let storage = Arc::clone(&storage);
                 let render_state_streams = Arc::clone(&render_state_streams);
 
                 let (_, new_pixel_data) = tokio::join!(
@@ -285,12 +316,20 @@ impl RenderManager {
                                     state,
                                     updated_at: chrono::Utc::now(),
                                 });
-                                storage.update_progress(render.id, progress_info)
+                                // push to batcher for async DB write (non-blocking)
+                                let _ = progress_watch_tx.send(progress_info);
+                                // no-op future so mark()'s .await returns instantly
+                                std::future::ready(())
                             },
                         );
                         while receiver.recv().await.is_some() {
                             progress_tracker.mark().await;
                         }
+                        // scope ends: progress_tracker dropped
+                        // --> closure dropped
+                        // --> borrow on progress_watch_tx released
+                        // --> progress_watch_tx dropped
+                        // --> signals db_task to flush and exit
                     },
                     async move {
                         let new_pixel_data = tokio::task::spawn_blocking(move || {
@@ -309,6 +348,9 @@ impl RenderManager {
 
                 new_pixel_data
             };
+
+            // ensure the DB task finishes flushing the final progress value
+            db_task.await.unwrap();
 
             let ended_at = chrono::Utc::now();
 
@@ -1037,7 +1079,6 @@ impl RenderManager {
     pub fn render_state_streams(&self) -> &Arc<RenderStreamRegistry> {
         &self.render_state_streams
     }
-
 }
 
 #[derive(Clone, Copy, Serialize)]
