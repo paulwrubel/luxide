@@ -1,6 +1,7 @@
 import { getGridColumnsStyle } from './utils';
 import type { ChangeEvent, InputEvent } from 'react';
 import type { RenderForm, RenderFormPath } from '@/hooks/useRenderForm';
+import { FieldLabel } from '@/components/FieldLabel';
 
 export type TextInputControlProps = {
   form: RenderForm;
@@ -13,6 +14,7 @@ export type TextInputControlProps = {
   allowWrappingLabel?: boolean;
   labelPrefix?: React.ReactNode;
   labelSuffix?: React.ReactNode;
+  tooltip?: string | string[];
   valueLabel: string;
 };
 
@@ -28,6 +30,7 @@ export function TextInputControl(props: TextInputControlProps) {
     allowWrappingLabel,
     labelPrefix,
     labelSuffix,
+    tooltip,
     valueLabel,
   } = props;
 
@@ -40,7 +43,7 @@ export function TextInputControl(props: TextInputControlProps) {
           className={`flex items-center gap-2 ${allowWrappingLabel ? 'whitespace-normal' : 'whitespace-nowrap'}`}
         >
           {labelPrefix}
-          {label}
+          <FieldLabel tooltipContent={tooltip}>{label}</FieldLabel>
           {labelSuffix}
         </span>
       </h6>

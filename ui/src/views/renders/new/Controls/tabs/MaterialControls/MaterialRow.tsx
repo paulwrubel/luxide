@@ -9,6 +9,7 @@ import { InfoIconDefaultEntity } from '../../shared/icons/InfoIconDefaultEntity'
 import { DuplicateDropdown } from '../../shared/DuplicateDropdown';
 import { duplicateMaterial } from '@/utils/render/utils';
 import { MediumControls } from './MediumControls';
+import { RENDER_FIELD_COPY } from '@/data/renderFieldCopy';
 
 export type MaterialRowProps = {
   form: RenderForm;
@@ -72,10 +73,22 @@ export function MaterialRow(props: MaterialRowProps) {
     return (
       <>
         <form.AppField name={`materials.${name}.reflectance_texture`}>
-          {(field) => <field.SelectControl label="Reflectance Texture" items={textureItems} />}
+          {(field) => (
+            <field.SelectControl
+              label="Reflectance Texture"
+              items={textureItems}
+              tooltip={RENDER_FIELD_COPY.materials._shared.reflectanceTexture.description}
+            />
+          )}
         </form.AppField>
         <form.AppField name={`materials.${name}.emittance_texture`}>
-          {(field) => <field.SelectControl label="Emittance Texture" items={textureItems} />}
+          {(field) => (
+            <field.SelectControl
+              label="Emittance Texture"
+              items={textureItems}
+              tooltip={RENDER_FIELD_COPY.materials._shared.emittanceTexture.description}
+            />
+          )}
         </form.AppField>
       </>
     );
@@ -90,12 +103,26 @@ export function MaterialRow(props: MaterialRowProps) {
           <>
             <form.AppField name={`materials.${name}.index_of_refraction`}>
               {(field) => (
-                <field.RangeControl label="Index of Refraction" min={1.0} max={10.0} step={0.01} />
+                <field.RangeControl
+                  label="Index of Refraction"
+                  min={1.0}
+                  max={10.0}
+                  step={0.01}
+                  tooltip={RENDER_FIELD_COPY.materials.dielectric.indexOfRefraction.description}
+                />
               )}
             </form.AppField>
             <MediumControls form={form} materialName={name} />
             <form.AppField name={`materials.${name}.abbe_number`}>
-              {(field) => <field.RangeControl label="Abbe Number" min={1} max={100} step={1} />}
+              {(field) => (
+                <field.RangeControl
+                  label="Abbe Number"
+                  min={1}
+                  max={100}
+                  step={1}
+                  tooltip={RENDER_FIELD_COPY.materials.dielectric.abbeNumber.description}
+                />
+              )}
             </form.AppField>
             <TextureSelects name={name} />
           </>
@@ -106,7 +133,15 @@ export function MaterialRow(props: MaterialRowProps) {
         return (
           <>
             <form.AppField name={`materials.${name}.roughness`}>
-              {(field) => <field.RangeControl label="Roughness" min={0.0} max={1.0} step={0.01} />}
+              {(field) => (
+                <field.RangeControl
+                  label="Roughness"
+                  min={0.0}
+                  max={1.0}
+                  step={0.01}
+                  tooltip={RENDER_FIELD_COPY.materials.specular.roughness.description}
+                />
+              )}
             </form.AppField>
             <TextureSelects name={name} />
           </>

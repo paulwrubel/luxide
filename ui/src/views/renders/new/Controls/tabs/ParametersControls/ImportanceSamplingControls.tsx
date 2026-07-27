@@ -4,6 +4,8 @@ import { Separator } from '@/components/Separator';
 import { TextInputControl } from '@/components/form-controls/TextInputControl';
 import { AnimatedSeparator } from '@/components/AnimatedSeparator';
 import { ExpandableSection } from '@/components/ExpandableSection';
+import { FieldLabel } from '@/components/FieldLabel';
+import { RENDER_FIELD_COPY } from '@/data/renderFieldCopy';
 import { WarningIconAdvancedProperty } from '../../shared/icons/WarningIconAdvancedProperty';
 import { useSelector } from '@tanstack/react-store';
 import type { RenderForm } from '@/hooks/useRenderForm';
@@ -47,7 +49,11 @@ export function ImportanceSamplingControls(props: ImportanceSamplingControlsProp
       <div className="flex w-full items-center justify-between py-2">
         <h6 className="overflow-hidden font-normal">
           <span className="flex items-center gap-2">
-            Use Importance Sampling?
+            <FieldLabel
+              tooltipContent={RENDER_FIELD_COPY.parameters.useImportanceSampling.description}
+            >
+              Use Importance Sampling?
+            </FieldLabel>
             <WarningIconAdvancedProperty />
           </span>
         </h6>
@@ -71,6 +77,7 @@ export function ImportanceSamplingControls(props: ImportanceSamplingControlsProp
             valueLabel="weight"
             type="number"
             labelSuffix={<WarningIconAdvancedProperty />}
+            tooltip={RENDER_FIELD_COPY.parameters.brdfWeight.description}
           />
           <TextInputControl
             form={form}
@@ -80,6 +87,7 @@ export function ImportanceSamplingControls(props: ImportanceSamplingControlsProp
             valueLabel="weight"
             type="number"
             labelSuffix={<WarningIconAdvancedProperty />}
+            tooltip={RENDER_FIELD_COPY.parameters.emissiveWeight.description}
           />
           <TextInputControl
             form={form}
@@ -89,6 +97,7 @@ export function ImportanceSamplingControls(props: ImportanceSamplingControlsProp
             valueLabel="weight"
             type="number"
             labelSuffix={<WarningIconAdvancedProperty />}
+            tooltip={RENDER_FIELD_COPY.parameters.transmissiveWeight.description}
           />
           <TextInputControl
             form={form}
@@ -98,6 +107,7 @@ export function ImportanceSamplingControls(props: ImportanceSamplingControlsProp
             valueLabel="weight"
             type="number"
             labelSuffix={<WarningIconAdvancedProperty />}
+            tooltip={RENDER_FIELD_COPY.parameters.specularWeight.description}
           />
           <TextInputControl
             form={form}
@@ -107,12 +117,14 @@ export function ImportanceSamplingControls(props: ImportanceSamplingControlsProp
             valueLabel="weight"
             type="number"
             labelSuffix={<WarningIconAdvancedProperty />}
+            tooltip={RENDER_FIELD_COPY.parameters.virtualWeight.description}
           />
           <form.AppField name="parameters.importance_sampling.use_multiple_importance_sampling">
             {(field) => (
               <field.ToggleControl
                 label="Use Multiple Importance Sampling"
                 labelSuffix={<WarningIconAdvancedProperty />}
+                tooltip={RENDER_FIELD_COPY.parameters.useMultipleImportanceSampling.description}
               />
             )}
           </form.AppField>

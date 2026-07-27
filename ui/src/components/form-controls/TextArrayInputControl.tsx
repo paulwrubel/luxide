@@ -1,5 +1,6 @@
 import { getGridColumnsStyle } from './utils';
 import type { RenderForm, RenderFormPath } from '@/hooks/useRenderForm';
+import { FieldLabel } from '@/components/FieldLabel';
 
 export type TextArrayInputControlProps = {
   form: RenderForm;
@@ -10,6 +11,7 @@ export type TextArrayInputControlProps = {
   allowWrappingLabel?: boolean;
   labelPrefix?: React.ReactNode;
   labelSuffix?: React.ReactNode;
+  tooltip?: string | string[];
   valueLabels: string[];
   unenforcedStep?: number;
 };
@@ -24,6 +26,7 @@ export function TextArrayInputControl(props: TextArrayInputControlProps) {
     allowWrappingLabel,
     labelPrefix,
     labelSuffix,
+    tooltip,
     valueLabels,
     unenforcedStep,
   } = props;
@@ -37,7 +40,7 @@ export function TextArrayInputControl(props: TextArrayInputControlProps) {
           className={`flex items-center gap-2 ${allowWrappingLabel ? 'whitespace-normal' : 'whitespace-nowrap'}`}
         >
           {labelPrefix}
-          {label}
+          <FieldLabel tooltipContent={tooltip}>{label}</FieldLabel>
           {labelSuffix}
         </span>
       </h6>

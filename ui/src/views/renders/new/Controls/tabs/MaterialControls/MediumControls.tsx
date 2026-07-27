@@ -8,6 +8,8 @@ import { TextInputControl } from '@/components/form-controls/TextInputControl';
 import { TextArrayInputControl } from '@/components/form-controls/TextArrayInputControl';
 import type { RenderForm, RenderFormPath } from '@/hooks/useRenderForm';
 import type { MediumData, NormalizedMaterialData } from '@/utils/render/material';
+import { FieldLabel } from '@/components/FieldLabel';
+import { RENDER_FIELD_COPY } from '@/data/renderFieldCopy';
 
 export type MediumControlsProps = {
   form: RenderForm;
@@ -80,7 +82,13 @@ export function MediumControls(props: MediumControlsProps) {
     <>
       <AnimatedSeparator visible={hasInteriorMedium} />
       <div className="flex w-full items-center justify-between py-2">
-        <h6 className="overflow-hidden font-normal">Has Interior Medium?</h6>
+        <h6 className="overflow-hidden font-normal">
+          <FieldLabel
+            tooltipContent={RENDER_FIELD_COPY.materials.dielectric.hasInteriorMedium.description}
+          >
+            Has Interior Medium?
+          </FieldLabel>
+        </h6>
         <ToggleSwitch checked={hasInteriorMedium} onChange={handleToggle} />
       </div>
       <ExpandableSection expanded={hasInteriorMedium} onExpandEnd={() => form.validate('change')}>
@@ -97,6 +105,7 @@ export function MediumControls(props: MediumControlsProps) {
                   { label: 'Homogeneous', value: 'homogeneous' },
                 ]}
                 onChange={(value) => handleTypeChange(value)}
+                tooltip={RENDER_FIELD_COPY.materials.dielectric.mediumType.description}
               />
             )}
           </form.AppField>
@@ -110,6 +119,7 @@ export function MediumControls(props: MediumControlsProps) {
                 valueLabels={['r', 'g', 'b']}
                 type="number"
                 unenforcedStep={0.01}
+                tooltip={RENDER_FIELD_COPY.materials.dielectric.transmittance.description}
               />
               <TextInputControl
                 form={form}
@@ -119,6 +129,7 @@ export function MediumControls(props: MediumControlsProps) {
                 labelSpacePercentage={60}
                 type="number"
                 valueLabel="units"
+                tooltip={RENDER_FIELD_COPY.materials.dielectric.attenuationDistance.description}
               />
               <TextArrayInputControl
                 form={form}
@@ -128,6 +139,7 @@ export function MediumControls(props: MediumControlsProps) {
                 valueLabels={['r', 'g', 'b']}
                 type="number"
                 unenforcedStep={0.01}
+                tooltip={RENDER_FIELD_COPY.materials.dielectric.emittance.description}
               />
             </>
           )}

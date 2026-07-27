@@ -1,3 +1,4 @@
+import { FieldLabel } from '@/components/FieldLabel';
 import { useFieldContext } from '@/hooks/formContext';
 import React from 'react';
 import { Label, Select } from 'flowbite-react';
@@ -11,13 +12,14 @@ export type SelectControlProps = {
   label: string;
   labelPrefix?: React.ReactNode;
   labelSuffix?: React.ReactNode;
+  tooltip?: string | string[];
   items: SelectItem[];
   onChange?: (value: string) => void;
   mapValue?: (value: string) => string;
 };
 
 export function SelectControl(props: SelectControlProps) {
-  const { label, labelPrefix, labelSuffix, items, onChange, mapValue } = props;
+  const { label, labelPrefix, labelSuffix, tooltip, items, onChange, mapValue } = props;
 
   const field = useFieldContext<string>();
 
@@ -30,7 +32,7 @@ export function SelectControl(props: SelectControlProps) {
       <span className="flex justify-between">
         <span className="flex gap-2">
           {labelPrefix}
-          {label}
+          <FieldLabel tooltipContent={tooltip}>{label}</FieldLabel>
           {labelSuffix}
         </span>
         <span>{valueLabel}</span>

@@ -1,11 +1,12 @@
 import { AccordionRow } from '../../shared/AccordionRow';
-import { WarningIconUnaffectedPreview } from '../../shared/icons/WarningIconUnaffectedPreview';
+import { RENDER_FIELD_COPY } from '@/data/renderFieldCopy';
 import { TextArrayInputControl } from '@/components/form-controls/TextArrayInputControl';
 import { renameCamera } from '@/utils/render/utils';
 import type { RenderForm, RenderFormPath } from '@/hooks/useRenderForm';
 import type { DeepKeys } from '@tanstack/react-form';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
 import { useSelector } from '@tanstack/react-store';
+import { WarningIconUnaffectedPreview } from '../../shared/icons/WarningIconUnaffectedPreview';
 
 export type CameraPanelProps = {
   form: RenderForm;
@@ -36,7 +37,13 @@ export function CameraPanel(props: CameraPanelProps) {
       <div className="flex flex-col gap-2">
         <form.AppField name={`${formPath}.vertical_field_of_view_degrees`}>
           {(field) => (
-            <field.RangeControl label="Vertical FOV (degrees)" min={1.0} max={170.0} step={1.0} />
+            <field.RangeControl
+              label="Vertical FOV (degrees)"
+              min={1.0}
+              max={170.0}
+              step={1.0}
+              tooltip={RENDER_FIELD_COPY.cameras.verticalFOV.description}
+            />
           )}
         </form.AppField>
         <TextArrayInputControl
@@ -45,6 +52,7 @@ export function CameraPanel(props: CameraPanelProps) {
           label="Eye"
           valueLabels={['x', 'y', 'z']}
           type="number"
+          tooltip={RENDER_FIELD_COPY.cameras.eyeLocation.description}
         />
         <TextArrayInputControl
           form={form}
@@ -52,6 +60,7 @@ export function CameraPanel(props: CameraPanelProps) {
           label="Target"
           valueLabels={['x', 'y', 'z']}
           type="number"
+          tooltip={RENDER_FIELD_COPY.cameras.targetLocation.description}
         />
         <TextArrayInputControl
           form={form}
@@ -59,6 +68,7 @@ export function CameraPanel(props: CameraPanelProps) {
           label="View Up"
           valueLabels={['x', 'y', 'z']}
           type="number"
+          tooltip={RENDER_FIELD_COPY.cameras.viewUp.description}
         />
         <form.AppField name={`${formPath}.defocus_angle_degrees`}>
           {(field) => (
@@ -68,6 +78,7 @@ export function CameraPanel(props: CameraPanelProps) {
               max={180.0}
               step={1.0}
               labelPrefix={<WarningIconUnaffectedPreview />}
+              tooltip={RENDER_FIELD_COPY.cameras.defocusAngle.description}
             />
           )}
         </form.AppField>

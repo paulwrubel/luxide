@@ -1,13 +1,14 @@
 import { AccordionRow } from '../../shared/AccordionRow';
 import { TextInputControl } from '@/components/form-controls/TextInputControl';
 import { TextArrayInputControl } from '@/components/form-controls/TextArrayInputControl';
-import { InfoIconAdditionalInfo } from '../../shared/icons/InfoIconAdditionalInfo';
 import { getTextureData } from '@/utils/render/texture';
+import { RENDER_FIELD_COPY } from '@/data/renderFieldCopy';
 import { fixReferences, renameTexture } from '@/utils/render/utils';
 import type { NormalizedRenderConfig } from '@/utils/render/config';
 import type { RenderForm } from '@/hooks/useRenderForm';
 import { useSelector } from '@tanstack/react-store';
 import { Separator } from '@/components/Separator';
+import { InfoIconAdditionalInfo } from '../../shared/icons/InfoIconAdditionalInfo';
 import { WarningIconOrphanGeometric } from '../../shared/icons/WarningIconOrphanGeometric';
 import { InfoIconDefaultEntity } from '../../shared/icons/InfoIconDefaultEntity';
 import { DuplicateDropdown } from '../../shared/DuplicateDropdown';
@@ -85,6 +86,7 @@ export function TextureRow(props: TextureRowProps) {
               label="Scale"
               valueLabel="scale"
               type="number"
+              tooltip={RENDER_FIELD_COPY.textures.scale.description}
             />
             <Separator />
             <div className="flex items-baseline justify-between py-1">
@@ -138,6 +140,7 @@ export function TextureRow(props: TextureRowProps) {
                 ]}
               />
             }
+            tooltip={RENDER_FIELD_COPY.textures.color.description}
           />
         );
       }

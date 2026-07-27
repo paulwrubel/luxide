@@ -3,6 +3,8 @@ import { ToggleSwitch } from 'flowbite-react';
 import { TextInputControl } from '@/components/form-controls/TextInputControl';
 import { AnimatedSeparator } from '@/components/AnimatedSeparator';
 import { ExpandableSection } from '@/components/ExpandableSection';
+import { FieldLabel } from '@/components/FieldLabel';
+import { RENDER_FIELD_COPY } from '@/data/renderFieldCopy';
 import { WarningIconAdvancedProperty } from '../../shared/icons/WarningIconAdvancedProperty';
 import { useSelector } from '@tanstack/react-store';
 import type { RenderForm } from '@/hooks/useRenderForm';
@@ -36,7 +38,11 @@ export function RussianRouletteControls(props: RussianRouletteControlsProps) {
       <div className="flex w-full items-center justify-between py-2">
         <h6 className="overflow-hidden font-normal">
           <span className="flex items-center gap-2">
-            Use Russian Roulette?
+            <FieldLabel
+              tooltipContent={RENDER_FIELD_COPY.parameters.useRussianRoulette.description}
+            >
+              Use Russian Roulette?
+            </FieldLabel>
             <WarningIconAdvancedProperty />
           </span>
         </h6>
@@ -57,6 +63,7 @@ export function RussianRouletteControls(props: RussianRouletteControlsProps) {
             valueLabel="bounces"
             type="number"
             labelSuffix={<WarningIconAdvancedProperty />}
+            tooltip={RENDER_FIELD_COPY.parameters.minBouncesBeforeRoulette.description}
           />
         </div>
       </ExpandableSection>
