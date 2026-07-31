@@ -475,6 +475,7 @@ impl RenderManager {
                                 state: RenderState::FinishedCheckpointIteration(iteration),
                                 updated_at: chrono::Utc::now(),
                             });
+                            render_state_streams.unmark_pausing(render.id);
                             // remove render from running set
                             println!(
                                 "Render {} completed checkpoint iteration {}",
@@ -877,7 +878,6 @@ impl RenderManager {
                 // when pausing, we first mark it as Pausing at the current checkpoint
                 // the render thread will see this and transition to Paused when done
                 println!("Pausing render {id} at checkpoint {checkpoint_iteration}");
-                self.render_state_streams.mark_pausing(id);
                 self.storage
                     .update_render_state(
                         id,
@@ -886,8 +886,9 @@ impl RenderManager {
                             progress_info,
                         },
                     )
-                    .await
-                    .map_err(|e| e.into())
+                    .await?;
+                self.render_state_streams.mark_pausing(id);
+                Ok(())
             }
             _ => Err(RenderManagerError::ClientError(
                 StatusCode::BAD_REQUEST,
