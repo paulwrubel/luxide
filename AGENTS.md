@@ -93,4 +93,4 @@ Load the `react-code-conventions` skill (`.opencode/skills/react-code-convention
 
 Load the `postgres-queries` skill (`.opencode/skills/postgres-queries/`) when interacting with live renders, or when asked to view a render.
 
-Load the `git-conventions` skill (`.opencode/skills/git-conventions/`) when creating commits, branches, or pull requests.
+Load the `git-conventions` skill when creating commits, branches, or pull requests.
